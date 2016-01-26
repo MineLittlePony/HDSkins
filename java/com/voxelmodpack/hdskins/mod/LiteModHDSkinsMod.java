@@ -15,7 +15,7 @@ import com.voxelmodpack.voxelmenu.IPanoramaRenderer;
 
 import net.minecraft.client.Minecraft;
 
-public class HDSkinsModCore implements HDSkinsMod {
+public class LiteModHDSkinsMod implements HDSkinsMod {
     @Override
     public String getName() {
         return "HD Skins";
@@ -30,11 +30,10 @@ public class HDSkinsModCore implements HDSkinsMod {
     public void init(File configPath) {
         try {
             Class<?> ex = Class.forName("com.thevoxelbox.voxelmenu.GuiMainMenuVoxelBox");
-            Method mRegisterCustomScreen = ex.getDeclaredMethod("registerCustomScreen",
-                    new Class[] { Class.class, String.class });
+            Method mRegisterCustomScreen = ex.getDeclaredMethod("registerCustomScreen", Class.class, String.class);
             mRegisterCustomScreen.invoke(null, GuiSkins.class, "HD Skins Manager");
         } catch (ClassNotFoundException var4) {
-
+            // voxelmenu's not here, man
         } catch (Exception var5) {
             var5.printStackTrace();
         }
@@ -62,9 +61,8 @@ public class HDSkinsModCore implements HDSkinsMod {
     public static IPanoramaRenderer getPanoramaRenderer(IPanoramaRenderer fallbackRenderer) {
         try {
             Class<?> ex = Class.forName("com.thevoxelbox.voxelmenu.VoxelMenuModCore");
-            Method mGetPanoramaRenderer = ex.getDeclaredMethod("getPanoramaRenderer", new Class[0]);
-            IPanoramaRenderer panoramaRenderer = (IPanoramaRenderer) mGetPanoramaRenderer.invoke((Object) null,
-                    new Object[0]);
+            Method mGetPanoramaRenderer = ex.getDeclaredMethod("getPanoramaRenderer");
+            IPanoramaRenderer panoramaRenderer = (IPanoramaRenderer) mGetPanoramaRenderer.invoke(null);
             if (panoramaRenderer != null) {
                 return panoramaRenderer;
             }
