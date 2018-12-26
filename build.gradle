@@ -11,7 +11,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
@@ -20,14 +21,9 @@ plugins {
     id 'org.ajoberstar.grgit' version '1.7.2'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
+apply plugin: 'net.minecraftforge.gradle.liteloader'
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
-compileJava.sourceCompatibility = '1.8'
-compileJava.targetCompatibility = '1.8'
 
 ext {
     revision = grgit.log().size()
@@ -48,57 +44,23 @@ if (project.release == 'SNAPSHOT') {
 
 group = project.group
 description = project.displayname
-archivesBaseName = project.name
-
-sourceSets {
-    common {
-        // code shared between HDSkins and MineLP mods
-        // TODO: Make this into a library? I mean, it's not a lot.
-        compileClasspath += main.compileClasspath
-    }
-
-    main {
-        // HDSkins.
-        compileClasspath += common.output
-        ext.refMap = 'hdskins.mixin.refmap.json'
-    }
-
-    // Litemod stuff, separated for future removal
-    litemod {
-        compileClasspath += main.compileClasspath
-        compileClasspath += litemod.output
-        compileClasspath += hdskins.output
-    }
-
-    fml {
-        compileClasspath += main.compileClasspath
-        compileClasspath += litemod.output
-    }
-}
 
 minecraft {
-    mappings channel: project.mappings_channel, version: project.mappings_version + "-" + project.minecraft_version
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                hdskins {
-                    source sourceSets.common
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+    version = project.minecraft_version
+    mappings = project.mappings_version
+    runDir = 'run'
+    replace '@VERSION@', project.version
 }
 
-repositories {
-    maven {
-        url = 'https://repo.spongepowered.org/maven'
+mixin {
+    defaultObfuscationEnv notch
+}
+
+targetCompatibility = 1.8
+sourceCompatibility = 1.8
+sourceSets {
+    main {
+        ext.refMap = 'hdskins.mixin.refmap.json'
     }
 }
 
@@ -118,24 +80,37 @@ manifest {
     attributes 'Implementation-Version': "${project.version} (git-${project.hash})"
 }
 
-jar {
-    from sourceSets.common.output
-    from sourceSets.main.output
-    from sourceSets.fml.output
+litemod.json {
+    mcversion = project.minecraft_version
+    displayName = project.displayname
+    author = project.authors
+    revision = project.revision
+    description = project.description
+    mixinConfigs += [
+      'hdskins.mixin.json'
+    ]
+}
 
+archivesBaseName = "mod-${project.name.toLowerCase()}"
+
+afterEvaluate {
+    file('build.number').delete()
+}
+
+jar {
+    from litemod
     classifier 'base'
     extension 'jar'
 }
 
-/*
 shadowJar {
-//    classifier "mc$minecraft.version"
+    extension 'litemod'
+    classifier "mc$minecraft.version"
 
-    from sourceSets.common.output
-    from sourceSets.main.output
-    from sourceSets.fml.output
+    from litemod
 
     dependencies {
+        exclude dependency('deobf.com.mumfrey:liteloader:')
         exclude dependency('deobf.org.ow2.asm:')
         exclude dependency('org.spongepowered:mixin:')
         exclude 'META-INF/**'
@@ -149,17 +124,18 @@ shadowJar {
 }
 
 task srgJar(type: Jar) {
-    from sourceSets.common.output
-
-    from sourceSets.hdskins.output
-    from sourceSets.hdskinsfml.output
-
     from sourceSets.main.output
-    from sourceSets.client.output
-    from sourceSets.fml.output
-
-    from sourceSets.hdskins.output
+    from litemod
 
     classifier "mc$minecraft.version-srg"
 }
-*/
+
+sourceJar.enabled = false
+
+reobf {
+    srgJar {
+        mappingType = 'SEARGE'
+    }
+
+    shadowJar{}
+}
