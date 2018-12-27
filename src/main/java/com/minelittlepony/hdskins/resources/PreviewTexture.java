@@ -1,10 +1,9 @@
 package com.minelittlepony.hdskins.resources;
 
+import com.minelittlepony.hdskins.VanillaModels;
 import net.minecraft.client.renderer.IImageBuffer;
 import net.minecraft.client.renderer.texture.ThreadDownloadImageData;
 import net.minecraft.util.ResourceLocation;
-
-import com.minelittlepony.hdskins.VanillaModels;
 
 import javax.annotation.Nullable;
 
