@@ -50,6 +50,8 @@ minecraft {
     mappings = project.mappings_version
     runDir = 'run'
     replace '@VERSION@', project.version
+
+    coreMod = 'com.minelittlepony.hdskins.coremod.CoreMod'
 }
 
 mixin {

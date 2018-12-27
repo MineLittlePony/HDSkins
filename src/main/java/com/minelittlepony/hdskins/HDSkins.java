@@ -8,6 +8,7 @@ import com.minelittlepony.hdskins.server.SkinServer;
 import com.minelittlepony.hdskins.server.SkinServerSerializer;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,8 @@ public class HDSkins {
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(SkinServer.class, new SkinServerSerializer())
+            .setPrettyPrinting()
+            .serializeNulls()
             .create();
 
     @Mod.Instance
@@ -40,11 +43,14 @@ public class HDSkins {
         logger = event.getModLog();
         configFile = new File(event.getModConfigurationDirectory(), "hdskins.json");
 
-        loadConfig();
-
         skinManager = new HDSkinManager();
 
         RenderingRegistry.registerEntityRenderingHandler(EntityPlayerModel.class, RenderPlayerModel::new);
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        loadConfig();
     }
 
     @Mod.EventHandler
