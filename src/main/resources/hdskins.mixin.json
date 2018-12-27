@@ -1,6 +1,7 @@
 {
     "required": true,
-    "minVersion": "0.7",
+    "minVersion": "0.7.11",
+    "compatibilityLevel": "JAVA_8",
     "package": "com.minelittlepony.hdskins.mixin",
     "refmap": "hdskins.mixin.refmap.json",
     "mixins": [
