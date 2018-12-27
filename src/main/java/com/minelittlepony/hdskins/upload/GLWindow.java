@@ -32,6 +32,7 @@ import javax.swing.*;
 /**
  * Experimental window to control file drop. It kind of sucks.
  *
+ * TODO: Remove in 1.13 to be replaced by glfw
  */
 public class GLWindow extends DropTarget {
 

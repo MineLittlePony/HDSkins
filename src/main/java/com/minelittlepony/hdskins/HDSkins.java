@@ -18,7 +18,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 
-@Mod(modid = "hdskins")
+@Mod(modid = "hdskins", clientSideOnly = true)
 public class HDSkins {
 
     private static final Gson gson = new GsonBuilder()
