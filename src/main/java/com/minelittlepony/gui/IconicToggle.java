@@ -1,6 +1,6 @@
 package com.minelittlepony.gui;
 
-import com.voxelmodpack.hdskins.util.MoreStreams;
+import com.minelittlepony.hdskins.util.MoreStreams;
 
 public class IconicToggle extends IconicButton {
 
