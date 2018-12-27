@@ -1,5 +1,6 @@
 package com.voxelmodpack.hdskins.upload;
 
+import com.voxelmodpack.hdskins.HDSkins;
 import net.minecraft.client.Minecraft;
 
 import java.io.File;
@@ -8,7 +9,6 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.lang3.StringUtils;
-import com.voxelmodpack.hdskins.LiteModHDSkins;
 
 /**
  * Base class for "open file" dialog threads
@@ -38,7 +38,7 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
         JFileChooser fileDialog = new JFileChooser();
         fileDialog.setDialogTitle(dialogTitle);
 
-        String last = LiteModHDSkins.instance().lastChosenFile;
+        String last = HDSkins.instance.getConfig().lastChosenFile;
         if (!StringUtils.isBlank(last)) {
             fileDialog.setSelectedFile(new File(last));
         }
@@ -49,8 +49,8 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
         File f = fileDialog.getSelectedFile();
 
         if (f != null) {
-            LiteModHDSkins.instance().lastChosenFile = f.getAbsolutePath();
-            LiteModHDSkins.instance().writeConfig();
+            HDSkins.instance.getConfig().lastChosenFile = f.getAbsolutePath();
+            HDSkins.instance.saveConfig();
 
             if (!f.exists() && f.getName().indexOf('.') == -1) {
                 f = appendMissingExtension(f);

@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.voxelmodpack.hdskins.HDSkinManager;
+import com.voxelmodpack.hdskins.HDSkins;
 
 import java.lang.reflect.Type;
 
@@ -32,6 +32,6 @@ public class SkinServerSerializer implements JsonSerializer<SkinServer>, JsonDes
     public SkinServer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         String type = json.getAsJsonObject().get("type").getAsString();
 
-        return context.deserialize(json, HDSkinManager.INSTANCE.getSkinServerClass(type));
+        return context.deserialize(json, HDSkins.instance.getSkinManager().getSkinServerClass(type));
     }
 }

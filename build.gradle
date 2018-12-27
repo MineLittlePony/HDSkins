@@ -13,7 +13,7 @@ buildscript {
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+//        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
 
@@ -21,9 +21,9 @@ plugins {
     id 'org.ajoberstar.grgit' version '1.7.2'
 }
 
-apply plugin: 'net.minecraftforge.gradle.liteloader'
+apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'com.github.johnrengelman.shadow'
+//apply plugin: 'com.github.johnrengelman.shadow'
 
 ext {
     revision = grgit.log().size()
@@ -63,7 +63,11 @@ sourceSets {
         ext.refMap = 'hdskins.mixin.refmap.json'
     }
 }
-
+repositories {
+    maven {
+        url 'https://repo.spongepowered.org/maven'
+    }
+}
 dependencies {
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
@@ -78,62 +82,26 @@ manifest {
     attributes 'Implementation-Version': "${project.version} (git-${project.hash})"
 }
 
-litemod.json {
-    mcversion = project.minecraft_version
-    displayName = project.displayname
-    author = project.authors
-    revision = project.revision
-    description = project.description
-    mixinConfigs += [
-      'hdskins.mixin.json'
-    ]
-}
-
 archivesBaseName = "mod-${project.name.toLowerCase()}"
 
-afterEvaluate {
-    file('build.number').delete()
-}
-
 jar {
-    from litemod
     classifier 'base'
     extension 'jar'
 }
-
+/*
 shadowJar {
     extension 'litemod'
     classifier "mc$minecraft.version"
 
-    from litemod
-    
     dependencies {
-        exclude dependency('deobf.com.mumfrey:liteloader:')
-        exclude dependency('deobf.org.ow2.asm:')
         exclude dependency('org.spongepowered:mixin:')
         exclude 'META-INF/**'
     }
 
     relocate 'org.apache.http.entity.mime', 'com.voxelmodpack.repack.org.apache.http.entity.mime'
-    exclude 'dummyThing'
-    doLast {
-        file('build/libs/' + archivesBaseName + '-' + version + '-base.jar').delete();
-    }
 }
-
-task srgJar(type: Jar) {
-    from sourceSets.main.output
-    from litemod
-
-    classifier "mc$minecraft.version-srg"
-}
-
-sourceJar.enabled = false
 
 reobf {
-    srgJar {
-        mappingType = 'SEARGE'
-    }
-
     shadowJar{}
 }
+*/

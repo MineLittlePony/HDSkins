@@ -1,7 +1,7 @@
 package com.voxelmodpack.hdskins.resources.texture;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.voxelmodpack.hdskins.HDSkinManager;
+import com.voxelmodpack.hdskins.HDSkins;
 
 import javax.annotation.Nullable;
 import java.awt.Graphics;
@@ -62,7 +62,7 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
         drawImage(48, 52, 44, 64, 52, 20, 56, 32);
 
         // mod things
-        HDSkinManager.INSTANCE.convertSkin(image, graphics);
+        HDSkins.instance.getSkinManager().convertSkin(image, graphics);
 
         graphics.dispose();
 

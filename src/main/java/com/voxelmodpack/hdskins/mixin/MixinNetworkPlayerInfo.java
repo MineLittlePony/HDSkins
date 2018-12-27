@@ -3,7 +3,7 @@ package com.voxelmodpack.hdskins.mixin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.voxelmodpack.hdskins.HDSkinManager;
+import com.voxelmodpack.hdskins.HDSkins;
 import com.voxelmodpack.hdskins.ducks.INetworkPlayerInfo;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.resources.SkinManager;
@@ -81,7 +81,7 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                             + "Z)V",
                     shift = At.Shift.BEFORE))
     private void onLoadTexture(CallbackInfo ci) {
-        HDSkinManager.INSTANCE.fetchAndLoadSkins(gameProfile, (type, location, profileTexture) -> {
+        HDSkins.instance.getSkinManager().fetchAndLoadSkins(gameProfile, (type, location, profileTexture) -> {
             customTextures.put(type, location);
             customProfiles.put(type, profileTexture);
         });
@@ -95,7 +95,7 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                             + "Z)V"))
     private void redirectLoadPlayerTextures(SkinManager skinManager, GameProfile profile, SkinManager.SkinAvailableCallback callback, boolean requireSecure) {
         skinManager.loadProfileTextures(profile, (typeIn, location, profileTexture) -> {
-            HDSkinManager.INSTANCE.parseSkin(profile, typeIn, location, profileTexture).thenAccept(v -> {
+            HDSkins.instance.getSkinManager().parseSkin(profile, typeIn, location, profileTexture).thenAccept(v -> {
                 playerTextures.put(typeIn, location);
                 vanillaProfiles.put(typeIn, profileTexture);
             });
@@ -106,10 +106,10 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     public void reloadTextures() {
         synchronized (this) {
             for (Map.Entry<Type, MinecraftProfileTexture> entry : customProfiles.entrySet()) {
-                HDSkinManager.INSTANCE.parseSkin(gameProfile, entry.getKey(), customTextures.get(entry.getKey()), entry.getValue());
+                HDSkins.instance.getSkinManager().parseSkin(gameProfile, entry.getKey(), customTextures.get(entry.getKey()), entry.getValue());
             }
             for (Map.Entry<Type, MinecraftProfileTexture> entry : vanillaProfiles.entrySet()) {
-                HDSkinManager.INSTANCE.parseSkin(gameProfile, entry.getKey(), playerTextures.get(entry.getKey()), entry.getValue());
+                HDSkins.instance.getSkinManager().parseSkin(gameProfile, entry.getKey(), playerTextures.get(entry.getKey()), entry.getValue());
             }
         }
     }

@@ -2,7 +2,7 @@ package com.voxelmodpack.hdskins.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.voxelmodpack.hdskins.HDSkinManager;
+import com.voxelmodpack.hdskins.HDSkins;
 import net.minecraft.client.renderer.tileentity.TileEntitySkullRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntitySkull;
@@ -23,7 +23,7 @@ public abstract class MixinSkullRenderer extends TileEntitySpecialRenderer<TileE
                     ordinal = 4))
     private void onBindTexture(TileEntitySkullRenderer tesr, ResourceLocation rl, float x, float y, float z, EnumFacing facing, float rotation, int meta, @Nullable GameProfile profile, int p_180543_8_, float ticks) {
         if (profile != null) {
-            ResourceLocation skin = HDSkinManager.INSTANCE.getTextures(profile).get(Type.SKIN);
+            ResourceLocation skin = HDSkins.instance.getSkinManager().getTextures(profile).get(Type.SKIN);
 
             if (skin != null) {
                 rl = skin;

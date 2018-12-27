@@ -1,6 +1,6 @@
 package com.voxelmodpack.hdskins.mixin;
 
-import com.voxelmodpack.hdskins.HDSkinManager;
+import com.voxelmodpack.hdskins.HDSkins;
 import net.minecraft.client.renderer.IImageBuffer;
 import net.minecraft.client.renderer.ImageBufferDownload;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +24,7 @@ public abstract class MixinImageBufferDownload implements IImageBuffer {
         boolean isLegacy = image.getHeight() == 32;
         if (isLegacy) {
             Graphics graphics = image2.getGraphics();
-            HDSkinManager.INSTANCE.convertSkin(image2, graphics);
+            HDSkins.instance.getSkinManager().convertSkin(image2, graphics);
             graphics.dispose();
         }
     }

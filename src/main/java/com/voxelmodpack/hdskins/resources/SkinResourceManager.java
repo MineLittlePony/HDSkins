@@ -5,11 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.mumfrey.liteloader.util.log.LiteLoaderLogger;
+import com.voxelmodpack.hdskins.HDSkins;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.resource.IResourceType;
+import net.minecraftforge.client.resource.ISelectiveResourceReloadListener;
+import net.minecraftforge.client.resource.VanillaResourceType;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 
@@ -23,8 +25,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
-public class SkinResourceManager implements IResourceManagerReloadListener {
+public class SkinResourceManager implements ISelectiveResourceReloadListener {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -34,35 +37,36 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
     private Map<ResourceLocation, ResourceLocation> converted = Maps.newHashMap();
 
     @Override
-    public void onResourceManagerReload(IResourceManager resourceManager) {
-        uuidSkins.clear();
-        namedSkins.clear();
-        executor.shutdownNow();
-        executor = Executors.newSingleThreadExecutor();
-        inProgress.clear();
-        converted.clear();
-        for (String domain : resourceManager.getResourceDomains()) {
-            try {
-                for (IResource res : resourceManager.getAllResources(new ResourceLocation(domain, "textures/skins/skins.json"))) {
-                    try {
-                        SkinData data = getSkinData(res.getInputStream());
-                        for (Skin s : data.skins) {
-                            if (s.uuid != null) {
-                                uuidSkins.put(s.uuid, s);
+    public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
+        if (resourcePredicate.test(VanillaResourceType.TEXTURES)) {
+            uuidSkins.clear();
+            namedSkins.clear();
+            executor.shutdownNow();
+            executor = Executors.newSingleThreadExecutor();
+            inProgress.clear();
+            converted.clear();
+            for (String domain : resourceManager.getResourceDomains()) {
+                try {
+                    for (IResource res : resourceManager.getAllResources(new ResourceLocation(domain, "textures/skins/skins.json"))) {
+                        try {
+                            SkinData data = getSkinData(res.getInputStream());
+                            for (Skin s : data.skins) {
+                                if (s.uuid != null) {
+                                    uuidSkins.put(s.uuid, s);
+                                }
+                                if (s.name != null) {
+                                    namedSkins.put(s.name, s);
+                                }
                             }
-                            if (s.name != null) {
-                                namedSkins.put(s.name, s);
-                            }
+                        } catch (JsonParseException je) {
+                            HDSkins.instance.logger.warn("Invalid skins.json in %s", res.getResourcePackName(), je);
                         }
-                    } catch (JsonParseException je) {
-                        LiteLoaderLogger.warning(je, "Invalid skins.json in %s", res.getResourcePackName());
                     }
+                } catch (IOException e) {
+                    // ignore
                 }
-            } catch (IOException e) {
-                // ignore
             }
         }
-
     }
 
     private SkinData getSkinData(InputStream stream) {

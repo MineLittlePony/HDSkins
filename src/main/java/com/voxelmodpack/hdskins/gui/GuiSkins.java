@@ -10,11 +10,8 @@ import com.minelittlepony.gui.Label;
 import com.minelittlepony.gui.Style;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.voxelmodpack.hdskins.HDSkinManager;
-import com.voxelmodpack.hdskins.SkinChooser;
-import com.voxelmodpack.hdskins.SkinUploader;
+import com.voxelmodpack.hdskins.*;
 import com.voxelmodpack.hdskins.SkinUploader.ISkinUploadHandler;
-import com.voxelmodpack.hdskins.VanillaModels;
 import com.voxelmodpack.hdskins.server.SkinServer;
 import com.voxelmodpack.hdskins.upload.GLWindow;
 import com.voxelmodpack.hdskins.util.CallableFutures;
@@ -233,7 +230,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
             e.printStackTrace();
         }
 
-        HDSkinManager.INSTANCE.clearSkinCache();
+        HDSkins.instance.getSkinManager().clearSkinCache();
 
         GLWindow.current().clearDropTargetListener();
     }

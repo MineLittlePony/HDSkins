@@ -16,8 +16,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
-import com.mumfrey.liteloader.core.LiteLoader;
-import com.mumfrey.liteloader.util.log.LiteLoaderLogger;
 import com.voxelmodpack.hdskins.ducks.INetworkPlayerInfo;
 import com.voxelmodpack.hdskins.gui.GuiSkins;
 import com.voxelmodpack.hdskins.resources.SkinResourceManager;
@@ -37,11 +35,10 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.ThreadDownloadImageData;
 import net.minecraft.client.renderer.texture.ITextureObject;
-import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.IResourceManagerReloadListener;
-import net.minecraft.client.resources.SkinManager;
+import net.minecraft.client.resources.*;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.resource.ISelectiveResourceReloadListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -69,15 +66,13 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public final class HDSkinManager implements IResourceManagerReloadListener {
+public final class HDSkinManager {
 
     private static final Logger logger = LogManager.getLogger();
 
     public static final ExecutorService skinUploadExecutor = Executors.newSingleThreadExecutor();
     public static final ExecutorService skinDownloadExecutor = Executors.newFixedThreadPool(8);
     public static final CloseableHttpClient httpClient = HttpClients.createSystem();
-
-    public static final HDSkinManager INSTANCE = new HDSkinManager();
 
     private List<ISkinCacheClearListener> clearListeners = Lists.newArrayList();
 
@@ -95,12 +90,15 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
 
     private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
-    private HDSkinManager() {
+    public HDSkinManager() {
 
         // register default skin server types
         addSkinServerType(LegacySkinServer.class);
         addSkinServerType(ValhallaSkinServer.class);
         addSkinServerType(BethlehemSkinServer.class);
+
+        IReloadableResourceManager irrm = (IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager();
+        irrm.registerReloadListener(resources);
     }
 
     public void setSkinsGui(Function<List<SkinServer>, GuiSkins> skinsGuiFunc) {
@@ -193,7 +191,7 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
 
             // schedule texture loading on the main thread.
             TextureLoader.loadTexture(resource, new ThreadDownloadImageData(
-                    new File(LiteLoader.getAssetsDirectory(), "hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()),
+                    new File(Launch.assetsDir, "hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()),
                     texture.getUrl(),
                     DefaultPlayerSkin.getDefaultSkinLegacy(),
                     new ImageBufferDownloadHD(type, () -> {
@@ -242,9 +240,9 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
     }
 
     public void clearSkinCache() {
-        LiteLoaderLogger.info("Clearing local player skin cache");
+        logger.info("Clearing local player skin cache");
 
-        FileUtils.deleteQuietly(new File(LiteLoader.getAssetsDirectory(), "hd"));
+        FileUtils.deleteQuietly(new File(Launch.assetsDir, "hd"));
 
         skins.invalidateAll();
         parseSkins();
@@ -338,8 +336,4 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
         });
     }
 
-    @Override
-    public void onResourceManagerReload(IResourceManager resourceManager) {
-        this.resources.onResourceManagerReload(resourceManager);
-    }
 }

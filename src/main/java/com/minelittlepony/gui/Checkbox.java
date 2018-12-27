@@ -1,11 +1,11 @@
 package com.minelittlepony.gui;
 
-import com.mumfrey.liteloader.client.gui.GuiCheckbox;
 
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
+import net.minecraftforge.fml.client.config.GuiCheckBox;
 
 /**
  * Checkbox that supports a gui action when it changes.
@@ -13,7 +13,7 @@ import net.minecraft.client.resources.I18n;
  * @author Sollace
  *
  */
-public class Checkbox extends GuiCheckbox implements IActionable, IGuiTooltipped<Checkbox> {
+public class Checkbox extends GuiCheckBox implements IActionable, IGuiTooltipped<Checkbox> {
 
     private int tipX = 0;
     private int tipY = 0;
@@ -23,14 +23,13 @@ public class Checkbox extends GuiCheckbox implements IActionable, IGuiTooltipped
     private final IGuiCallback<Boolean> action;
 
     public Checkbox(int x, int y, String displayString, boolean value, IGuiCallback<Boolean> callback) {
-        super(0, x, y, I18n.format(displayString));
+        super(0, x, y, I18n.format(displayString), value);
         action = callback;
-        checked = value;
     }
 
     @Override
     public void perform() {
-        checked = action.perform(!checked);
+        setIsChecked(action.perform(!isChecked()));
     }
 
     @Override
