@@ -92,7 +92,7 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
 
     private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
-    private HDSkinManager() {
+    public HDSkinManager() {
 
         // register default skin server types
         addSkinServerType(LegacySkinServer.class);
@@ -338,6 +338,6 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
 
     @Override
     public void onResourceManagerReload(IResourceManager resourceManager) {
-        this.resources.onResourceManagerReload(resourceManager);
+        resources.onResourceManagerReload(resourceManager);
     }
 }

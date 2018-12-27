@@ -64,7 +64,6 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
                 // ignore
             }
         }
-
     }
 
     private SkinData getSkinData(InputStream stream) {
@@ -104,17 +103,14 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
     private void loadSkinResource(@Nullable final ResourceLocation res) {
         if (res != null) {
             // read and convert in a new thread
-            this.inProgress.computeIfAbsent(res, r -> CompletableFuture.supplyAsync(new ImageLoader(r), executor)
-                    .whenComplete((loc, t) -> {
-                        if (loc != null)
-                            converted.put(res, loc);
-                        else {
-                            LogManager.getLogger().warn("Errored while processing {}. Using original.", res, t);
-                            converted.put(res, res);
-                        }
-                    }));
-
-
+            this.inProgress.computeIfAbsent(res, r -> CompletableFuture.supplyAsync(new ImageLoader(r), executor).whenComplete((loc, t) -> {
+                if (loc != null) {
+                    converted.put(res, loc);
+                } else {
+                    LogManager.getLogger().warn("Errored while processing {}. Using original.", res, t);
+                    converted.put(res, res);
+                }
+            }));
         }
 
     }

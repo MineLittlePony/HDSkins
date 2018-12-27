@@ -9,6 +9,7 @@ import com.minelittlepony.common.client.gui.IconicToggle;
 import com.minelittlepony.common.client.gui.Label;
 import com.minelittlepony.common.client.gui.Style;
 import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinChooser;
 import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.VanillaModels;
