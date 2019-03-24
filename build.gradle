@@ -11,8 +11,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
@@ -21,9 +20,14 @@ plugins {
     id 'org.ajoberstar.grgit' version '1.7.2'
 }
 
-apply plugin: 'net.minecraftforge.gradle.liteloader'
-apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
 apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+compileJava.sourceCompatibility = '1.8'
+compileJava.targetCompatibility = '1.8'
 
 ext {
     revision = grgit.log().size()
@@ -44,20 +48,8 @@ if (project.release == 'SNAPSHOT') {
 
 group = project.group
 description = project.displayname
+archivesBaseName = project.name
 
-minecraft {
-    version = project.minecraft_version
-    mappings = project.mappings_version
-    runDir = 'run'
-    replace '@VERSION@', project.version
-}
-
-mixin {
-    defaultObfuscationEnv notch
-}
-
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
 sourceSets {
     common {
         // code shared between HDSkins and MineLP mods
@@ -99,9 +91,53 @@ sourceSets {
         compileClasspath += litemod.output
         compileClasspath += hdskins.output
     }
+
+    fml {
+        compileClasspath += main.compileClasspath
+        compileClasspath += main.output
+        compileClasspath += client.output
+    }
+
+    hdskinsfml {
+        compileClasspath += main.compileClasspath
+        compileClasspath += litemod.output
+        compileClasspath += hdskins.output
+    }
+}
+
+minecraft {
+    mappings channel: 'snapshot', version: project.mappings_version
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+
+            // replace '@VERSION@', project.version
+
+            mods {
+                minelittlepony {
+                    source sourceSets.common
+                    source sourceSets.hdskins
+                    source sourceSets.client
+                    source sourceSets.main
+
+                    // replace '@VERSION@', project.version
+                }
+
+                // replace '@VERSION@', project.version
+            }
+        }
+    }
+
+    // replace '@VERSION@', project.version
 }
 
 dependencies {
+    minecraft 'net.minecraftforge:forge:1.13.2-25.0.90'
+
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
@@ -115,29 +151,18 @@ manifest {
     attributes 'Implementation-Version': "${project.version} (git-${project.hash})"
 }
 
-litemod.json {
-    mcversion = project.minecraft_version
-    displayName = project.displayname
-    author = project.authors
-    revision = project.revision
-    description = project.description
-    description.minelittlepony = project.description_mlp
-    description.hdskinsmod = project.description_hd
-    mixinConfigs += [
-      'minelp.mixin.json',
-      'hdskins.mixin.json'
-    ]
-}
-
-archivesBaseName = "mod-${project.name.toLowerCase()}"
-
-afterEvaluate {
-    file('build.number').delete()
-}
-
 jar {
+    from sourceSets.common.output
+    from sourceSets.main.output
+
     from sourceSets.hdskins.output
-    from litemod
+    from sourceSets.hdskinsfml.output
+
+    from sourceSets.client.output
+    from sourceSets.fml.output
+
+    replace '@VERSION@', project.version
+
     classifier 'base'
     extension 'jar'
 }
@@ -159,25 +184,24 @@ task copyBGPones(type: Copy) {
 }
 
 shadowJar {
-    extension 'litemod'
     classifier "mc$minecraft.version"
 
     from sourceSets.common.output
 
     from sourceSets.hdskins.output
-    from sourceSets.hdskinslitemod.output
+    from sourceSets.hdskinsfml.output
 
     from sourceSets.client.output
-    from sourceSets.litemod.output
-    from litemod
+    from sourceSets.fml.output
 
     exclude "/assets/minelittlepony/textures/entity/pony"
     from(copyBGPones) {
         into "/assets/minelittlepony/textures/entity/pony"
     }
-    
+
+    replace '@VERSION@', project.version
+
     dependencies {
-        exclude dependency('deobf.com.mumfrey:liteloader:')
         exclude dependency('deobf.org.ow2.asm:')
         exclude dependency('org.spongepowered:mixin:')
         exclude 'META-INF/**'
@@ -194,14 +218,15 @@ task srgJar(type: Jar) {
     from sourceSets.common.output
 
     from sourceSets.hdskins.output
-    from sourceSets.hdskinslitemod.output
+    from sourceSets.hdskinsfml.output
 
     from sourceSets.main.output
     from sourceSets.client.output
-    from sourceSets.litemod.output
+    from sourceSets.fml.output
 
     from sourceSets.hdskins.output
-    from litemod
+
+    replace '@VERSION@', project.version
 
     classifier "mc$minecraft.version-srg"
 }
@@ -210,6 +235,8 @@ task horseLib(type: Jar) {
     from sourceSets.common.output
 
     from sourceSets.main.output
+
+    replace '@VERSION@', project.version
 
     baseName = "HoarseLib"
 }
