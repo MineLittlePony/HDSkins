@@ -2,7 +2,6 @@ package com.minelittlepony.hdskins.gui;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.model.ModelBiped.ArmPose;
 import net.minecraft.client.renderer.entity.model.ModelElytra;
 import net.minecraft.client.renderer.entity.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -10,6 +9,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.renderer.entity.model.ModelBiped;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -103,7 +103,8 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
         if (entity.isPlayerSleeping()) {
             BedHead.instance.render(entity);
         }
-        if (entity.getRidingEntity() != null) {
+
+        if (entity.isPassenger()) {
             MrBoaty.instance.render();
         }
 
@@ -119,8 +120,8 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
         player.bipedRightArmwear.isHidden = !parts.contains(EnumPlayerModelParts.RIGHT_SLEEVE);
         player.isSneak = entity.isSneaking();
 
-        player.leftArmPose = ArmPose.EMPTY;
-        player.rightArmPose = ArmPose.EMPTY;
+        player.leftArmPose = ModelBiped.ArmPose.EMPTY;
+        player.rightArmPose = ModelBiped.ArmPose.EMPTY;
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
@@ -199,7 +200,7 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
         public static MrBoaty instance = new MrBoaty();
 
         public MrBoaty() {
-            super(null);
+            super(DummyWorld.INSTANCE);
         }
 
         public void render() {

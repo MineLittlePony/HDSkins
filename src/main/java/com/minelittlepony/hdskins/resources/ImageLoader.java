@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.resources;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 
@@ -62,7 +63,7 @@ public class ImageLoader implements Supplier<ResourceLocation> {
     private ResourceLocation loadSkin(NativeImage image) {
 
         ResourceLocation conv = new ResourceLocation(original.getNamespace() + "-converted", original.getPath());
-        boolean success = mc.getTextureManager().loadTexture(conv, new DynamicTextureImage(image));
+        boolean success = mc.getTextureManager().loadTexture(conv, new DynamicTexture(image));
         return success ? conv : null;
     }
 

@@ -1,6 +1,6 @@
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package com.minelittlepony.hdskins.server;
+package com.minelittlepony.hdskins.net;
 
 import mcp.MethodsReturnNonnullByDefault;
 

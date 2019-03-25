@@ -10,6 +10,7 @@ import java.io.File;
 /**
  * Opens an awt "Save File" dialog
  */
+@Deprecated // no more swing
 public abstract class ThreadSaveFile extends ThreadOpenFile {
 
     protected String filename;
@@ -26,7 +27,7 @@ public abstract class ThreadSaveFile extends ThreadOpenFile {
         do {
             chooser.setSelectedFile(new File(filename));
 
-            int result = chooser.showSaveDialog(InternalDialog.getAWTContext());
+            int result = chooser.showSaveDialog(null);
 
             File f = chooser.getSelectedFile();
             if (result == 0 && f != null && f.exists()) {

@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.server;
+package com.minelittlepony.hdskins.net;
 
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -32,25 +32,25 @@ public interface SkinServer {
     );
 
     /**
-     * Returns true for any features that this skin server supports.
+     * Returns true for any features that this skin net supports.
      */
     boolean supportsFeature(Feature feature);
 
     /**
      * Synchronously loads texture information for the provided profile.
      *
-     * @return The parsed server response as a textures payload.
+     * @return The parsed net response as a textures payload.
      *
      * @throws IOException  If any authenticaiton or network error occurs.
      */
     MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException;
 
     /**
-     * Synchronously uploads a skin to this server.
+     * Synchronously uploads a skin to this net.
      *
      * @param upload The payload to send.
      *
-     * @return A server response object.
+     * @return A net response object.
      *
      * @throws IOException
      * @throws AuthenticationException
@@ -58,7 +58,7 @@ public interface SkinServer {
     SkinUploadResponse performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
 
     /**
-     * Asynchronously uploads a skin to the server.
+     * Asynchronously uploads a skin to the net.
      *
      * Returns an incomplete future for chaining other actions to be performed after this method completes.
      * Actions are dispatched to the default skinUploadExecutor
@@ -80,7 +80,7 @@ public interface SkinServer {
     }
 
     /**
-     * Called to validate this skin server's state.
+     * Called to validate this skin net's state.
      * Any servers with an invalid gateway format will not be loaded and generate an exception.
      */
     default boolean verifyGateway() {

@@ -9,9 +9,9 @@ import net.minecraft.entity.Entity;
 import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.gui.EntityPlayerModel;
 import com.minelittlepony.hdskins.gui.RenderPlayerModel;
-import com.minelittlepony.hdskins.server.SkinServer;
+import com.minelittlepony.hdskins.net.SkinServer;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
 
@@ -40,7 +40,7 @@ public abstract class HDSkins {
         irrm.addReloadListener(HDSkinManager.INSTANCE);
     }
 
-    public abstract File getAssetsDirectory();
+    public abstract Path getAssetsDirectory();
 
     public abstract void saveConfig();
 

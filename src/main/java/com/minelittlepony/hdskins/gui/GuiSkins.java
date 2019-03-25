@@ -11,33 +11,37 @@ import com.minelittlepony.common.client.gui.Style;
 import com.minelittlepony.hdskins.HDSkinManager;
 import com.minelittlepony.hdskins.SkinChooser;
 import com.minelittlepony.hdskins.SkinUploader;
-import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
-import com.minelittlepony.hdskins.server.SkinServer;
-import com.minelittlepony.hdskins.upload.GLWindow;
+import com.minelittlepony.hdskins.VanillaModels;
+import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.RenderSkybox;
+import net.minecraft.client.renderer.RenderSkyboxCube;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemArmorDyeable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 import static net.minecraft.client.renderer.GlStateManager.*;
@@ -126,7 +130,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
             updateCounter++;
         }
 
-        panorama.update();
         uploader.update();
 
         updateButtons();
@@ -134,42 +137,46 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
 
     @Override
     public void initGui() {
-        GLWindow.current().setDropTargetListener(files -> {
+       /* GLWindow.current().setDropTargetListener(files -> {
             files.stream().findFirst().ifPresent(file -> {
                 chooser.selectFile(file);
                 updateButtons();
             });
-        });
+        }); */
 
         panorama.init();
 
         addButton(new Label(width / 2, 10, "hdskins.manager", 0xffffff, true));
         addButton(new Label(34, 34, "hdskins.local", 0xffffff));
-        addButton(new Label(width / 2 + 34, 34, "hdskins.server", 0xffffff));
+        addButton(new Label(width / 2 + 34, 34, "hdskins.net", 0xffffff));
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender ->
-                    chooser.openBrowsePNG(mc, format("hdskins.open.title"))))
-                .setEnabled(!mc.mainWindow.isFullscreen());
+        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender -> {
+            chooser.openBrowsePNG(mc, format("hdskins.open.title"));
+        })).setEnabled(!mc.mainWindow.isFullscreen());
 
         addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 20, 48, 20, "hdskins.options.chevy", sender -> {
             if (uploader.canUpload()) {
                 punchServer("hdskins.upload");
             }
         })).setEnabled(uploader.canUpload())
-                .setTooltip("hdskins.options.chevy.title");
+            .setTooltip("hdskins.options.chevy.title");
 
         addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20, "hdskins.options.download", sender -> {
             if (uploader.canClear()) {
                 chooser.openSavePNG(mc, format("hdskins.save.title"));
             }
         })).setEnabled(uploader.canClear())
-                .setTooltip("hdskins.options.download.title");
+            .setTooltip("hdskins.options.download.title");
 
-        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20, "hdskins.options.clear", sender -> {
+        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20, "hdskins.options.clear", sender ->{
             if (uploader.canClear()) {
                 punchServer("hdskins.request");
             }
         })).setEnabled(uploader.canClear());
+
+        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender ->
+                    chooser.openBrowsePNG(mc, format("hdskins.open.title"))))
+                .setEnabled(!mc.mainWindow.isFullscreen());
 
         addButton(new Button(width / 2 - 50, height - 25, 100, 20, "hdskins.options.close", sender ->
                     mc.displayGuiScreen(new GuiMainMenu())));
@@ -235,7 +242,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
 
         HDSkinManager.INSTANCE.clearSkinCache();
 
-        GLWindow.current().clearDropTargetListener();
+//        GLWindow.current().clearDropTargetListener();
     }
 
     @Override
@@ -296,7 +303,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
     }
 
     @Override
-    public boolean keyPressed(int mouseX, int mouseY, int keyCode) {
+    public boolean charTyped(char keyChar, int keyCode) {
         if (canTakeEvents()) {
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
                 updateCounter -= 5;
@@ -305,7 +312,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
             }
 
             if (!chooser.pickingInProgress() && !uploader.uploadInProgress()) {
-                return super.keyPressed(mouseX, mouseY, keyCode);
+                return super.charTyped(keyChar, keyCode);
             }
         }
 
@@ -372,9 +379,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
         enableClipping(bottom);
 
         float yPos = height * 0.75F;
-        float xPos1 = width / 4;
+        float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
-        float scale = height / 4;
+        float scale = height / 4F;
 
         renderPlayerModel(localPlayer, xPos1, yPos, scale, horizon - mouseY, mouseX, partialTick);
         renderPlayerModel(remotePlayer, xPos2, yPos, scale, horizon - mouseY, mouseX, partialTick);
@@ -452,7 +459,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
 
         rotatef(rot, 0, 1, 0);
 
-        float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
+        float lookFactor = (float) Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float) Math.atan((xPosition - mouseX) / 20) * 30;
 
         thePlayer.rotationYawHead = lookX * lookFactor;
@@ -465,15 +472,15 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
         disableColorMaterial();
     }
 
-/*
- *       /   |
- *     1/    |o      Q = t + q
- *     /q    |       x = xPosition - mouseX
- *     *-----*       sin(q) = o             cos(q) = x        tan(q) = o/x
- *   --|--x------------------------------------
- *     |
- *      mouseX
- */
+    /*
+     *       /   |
+     *     1/    |o      Q = t + q
+     *     /q    |       x = xPosition - mouseX
+     *     *-----*       sin(q) = o             cos(q) = x        tan(q) = o/x
+     *   --|--x------------------------------------
+     *     |
+     *      mouseX
+     */
 
     private void enableClipping(int yBottom) {
         GL11.glPopAttrib();

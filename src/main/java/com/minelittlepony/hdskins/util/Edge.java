@@ -1,12 +1,14 @@
 package com.minelittlepony.hdskins.util;
 
+import java.util.function.Consumer;
+
 public abstract class Edge {
 
     private boolean previousState;
 
-    private Callback callback;
+    private Consumer<Boolean> callback;
 
-    public Edge(Callback callback) {
+    public Edge(Consumer<Boolean> callback) {
         this.callback = callback;
     }
 
@@ -15,7 +17,7 @@ public abstract class Edge {
 
         if (state != previousState) {
             previousState = state;
-            callback.call(state);
+            callback.accept(state);
         }
     }
 
@@ -25,8 +27,4 @@ public abstract class Edge {
 
     protected abstract boolean nextState();
 
-    @FunctionalInterface
-    public interface Callback {
-        void call(boolean state);
-    }
 }

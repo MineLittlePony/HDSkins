@@ -4,15 +4,16 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import com.minelittlepony.hdskins.HDSkins;
 
+import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.api.IEnvironment;
+
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,8 +32,8 @@ public class Config extends HDSkins {
     }
 
     @Override
-    public File getAssetsDirectory() {
-        return FMLPaths.CONFIGDIR.get().getParent().toAbsolutePath().toFile();
+    public Path getAssetsDirectory() {
+        return Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.ASSETSDIR.get()).get();
     }
 
     @Override

@@ -1,5 +1,11 @@
 package com.minelittlepony.hdskins;
 
+import com.minelittlepony.hdskins.gui.EntityPlayerModel;
+import com.minelittlepony.hdskins.gui.Feature;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinUpload;
+import com.minelittlepony.hdskins.util.MoreHttpResponses;
+import com.minelittlepony.hdskins.util.NetClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -11,13 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
-import com.minelittlepony.hdskins.gui.EntityPlayerModel;
-import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.resources.PreviewTextureManager;
-import com.minelittlepony.hdskins.server.SkinServer;
-import com.minelittlepony.hdskins.server.SkinUpload;
-import com.minelittlepony.hdskins.util.MoreHttpResponses;
-import com.minelittlepony.hdskins.util.NetClient;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;

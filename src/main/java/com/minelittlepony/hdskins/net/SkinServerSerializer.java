@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.server;
+package com.minelittlepony.hdskins.net;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -19,7 +19,7 @@ public class SkinServerSerializer implements JsonSerializer<SkinServer>, JsonDes
         ServerType serverType = src.getClass().getAnnotation(ServerType.class);
 
         if (serverType == null) {
-            throw new JsonIOException("Skin server class did not have a type: " + typeOfSrc);
+            throw new JsonIOException("Skin net class did not have a type: " + typeOfSrc);
         }
 
         JsonObject obj = context.serialize(src).getAsJsonObject();

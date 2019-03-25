@@ -6,16 +6,15 @@ import com.minelittlepony.hdskins.upload.ThreadSaveFilePNG;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.NativeImage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-import javax.swing.UIManager;
 
 public class SkinChooser {
 
@@ -27,14 +26,6 @@ public class SkinChooser {
     public static final String ERR_INVALID = "hdskins.error.invalid";
 
     public static final String MSG_CHOOSE = "hdskins.choose";
-
-    static {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private static boolean isPowerOfTwo(int number) {
         return number != 0 && (number & number - 1) == 0;
@@ -56,6 +47,7 @@ public class SkinChooser {
         return openFileThread != null;
     }
 
+    @Nullable
     public String getStatus() {
         return status;
     }
@@ -100,12 +92,8 @@ public class SkinChooser {
             return ERR_EXT;
         }
 
-        try {
-            BufferedImage chosenImage = ImageIO.read(skinFile);
-
-            if (chosenImage == null) {
-                return ERR_OPEN;
-            }
+        try (FileInputStream in = new FileInputStream(skinFile)) {
+            NativeImage chosenImage = NativeImage.read(in);
 
             if (!acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight())) {
                 return ERR_INVALID;

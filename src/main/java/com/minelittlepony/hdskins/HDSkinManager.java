@@ -17,11 +17,11 @@ import com.minelittlepony.hdskins.gui.GuiSkins;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
-import com.minelittlepony.hdskins.server.BethlehemSkinServer;
-import com.minelittlepony.hdskins.server.LegacySkinServer;
-import com.minelittlepony.hdskins.server.ServerType;
-import com.minelittlepony.hdskins.server.SkinServer;
-import com.minelittlepony.hdskins.server.ValhallaSkinServer;
+import com.minelittlepony.hdskins.net.BethlehemSkinServer;
+import com.minelittlepony.hdskins.net.LegacySkinServer;
+import com.minelittlepony.hdskins.net.ServerType;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.ValhallaSkinServer;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.PlayerUtil;
 import com.minelittlepony.hdskins.util.ProfileTextureUtil;
@@ -41,16 +41,16 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SkinManager;
 import net.minecraft.util.ResourceLocation;
-import org.apache.commons.io.FileUtils;
+
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -191,7 +191,7 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
 
             // schedule texture loading on the main thread.
             TextureLoader.loadTexture(resource, new ThreadDownloadImageData(
-                    new File(HDSkins.getInstance().getAssetsDirectory(), "hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()),
+                    HDSkins.getInstance().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
                     DefaultPlayerSkin.getDefaultSkinLegacy(),
                     new ImageBufferDownloadHD(type, () -> {
@@ -242,7 +242,11 @@ public final class HDSkinManager implements IResourceManagerReloadListener {
     public void clearSkinCache() {
         logger.info("Clearing local player skin cache");
 
-        FileUtils.deleteQuietly(new File(HDSkins.getInstance().getAssetsDirectory(), "hd"));
+        try {
+            Files.deleteIfExists(HDSkins.getInstance().getAssetsDirectory().resolve("hd"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         skins.invalidateAll();
         parseSkins();

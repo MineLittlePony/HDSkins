@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.server;
+package com.minelittlepony.hdskins.net;
 
 import net.minecraft.util.Session;
 

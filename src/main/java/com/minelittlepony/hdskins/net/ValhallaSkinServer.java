@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.server;
+package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.annotations.Expose;
@@ -198,7 +198,6 @@ public class ValhallaSkinServer implements SkinServer {
                 .toString();
     }
 
-    @SuppressWarnings("WeakerAccess")
     private static class AuthHandshake {
 
         private boolean offline;
@@ -206,7 +205,6 @@ public class ValhallaSkinServer implements SkinServer {
         private long verifyToken;
     }
 
-    @SuppressWarnings("WeakerAccess")
     private static class AuthResponse {
 
         private String accessToken;

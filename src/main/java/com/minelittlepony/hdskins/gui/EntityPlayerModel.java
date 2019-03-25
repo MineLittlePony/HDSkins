@@ -10,7 +10,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SkinManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -117,8 +116,8 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
     }
 
     @Override
-    public Entity getRidingEntity() {
-        return previewRiding ? this : null;
+    public boolean isPassenger() {
+        return previewRiding;
     }
 
     @Override

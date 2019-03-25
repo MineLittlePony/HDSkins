@@ -6,6 +6,7 @@ import javax.swing.filechooser.FileFilter;
 
 import java.io.File;
 
+@Deprecated // no more swing
 public class ThreadSaveFilePNG extends ThreadSaveFile {
 
     public ThreadSaveFilePNG(Minecraft minecraft, String dialogTitle, String filename, IFileCallback callback) {

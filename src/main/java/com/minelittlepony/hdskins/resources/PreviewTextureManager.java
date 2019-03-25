@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 /**
  * Manager for fetching preview textures. This ensures that multiple calls
- * to the skin server aren't done when fetching preview textures.
+ * to the skin net aren't done when fetching preview textures.
  */
 public class PreviewTextureManager {
 

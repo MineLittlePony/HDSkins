@@ -2,18 +2,18 @@ buildscript {
     repositories {
         jcenter()
         maven {
-            name 'forge'
-            url 'http://files.minecraftforge.net/maven'
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven'
         }
-        maven {
-            name = 'sponge'
-            url = 'https://repo.spongepowered.org/maven'
-        }
+//        maven {
+//            name = 'sponge'
+//            url = 'https://repo.spongepowered.org/maven'
+//        }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
-//        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+//        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
 
@@ -21,9 +21,9 @@ plugins {
     id 'org.ajoberstar.grgit' version '1.7.2'
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'org.spongepowered.mixin'
-//apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle'
+//apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 ext {
     revision = grgit.log().size()
@@ -46,44 +46,77 @@ group = project.group
 description = project.displayname
 
 minecraft {
-    version = project.minecraft_version + '-' + project.forge_version
-    mappings = project.mappings_version
-    runDir = 'run'
-    replace '@VERSION@', project.version
+    mappings channel: project.mappings_channel, version: project.mappings_version + '-' + project.minecraft_version
 
-    coreMod = 'com.minelittlepony.hdskins.coremod.CoreMod'
+    runs {
+        client {
+            workingDirectory file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                hdskins {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            client {
+                workingDirectory file('run')
+
+                property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+                property 'forge.logging.console.level', 'debug'
+
+                mods {
+                    hdskins {
+                        source sourceSets.main
+                    }
+                }
+            }
+        }
+    }
+
+//    coreMod = 'com.minelittlepony.hdskins.coremod.CoreMod'
 }
 
-mixin {
-    defaultObfuscationEnv notch
-}
+//mixin {
+//    defaultObfuscationEnv notch
+//}
 
 targetCompatibility = 1.8
 sourceCompatibility = 1.8
-sourceSets {
-    main {
-        ext.refMap = 'hdskins.mixin.refmap.json'
-    }
-}
-repositories {
-    maven {
-        url 'https://repo.spongepowered.org/maven'
-    }
-}
+//sourceSets {
+//    main {
+//        ext.refMap = 'hdskins.mixin.refmap.json'
+//    }
+//}
+//repositories {
+//    maven {
+//        url 'https://repo.spongepowered.org/maven'
+//    }
+//}
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.13.2-25.0.90'
-
+    minecraft "net.minecraftforge:forge:1.13.2-25.0.90"
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
     }
-    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
-        transitive = false
-    }
+//    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+//        transitive = false
+//    }
 }
 
 manifest {
-    attributes 'Implementation-Version': "${project.version} (git-${project.hash})"
+    attributes(
+            "Specification-Title": project.name,
+            "Specification-Vendor": project.name,
+            "Specification-Version": "${version}",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version} (git-${project.hash})",
+            "Implementation-Vendor": project.name,
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    )
 }
 
 archivesBaseName = "mod-${project.name.toLowerCase()}"
@@ -92,20 +125,14 @@ jar {
     classifier 'base'
     extension 'jar'
 }
-/*
+
 shadowJar {
-    extension 'litemod'
-    classifier "mc$minecraft.version"
+//    classifier "mc$minecraft.version"
 
     dependencies {
-        exclude dependency('org.spongepowered:mixin:')
+//        exclude dependency('org.spongepowered:mixin:')
         exclude 'META-INF/**'
     }
 
     relocate 'org.apache.http.entity.mime', 'com.voxelmodpack.repack.org.apache.http.entity.mime'
 }
-
-reobf {
-    shadowJar{}
-}
-*/

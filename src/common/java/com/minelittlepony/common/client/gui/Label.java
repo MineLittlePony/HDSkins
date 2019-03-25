@@ -1,6 +1,7 @@
 package com.minelittlepony.common.client.gui;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 
 /**
@@ -35,12 +36,13 @@ public class Label extends GuiButton {
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
-        Minecraft mc = Minecraft.getInstance();
+
+        FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
 
         if (center) {
-            drawCenteredString(mc.fontRenderer, GameGui.format(text), x, y, color);
+            drawCenteredString(fontRenderer, GameGui.format(text), x, y, color);
         } else {
-            drawString(mc.fontRenderer, GameGui.format(text), x, y, color);
+            drawString(fontRenderer, GameGui.format(text), x, y, color);
         }
     }
 }

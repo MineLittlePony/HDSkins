@@ -16,8 +16,9 @@ import com.minelittlepony.hdskins.HDSkins;
  *
  * @author Adam Mummery-Smith
  */
+<<<<<<< HEAD
 //TODO: No more swing
-@Deprecated
+@Deprecated // no more swing
 public abstract class ThreadOpenFile extends Thread implements IFileDialog {
 
     protected String dialogTitle;
@@ -64,7 +65,7 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
     }
 
     protected int showDialog(JFileChooser chooser) {
-        return chooser.showOpenDialog(InternalDialog.getAWTContext());
+        return chooser.showOpenDialog(null);
     }
 
     /**
