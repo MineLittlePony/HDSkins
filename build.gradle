@@ -57,36 +57,14 @@ sourceSets {
         compileClasspath += main.compileClasspath
     }
 
-    hdskins {
+    main {
         // HDSkins.
-        // TODO: Move to a separate project
-        compileClasspath += main.compileClasspath
         compileClasspath += common.output
         ext.refMap = 'hdskins.mixin.refmap.json'
-    }
-    client {
-        // Client-only code
-        compileClasspath += main.compileClasspath
-        compileClasspath += main.output
-        compileClasspath += common.output
-        compileClasspath += hdskins.output
-        ext.refMap = 'minelp.mixin.refmap.json'
-    }
-    main {
-        // Non-client code. Called main because gradle calls it that
-        // TODO: HorseLib.java
-
-        compileClasspath += common.output
     }
 
     // Litemod stuff, separated for future removal
     litemod {
-        compileClasspath += main.compileClasspath
-        compileClasspath += main.output
-        compileClasspath += client.output
-    }
-
-    hdskinslitemod {
         compileClasspath += main.compileClasspath
         compileClasspath += litemod.output
         compileClasspath += hdskins.output
@@ -94,14 +72,7 @@ sourceSets {
 
     fml {
         compileClasspath += main.compileClasspath
-        compileClasspath += main.output
-        compileClasspath += client.output
-    }
-
-    hdskinsfml {
-        compileClasspath += main.compileClasspath
         compileClasspath += litemod.output
-        compileClasspath += hdskins.output
     }
 }
 
@@ -115,28 +86,17 @@ minecraft {
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
 
-            // replace '@VERSION@', project.version
-
             mods {
-                minelittlepony {
+                hdskins {
                     source sourceSets.common
-                    source sourceSets.hdskins
-                    source sourceSets.client
                     source sourceSets.main
-
-                    // replace '@VERSION@', project.version
                 }
-
-                // replace '@VERSION@', project.version
             }
         }
     }
-
-    // replace '@VERSION@', project.version
 }
 
 repositories {
-//    jcenter()
     maven {
         url = 'https://repo.spongepowered.org/maven'
     }
@@ -161,33 +121,10 @@ manifest {
 jar {
     from sourceSets.common.output
     from sourceSets.main.output
-
-    from sourceSets.hdskins.output
-    from sourceSets.hdskinsfml.output
-
-    from sourceSets.client.output
     from sourceSets.fml.output
-
-//    replace '@VERSION@', project.version
 
     classifier 'base'
     extension 'jar'
-}
-
-task copyBGPones(type: Copy) {
-
-    def illegals = /[^a-z0-9_\/.-]/
-
-    from "skins/Background Ponies"
-    // TODO: What is tempDir????
-    into temporaryDir
-
-    eachFile {
-        if (it.name =~ illegals){
-            logger.warn("Sanitizing file with illegal characters: ${it.path}")
-            it.name = it.name.replaceAll(/\s/, '_').replaceAll(illegals, '')
-        }
-    }
 }
 
 /*
@@ -195,19 +132,8 @@ shadowJar {
 //    classifier "mc$minecraft.version"
 
     from sourceSets.common.output
-
-    from sourceSets.hdskins.output
-    from sourceSets.hdskinsfml.output
-
-    from sourceSets.client.output
+    from sourceSets.main.output
     from sourceSets.fml.output
-
-    exclude "/assets/minelittlepony/textures/entity/pony"
-    from(copyBGPones) {
-        into "/assets/minelittlepony/textures/entity/pony"
-    }
-
-//    replace '@VERSION@', project.version
 
     dependencies {
         exclude dependency('deobf.org.ow2.asm:')
@@ -234,28 +160,6 @@ task srgJar(type: Jar) {
 
     from sourceSets.hdskins.output
 
-//    replace '@VERSION@', project.version
-
     classifier "mc$minecraft.version-srg"
 }
 */
-
-task horseLib(type: Jar) {
-    from sourceSets.common.output
-
-    from sourceSets.main.output
-
-//    replace '@VERSION@', project.version
-
-    baseName = "HoarseLib"
-}
-
-//sourceJar.enabled = false
-
-//reobf {
-//    srgJar {
-//        mappingType = 'SEARGE'
-//    }
-//
-//    shadowJar{}
-//}
