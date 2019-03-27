@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[25,)"
-[[hdskins]]
+[[mods]]
 modId="hdskins"
 version="5.0.0"
 displayName="HD Skins"
