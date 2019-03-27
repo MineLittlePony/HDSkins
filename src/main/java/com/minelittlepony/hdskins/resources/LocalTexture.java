@@ -11,9 +11,10 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.SkinManager.SkinAvailableCallback;
 import net.minecraft.util.ResourceLocation;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class LocalTexture {
 
@@ -91,18 +92,17 @@ public class LocalTexture {
         });
     }
 
-    public void setLocal(File file) {
-        if (!file.exists()) {
+    public void setLocal(Path file) {
+        if (!Files.exists(file)) {
             return;
         }
 
         clearLocal();
 
-        try (FileInputStream input = new FileInputStream(file)) {
-            NativeImage image = NativeImage.read(input);
-            NativeImage nativeImage = new ImageBufferDownloadHD().parseUserSkin(image);
+        try (InputStream input = Files.newInputStream(file)) {
+            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.read(input));
 
-            local = new DynamicTexture(nativeImage);
+            local = new DynamicTexture(image);
             localResource = textureManager.getDynamicTextureLocation("localSkinPreview", local);
         } catch (IOException e) {
             e.printStackTrace();

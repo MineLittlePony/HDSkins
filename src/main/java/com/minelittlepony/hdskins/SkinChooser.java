@@ -7,12 +7,12 @@ import com.minelittlepony.hdskins.util.MoreHttpResponses;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
@@ -67,7 +67,7 @@ public class SkinChooser {
             if (dialogResult == 0) {
                 try (MoreHttpResponses response = uploader.downloadSkin().get()) {
                     if (response.ok()) {
-                        FileUtils.copyInputStreamToFile(response.getInputStream(), file);
+                        Files.copy(response.getInputStream(), file);
                     }
                 } catch (IOException | InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -78,21 +78,21 @@ public class SkinChooser {
         openFileThread.start();
     }
 
-    public void selectFile(File skinFile) {
+    public void selectFile(Path skinFile) {
         status = evaluateAndSelect(skinFile);
     }
 
     @Nullable
-    private String evaluateAndSelect(File skinFile) {
-        if (!skinFile.exists()) {
+    private String evaluateAndSelect(Path skinFile) {
+        if (!Files.exists(skinFile)) {
             return ERR_UNREADABLE;
         }
 
-        if (!FilenameUtils.isExtension(skinFile.getName(), new String[]{"png", "PNG"})) {
+        if (!FilenameUtils.isExtension(skinFile.getFileName().toString(), new String[]{"png", "PNG"})) {
             return ERR_EXT;
         }
 
-        try (FileInputStream in = new FileInputStream(skinFile)) {
+        try (InputStream in = Files.newInputStream(skinFile)) {
             NativeImage chosenImage = NativeImage.read(in);
 
             if (!acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight())) {

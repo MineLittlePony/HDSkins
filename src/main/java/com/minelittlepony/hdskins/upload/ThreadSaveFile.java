@@ -15,7 +15,7 @@ public abstract class ThreadSaveFile extends ThreadOpenFile {
 
     protected String filename;
 
-    protected ThreadSaveFile(Minecraft minecraft, String dialogTitle, String initialFilename, IFileCallback callback) throws IllegalStateException {
+    protected ThreadSaveFile(Minecraft minecraft, String dialogTitle, String initialFilename, IFileSystemCallback callback) throws IllegalStateException {
         super(minecraft, dialogTitle, callback);
         this.filename = initialFilename;
     }

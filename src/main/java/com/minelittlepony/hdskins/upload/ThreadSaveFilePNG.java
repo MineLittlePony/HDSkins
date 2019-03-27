@@ -9,7 +9,7 @@ import java.io.File;
 //TODO: No more swing
 public class ThreadSaveFilePNG extends ThreadSaveFile {
 
-    public ThreadSaveFilePNG(Minecraft minecraft, String dialogTitle, String filename, IFileCallback callback) {
+    public ThreadSaveFilePNG(Minecraft minecraft, String dialogTitle, String filename, IFileSystemCallback callback) {
         super(minecraft, dialogTitle, filename, callback);
     }
 

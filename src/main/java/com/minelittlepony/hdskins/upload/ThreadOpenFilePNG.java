@@ -13,7 +13,7 @@ import java.io.File;
 // TODO: No more swing
 public class ThreadOpenFilePNG extends ThreadOpenFile {
 
-    public ThreadOpenFilePNG(Minecraft minecraft, String dialogTitle, IFileCallback callback) throws IllegalStateException {
+    public ThreadOpenFilePNG(Minecraft minecraft, String dialogTitle, IFileSystemCallback callback) throws IllegalStateException {
         super(minecraft, dialogTitle, callback);
     }
 

@@ -17,7 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -61,7 +61,7 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
         }, Minecraft.getInstance()::addScheduledTask); // run on main thread
     }
 
-    public void setLocalTexture(File skinTextureFile, Type type) {
+    public void setLocalTexture(Path skinTextureFile, Type type) {
         if (type == Type.SKIN) {
             skin.setLocal(skinTextureFile);
         } else if (type == Type.ELYTRA) {

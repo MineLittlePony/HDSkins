@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.upload;
 import net.minecraft.client.Minecraft;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
@@ -25,9 +26,9 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
     /**
      * Delegate to call back when the dialog box is closed
      */
-    protected final IFileCallback parentScreen;
+    protected final IFileSystemCallback parentScreen;
 
-    protected ThreadOpenFile(Minecraft minecraft, String dialogTitle, IFileCallback callback) throws IllegalStateException {
+    protected ThreadOpenFile(Minecraft minecraft, String dialogTitle, IFileSystemCallback callback) throws IllegalStateException {
         if (minecraft.mainWindow.isFullscreen()) {
             throw new IllegalStateException("Cannot open an awt window whilst minecraft is in full screen mode!");
         }
@@ -62,7 +63,7 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
             }
         }
 
-        parentScreen.onDialogClosed(f, dialogResult);
+        parentScreen.onDialogClosed(Paths.get(f.getAbsolutePath()), dialogResult);
     }
 
     protected int showDialog(JFileChooser chooser) {

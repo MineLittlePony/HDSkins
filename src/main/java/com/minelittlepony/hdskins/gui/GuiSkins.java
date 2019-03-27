@@ -242,7 +242,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     @Override
     public void onDrop(List<Path> paths) {
         paths.stream().findFirst().ifPresent(path -> {
-            chooser.selectFile(path.toFile());
+            chooser.selectFile(path);
             updateButtons();
         });
     }

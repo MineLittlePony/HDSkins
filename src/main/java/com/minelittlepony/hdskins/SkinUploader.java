@@ -25,8 +25,9 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -70,8 +71,8 @@ public class SkinUploader implements Closeable {
 
     private final Object skinLock = new Object();
 
-    private File pendingLocalSkin;
-    private File localSkin;
+    private Path pendingLocalSkin;
+    private URI localSkin;
 
     private final ISkinUploadHandler listener;
 
@@ -189,7 +190,7 @@ public class SkinUploader implements Closeable {
         sendingSkin = true;
         status = statusMsg;
 
-        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin.toURI(), skinMetadata)).handle((response, throwable) -> {
+        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handle((response, throwable) -> {
             if (throwable == null) {
                 logger.info("Upload completed with: %s", response);
                 setError(null);
@@ -242,7 +243,7 @@ public class SkinUploader implements Closeable {
         remotePlayer.releaseTextures();
     }
 
-    public void setLocalSkin(File skinFile) {
+    public void setLocalSkin(Path skinFile) {
         mc.addScheduledTask(localPlayer::releaseTextures);
 
         synchronized (skinLock) {
@@ -258,7 +259,7 @@ public class SkinUploader implements Closeable {
             if (pendingLocalSkin != null) {
                 System.out.println("Set " + skinType + " " + pendingLocalSkin);
                 localPlayer.setLocalTexture(pendingLocalSkin, skinType);
-                localSkin = pendingLocalSkin;
+                localSkin = pendingLocalSkin.toUri();
                 pendingLocalSkin = null;
                 listener.onSetLocalSkin(skinType);
             }
