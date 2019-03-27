@@ -1,8 +1,7 @@
 package com.minelittlepony.hdskins;
 
+import com.minelittlepony.hdskins.upload.FileSystem;
 import com.minelittlepony.hdskins.upload.IFileDialog;
-import com.minelittlepony.hdskins.upload.ThreadOpenFilePNG;
-import com.minelittlepony.hdskins.upload.ThreadSaveFilePNG;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 
 import net.minecraft.client.Minecraft;
@@ -31,6 +30,7 @@ public class SkinChooser {
         return number != 0 && (number & number - 1) == 0;
     }
 
+    @Nullable
     private IFileDialog openFileThread;
 
     private final SkinUploader uploader;
@@ -52,19 +52,25 @@ public class SkinChooser {
         return status;
     }
 
-    public void openBrowsePNG(Minecraft mc, String title) {
-        openFileThread = new ThreadOpenFilePNG(mc, title, (file, dialogResult) -> {
+    public void openBrowsePNG(String title) {
+        openFileThread = FileSystem.openRead(title)
+                .filter(".png", "PNG Files (*.png)")
+                .andThen((file, success) -> {
             openFileThread = null;
-            if (dialogResult == 0) {
+
+            if (success) {
                 selectFile(file);
             }
-        });
-        openFileThread.start();
+        }).launch();
     }
 
-    public void openSavePNG(Minecraft mc, String title) {
-        openFileThread = new ThreadSaveFilePNG(mc, title, mc.getSession().getUsername() + ".png", (file, dialogResult) -> {
-            if (dialogResult == 0) {
+    public void openSavePNG(String title, String filename) {
+        openFileThread = FileSystem.openWrite(title)
+                .filter(".png", "PNG Files (*.png)")
+                .andThen((file, success) -> {
+            openFileThread = null;
+
+            if (success) {
                 try (MoreHttpResponses response = uploader.downloadSkin().get()) {
                     if (response.ok()) {
                         Files.copy(response.getInputStream(), file);
@@ -73,9 +79,7 @@ public class SkinChooser {
                     e.printStackTrace();
                 }
             }
-            openFileThread = null;
-        });
-        openFileThread.start();
+        }).launch();
     }
 
     public void selectFile(Path skinFile) {

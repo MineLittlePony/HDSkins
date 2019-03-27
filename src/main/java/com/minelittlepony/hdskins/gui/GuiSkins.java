@@ -144,7 +144,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         addButton(new Label(width / 2 + 34, 34, "hdskins.net", 0xffffff));
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender -> {
-            chooser.openBrowsePNG(mc, format("hdskins.open.title"));
+            chooser.openBrowsePNG(format("hdskins.open.title"));
         })).setEnabled(!mc.mainWindow.isFullscreen());
 
         addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 20, 48, 20, "hdskins.options.chevy", sender -> {
@@ -156,7 +156,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20, "hdskins.options.download", sender -> {
             if (uploader.canClear()) {
-                chooser.openSavePNG(mc, format("hdskins.save.title"));
+                chooser.openSavePNG(format("hdskins.save.title"), mc.getSession().getUsername());
             }
         })).setEnabled(uploader.canClear())
             .setTooltip("hdskins.options.download.title");
@@ -168,7 +168,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         })).setEnabled(uploader.canClear());
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender ->
-                    chooser.openBrowsePNG(mc, format("hdskins.open.title"))))
+                    chooser.openBrowsePNG(format("hdskins.open.title"))))
                 .setEnabled(!mc.mainWindow.isFullscreen());
 
         addButton(new Button(width / 2 - 50, height - 25, 100, 20, "hdskins.options.close", sender ->

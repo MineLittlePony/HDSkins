@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.upload;
 import net.minecraft.client.Minecraft;
 
 import java.io.File;
-import java.nio.file.Paths;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
@@ -18,23 +17,48 @@ import com.minelittlepony.hdskins.HDSkins;
  *
  * @author Adam Mummery-Smith
  */
-//TODO: No more swing
-public abstract class ThreadOpenFile extends Thread implements IFileDialog {
+@Deprecated
+class ThreadOpenFile extends Thread implements IFileDialog {
 
-    protected String dialogTitle;
+    private String dialogTitle;
+
+    private String extension;
+
+    private String description;
 
     /**
      * Delegate to call back when the dialog box is closed
      */
-    protected final IFileSystemCallback parentScreen;
+    private Callback callback;
 
-    protected ThreadOpenFile(Minecraft minecraft, String dialogTitle, IFileSystemCallback callback) throws IllegalStateException {
-        if (minecraft.mainWindow.isFullscreen()) {
+    ThreadOpenFile(String dialogTitle) throws IllegalStateException {
+        if (Minecraft.getInstance().mainWindow.isFullscreen()) {
             throw new IllegalStateException("Cannot open an awt window whilst minecraft is in full screen mode!");
         }
 
-        this.parentScreen = callback;
         this.dialogTitle = dialogTitle;
+    }
+
+    @Override
+    public IFileDialog andThen(Callback callback) {
+        this.callback = callback;
+
+        start();
+
+        return this;
+    }
+
+    public IFileDialog filter(String extension, String description) {
+        this.extension = extension;
+        this.description = description;
+
+        return this;
+    }
+
+    @Override
+    public IFileDialog launch() {
+        start();
+        return this;
     }
 
     @Override
@@ -48,7 +72,17 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
         if (!StringUtils.isBlank(last)) {
             fileDialog.setSelectedFile(new File(last));
         }
-        fileDialog.setFileFilter(getFileFilter());
+        fileDialog.setFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                return f.isDirectory() || f.getName().toLowerCase().endsWith(extension);
+            }
+
+            @Override
+            public String getDescription() {
+                return description;
+            }
+        });
 
         int dialogResult = showDialog(fileDialog);
 
@@ -59,23 +93,18 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
             config.save();
 
             if (!f.exists() && f.getName().indexOf('.') == -1) {
-                f = appendMissingExtension(f);
+                f = appendExtension(f);
             }
         }
 
-        parentScreen.onDialogClosed(Paths.get(f.getAbsolutePath()), dialogResult);
+        callback.onDialogClosed(f.toPath(), dialogResult == 0);
     }
 
     protected int showDialog(JFileChooser chooser) {
         return chooser.showOpenDialog(null);
     }
 
-    /**
-     * Subclasses should override this to return a file filter
-     */
-    protected abstract FileFilter getFileFilter();
-
-    protected File appendMissingExtension(File file) {
-        return file;
+    protected File appendExtension(File file) {
+        return new File(file.getParentFile(), file.getName() + extension);
     }
 }

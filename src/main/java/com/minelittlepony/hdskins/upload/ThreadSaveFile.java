@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.upload;
 
-import net.minecraft.client.Minecraft;
-
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -10,13 +8,13 @@ import java.io.File;
 /**
  * Opens an awt "Save File" dialog
  */
-//TODO: No more swing
-public abstract class ThreadSaveFile extends ThreadOpenFile {
+@Deprecated
+class ThreadSaveFile extends ThreadOpenFile {
 
-    protected String filename;
+    private String filename;
 
-    protected ThreadSaveFile(Minecraft minecraft, String dialogTitle, String initialFilename, IFileSystemCallback callback) throws IllegalStateException {
-        super(minecraft, dialogTitle, callback);
+    ThreadSaveFile(String dialogTitle, String initialFilename) throws IllegalStateException {
+        super(dialogTitle);
         this.filename = initialFilename;
     }
 
