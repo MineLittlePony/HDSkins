@@ -21,7 +21,7 @@ class ThreadSaveFile extends ThreadOpenFile {
     @Override
     protected int showDialog(JFileChooser chooser) {
         do {
-            chooser.setSelectedFile(new File(filename));
+            chooser.setSelectedFile(appendExtension(new File(filename)));
 
             int result = chooser.showSaveDialog(null);
 

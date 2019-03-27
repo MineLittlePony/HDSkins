@@ -105,6 +105,10 @@ class ThreadOpenFile extends Thread implements IFileDialog {
     }
 
     protected File appendExtension(File file) {
-        return new File(file.getParentFile(), file.getName() + extension);
+        if (!file.getName().endsWith(extension)) {
+            return new File(file.getParentFile(), file.getName() + extension);
+        }
+        
+        return file;
     }
 }

@@ -4,7 +4,6 @@ import com.minelittlepony.hdskins.upload.FileSystem;
 import com.minelittlepony.hdskins.upload.IFileDialog;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
 
@@ -35,9 +34,7 @@ public class SkinChooser {
 
     private final SkinUploader uploader;
 
-
     private volatile String status = MSG_CHOOSE;
-
 
     public SkinChooser(SkinUploader uploader) {
         this.uploader = uploader;
@@ -65,7 +62,7 @@ public class SkinChooser {
     }
 
     public void openSavePNG(String title, String filename) {
-        openFileThread = FileSystem.openWrite(title)
+        openFileThread = FileSystem.openWrite(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             openFileThread = null;
