@@ -5,14 +5,9 @@ buildscript {
             name = 'forge'
             url = 'http://files.minecraftforge.net/maven'
         }
-//        maven {
-//            name = 'sponge'
-//            url = 'https://repo.spongepowered.org/maven'
-//        }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-//        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
@@ -22,8 +17,8 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
-//apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'eclipse'
 
 ext {
     revision = grgit.log().size()
@@ -45,6 +40,23 @@ if (project.release == 'SNAPSHOT') {
 group = project.group
 description = project.displayname
 
+sourceSets {
+    common {
+        // code shared between HDSkins and MineLP mods
+        compileClasspath += main.compileClasspath
+    }
+
+    main {
+        compileClasspath += common.output
+    }
+
+    fml {
+        compileClasspath += main.compileClasspath
+        compileClasspath += common.output
+        compileClasspath += main.output
+    }
+}
+
 minecraft {
     mappings channel: project.mappings_channel, version: project.mappings_version + '-' + project.minecraft_version
 
@@ -57,54 +69,26 @@ minecraft {
 
             mods {
                 hdskins {
+                    source sourceSets.common
                     source sourceSets.main
-                }
-            }
-        }
-        server {
-            client {
-                workingDirectory file('run')
-
-                property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-                property 'forge.logging.console.level', 'debug'
-
-                mods {
-                    hdskins {
-                        source sourceSets.main
-                    }
+                    source sourceSets.fml
                 }
             }
         }
     }
-
-//    coreMod = 'com.minelittlepony.hdskins.coremod.CoreMod'
 }
-
-//mixin {
-//    defaultObfuscationEnv notch
-//}
 
 targetCompatibility = 1.8
 sourceCompatibility = 1.8
-//sourceSets {
-//    main {
-//        ext.refMap = 'hdskins.mixin.refmap.json'
-//    }
-//}
-//repositories {
-//    maven {
-//        url 'https://repo.spongepowered.org/maven'
-//    }
-//}
+compileJava.sourceCompatibility = '1.8'
+compileJava.targetCompatibility = '1.8'
+
 dependencies {
-    minecraft "net.minecraftforge:forge:1.13.2-25.0.90"
+    minecraft "net.minecraftforge:forge:" + project.minecraft_version + "-" + project.forge_version
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
     }
-//    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
-//        transitive = false
-//    }
 }
 
 manifest {
@@ -127,10 +111,7 @@ jar {
 }
 
 shadowJar {
-//    classifier "mc$minecraft.version"
-
     dependencies {
-//        exclude dependency('org.spongepowered:mixin:')
         exclude 'META-INF/**'
     }
 
