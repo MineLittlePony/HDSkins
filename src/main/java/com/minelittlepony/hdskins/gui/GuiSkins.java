@@ -21,7 +21,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
@@ -31,7 +30,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.item.ItemArmorDyeable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -43,7 +41,6 @@ import org.lwjgl.opengl.GL11;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 import static net.minecraft.client.renderer.GlStateManager.*;
@@ -51,6 +48,7 @@ import static net.minecraft.client.renderer.GlStateManager.*;
 public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
 
     private int updateCounter = 0;
+    private float lastPartialTick;
 
     private Button btnBrowse;
     private FeatureButton btnUpload;
@@ -78,9 +76,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     protected final SkinUploader uploader;
     protected final SkinChooser chooser;
 
-    protected final CubeMap panorama;
+    private final RenderSkybox panorama = new RenderSkybox(new RenderSkyboxCube(getBackground()));
 
-    private FileDrop dropper = FileDrop.newDropEvent(this);
+    private final FileDrop dropper = FileDrop.newDropEvent(this);
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled) {
         @Override
@@ -115,12 +113,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         uploader = new SkinUploader(servers, localPlayer, remotePlayer, this);
         chooser = new SkinChooser(uploader);
-        panorama = new CubeMap(this);
-        initPanorama();
     }
 
-    protected void initPanorama() {
-        panorama.setSource("hdskins:textures/cubemaps/cubemap0_%d.png");
+    protected ResourceLocation getBackground() {
+        return new ResourceLocation("hdskins:textures/cubemaps/cubemap0_%d.png");
     }
 
     protected EntityPlayerModel getModel(GameProfile profile) {
@@ -141,8 +137,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
     @Override
     public void initGui() {
-        panorama.init();
-
         dropper.subscribe();
 
         addButton(new Label(width / 2, 10, "hdskins.manager", 0xffffff, true));
@@ -367,8 +361,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         jumpKey.update();
         sneakKey.update();
 
-        float deltaTime = panorama.getDelta(partialTick);
-        panorama.render(partialTick, zLevel);
+        panorama.render(partialTick);
+
+        float deltaTime = updateCounter + partialTick - lastPartialTick;
+        lastPartialTick = updateCounter + partialTick;
 
         int bottom = height - 40;
         int mid = width / 2;
