@@ -9,7 +9,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
-@EventBusSubscriber(modid = "hdskins")
+@EventBusSubscriber(modid = HDSkins.MOD_ID)
 public class MainMenuListener {
 
     @SubscribeEvent

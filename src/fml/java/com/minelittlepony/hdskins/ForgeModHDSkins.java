@@ -20,7 +20,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-@Mod("hdskins")
+@Mod(HDSkins.MOD_ID)
 public class ForgeModHDSkins implements IModUtilities {
 
     private HDSkins hdskins = new HDSkins(this);

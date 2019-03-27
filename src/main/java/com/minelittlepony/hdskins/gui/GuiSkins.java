@@ -116,7 +116,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     protected ResourceLocation getBackground() {
-        return new ResourceLocation("hdskins:textures/cubemaps/cubemap0_%d.png");
+        return new ResourceLocation(HDSkins.MOD_ID, "textures/cubemaps/cubemap0_%d.png");
     }
 
     protected EntityPlayerModel getModel(GameProfile profile) {

@@ -68,6 +68,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public final class HDSkins {
+    public static final String MOD_ID = "hdskins";
     public static final String MOD_NAME = "HD Skins";
     public static final String VERSION = "5.0.0";
 
