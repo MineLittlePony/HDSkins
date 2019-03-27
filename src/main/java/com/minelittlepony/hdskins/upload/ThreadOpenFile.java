@@ -43,8 +43,6 @@ class ThreadOpenFile extends Thread implements IFileDialog {
     public IFileDialog andThen(Callback callback) {
         this.callback = callback;
 
-        start();
-
         return this;
     }
 
