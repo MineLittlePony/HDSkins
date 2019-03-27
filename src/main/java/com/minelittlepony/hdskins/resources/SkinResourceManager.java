@@ -9,7 +9,6 @@ import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,57 +27,71 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
 
+    private static final Gson gson = new Gson();
+
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private Map<UUID, Skin> uuidSkins = Maps.newHashMap();
     private Map<String, Skin> namedSkins = Maps.newHashMap();
+
     private Map<ResourceLocation, Future<ResourceLocation>> inProgress = Maps.newHashMap();
     private Map<ResourceLocation, ResourceLocation> converted = Maps.newHashMap();
 
     @Override
     public void onResourceManagerReload(IResourceManager resourceManager) {
+
         uuidSkins.clear();
         namedSkins.clear();
+
         executor.shutdownNow();
         executor = Executors.newSingleThreadExecutor();
+
         inProgress.clear();
         converted.clear();
+
         for (String domain : resourceManager.getResourceNamespaces()) {
             try {
-                for (IResource res : resourceManager.getAllResources(new ResourceLocation(domain, "textures/skins/skins.json"))) {
-                    try {
-                        SkinData data = getSkinData(res.getInputStream());
-                        for (Skin s : data.skins) {
-                            if (s.uuid != null) {
-                                uuidSkins.put(s.uuid, s);
-                            }
-                            if (s.name != null) {
-                                namedSkins.put(s.name, s);
-                            }
-                        }
-                    } catch (JsonParseException je) {
-                        logger.warn("Invalid skins.json in " + res.getPackName(), je);
-                    }
-                }
-            } catch (IOException e) {
-                // ignore
+                resourceManager.getAllResources(new ResourceLocation(domain, "textures/skins/skins.json")).forEach(this::loadResource);
+            } catch (IOException ignored) { }
+        }
+    }
+
+    private void loadResource(IResource resource) {
+        SkinData data = getSkinData(resource);
+
+        if (data == null) {
+            return;
+        }
+
+        for (Skin s : data.skins) {
+
+            if (s.uuid != null) {
+                uuidSkins.put(s.uuid, s);
+            }
+
+            if (s.name != null) {
+                namedSkins.put(s.name, s);
             }
         }
     }
 
-    private SkinData getSkinData(InputStream stream) {
-        try {
-            return new Gson().fromJson(new InputStreamReader(stream), SkinData.class);
-        } finally {
-            IOUtils.closeQuietly(stream);
-        }
+    @Nullable
+    private SkinData getSkinData(IResource resource) throws JsonParseException {
+
+        try (InputStream stream = resource.getInputStream()) {
+            return gson.fromJson(new InputStreamReader(stream), SkinData.class);
+        } catch (JsonParseException e) {
+            logger.warn("Invalid skins.json in " + resource.getPackName(), e);
+        } catch (IOException ignored) {}
+
+        return null;
     }
 
     @Nullable
     public ResourceLocation getPlayerTexture(GameProfile profile, Type type) {
-        if (type != Type.SKIN)
-            // not supported
-            return null;
+        if (type != Type.SKIN) {
+            return null; // not supported
+        }
 
         Skin skin = getSkin(profile);
         if (skin != null) {
@@ -97,31 +110,35 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
     @Nullable
     public ResourceLocation getConvertedResource(@Nullable ResourceLocation res) {
         loadSkinResource(res);
+
         return converted.get(res);
     }
 
     private void loadSkinResource(@Nullable final ResourceLocation res) {
-        if (res != null) {
-            // read and convert in a new thread
-            this.inProgress.computeIfAbsent(res, r -> CompletableFuture.supplyAsync(new ImageLoader(r), executor).whenComplete((loc, t) -> {
-                if (loc != null) {
-                    converted.put(res, loc);
-                } else {
-                    LogManager.getLogger().warn("Errored while processing {}. Using original.", res, t);
-                    converted.put(res, res);
-                }
-            }));
+        if (res != null) { // read and convert in a new thread
+            inProgress.computeIfAbsent(res, this::computeNewSkinResource);
         }
+    }
 
+    private CompletableFuture<ResourceLocation> computeNewSkinResource(ResourceLocation res) {
+        return CompletableFuture.supplyAsync(new ImageLoader(res), executor).whenComplete((loc, t) -> {
+            if (loc != null) {
+                converted.put(res, loc);
+            } else {
+                LogManager.getLogger().warn("Errored while processing {}. Using original.", res, t);
+                converted.put(res, res);
+            }
+        });
     }
 
     @Nullable
     private Skin getSkin(GameProfile profile) {
-        Skin skin = this.uuidSkins.get(profile.getId());
+        Skin skin = uuidSkins.get(profile.getId());
+
         if (skin == null) {
-            skin = this.namedSkins.get(profile.getName());
+            return namedSkins.get(profile.getName());
         }
+
         return skin;
     }
-
 }

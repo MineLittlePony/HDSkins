@@ -5,17 +5,21 @@ import net.minecraft.util.ResourceLocation;
 import java.util.List;
 import java.util.UUID;
 
-@SuppressWarnings("unused")
-class SkinData {
+import com.google.gson.annotations.Expose;
 
+class SkinData {
+    @Expose
     List<Skin> skins;
 }
 
-@SuppressWarnings("unused")
 class Skin {
-
+    @Expose
     String name;
+
+    @Expose
     UUID uuid;
+
+    @Expose
     String skin;
 
     public ResourceLocation getTexture() {
