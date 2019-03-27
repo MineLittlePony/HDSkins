@@ -7,9 +7,9 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = "hdskins")
+@EventBusSubscriber(modid = "hdskins")
 public class MainMenuListener {
 
     @SubscribeEvent
