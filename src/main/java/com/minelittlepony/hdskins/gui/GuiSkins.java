@@ -14,6 +14,7 @@ import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.GameProfile;
@@ -41,12 +42,13 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import static net.minecraft.client.renderer.GlStateManager.*;
 
-public class GuiSkins extends GameGui implements ISkinUploadHandler {
+public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
 
     private int updateCounter = 0;
 
@@ -77,6 +79,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
     protected final SkinChooser chooser;
 
     protected final CubeMap panorama;
+
+    private FileDrop dropper = FileDrop.newDropEvent(this);
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled) {
         @Override
@@ -137,14 +141,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
 
     @Override
     public void initGui() {
-       /* GLWindow.current().setDropTargetListener(files -> {
-            files.stream().findFirst().ifPresent(file -> {
-                chooser.selectFile(file);
-                updateButtons();
-            });
-        }); */
-
         panorama.init();
+
+        dropper.subscribe();
 
         addButton(new Label(width / 2, 10, "hdskins.manager", 0xffffff, true));
         addButton(new Label(34, 34, "hdskins.local", 0xffffff));
@@ -243,7 +242,15 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
 
         HDSkins.getInstance().clearSkinCache();
 
-//        GLWindow.current().clearDropTargetListener();
+        dropper.cancel();
+    }
+
+    @Override
+    public void onDrop(List<Path> paths) {
+        paths.stream().findFirst().ifPresent(path -> {
+            chooser.selectFile(path.toFile());
+            updateButtons();
+        });
     }
 
     @Override
