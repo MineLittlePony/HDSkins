@@ -1,12 +1,9 @@
-package com.minelittlepony.hdskins.litemod;
+package com.minelittlepony.hdskins;
 
 import com.google.gson.GsonBuilder;
-import com.minelittlepony.common.client.gui.GuiLiteHost;
-import com.minelittlepony.hdskins.HDSkinManager;
 import com.minelittlepony.hdskins.HDSkins;
-import com.minelittlepony.hdskins.gui.HDSkinsConfigPanel;
-import com.minelittlepony.hdskins.server.SkinServer;
-import com.minelittlepony.hdskins.server.SkinServerSerializer;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinServerSerializer;
 import com.mumfrey.liteloader.Configurable;
 import com.mumfrey.liteloader.InitCompleteListener;
 import com.mumfrey.liteloader.ViewportListener;
@@ -18,16 +15,18 @@ import com.mumfrey.liteloader.modconfig.ExposableOptions;
 import com.mumfrey.liteloader.util.ModUtilities;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 
-@ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = "hdskins")
-public class LiteModHDSkins extends HDSkins implements InitCompleteListener, AdvancedExposable {
+public class LiteModHDSkins implements IModUtilities, InitCompleteListener {
+
+    private final HDSkins hdskins = new HDSkins(this);
 
     @Override
     public String getName() {
@@ -40,26 +39,16 @@ public class LiteModHDSkins extends HDSkins implements InitCompleteListener, Adv
     }
 
     @Override
-    public void saveConfig() {
-        LiteLoader.getInstance().writeConfig(this);
-    }
-
-    @Override
     public void init(File configPath) {
+        Config config = new Config();
+        LiteLoader.getInstance().registerExposable(config, null);
 
-        // register config
-        LiteLoader.getInstance().registerExposable(this, null);
-        super.init();
+        hdskins.init(config);
     }
 
     @Override
     public void upgradeSettings(String version, File configPath, File oldConfigPath) {
-        HDSkinManager.INSTANCE.clearSkinCache();
-    }
-
-    @Override
-    public void setupGsonSerialiser(GsonBuilder gsonBuilder) {
-        gsonBuilder.registerTypeAdapter(SkinServer.class, new SkinServerSerializer());
+        hdskins.clearSkinCache();
     }
 
     @Override
@@ -69,17 +58,30 @@ public class LiteModHDSkins extends HDSkins implements InitCompleteListener, Adv
 
     @Override
     public void onInitCompleted(Minecraft minecraft, LiteLoader loader) {
-        initComplete();
+        hdskins.posInit();
     }
 
     @Override
-    protected <T extends Entity> void addRenderer(Class<T> type, Function<RenderManager, Render<T>> renderer) {
+    public <T extends Entity> void addRenderer(Class<T> type, Function<RenderManager, Render<T>> renderer) {
         ModUtilities.addRenderer(type, renderer.apply(Minecraft.getInstance().getRenderManager()));
     }
 
     @Override
-    public File getAssetsDirectory() {
-        return LiteLoader.getAssetsDirectory();
+    public Path getAssetsDirectory() {
+        return Paths.get(LiteLoader.getAssetsDirectory().toURI());
     }
 
+    @ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = "hdskins")
+    class Config extends AbstractConfig implements AdvancedExposable {
+
+        @Override
+        public void save() {
+            LiteLoader.getInstance().writeConfig(this);
+        }
+
+        @Override
+        public void setupGsonSerialiser(GsonBuilder gsonBuilder) {
+            gsonBuilder.registerTypeAdapter(SkinServer.class, new SkinServerSerializer());
+        }
+    }
 }
