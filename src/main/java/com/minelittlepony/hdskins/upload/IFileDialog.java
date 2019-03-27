@@ -1,6 +1,10 @@
 package com.minelittlepony.hdskins.upload;
 
-@Deprecated // no more swing
-public interface IFileDialog extends Runnable {
+/**
+ * A file dialog for opening and reading files.
+ * 
+ * Implementations may vary.
+ */
+public interface IFileDialog {
     void start();
 }

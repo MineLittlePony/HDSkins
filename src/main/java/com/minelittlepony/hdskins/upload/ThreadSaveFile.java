@@ -10,7 +10,7 @@ import java.io.File;
 /**
  * Opens an awt "Save File" dialog
  */
-@Deprecated // no more swing
+//TODO: No more swing
 public abstract class ThreadSaveFile extends ThreadOpenFile {
 
     protected String filename;
@@ -22,8 +22,6 @@ public abstract class ThreadSaveFile extends ThreadOpenFile {
 
     @Override
     protected int showDialog(JFileChooser chooser) {
-
-
         do {
             chooser.setSelectedFile(new File(filename));
 

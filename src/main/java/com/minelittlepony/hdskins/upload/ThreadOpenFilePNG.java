@@ -10,7 +10,7 @@ import java.io.File;
  *
  * @author Adam Mummery-Smith
  */
-@Deprecated // no more swing
+// TODO: No more swing
 public class ThreadOpenFilePNG extends ThreadOpenFile {
 
     public ThreadOpenFilePNG(Minecraft minecraft, String dialogTitle, IFileCallback callback) throws IllegalStateException {
