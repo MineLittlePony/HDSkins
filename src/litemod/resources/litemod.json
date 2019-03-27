@@ -1,0 +1,10 @@
+{
+    "name": "hdskins",
+    "mcversion": "${mcversion}",
+    "version": "${version}",
+    "revision": "${revision}",
+    "description": "${description}",
+    "mixinConfigs": [
+        "hdskins.mixin.json"
+    ]
+}

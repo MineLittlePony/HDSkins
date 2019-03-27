@@ -1,0 +1,11 @@
+modLoader="javafml"
+loaderVersion="[25,)"
+[[hdskins]]
+modId="hdskins"
+version="5.0.0"
+displayName="HD Skins"
+credits="Thanks for this example mod goes to Java"
+authors="Mumfrey, Killjoy1221, Sollace"
+description='''
+Separate skin server that also supports HD skins. Access via button on the main menu.
+'''
