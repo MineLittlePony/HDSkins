@@ -1,77 +1,52 @@
 package com.minelittlepony.hdskins.mixin;
 
-import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.PlayerSkins;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.resources.SkinManager;
 import net.minecraft.util.ResourceLocation;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 @Mixin(NetworkPlayerInfo.class)
 public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
 
-    private Map<Type, ResourceLocation> customTextures = new HashMap<>();
-    private Map<Type, MinecraftProfileTexture> customProfiles = new HashMap<>();
+    private PlayerSkins hdskinsPlayerSkins = new PlayerSkins(this);
 
-    private Map<Type, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
+    @Override
+    @Accessor("playerTextures")
+    public abstract Map<Type, ResourceLocation> getVanillaTextures();
 
-    @Shadow
-    @Final
-    private GameProfile gameProfile;
+    @Override
+    @Accessor("gameProfile")
+    public abstract GameProfile getGameProfile();
 
-    @Shadow
-    Map<Type, ResourceLocation> playerTextures;
-
-    @SuppressWarnings("InvalidMemberReference") // mc-dev bug?
     @Redirect(method = {"getLocationSkin", "getLocationCape", "getLocationElytra"},
-            at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
+            at = @At(value = "INVOKE",
+                    target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
+                    remap = false)
+    )
     // synthetic
     private Object getSkin(Map<Type, ResourceLocation> playerTextures, Object key) {
-        return getSkin(playerTextures, (Type) key);
-    }
-
-    // with generics
-    private ResourceLocation getSkin(Map<Type, ResourceLocation> playerTextures, Type type) {
-        if (this.customTextures.containsKey(type)) {
-            return this.customTextures.get(type);
-        }
-
-        return playerTextures.get(type);
+        return hdskinsPlayerSkins.getSkin(playerTextures, (Type) key);
     }
 
     @Nullable
     @Redirect(method = "getSkinType",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/NetworkPlayerInfo;skinType:Ljava/lang/String;"))
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/NetworkPlayerInfo;skinType:Ljava/lang/String;")
+    )
     private String getTextureModel(NetworkPlayerInfo self) {
-        String model = getModelFrom(customProfiles);
-        if (model != null) {
-            return model;
-        }
-        return getModelFrom(vanillaProfiles);
-    }
-
-    @Nullable
-    private static String getModelFrom(Map<Type, MinecraftProfileTexture> texture) {
-        if (texture.containsKey(Type.SKIN)) {
-            String model = texture.get(Type.SKIN).getMetadata("model");
-
-            return model != null ? model : "default";
-        }
-        return null;
+        return hdskinsPlayerSkins.getModel();
     }
 
     @Inject(method = "loadPlayerTextures",
@@ -80,12 +55,10 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                             + "Lcom/mojang/authlib/GameProfile;"
                             + "Lnet/minecraft/client/resources/SkinManager$SkinAvailableCallback;"
                             + "Z)V",
-                    shift = At.Shift.BEFORE))
+                    shift = At.Shift.BEFORE)
+    )
     private void onLoadTexture(CallbackInfo ci) {
-        HDSkins.getInstance().fetchAndLoadSkins(gameProfile, (type, location, profileTexture) -> {
-            customTextures.put(type, location);
-            customProfiles.put(type, profileTexture);
-        });
+        hdskinsPlayerSkins.fetch();
     }
 
     @Redirect(method = "loadPlayerTextures",
@@ -93,25 +66,14 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                     target = "Lnet/minecraft/client/resources/SkinManager;loadProfileTextures("
                             + "Lcom/mojang/authlib/GameProfile;"
                             + "Lnet/minecraft/client/resources/SkinManager$SkinAvailableCallback;"
-                            + "Z)V"))
+                            + "Z)V")
+    )
     private void redirectLoadPlayerTextures(SkinManager skinManager, GameProfile profile, SkinManager.SkinAvailableCallback callback, boolean requireSecure) {
-        skinManager.loadProfileTextures(profile, (typeIn, location, profileTexture) -> {
-            HDSkins.getInstance().parseSkin(profile, typeIn, location, profileTexture).thenAccept(v -> {
-                playerTextures.put(typeIn, location);
-                vanillaProfiles.put(typeIn, profileTexture);
-            });
-        }, requireSecure);
+        hdskinsPlayerSkins.load(skinManager, profile, callback, requireSecure);
     }
 
     @Override
     public void reloadTextures() {
-        synchronized (this) {
-            for (Map.Entry<Type, MinecraftProfileTexture> entry : customProfiles.entrySet()) {
-                HDSkins.getInstance().parseSkin(gameProfile, entry.getKey(), customTextures.get(entry.getKey()), entry.getValue());
-            }
-            for (Map.Entry<Type, MinecraftProfileTexture> entry : vanillaProfiles.entrySet()) {
-                HDSkins.getInstance().parseSkin(gameProfile, entry.getKey(), playerTextures.get(entry.getKey()), entry.getValue());
-            }
-        }
+        hdskinsPlayerSkins.reload();
     }
 }
