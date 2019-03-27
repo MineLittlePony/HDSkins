@@ -13,12 +13,6 @@ final class InternalDialog {
     static JFrame hiddenFrame;
 
     public static JFrame getAWTContext() {
-        JFrame context = GLWindow.current().getFrame();
-
-        if (context != null) {
-            return context;
-        }
-
         if (hiddenFrame == null) {
             hiddenFrame = new JFrame("InternalDialogue");
             hiddenFrame.setVisible(false);
