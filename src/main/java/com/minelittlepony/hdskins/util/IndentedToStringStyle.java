@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.util;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -15,7 +14,7 @@ public class IndentedToStringStyle extends ToStringStyle {
     private IndentedToStringStyle() {
         this.setFieldNameValueSeparator(": " + RESET + ITALIC);
         this.setContentStart(null);
-        this.setFieldSeparator(SystemUtils.LINE_SEPARATOR + "  " + RESET + YELLOW);
+        this.setFieldSeparator(System.lineSeparator() + "  " + RESET + YELLOW);
         this.setFieldSeparatorAtStart(true);
         this.setContentEnd(null);
         this.setUseIdentityHashCode(false);
