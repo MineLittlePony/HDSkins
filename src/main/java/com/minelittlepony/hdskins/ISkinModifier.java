@@ -10,8 +10,6 @@ public interface ISkinModifier {
     interface IDrawer {
         NativeImage getImage();
 
-        void draw(int scale,
-                /*destination: */ int dx1, int dy1, int dx2, int dy2,
-                /*source: */      int sx1, int sy1, int sx2, int sy2);
+        void draw(int scale, int xFrom, int yFrom, int xToDelta, int yToDelta, int width, int height, boolean mirrorX, boolean mirrorY);
     }
 }

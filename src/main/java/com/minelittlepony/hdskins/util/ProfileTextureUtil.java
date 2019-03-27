@@ -31,7 +31,6 @@ public class ProfileTextureUtil {
         }
     }
 
-    @Deprecated
     public static NativeImage getDynamicBufferedImage(int width, int height, DynamicTexture texture) {
         NativeImage image = new NativeImage(16, 16, true);
         image.copyImageData(texture.getTextureData());

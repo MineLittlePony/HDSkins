@@ -5,6 +5,9 @@ import net.minecraft.client.renderer.texture.NativeImage;
 
 @FunctionalInterface
 public interface ISkinAvailableCallback extends IImageBuffer {
+    
+    ISkinAvailableCallback NULL = () -> {};
+    
     @Override
     default NativeImage parseUserSkin(NativeImage image) {
         return image;

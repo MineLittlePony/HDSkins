@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.resources;
 
-import com.minelittlepony.hdskins.resources.texture.DynamicTextureImage;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;

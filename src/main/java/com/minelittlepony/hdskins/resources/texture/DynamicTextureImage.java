@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.resources.texture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
 
-public class DynamicTextureImage extends DynamicTexture implements IBufferedTexture {
+public class DynamicTextureImage extends DynamicTexture {
 
     private NativeImage image;
 
@@ -12,7 +12,6 @@ public class DynamicTextureImage extends DynamicTexture implements IBufferedText
         this.image = bufferedImage;
     }
 
-    @Override
     public NativeImage getBufferedImage() {
         return image;
     }
@@ -22,5 +21,4 @@ public class DynamicTextureImage extends DynamicTexture implements IBufferedText
         super.deleteGlTexture();
         this.image = null;
     }
-
 }

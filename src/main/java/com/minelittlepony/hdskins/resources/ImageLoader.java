@@ -5,7 +5,6 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.util.ResourceLocation;
 
-import com.minelittlepony.hdskins.resources.texture.DynamicTextureImage;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 
 import java.io.IOException;
