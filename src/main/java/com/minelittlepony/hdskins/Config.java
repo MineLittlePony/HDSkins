@@ -1,25 +1,15 @@
-package com.minelittlepony.hdskins.fml;
-
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
+package com.minelittlepony.hdskins;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
-import com.minelittlepony.hdskins.HDSkins;
-
-import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.api.IEnvironment;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Function;
 
-public class Config extends HDSkins {
+class Config extends AbstractConfig {
     static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
@@ -32,12 +22,7 @@ public class Config extends HDSkins {
     }
 
     @Override
-    public Path getAssetsDirectory() {
-        return Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.ASSETSDIR.get()).get();
-    }
-
-    @Override
-    public void saveConfig() {
+    public void save() {
         try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(configFile))) {
             writer.setIndent("    ");
 
@@ -45,11 +30,6 @@ public class Config extends HDSkins {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected <T extends Entity> void addRenderer(Class<T> type, Function<RenderManager, Render<T>> renderer) {
-        RenderingRegistry.registerEntityRenderingHandler(type, rm -> renderer.apply(rm));
     }
 
     static Config of(Path file) {
@@ -67,7 +47,7 @@ public class Config extends HDSkins {
             result = new Config(file);
         }
 
-        result.saveConfig();
+        result.save();
 
         return result;
     }

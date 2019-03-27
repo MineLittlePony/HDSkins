@@ -6,7 +6,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +72,7 @@ public class NetClient {
             }
         }
 
-        return MoreHttpResponses.execute(HDSkinManager.httpClient, request);
+        return MoreHttpResponses.execute(HDSkins.httpClient, request);
     }
 
     public CompletableFuture<MoreHttpResponses> async(Executor exec) {

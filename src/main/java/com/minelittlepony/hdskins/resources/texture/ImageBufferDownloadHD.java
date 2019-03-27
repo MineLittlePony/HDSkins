@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.resources.texture;
 
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.renderer.texture.NativeImage;
 
@@ -61,7 +61,7 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
         drawImage(52, 20, -8, 32, 4, 12, true, false); // back
 
         // mod things
-        HDSkinManager.INSTANCE.convertSkin(image);
+        HDSkins.INSTANCE.convertSkin(image);
 
         if (callback != null) {
             return callback.parseUserSkin(image);

@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.net;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.mojang.authlib.GameProfile;
@@ -66,7 +66,7 @@ public interface SkinServer {
      * @param upload The payload to send.
      */
     default CompletableFuture<SkinUploadResponse> uploadSkin(SkinUpload upload) {
-        return CallableFutures.asyncFailableFuture(() -> performSkinUpload(upload), HDSkinManager.skinUploadExecutor);
+        return CallableFutures.asyncFailableFuture(() -> performSkinUpload(upload), HDSkins.skinUploadExecutor);
     }
 
     /**
@@ -76,7 +76,7 @@ public interface SkinServer {
      * Actions are dispatched to the default skinDownloadExecutor
      */
     default CompletableFuture<MinecraftTexturesPayload> getPreviewTextures(GameProfile profile) {
-        return CallableFutures.asyncFailableFuture(() -> loadProfileData(profile), HDSkinManager.skinDownloadExecutor);
+        return CallableFutures.asyncFailableFuture(() -> loadProfileData(profile), HDSkins.skinDownloadExecutor);
     }
 
     /**

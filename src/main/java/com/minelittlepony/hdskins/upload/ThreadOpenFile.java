@@ -9,6 +9,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.minelittlepony.hdskins.AbstractConfig;
 import com.minelittlepony.hdskins.HDSkins;
 
 /**
@@ -41,7 +42,9 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
         JFileChooser fileDialog = new JFileChooser();
         fileDialog.setDialogTitle(dialogTitle);
 
-        String last = HDSkins.getInstance().lastChosenFile;
+        AbstractConfig config = HDSkins.getInstance().getConfig();
+
+        String last = config.lastChosenFile;
         if (!StringUtils.isBlank(last)) {
             fileDialog.setSelectedFile(new File(last));
         }
@@ -52,8 +55,8 @@ public abstract class ThreadOpenFile extends Thread implements IFileDialog {
         File f = fileDialog.getSelectedFile();
 
         if (f != null) {
-            HDSkins.getInstance().lastChosenFile = f.getAbsolutePath();
-            HDSkins.getInstance().saveConfig();
+            config.lastChosenFile = f.getAbsolutePath();
+            config.save();
 
             if (!f.exists() && f.getName().indexOf('.') == -1) {
                 f = appendMissingExtension(f);

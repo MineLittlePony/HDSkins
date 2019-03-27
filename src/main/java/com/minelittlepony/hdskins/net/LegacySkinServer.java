@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.gson.annotations.Expose;
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -66,7 +66,7 @@ public class LegacySkinServer implements SkinServer {
             }
 
             return TexturesPayloadBuilder.createTexturesPayload(profile, map);
-        }, HDSkinManager.skinDownloadExecutor);
+        }, HDSkins.skinDownloadExecutor);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class LegacySkinServer implements SkinServer {
     }
 
     private MinecraftProfileTexture loadProfileTexture(GameProfile profile, String url) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkinManager.httpClient, new HttpHead(url))) {
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, new HttpHead(url))) {
             if (!resp.ok()) {
                 throw new IOException("Bad response code: " + resp.getResponseCode() + ". URL: " + url);
             }

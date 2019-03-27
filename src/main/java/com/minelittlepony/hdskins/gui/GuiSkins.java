@@ -8,7 +8,7 @@ import com.minelittlepony.common.client.gui.IconicButton;
 import com.minelittlepony.common.client.gui.IconicToggle;
 import com.minelittlepony.common.client.gui.Label;
 import com.minelittlepony.common.client.gui.Style;
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinChooser;
 import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
@@ -234,13 +234,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler {
     @Override
     public void onGuiClosed() {
         super.onGuiClosed();
+
         try {
             uploader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        HDSkinManager.INSTANCE.clearSkinCache();
+        HDSkins.getInstance().clearSkinCache();
 
 //        GLWindow.current().clearDropTargetListener();
     }

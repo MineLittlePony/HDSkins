@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.mixin;
 
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
@@ -25,7 +25,7 @@ public abstract class MixinSkullRenderer extends TileEntityRenderer<TileEntitySk
                     ordinal = 4))
     private void onBindTexture(TileEntitySkullRenderer tesr, ResourceLocation rl, float x, float y, float z, EnumFacing facing, float rotation, int meta, @Nullable GameProfile profile, int p_180543_8_, float ticks) {
         if (profile != null) {
-            ResourceLocation skin = HDSkinManager.INSTANCE.getTextures(profile).get(Type.SKIN);
+            ResourceLocation skin = HDSkins.getInstance().getTextures(profile).get(Type.SKIN);
 
             if (skin != null) {
                 rl = skin;

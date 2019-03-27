@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.mixin;
 
 import com.minelittlepony.common.client.gui.IconicButton;
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
@@ -18,7 +18,7 @@ public class MixinGuiMainMenu extends GuiScreen {
     @Inject(method = "initGui()V", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         addButton(new IconicButton(width - 50, height - 50, sender -> {
-            mc.displayGuiScreen(HDSkinManager.INSTANCE.createSkinsGui());
+            mc.displayGuiScreen(HDSkins.getInstance().createSkinsGui());
         }).setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb));
     }
 }

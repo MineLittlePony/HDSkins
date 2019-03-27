@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.annotations.Expose;
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
@@ -41,7 +41,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkinManager.httpClient, new HttpGet(getTexturesURI(profile)))) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, new HttpGet(getTexturesURI(profile)))) {
 
             if (response.ok()) {
                 return response.unwrapAsJson(MinecraftTexturesPayload.class);
@@ -113,7 +113,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private SkinUploadResponse upload(HttpUriRequest request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkinManager.httpClient, request)) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
             return response.unwrapAsJson(SkinUploadResponse.class);
         }
     }
@@ -141,7 +141,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthHandshake authHandshake(String name) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkinManager.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
                 .setUri(getHandshakeURI())
                 .addParameter("name", name)
                 .build())) {
@@ -150,7 +150,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkinManager.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
                 .setUri(getResponseURI())
                 .addParameter("name", name)
                 .addParameter("verifyToken", String.valueOf(verifyToken))

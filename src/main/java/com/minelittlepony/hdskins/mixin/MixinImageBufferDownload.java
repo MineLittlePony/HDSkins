@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.minelittlepony.hdskins.HDSkinManager;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.resources.texture.SimpleDrawer;
 
 @Mixin(ImageBufferDownload.class)
@@ -24,7 +24,7 @@ public abstract class MixinImageBufferDownload implements IImageBuffer {
         NativeImage image2 = ci.getReturnValue();
         boolean isLegacy = image.getHeight() == 32;
         if (isLegacy) {
-            HDSkinManager.INSTANCE.convertSkin((SimpleDrawer)(() -> image2));
+            HDSkins.getInstance().convertSkin((SimpleDrawer)(() -> image2));
         }
     }
 }
