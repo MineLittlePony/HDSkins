@@ -69,8 +69,6 @@ minecraft {
 
             mods {
                 hdskins {
-                    source sourceSets.common
-                    source sourceSets.main
                     source sourceSets.fml
                 }
             }
