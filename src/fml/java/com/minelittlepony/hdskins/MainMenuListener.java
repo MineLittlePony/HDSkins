@@ -5,11 +5,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
-@EventBusSubscriber(modid = HDSkins.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = HDSkins.MOD_ID)
 public class MainMenuListener {
 
     @SubscribeEvent
