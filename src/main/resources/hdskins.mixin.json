@@ -5,11 +5,9 @@
     "package": "com.minelittlepony.hdskins.mixin",
     "refmap": "hdskins.mixin.refmap.json",
     "mixins": [
-        "MixinMinecraft",
         "MixinGuiMainMenu",
         "MixinImageBufferDownload",
         "MixinNetworkPlayerInfo",
-        "MixinSkullRenderer",
-        "MixinThreadDownloadImageData"
+        "MixinSkullRenderer"
     ]
 }

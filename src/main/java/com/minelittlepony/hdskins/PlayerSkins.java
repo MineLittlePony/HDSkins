@@ -18,22 +18,22 @@ public class PlayerSkins {
 
     private final INetworkPlayerInfo playerInfo;
 
-    private Map<Type, ResourceLocation> customTextures = new HashMap<>();
+    private final Map<Type, ResourceLocation> customTextures = new HashMap<>();
 
-    private Map<Type, MinecraftProfileTexture> customProfiles = new HashMap<>();
+    private final Map<Type, MinecraftProfileTexture> customProfiles = new HashMap<>();
 
-    private Map<Type, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
+    private final Map<Type, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
 
     public PlayerSkins(INetworkPlayerInfo playerInfo) {
         this.playerInfo = playerInfo;
     }
 
-    public ResourceLocation getSkin(Map<Type, ResourceLocation> playerTextures, Type type) {
+    public ResourceLocation getSkin(Type type) {
         if (customTextures.containsKey(type)) {
             return customTextures.get(type);
         }
 
-        return playerTextures.get(type);
+        return playerInfo.getVanillaTextures().get(type);
     }
 
     public String getModel() {
@@ -42,11 +42,10 @@ public class PlayerSkins {
         });
     }
 
-    public void fetch() {
-        HDSkins.getInstance().fetchAndLoadSkins(playerInfo.getGameProfile(), this::onCustomTextureLoaded);
-    }
+    public void load(SkinManager skinManager, GameProfile profile, boolean requireSecure) {
 
-    public void load(SkinManager skinManager, GameProfile profile, SkinManager.SkinAvailableCallback callback, boolean requireSecure) {
+        HDSkins.getInstance().fetchAndLoadSkins(profile, this::onCustomTextureLoaded);
+
         skinManager.loadProfileTextures(profile, this::onVanillaTextureLoaded, requireSecure);
     }
 

@@ -11,9 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -32,33 +30,19 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     public abstract GameProfile getGameProfile();
 
     @Redirect(method = {"getLocationSkin", "getLocationCape", "getLocationElytra"},
-            at = @At(value = "INVOKE",
-                    target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
-                    remap = false)
+            at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", remap = false)
     )
     // synthetic
-    private Object getSkin(Map<Type, ResourceLocation> playerTextures, Object key) {
-        return hdskinsPlayerSkins.getSkin(playerTextures, (Type) key);
+    private Object getSkin(Map<Type, ResourceLocation> sender, Object key) {
+        return hdskinsPlayerSkins.getSkin((Type) key);
     }
 
     @Nullable
     @Redirect(method = "getSkinType",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/NetworkPlayerInfo;skinType:Ljava/lang/String;")
     )
-    private String getTextureModel(NetworkPlayerInfo self) {
+    private String getTextureModel(NetworkPlayerInfo sender) {
         return hdskinsPlayerSkins.getModel();
-    }
-
-    @Inject(method = "loadPlayerTextures",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/resources/SkinManager;loadProfileTextures("
-                            + "Lcom/mojang/authlib/GameProfile;"
-                            + "Lnet/minecraft/client/resources/SkinManager$SkinAvailableCallback;"
-                            + "Z)V",
-                    shift = At.Shift.BEFORE)
-    )
-    private void onLoadTexture(CallbackInfo ci) {
-        hdskinsPlayerSkins.fetch();
     }
 
     @Redirect(method = "loadPlayerTextures",
@@ -68,8 +52,8 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                             + "Lnet/minecraft/client/resources/SkinManager$SkinAvailableCallback;"
                             + "Z)V")
     )
-    private void redirectLoadPlayerTextures(SkinManager skinManager, GameProfile profile, SkinManager.SkinAvailableCallback callback, boolean requireSecure) {
-        hdskinsPlayerSkins.load(skinManager, profile, callback, requireSecure);
+    private void redirectLoadPlayerTextures(SkinManager sender, GameProfile profile, SkinManager.SkinAvailableCallback callback, boolean requireSecure) {
+        hdskinsPlayerSkins.load(sender, profile, requireSecure);
     }
 
     @Override
