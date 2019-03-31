@@ -69,8 +69,10 @@ minecraft {
 
             mods {
                 hdskins {
-                    // Remember to add /bin/default to the Environment configs
+                    // TODO: Remember to add /bin/default to the Environment configs
                     // hdskins%%C:/.../bin/default
+                    source sourceSets.common
+                    source sourceSets.main
                     source sourceSets.fml
                 }
             }
