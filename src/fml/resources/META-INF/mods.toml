@@ -1,11 +1,22 @@
 modLoader="javafml"
-loaderVersion="[25,)"
+loaderVersion="[24,)"
+issueTrackerURL="http://github.com/MineLittlePony/HDSkins/issues/"
+logoFile="hdskins_logo.png"
+
 [[mods]]
-modId="hdskins"
-version="5.0.0"
-displayName="HD Skins"
-credits="Thanks for this example mod goes to Java"
-authors="Mumfrey, Killjoy1221, Sollace"
-description='''
-Separate skin server that also supports HD skins. Access via button on the main menu.
-'''
+    modId="hdskins"
+    version="5.0.0"
+    displayName="HD Skins"
+    credits="Mumfrey,Killjoy1221,Sollace"
+    authors="Mumfrey"
+    description='''
+Faster, stronger, more res skin servers for Minecraft.
+
+Access via the main menu.'''
+
+[[dependencies.hdskins]]
+    modId="forge"
+    mandatory=true
+    versionRange="[25,)"
+    ordering="NONE"
+    side="BOTH"
