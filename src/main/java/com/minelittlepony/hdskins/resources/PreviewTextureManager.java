@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.resources;
 
 import com.google.common.collect.Maps;
-import com.minelittlepony.hdskins.resources.texture.ISkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
@@ -32,13 +31,12 @@ public class PreviewTextureManager {
         }
 
         MinecraftProfileTexture texture = textures.get(type);
-        ISkinAvailableCallback buff = new ImageBufferDownloadHD(type, () -> {
+
+        PreviewTexture skinTexture = new PreviewTexture(texture, def, new ImageBufferDownloadHD(type, () -> {
             if (callback != null) {
                 callback.onSkinTextureAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
             }
-        });
-
-        PreviewTexture skinTexture = new PreviewTexture(texture.getMetadata("model"), texture.getUrl(), def, buff);
+        }));
 
         TextureLoader.loadTexture(location, skinTexture);
 

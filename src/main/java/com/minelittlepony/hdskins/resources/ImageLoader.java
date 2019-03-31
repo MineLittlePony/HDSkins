@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 public class ImageLoader implements Supplier<ResourceLocation> {
 
-    private static Minecraft mc = Minecraft.getInstance();
+    private static final Minecraft mc = Minecraft.getInstance();
 
     private final ResourceLocation original;
 
@@ -29,14 +29,17 @@ public class ImageLoader implements Supplier<ResourceLocation> {
     @Nullable
     public ResourceLocation get() {
         NativeImage image = getImage(original);
+
         final NativeImage updated = new ImageBufferDownloadHD().parseUserSkin(image);
+
         if (updated == null) {
             return null;
         }
+
         if (updated == image) {
-            // don't load a new image
-            return this.original;
+            return this.original; // don't load a new image
         }
+
         return addTaskAndGet(() -> loadSkin(updated));
     }
 
@@ -58,12 +61,15 @@ public class ImageLoader implements Supplier<ResourceLocation> {
         }
     }
 
+    @SuppressWarnings("resource")
     @Nullable
     private ResourceLocation loadSkin(NativeImage image) {
-
         ResourceLocation conv = new ResourceLocation(original.getNamespace() + "-converted", original.getPath());
-        boolean success = mc.getTextureManager().loadTexture(conv, new DynamicTexture(image));
-        return success ? conv : null;
-    }
 
+        if (mc.getTextureManager().loadTexture(conv, new DynamicTexture(image))) {
+            return conv;
+        }
+
+        return null;
+    }
 }

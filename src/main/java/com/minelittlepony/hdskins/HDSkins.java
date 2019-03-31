@@ -84,19 +84,19 @@ public final class HDSkins {
         return instance;
     }
 
-    private List<ISkinCacheClearListener> clearListeners = Lists.newArrayList();
+    private final List<ISkinCacheClearListener> clearListeners = Lists.newArrayList();
 
-    private BiMap<String, Class<? extends SkinServer>> skinServerTypes = HashBiMap.create(2);
+    private final BiMap<String, Class<? extends SkinServer>> skinServerTypes = HashBiMap.create(2);
 
-    private List<SkinServer> skinServers = Lists.newArrayList();
+    private final List<SkinServer> skinServers = Lists.newArrayList();
 
     private LoadingCache<GameProfile, CompletableFuture<Map<Type, MinecraftProfileTexture>>> skins = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::loadProfileData));
 
-    private List<ISkinModifier> skinModifiers = Lists.newArrayList();
+    private final List<ISkinModifier> skinModifiers = Lists.newArrayList();
 
-    private List<ISkinParser> skinParsers = Lists.newArrayList();
+    private final List<ISkinParser> skinParsers = Lists.newArrayList();
 
     private AbstractConfig config;
 
@@ -266,18 +266,6 @@ public final class HDSkins {
         this.skinServerTypes.put(st.value(), type);
     }
 
-    public Class<? extends SkinServer> getSkinServerClass(String type) {
-        return this.skinServerTypes.get(type);
-    }
-
-    void addSkinServer(SkinServer skinServer) {
-        this.skinServers.add(skinServer);
-    }
-
-    public void addClearListener(ISkinCacheClearListener listener) {
-        clearListeners.add(listener);
-    }
-
     public void clearSkinCache() {
         logger.info("Clearing local player skin cache");
 
@@ -299,6 +287,18 @@ public final class HDSkins {
             logger.warn("Exception encountered calling skin listener '{}'. It will be removed.", callback.getClass().getName(), e);
             return true;
         }
+    }
+
+    public Class<? extends SkinServer> getSkinServerClass(String type) {
+        return this.skinServerTypes.get(type);
+    }
+
+    public void addClearListener(ISkinCacheClearListener listener) {
+        clearListeners.add(listener);
+    }
+
+    public void addSkinServer(SkinServer skinServer) {
+        skinServers.add(skinServer);
     }
 
     public void addSkinModifier(ISkinModifier modifier) {

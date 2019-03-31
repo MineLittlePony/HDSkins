@@ -1,6 +1,8 @@
 package com.minelittlepony.hdskins.resources;
 
 import com.minelittlepony.hdskins.VanillaModels;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+
 import net.minecraft.client.renderer.IImageBuffer;
 import net.minecraft.client.renderer.texture.ThreadDownloadImageData;
 import net.minecraft.util.ResourceLocation;
@@ -11,15 +13,15 @@ public class PreviewTexture extends ThreadDownloadImageData {
 
     private boolean uploaded;
 
-    private String model;
+    private final String model;
 
-    private String fileUrl;
+    private final String fileUrl;
 
-    public PreviewTexture(@Nullable String model, String url, ResourceLocation fallbackTexture, @Nullable IImageBuffer imageBuffer) {
-        super(null, url, fallbackTexture, imageBuffer);
+    public PreviewTexture(MinecraftProfileTexture texture, ResourceLocation fallbackTexture, @Nullable IImageBuffer imageBuffer) {
+        super(null, texture.getUrl(), fallbackTexture, imageBuffer);
 
-        this.model = VanillaModels.nonNull(model);
-        this.fileUrl = url;
+        this.model = VanillaModels.nonNull(texture.getMetadata("model"));
+        this.fileUrl = texture.getUrl();
     }
 
     public boolean isTextureUploaded() {

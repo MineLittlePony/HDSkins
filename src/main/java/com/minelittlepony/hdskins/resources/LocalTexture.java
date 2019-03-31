@@ -16,11 +16,16 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 public class LocalTexture {
 
     private final TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
+    @Nullable
     private DynamicTexture local;
+
+    @Nullable
     private PreviewTexture remote;
 
     private ResourceLocation remoteResource;
@@ -77,6 +82,7 @@ public class LocalTexture {
         return hasRemote() && remote.isTextureUploaded();
     }
 
+    @Nullable
     public PreviewTexture getRemote() {
         return remote;
     }
