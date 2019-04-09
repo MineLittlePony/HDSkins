@@ -41,7 +41,7 @@ public interface SkinServer {
      *
      * @return The parsed net response as a textures payload.
      *
-     * @throws IOException  If any authenticaiton or network error occurs.
+     * @throws IOException  If any authentication or network error occurs.
      */
     MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException;
 
@@ -52,7 +52,7 @@ public interface SkinServer {
      *
      * @return A net response object.
      *
-     * @throws IOException
+     * @throws IOException  If any authentication or network error occurs.
      * @throws AuthenticationException
      */
     SkinUploadResponse performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;

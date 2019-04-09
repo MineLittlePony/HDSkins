@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins;
 
 import com.minelittlepony.hdskins.gui.EntityPlayerModel;
 import com.minelittlepony.hdskins.gui.Feature;
+import com.minelittlepony.hdskins.net.HttpException;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinUpload;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
@@ -229,6 +230,18 @@ public class SkinUploader implements Closeable {
                     offline = true;
                 } else if (throwable instanceof AuthenticationException) {
                     throttlingNeck = true;
+                } else if (throwable instanceof HttpException) {
+                    HttpException ex = (HttpException)throwable;
+
+                    HDSkins.logger.error(ex.getReasonPhrase(), ex);
+
+                    int code = ex.getStatusCode();
+
+                    if (code >= 500) {
+                        setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
+                    } else if (code >= 400 && code != 403 && code != 404) {
+                        setError(ex.getReasonPhrase());
+                    }
                 } else {
                     setError(throwable.toString());
                 }
