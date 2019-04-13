@@ -1,6 +1,8 @@
 package com.minelittlepony.hdskins;
 
-import com.minelittlepony.common.client.gui.IconicButton;
+import com.minelittlepony.common.client.gui.element.IconicButton;
+import com.minelittlepony.common.client.gui.style.Style;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.init.Items;
@@ -19,9 +21,9 @@ public class MainMenuListener {
             int width = event.getGui().width;
             int height = event.getGui().height;
 
-            event.addButton(new IconicButton(width - 50, height - 50, sender-> {
+            event.addButton(new IconicButton(width - 50, height - 50).onClick(sender-> {
                 Minecraft.getInstance().displayGuiScreen(HDSkins.getInstance().createSkinsGui());
-            }).setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb));
+            }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
         }
     }
 }

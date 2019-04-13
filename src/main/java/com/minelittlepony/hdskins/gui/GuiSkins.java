@@ -1,13 +1,12 @@
 package com.minelittlepony.hdskins.gui;
 
 import com.google.common.base.Splitter;
-import com.minelittlepony.common.client.gui.Button;
 import com.minelittlepony.common.client.gui.GameGui;
-import com.minelittlepony.common.client.gui.IGuiAction;
-import com.minelittlepony.common.client.gui.IconicButton;
-import com.minelittlepony.common.client.gui.IconicToggle;
-import com.minelittlepony.common.client.gui.Label;
-import com.minelittlepony.common.client.gui.Style;
+import com.minelittlepony.common.client.gui.element.Button;
+import com.minelittlepony.common.client.gui.element.IconicButton;
+import com.minelittlepony.common.client.gui.element.IconicToggle;
+import com.minelittlepony.common.client.gui.element.Label;
+import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinChooser;
 import com.minelittlepony.hdskins.SkinUploader;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static net.minecraft.client.renderer.GlStateManager.*;
 
@@ -139,89 +139,117 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     public void initGui() {
         dropper.subscribe();
 
-        addButton(new Label(width / 2, 10, "hdskins.manager", 0xffffff, true));
-        addButton(new Label(34, 34, "hdskins.local", 0xffffff));
-        addButton(new Label(width / 2 + 34, 34, "hdskins.net", 0xffffff));
+        addButton(new Label(width / 2, 10)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
+        addButton(new Label(34, 34)).getStyle().setText("hdskins.local").setColor(0xffffff);
+        addButton(new Label(width / 2 + 34, 34)).getStyle().setText("hdskins.net").setColor(0xffffff);
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender -> {
-            chooser.openBrowsePNG(format("hdskins.open.title"));
-        })).setEnabled(!mc.mainWindow.isFullscreen());
+        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
+                .onClick(sender -> chooser.openBrowsePNG(format("hdskins.open.title")))
+                .setEnabled(!mc.mainWindow.isFullscreen())
+                .getStyle().setText("hdskins.options.browse");
 
-        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 20, 48, 20, "hdskins.options.chevy", sender -> {
-            if (uploader.canUpload()) {
-                punchServer("hdskins.upload");
-            }
-        })).setEnabled(uploader.canUpload())
-            .setTooltip("hdskins.options.chevy.title");
+        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 20, 48, 20))
+                .setEnabled(uploader.canUpload())
+                .onClick(sender -> {
+                    if (uploader.canUpload()) {
+                        punchServer("hdskins.upload");
+                    }
+                })
+                .getStyle()
+                .setText("hdskins.options.chevy")
+                .setTooltip("hdskins.options.chevy.title");
 
-        addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20, "hdskins.options.download", sender -> {
-            if (uploader.canClear()) {
-                chooser.openSavePNG(format("hdskins.save.title"), mc.getSession().getUsername());
-            }
-        })).setEnabled(uploader.canClear())
-            .setTooltip("hdskins.options.download.title");
+        addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20))
+                .setEnabled(uploader.canClear())
+                .onClick(sender -> {
+                    if (uploader.canClear()) {
+                        chooser.openSavePNG(format("hdskins.save.title"), mc.getSession().getUsername());
+                    }
+                })
+                .getStyle()
+                .setText("hdskins.options.download")
+                .setTooltip("hdskins.options.download.title");
 
-        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20, "hdskins.options.clear", sender ->{
-            if (uploader.canClear()) {
-                punchServer("hdskins.request");
-            }
-        })).setEnabled(uploader.canClear());
+        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20))
+                .setEnabled(uploader.canClear())
+                .onClick(sender -> {
+                    if (uploader.canClear()) {
+                        punchServer("hdskins.request");
+                    }
+                })
+                .getStyle()
+                .setText("hdskins.options.clear");
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20, "hdskins.options.browse", sender ->
-                    chooser.openBrowsePNG(format("hdskins.open.title"))))
-                .setEnabled(!mc.mainWindow.isFullscreen());
+        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
+                .onClick(sender -> chooser.openBrowsePNG(format("hdskins.open.title")))
+                .setEnabled(!mc.mainWindow.isFullscreen())
+                .getStyle()
+                .setText("hdskins.options.browse");
 
-        addButton(new Button(width / 2 - 50, height - 25, 100, 20, "hdskins.options.close", sender ->
-                    mc.displayGuiScreen(new GuiMainMenu())));
+        addButton(new Button(width / 2 - 50, height - 25, 100, 20))
+                .onClick(sender -> mc.displayGuiScreen(new GuiMainMenu()))
+                .getStyle()
+                .setText("hdskins.options.close");
 
-        addButton(btnModeSteve = new FeatureSwitch(width - 25, 32, sender -> switchSkinMode(VanillaModels.DEFAULT)))
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
+        addButton(btnModeSteve = new FeatureSwitch(width - 25, 32))
+                .onClick(sender -> switchSkinMode(VanillaModels.DEFAULT))
                 .setEnabled(VanillaModels.isSlim(uploader.getMetadataField("model")))
+                .getStyle()
+                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
                 .setTooltip("hdskins.mode.steve")
                 .setTooltipOffset(0, 10);
 
-        addButton(btnModeAlex = new FeatureSwitch(width - 25, 51, sender -> switchSkinMode(VanillaModels.SLIM)))
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
+        addButton(btnModeAlex = new FeatureSwitch(width - 25, 51))
+                .onClick(sender -> switchSkinMode(VanillaModels.SLIM))
                 .setEnabled(VanillaModels.isFat(uploader.getMetadataField("model")))
+                .getStyle()
+                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
                 .setTooltip("hdskins.mode.alex")
                 .setTooltipOffset(0, 10);
 
-        addButton(btnModeSkin = new FeatureSwitch(width - 25, 75, sender -> uploader.setSkinType(Type.SKIN)))
-                .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
+        addButton(btnModeSkin = new FeatureSwitch(width - 25, 75))
+                .onClick(sender -> uploader.setSkinType(Type.SKIN))
                 .setEnabled(uploader.getSkinType() == Type.ELYTRA)
+                .getStyle()
+                .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
                 .setTooltip(format("hdskins.mode." + Type.SKIN.name().toLowerCase()))
                 .setTooltipOffset(0, 10);
 
-        addButton(btnModeElytra = new FeatureSwitch(width - 25, 94, sender -> uploader.setSkinType(Type.ELYTRA)))
-                .setIcon(new ItemStack(Items.ELYTRA))
+        addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
+                .onClick(sender -> uploader.setSkinType(Type.ELYTRA))
                 .setEnabled(uploader.getSkinType() == Type.SKIN)
+                .getStyle()
+                .setIcon(new ItemStack(Items.ELYTRA))
                 .setTooltip(format("hdskins.mode." + Type.ELYTRA.name().toLowerCase()))
                 .setTooltipOffset(0, 10);
 
-        addButton(new IconicToggle(width - 25, 118, 3, sender -> {
-            playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-
-            boolean sleep = sender.getValue() == 1;
-            boolean ride = sender.getValue() == 2;
-            localPlayer.setSleeping(sleep);
-            remotePlayer.setSleeping(sleep);
-
-            localPlayer.setRiding(ride);
-            remotePlayer.setRiding(ride);
-        }))
+        addButton(new IconicToggle(width - 25, 118))
                 .setValue(localPlayer.isPlayerSleeping() ? 1 : 0)
-                .setStyle(new Style().setIcon(new ItemStack(Items.IRON_BOOTS, 1)).setTooltip("hdskins.mode.stand"), 0)
-                .setStyle(new Style().setIcon(new ItemStack(Items.CLOCK, 1)).setTooltip("hdskins.mode.sleep"), 1)
-                .setStyle(new Style().setIcon(new ItemStack(Items.OAK_BOAT, 1)).setTooltip("hdskins.mode.ride"), 2)
-                .setTooltipOffset(0, 10);
+                .setStyles(
+                        new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
+                        new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
+                        new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10))
+                .onClick((Consumer<IconicToggle>)sender -> {
+                    playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
 
-        addButton(new Button(width - 25, height - 65, 20, 20, "?", sender -> {
-            uploader.cycleGateway();
-            playSound(SoundEvents.ENTITY_VILLAGER_YES);
-            sender.setTooltip(uploader.getGateway());
-        }))
-                .setTooltip(uploader.getGateway())
-                .setTooltipOffset(0, 10);
+                    boolean sleep = sender.getValue() == 1;
+                    boolean ride = sender.getValue() == 2;
+                    localPlayer.setSleeping(sleep);
+                    remotePlayer.setSleeping(sleep);
+
+                    localPlayer.setRiding(ride);
+                    remotePlayer.setRiding(ride);
+                });
+
+        addButton(new Button(width - 25, height - 65, 20, 20))
+                .onClick(sender -> {
+                    uploader.cycleGateway();
+                    playSound(SoundEvents.ENTITY_VILLAGER_YES);
+                    sender.getStyle().setTooltip(uploader.getGateway());
+                })
+                .getStyle()
+                .setText("?")
+                .setTooltip(uploader.getGateway(), 0, 10);
     }
 
     @Override
@@ -394,22 +422,22 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             drawRect(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            drawCenteredString(fontRenderer, format(chooser.getStatus()), (int) xPos1, height / 2 - 4, 0xffffff);
+            drawCenteredString(fontRenderer, format(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
-            drawRect((int) (xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
+            drawRect((int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
 
             if (uploader.isThrottled()) {
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_MOJANG), (int) xPos2, height / 2 - 10, 0xff5555);
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_WAIT, uploader.getRetries()), (int) xPos2, height / 2 + 2, 0xff5555);
+                drawCenteredString(fontRenderer, format(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
+                drawCenteredString(fontRenderer, format(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
             } else if (uploader.isOffline()) {
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_OFFLINE), (int) xPos2, height / 2 - 4, 0xff5555);
+                drawCenteredString(fontRenderer, format(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
             } else {
-                drawCenteredString(fontRenderer, format(SkinUploader.STATUS_FETCH), (int) xPos2, height / 2 - 4, 0xffffff);
+                drawCenteredString(fontRenderer, format(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
             }
         }
 
@@ -427,7 +455,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         }
 
         if (msgFadeOpacity > 0) {
-            int opacity = (Math.min(180, (int) (msgFadeOpacity * 180)) & 255) << 24;
+            int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
 
             drawRect(0, 0, width, height, opacity);
 
@@ -463,11 +491,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         rotatef(rot, 0, 1, 0);
 
-        float lookFactor = (float) Math.sin((rot * (Math.PI / 180)) + 45);
-        float lookX = (float) Math.atan((xPosition - mouseX) / 20) * 30;
+        float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
+        float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
 
         thePlayer.rotationYawHead = lookX * lookFactor;
-        thePlayer.rotationPitch = (float) Math.atan(mouseY / 40) * -20;
+        thePlayer.rotationPitch = (float)Math.atan(mouseY / 40) * -20;
 
         mc.getRenderManager().renderEntity(thePlayer, 0, 0, 0, 0, 1, false);
 
@@ -541,48 +569,50 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     protected class FeatureButton extends Button {
-        private List<String> disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(format("hdskins.warning.disabled.description"));
-
-        protected boolean locked;
-
-        public FeatureButton(int x, int y, int width, int height, String label, IGuiAction<? extends Button> callback) {
-            super(x, y, width, height, label, callback);
-        }
-
-        @Override
-        protected List<String> getTooltip() {
-            if (locked) {
-                return disabledTooltip;
-            }
-            return super.getTooltip();
-        }
-
-        @Override
-        public Button setTooltip(String tooltip) {
-            disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(
-                    format("hdskins.warning.disabled.title",
-                    format(tooltip),
-                    format("hdskins.warning.disabled.description")));
-            return super.setTooltip(tooltip);
+        public FeatureButton(int x, int y, int width, int height) {
+            super(x, y, width, height);
+            setStyle(new FeatureStyle(this));
         }
 
         public void setLocked(boolean lock) {
-            locked = lock;
-            enabled &= !lock;
+            ((FeatureStyle)getStyle()).setLocked(lock);
         }
     }
 
     protected class FeatureSwitch extends IconicButton {
-        private List<String> disabledTooltip = null;
 
-        protected boolean locked;
+        public FeatureSwitch(int x, int y) {
+            super(x, y);
 
-        public FeatureSwitch(int x, int y, IGuiAction<? extends IconicButton> callback) {
-            super(x, y, callback);
+            setStyle(new FeatureStyle(this));
+        }
+
+        public void setLocked(boolean lock) {
+            ((FeatureStyle)getStyle()).setLocked(lock);
+        }
+    }
+
+    protected class FeatureStyle extends Style {
+
+        private final Button element;
+
+        private List<String> disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(format("hdskins.warning.disabled.description"));
+
+        private boolean locked;
+
+        public FeatureStyle(Button element) {
+            this.element = element;
+        }
+
+        public FeatureStyle setLocked(boolean locked) {
+            this.locked = locked;
+            element.enabled &= !locked;
+
+            return this;
         }
 
         @Override
-        protected List<String> getTooltip() {
+        public List<String> getTooltip() {
             if (locked) {
                 return disabledTooltip;
             }
@@ -590,17 +620,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         }
 
         @Override
-        public Button setTooltip(String tooltip) {
+        public Style setTooltip(String tooltip) {
             disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(
                     format("hdskins.warning.disabled.title",
-                    format(tooltip),
-                    format("hdskins.warning.disabled.description")));
+                            format(tooltip),
+                            format("hdskins.warning.disabled.description")));
             return super.setTooltip(tooltip);
-        }
-
-        public void setLocked(boolean lock) {
-            locked = lock;
-            enabled &= !lock;
         }
     }
 }

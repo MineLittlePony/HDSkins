@@ -1,9 +1,9 @@
-package com.minelittlepony.common.client.gui;
-
-import net.minecraft.client.gui.GuiButton;
+package com.minelittlepony.common.client.gui.element;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.minelittlepony.common.client.gui.IField;
 
 import java.util.function.Function;
 
@@ -12,25 +12,31 @@ import java.util.function.Function;
  *
  * @author Sollace
  */
-public class Slider extends GuiButton {
+public class Slider extends Button implements IField<Float, Slider> {
 
     private float min;
     private float max;
 
     private float value;
 
-    protected IGuiCallback<Float> action;
+    @Nonnull
+    private IChangeCallback<Float> action = IChangeCallback::none;
 
     @Nullable
     private Function<Float, String> formatter;
 
-    public Slider(int x, int y, float min, float max, float value, IGuiCallback<Float> action) {
-        super(0, x, y, "");
+    public Slider(int x, int y, float min, float max, float value) {
+        super(x, y);
 
         this.min = min;
         this.max = max;
         this.value = value;
+    }
+
+    @Override
+    public Slider onChange(@Nonnull IChangeCallback<Float> action) {
         this.action = action;
+        return this;
     }
 
     public Slider setFormatter(@Nonnull Function<Float, String> formatter) {
@@ -40,7 +46,8 @@ public class Slider extends GuiButton {
         return this;
     }
 
-    public void setValue(float value) {
+    @Override
+    public Slider setValue(Float value) {
         value = clamp(value, min, max);
         value = (value - min) / (max - min);
 
@@ -51,9 +58,12 @@ public class Slider extends GuiButton {
         if (formatter != null) {
             displayString = formatter.apply(getValue());
         }
+
+        return this;
     }
 
-    public float getValue() {
+    @Override
+    public Float getValue() {
         return value;
     }
 

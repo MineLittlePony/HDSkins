@@ -1,28 +1,39 @@
-package com.minelittlepony.common.client.gui;
+package com.minelittlepony.common.client.gui.element;
 
-import net.minecraft.client.gui.GuiButton;
+import javax.annotation.Nonnull;
 
-public class Toggle extends GuiButton {
+import com.minelittlepony.common.client.gui.IField;
+
+public class Toggle extends Button implements IField<Boolean, Toggle> {
 
     private boolean on;
 
-    protected IGuiCallback<Boolean> action;
+    @Nonnull
+    private IChangeCallback<Boolean> action = IChangeCallback::none;
 
-    public Toggle(int x, int y, boolean value, String label, IGuiCallback<Boolean> callback) {
-        super(0, x, y, 20, 20, label);
+    public Toggle(int x, int y, boolean value) {
+        super(x, y, 20, 20);
 
         on = value;
-        action = callback;
     }
 
-    public boolean getValue() {
+    @Override
+    public Toggle onChange(@Nonnull IChangeCallback<Boolean> action) {
+        this.action = action;
+        return this;
+    }
+
+    public Boolean getValue() {
         return on;
     }
 
-    public void setValue(boolean value) {
+    @Override
+    public Toggle setValue(Boolean value) {
         if (value != on) {
             on = action.perform(value);
         }
+
+        return this;
     }
 
     @Override

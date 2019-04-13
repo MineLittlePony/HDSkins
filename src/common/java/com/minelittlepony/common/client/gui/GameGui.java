@@ -16,10 +16,10 @@ public abstract class GameGui extends GuiScreen {
     }
 
     /**
-     * Formats a translation string and returns it in a list wrapped to a given width.
-     * This can be safely used in initGui, where the fontRenderer is often still null.
+     * Formats a translation string and returns it in a list wrapped to a given width. This can be
+     * safely used in initGui, where the fontRenderer is often still null.
      */
-    public List<String> formatMultiLine(String string, int width, Object...pars) {
+    public List<String> formatMultiLine(String string, int width, Object... pars) {
         FontRenderer fr = fontRenderer;
 
         if (fr == null) {
@@ -53,8 +53,8 @@ public abstract class GameGui extends GuiScreen {
 
     protected void postDrawContents(int mouseX, int mouseY, float partialTicks) {
         buttons.forEach(button -> {
-            if (button instanceof IGuiTooltipped) {
-                ((IGuiTooltipped<?>)button).renderToolTip(mc, mouseX, mouseY);
+            if (button instanceof ITooltipped) {
+                ((ITooltipped<?>)button).renderToolTip(mc, mouseX, mouseY);
             }
         });
     }
