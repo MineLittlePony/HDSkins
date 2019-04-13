@@ -10,6 +10,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SkinManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -37,7 +38,6 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
 
     protected final LocalTexture skin;
     protected final LocalTexture elytra;
-
 
     private final GameProfile profile;
 
@@ -126,6 +126,11 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
     }
 
     @Override
+    public Entity getRidingEntity() {
+        return previewRiding ? RenderPlayerModel.MrBoaty.instance : null;
+    }
+
+    @Override
     public boolean isSneaking() {
         return !previewRiding && !previewSleeping && super.isSneaking();
     }
@@ -152,7 +157,6 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
         if (posY == 0 && isJumping && !previewSleeping && !previewRiding) {
             jump();
         }
-
 
         motionY -= 0.08D;
         motionY *= 0.9800000190734863D;

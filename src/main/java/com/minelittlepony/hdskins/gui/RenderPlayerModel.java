@@ -127,11 +127,13 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
 
         double offset = entity.getYOffset() + entity.posY;
 
-
+        if (entity.isPassenger()) {
+            offset = entity.getMountedYOffset() - entity.height;
+        }
 
         if (entity.isPlayerSleeping()) {
             y--;
-            z += 0.5F;
+            z += 0.75F;
         } else if (player.isSneak) {
             y -= 0.125D;
         }
