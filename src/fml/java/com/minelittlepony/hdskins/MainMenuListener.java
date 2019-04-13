@@ -19,7 +19,7 @@ public class MainMenuListener {
             int width = event.getGui().width;
             int height = event.getGui().height;
 
-            event.getButtonList().add(new IconicButton(width - 50, height - 50, sender-> {
+            event.addButton(new IconicButton(width - 50, height - 50, sender-> {
                 Minecraft.getInstance().displayGuiScreen(HDSkins.getInstance().createSkinsGui());
             }).setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb));
         }
