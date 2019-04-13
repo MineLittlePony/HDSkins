@@ -14,6 +14,6 @@ class ForgeModHDSkins {
 
     @SubscribeEvent
     public void initOnClient(FMLClientSetupEvent event) {
-        FMLJavaModLoadingContext.get().getModEventBus().register(new ForgeModHDSkinsClient());
+        new ForgeModHDSkinsClient();
     }
 }

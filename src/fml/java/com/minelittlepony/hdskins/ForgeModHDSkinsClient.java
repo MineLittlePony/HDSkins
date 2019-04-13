@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 class ForgeModHDSkinsClient implements IModUtilities {
@@ -16,6 +17,7 @@ class ForgeModHDSkinsClient implements IModUtilities {
     private HDSkins hdskins = new HDSkins(this);
 
     public ForgeModHDSkinsClient() {
+        FMLJavaModLoadingContext.get().getModEventBus().register(this);
         hdskins.init(Config.of(FMLPaths.CONFIGDIR.get().resolve("hdskins.json")));
         hdskins.posInit();
     }
