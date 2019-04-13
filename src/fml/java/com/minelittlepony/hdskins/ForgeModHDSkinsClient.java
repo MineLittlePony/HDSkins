@@ -8,28 +8,15 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-public class ForgeModHDSkinsClient implements IModUtilities {
+class ForgeModHDSkinsClient implements IModUtilities {
 
     private HDSkins hdskins = new HDSkins(this);
 
     public ForgeModHDSkinsClient() {
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    private void commonInit(final FMLCommonSetupEvent event) {
         hdskins.init(Config.of(FMLPaths.CONFIGDIR.get().resolve("hdskins.json")));
-    }
-
-    @SubscribeEvent
-    private void clientInit(FMLClientSetupEvent event) {
         hdskins.posInit();
     }
 

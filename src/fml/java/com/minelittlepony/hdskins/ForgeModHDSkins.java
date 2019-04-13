@@ -6,7 +6,12 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod("hdskins")
-public class ForgeModHDSkins {
+class ForgeModHDSkins {
+
+    public ForgeModHDSkins() {
+        FMLJavaModLoadingContext.get().getModEventBus().register(this);
+    }
+
     @SubscribeEvent
     public void initOnClient(FMLClientSetupEvent event) {
         FMLJavaModLoadingContext.get().getModEventBus().register(new ForgeModHDSkinsClient());
