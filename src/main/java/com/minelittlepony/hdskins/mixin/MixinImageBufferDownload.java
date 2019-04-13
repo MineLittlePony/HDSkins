@@ -15,8 +15,7 @@ import com.minelittlepony.hdskins.resources.texture.SimpleDrawer;
 @Mixin(ImageBufferDownload.class)
 public abstract class MixinImageBufferDownload implements IImageBuffer {
 
-    @Inject(
-            method = "parseUserSkin(Lnet/minecraft/client/renderer/texture/NativeImage;)Lnet/minecraft/client/renderer/texture/NativeImage;",
+    @Inject(method = "parseUserSkin(Lnet/minecraft/client/renderer/texture/NativeImage;)Lnet/minecraft/client/renderer/texture/NativeImage;",
             at = @At("RETURN"),
             cancellable = true)
     private void update(NativeImage image, CallbackInfoReturnable<NativeImage> ci) {
