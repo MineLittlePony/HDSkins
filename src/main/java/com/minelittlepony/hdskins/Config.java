@@ -3,6 +3,8 @@ package com.minelittlepony.hdskins;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinServerSerializer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,9 +15,10 @@ class Config extends AbstractConfig {
     static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
+            .registerTypeAdapter(SkinServer.class, new SkinServerSerializer())
             .create();
 
-    private final Path configFile;
+    private Path configFile;
 
     Config(Path file) {
         configFile = file;
@@ -45,6 +48,8 @@ class Config extends AbstractConfig {
 
         if (result == null) {
             result = new Config(file);
+        } else {
+            result.configFile = file;
         }
 
         result.save();
