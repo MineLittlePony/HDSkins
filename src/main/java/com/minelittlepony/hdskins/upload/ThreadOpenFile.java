@@ -61,41 +61,46 @@ class ThreadOpenFile extends Thread implements IFileDialog {
 
     @Override
     public void run() {
-        JFileChooser fileDialog = new JFileChooser();
-        fileDialog.setDialogTitle(dialogTitle);
+        try {
+            JFileChooser fileDialog = new JFileChooser();
+            fileDialog.setDialogTitle(dialogTitle);
 
-        AbstractConfig config = HDSkins.getInstance().getConfig();
+            AbstractConfig config = HDSkins.getInstance().getConfig();
 
-        String last = config.lastChosenFile;
-        if (!StringUtils.isBlank(last)) {
-            fileDialog.setSelectedFile(new File(last));
+            String last = config.lastChosenFile;
+            if (!StringUtils.isBlank(last)) {
+                fileDialog.setSelectedFile(new File(last));
+            }
+            fileDialog.setFileFilter(new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return f.isDirectory() || f.getName().toLowerCase().endsWith(extension);
+                }
+
+                @Override
+                public String getDescription() {
+                    return description;
+                }
+            });
+
+            int dialogResult = showDialog(fileDialog);
+
+            File f = fileDialog.getSelectedFile();
+
+            if (f != null) {
+                config.lastChosenFile = f.getAbsolutePath();
+                config.save();
+
+                if (!f.exists() && f.getName().indexOf('.') == -1) {
+                    f = appendExtension(f);
+                }
+            }
+
+            callback.onDialogClosed(f.toPath(), dialogResult == 0);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            callback.onDialogClosed(new File("").toPath(), false);
         }
-        fileDialog.setFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().toLowerCase().endsWith(extension);
-            }
-
-            @Override
-            public String getDescription() {
-                return description;
-            }
-        });
-
-        int dialogResult = showDialog(fileDialog);
-
-        File f = fileDialog.getSelectedFile();
-
-        if (f != null) {
-            config.lastChosenFile = f.getAbsolutePath();
-            config.save();
-
-            if (!f.exists() && f.getName().indexOf('.') == -1) {
-                f = appendExtension(f);
-            }
-        }
-
-        callback.onDialogClosed(f.toPath(), dialogResult == 0);
     }
 
     protected int showDialog(JFileChooser chooser) {
