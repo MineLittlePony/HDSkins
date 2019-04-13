@@ -116,7 +116,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     protected ResourceLocation getBackground() {
-        return new ResourceLocation(HDSkins.MOD_ID, "textures/cubemaps/cubemap0_%d.png");
+        return new ResourceLocation(HDSkins.MOD_ID, "textures/cubemaps/cubemap0");
     }
 
     protected EntityPlayerModel getModel(GameProfile profile) {
@@ -276,7 +276,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         lastMouseX = mouseX;
 
-        if (canTakeEvents() && super.mouseClicked(mouseX, mouseY, button)) {
+        if (canTakeEvents() && !super.mouseClicked(mouseX, mouseY, button)) {
             int bottom = height - 40;
             int mid = width / 2;
 

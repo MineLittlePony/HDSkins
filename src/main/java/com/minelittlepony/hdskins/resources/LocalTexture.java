@@ -41,7 +41,7 @@ public class LocalTexture {
         this.blank = blank;
         this.type = type;
 
-        String file = String.format("%s/preview_%s.png", type.name().toLowerCase(), profile.getName());
+        String file = String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase();
 
         remoteResource = new ResourceLocation(file);
         textureManager.deleteTexture(remoteResource);
