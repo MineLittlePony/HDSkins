@@ -41,18 +41,12 @@ group = project.group
 description = project.displayname
 
 sourceSets {
-    common {
-        // code shared between HDSkins and MineLP mods
-        compileClasspath += main.compileClasspath
-    }
-
     main {
-        compileClasspath += common.output
+
     }
 
     fml {
         compileClasspath += main.compileClasspath
-        compileClasspath += common.output
         compileClasspath += main.output
     }
 }
@@ -70,8 +64,7 @@ minecraft {
             mods {
                 hdskins {
                     // TODO: Remember to add /bin/default to the Environment configs
-                    // hdskins%%C:/.../bin/default
-                    source sourceSets.common
+                    // hdskins%%C:/.../bin/default;hdskins%%C:/.../bin/default
                     source sourceSets.main
                     source sourceSets.fml
                 }
@@ -86,7 +79,10 @@ compileJava.sourceCompatibility = '1.8'
 compileJava.targetCompatibility = '1.8'
 
 dependencies {
+    // TODO: Add KirinUI as a dependency.
+
     minecraft "net.minecraftforge:forge:" + project.minecraft_version + "-" + project.forge_version
+
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
@@ -95,13 +91,8 @@ dependencies {
 
 manifest {
     attributes(
-            "Specification-Title": project.name,
-            "Specification-Vendor": project.name,
-            "Specification-Version": "${version}",
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version} (git-${project.hash})",
-            "Implementation-Vendor": project.name,
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        "Implementation-Version": "${version} (git-${project.hash})",
+        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
     )
 }
 
@@ -117,5 +108,5 @@ shadowJar {
         exclude 'META-INF/**'
     }
 
-    relocate 'org.apache.http.entity.mime', 'com.voxelmodpack.repack.org.apache.http.entity.mime'
+    relocate 'org.apache.http.entity.mime', 'com.minelittlepony.repack.org.apache.http.entity.mime'
 }
