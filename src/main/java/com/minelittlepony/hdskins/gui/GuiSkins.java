@@ -321,13 +321,15 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
-        lastMouseX = mouseX;
 
-        if (canTakeEvents() && super.mouseDragged(mouseX, mouseY, button, changeX, changeY)) {
+        if (canTakeEvents() && !super.mouseDragged(mouseX, mouseY, button, changeX, changeY)) {
             updateCounter -= (lastMouseX - mouseX);
+            lastMouseX = mouseX;
 
             return true;
         }
+
+        lastMouseX = mouseX;
 
         return false;
     }
