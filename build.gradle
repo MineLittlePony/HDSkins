@@ -87,6 +87,10 @@ dependencies {
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
     }
+
+    compile project(':kirin') {
+        transitive = false
+    }
 }
 
 manifest {
