@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderSkybox;
 import net.minecraft.client.renderer.RenderSkyboxCube;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -144,7 +145,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         addButton(new Label(width / 2 + 34, 34)).getStyle().setText("hdskins.net").setColor(0xffffff);
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
-                .onClick(sender -> chooser.openBrowsePNG(format("hdskins.open.title")))
+                .onClick(sender -> chooser.openBrowsePNG(I18n.format("hdskins.open.title")))
                 .setEnabled(!mc.mainWindow.isFullscreen())
                 .getStyle().setText("hdskins.options.browse");
 
@@ -163,7 +164,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        chooser.openSavePNG(format("hdskins.save.title"), mc.getSession().getUsername());
+                        chooser.openSavePNG(I18n.format("hdskins.save.title"), mc.getSession().getUsername());
                     }
                 })
                 .getStyle()
@@ -181,7 +182,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setText("hdskins.options.clear");
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
-                .onClick(sender -> chooser.openBrowsePNG(format("hdskins.open.title")))
+                .onClick(sender -> chooser.openBrowsePNG(I18n.format("hdskins.open.title")))
                 .setEnabled(!mc.mainWindow.isFullscreen())
                 .getStyle()
                 .setText("hdskins.options.browse");
@@ -212,7 +213,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setEnabled(uploader.getSkinType() == Type.ELYTRA)
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
-                .setTooltip(format("hdskins.mode." + Type.SKIN.name().toLowerCase()))
+                .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase())
                 .setTooltipOffset(0, 10);
 
         addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
@@ -220,7 +221,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setEnabled(uploader.getSkinType() == Type.SKIN)
                 .getStyle()
                 .setIcon(new ItemStack(Items.ELYTRA))
-                .setTooltip(format("hdskins.mode." + Type.ELYTRA.name().toLowerCase()))
+                .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase())
                 .setTooltipOffset(0, 10);
 
         addButton(new IconicToggle(width - 25, 118))
@@ -386,7 +387,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     @Override
-    protected void drawContents(int mouseX, int mouseY, float partialTick) {
+    public void render(int mouseX, int mouseY, float partialTick) {
         ctrlKey.update();
         jumpKey.update();
         sneakKey.update();
@@ -408,8 +409,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         drawGradientRect(30, horizon, mid - 30, bottom, 0x80FFFFFF, 0xffffff);
         drawGradientRect(mid + 30, horizon, width - 30, bottom, 0x80FFFFFF, 0xffffff);
 
-        super.drawContents(mouseX, mouseY, partialTick);
-
         enableClipping(bottom);
 
         float yPos = height * 0.75F;
@@ -422,9 +421,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         disableClipping();
 
+        super.render(mouseX, mouseY, partialTick);
+
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             drawRect(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            drawCenteredString(fontRenderer, format(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
+            drawCenteredString(fontRenderer, I18n.format(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
@@ -434,12 +435,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             drawRect((int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
 
             if (uploader.isThrottled()) {
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
+                drawCenteredString(fontRenderer, I18n.format(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
+                drawCenteredString(fontRenderer, I18n.format(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
             } else if (uploader.isOffline()) {
-                drawCenteredString(fontRenderer, format(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
+                drawCenteredString(fontRenderer, I18n.format(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
             } else {
-                drawCenteredString(fontRenderer, format(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
+                drawCenteredString(fontRenderer, I18n.format(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
             }
         }
 
@@ -461,14 +462,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
             drawRect(0, 0, width, height, opacity);
 
-            String errorMsg = format(uploader.getStatusMessage());
+            String errorMsg = I18n.format(uploader.getStatusMessage());
 
             if (uploadInProgress) {
                 drawCenteredString(fontRenderer, errorMsg, width / 2, height / 2, 0xffffff);
             } else if (showError) {
                 int blockHeight = (height - fontRenderer.getWordWrappedHeight(errorMsg, width - 10)) / 2;
 
-                drawCenteredString(fontRenderer, format("hdskins.failed"), width / 2, blockHeight - fontRenderer.FONT_HEIGHT * 2, 0xffff55);
+                drawCenteredString(fontRenderer, I18n.format("hdskins.failed"), width / 2, blockHeight - fontRenderer.FONT_HEIGHT * 2, 0xffff55);
                 fontRenderer.drawSplitString(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
@@ -598,7 +599,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         private final Button element;
 
-        private List<String> disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(format("hdskins.warning.disabled.description"));
+        private List<String> disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(I18n.format("hdskins.warning.disabled.description"));
 
         private boolean locked;
 
@@ -624,9 +625,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         @Override
         public Style setTooltip(String tooltip) {
             disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(
-                    format("hdskins.warning.disabled.title",
-                            format(tooltip),
-                            format("hdskins.warning.disabled.description")));
+                    I18n.format("hdskins.warning.disabled.title",
+                    I18n.format(tooltip),
+                    I18n.format("hdskins.warning.disabled.description")));
             return super.setTooltip(tooltip);
         }
     }
