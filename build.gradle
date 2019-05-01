@@ -43,6 +43,13 @@ sourceSets {
 
     }
 
+    // Workaround for broken classloading with forge in 1.13
+    kirin {
+        java {
+            srcDir "../Kirin/src/main/java"
+        }
+    }
+
     fml {
         compileClasspath += main.compileClasspath
         compileClasspath += main.output
@@ -61,8 +68,15 @@ minecraft {
 
             mods {
                 hdskins {
-                    // TODO: Remember to add /bin/default to the Environment configs
-                    // hdskins%%C:/.../bin/default;hdskins%%C:/.../bin/default
+                    // TODO: Gradle generates broken eclipse configs. Make sure you apply the following changes otherwise the game won't run:
+                    //  - (Optional) Remove test/java from the classpath
+                    //  - (Optional) Remove test/resources from the classpath
+                    //  - Disable "Allow output folders for source folders"
+                    //  - Remove the kirin.jar from the classpath
+                    //  - Change the run config to use the following string for finding mod classes:
+                            // TODO: Remember to add /bin/default to the Environment configs
+                            // hdskins%%C:/.../bin/default;hdskins%%C:/.../bin/default
+                            // * Duplicated twice because forge is retarded
 //                    source sourceSets.main
                     source sourceSets.fml
                 }
