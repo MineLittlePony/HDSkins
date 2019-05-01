@@ -6,7 +6,11 @@ import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.loading.FMLPaths;
 
+import java.nio.file.Path;
 import java.util.function.Function;
+
+import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.api.IEnvironment;
 
 class ForgeModHDSkinsClient implements IModUtilities {
 
@@ -18,5 +22,10 @@ class ForgeModHDSkinsClient implements IModUtilities {
     @Override
     public <T extends Entity> void addRenderer(Class<T> type, Function<RenderManager, Render<T>> renderer) {
         RenderingRegistry.registerEntityRenderingHandler(type, renderer::apply);
+    }
+
+    @Override
+    public Path getAssetsDirectory() {
+        return Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.ASSETSDIR.get()).get();
     }
 }

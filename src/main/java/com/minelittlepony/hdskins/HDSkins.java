@@ -33,8 +33,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 
-import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.api.IEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -75,8 +73,6 @@ public final class HDSkins {
 
     public static final Logger logger = LogManager.getLogger();
 
-    public static final Path ASSETS_DIR = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.ASSETSDIR.get()).get();
-
     public static final ExecutorService skinUploadExecutor = Executors.newSingleThreadExecutor();
     public static final ExecutorService skinDownloadExecutor = Executors.newFixedThreadPool(8);
     public static final CloseableHttpClient httpClient = HttpClients.createSystem();
@@ -111,13 +107,13 @@ public final class HDSkins {
 
     public HDSkins(IModUtilities utils, Path config) {
         instance = this;
+        this.utils = utils;
 
         // register default skin server types
         addSkinServerType(LegacySkinServer.class);
         addSkinServerType(ValhallaSkinServer.class);
         addSkinServerType(BethlehemSkinServer.class);
 
-        this.utils = utils;
         this.config = Config.of(config);
     }
 
@@ -230,7 +226,7 @@ public final class HDSkins {
 
             // schedule texture loading on the main thread.
             TextureLoader.loadTexture(resource, new ThreadDownloadImageData(
-                    ASSETS_DIR.resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
+                    getUtils().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
                     DefaultPlayerSkin.getDefaultSkinLegacy(),
                     new ImageBufferDownloadHD(type, () -> {
@@ -270,7 +266,7 @@ public final class HDSkins {
         logger.info("Clearing local player skin cache");
 
         try {
-            Files.deleteIfExists(ASSETS_DIR.resolve("hd"));
+            Files.deleteIfExists(getUtils().getAssetsDirectory().resolve("hd"));
         } catch (IOException e) {
             e.printStackTrace();
         }
