@@ -105,6 +105,8 @@ manifest {
     )
 }
 
+compileJava.options.compilerArgs += '-proc:none'
+
 jar {
     classifier 'base'
     extension 'jar'
