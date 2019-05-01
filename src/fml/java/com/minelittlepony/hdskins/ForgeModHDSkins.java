@@ -5,8 +5,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-@Mod("hdskins")
-class ForgeModHDSkins {
+@Mod(HDSkins.MOD_ID)
+public class ForgeModHDSkins {
 
     public ForgeModHDSkins() {
         FMLJavaModLoadingContext.get().getModEventBus().register(this);

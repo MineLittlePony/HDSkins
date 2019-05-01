@@ -9,15 +9,13 @@ buildscript {
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath 'org.ajoberstar.grgit:grgit-gradle:3.1.1'
     }
-}
-
-plugins {
-    id 'org.ajoberstar.grgit' version '1.7.2'
 }
 
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.ajoberstar.grgit'
 apply plugin: 'eclipse'
 
 ext {
@@ -58,14 +56,14 @@ minecraft {
         client {
             workingDirectory file('run')
 
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.markers', 'SCAN'
             property 'forge.logging.console.level', 'debug'
 
             mods {
                 hdskins {
                     // TODO: Remember to add /bin/default to the Environment configs
                     // hdskins%%C:/.../bin/default;hdskins%%C:/.../bin/default
-                    source sourceSets.main
+//                    source sourceSets.main
                     source sourceSets.fml
                 }
             }
@@ -75,22 +73,29 @@ minecraft {
 
 targetCompatibility = 1.8
 sourceCompatibility = 1.8
-compileJava.sourceCompatibility = '1.8'
-compileJava.targetCompatibility = '1.8'
+
+repositories {
+    maven {
+        url = 'https://jitpack.io'
+    }
+    maven {
+        url = 'https://repo.spongepowered.org/maven'
+    }
+}
 
 dependencies {
-    // TODO: Add KirinUI as a dependency.
 
     minecraft "net.minecraftforge:forge:" + project.minecraft_version + "-" + project.forge_version
 
+    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        transitive = false
+    }
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
     }
 
-    compile(project(':Kirin')) {
-        transitive = false
-    }
+    compile "com.github.MineLittlePony:Kirin:master-SNAPSHOT:base"
 }
 
 manifest {

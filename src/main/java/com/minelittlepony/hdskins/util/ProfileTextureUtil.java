@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.texture.NativeImage;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ public class ProfileTextureUtil {
     private static Field metadata = FieldUtils.getDeclaredField(MinecraftProfileTexture.class, "metadata", true);
 
     @SuppressWarnings("unchecked")
+    @Nullable
     public static Map<String, String> getMetadata(MinecraftProfileTexture texture) {
         try {
             return (Map<String, String>) FieldUtils.readField(metadata, texture);

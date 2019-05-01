@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-class Config extends AbstractConfig {
-    static final Gson gson = new GsonBuilder()
+public class Config extends AbstractConfig {
+    private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
             .registerTypeAdapter(SkinServer.class, new SkinServerSerializer())
@@ -20,7 +20,7 @@ class Config extends AbstractConfig {
 
     private Path configFile;
 
-    Config(Path file) {
+    private Config(Path file) {
         configFile = file;
     }
 
@@ -35,7 +35,7 @@ class Config extends AbstractConfig {
         }
     }
 
-    static Config of(Path file) {
+    public static Config of(Path file) {
         Config result = null;
 
         if (Files.exists(file)) {

@@ -33,6 +33,8 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 
+import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.api.IEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -52,6 +54,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,10 +72,10 @@ import javax.annotation.Nullable;
 
 public final class HDSkins {
     public static final String MOD_ID = "hdskins";
-    public static final String MOD_NAME = "HD Skins";
-    public static final String VERSION = "5.0.0";
 
     public static final Logger logger = LogManager.getLogger();
+
+    public static final Path ASSETS_DIR = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.ASSETSDIR.get()).get();
 
     public static final ExecutorService skinUploadExecutor = Executors.newSingleThreadExecutor();
     public static final ExecutorService skinDownloadExecutor = Executors.newFixedThreadPool(8);
@@ -106,15 +109,16 @@ public final class HDSkins {
 
     private final IModUtilities utils;
 
-    public HDSkins(IModUtilities utils) {
+    public HDSkins(IModUtilities utils, Path config) {
         instance = this;
-
-        this.utils = utils;
 
         // register default skin server types
         addSkinServerType(LegacySkinServer.class);
         addSkinServerType(ValhallaSkinServer.class);
         addSkinServerType(BethlehemSkinServer.class);
+
+        this.utils = utils;
+        this.config = Config.of(config);
     }
 
     public IModUtilities getUtils() {
@@ -125,14 +129,10 @@ public final class HDSkins {
         return config;
     }
 
-    void init(AbstractConfig config) {
-        this.config = config;
-
+    public void postinit() {
         IReloadableResourceManager irrm = (IReloadableResourceManager) Minecraft.getInstance().getResourceManager();
         irrm.addReloadListener(resources);
-    }
 
-    void posInit() {
         getUtils().addRenderer(EntityPlayerModel.class, RenderPlayerModel::new);
 
         // register skin servers.
@@ -230,7 +230,7 @@ public final class HDSkins {
 
             // schedule texture loading on the main thread.
             TextureLoader.loadTexture(resource, new ThreadDownloadImageData(
-                    getUtils().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
+                    ASSETS_DIR.resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
                     DefaultPlayerSkin.getDefaultSkinLegacy(),
                     new ImageBufferDownloadHD(type, () -> {
@@ -270,7 +270,7 @@ public final class HDSkins {
         logger.info("Clearing local player skin cache");
 
         try {
-            Files.deleteIfExists(getUtils().getAssetsDirectory().resolve("hd"));
+            Files.deleteIfExists(ASSETS_DIR.resolve("hd"));
         } catch (IOException e) {
             e.printStackTrace();
         }
