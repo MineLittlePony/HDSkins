@@ -105,8 +105,6 @@ manifest {
     )
 }
 
-archivesBaseName = "mod-${project.name.toLowerCase()}"
-
 jar {
     classifier 'base'
     extension 'jar'
