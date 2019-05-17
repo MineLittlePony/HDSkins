@@ -20,3 +20,9 @@ Access via the main menu.'''
     versionRange="[25,)"
     ordering="NONE"
     side="BOTH"
+[[dependencies.hdskins]]
+    modIddd="kirin"
+    mandatory=true
+    versionRange="*"
+    ordering="NONE"
+    side="CLIENT"
