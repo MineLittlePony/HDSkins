@@ -1,14 +1,14 @@
 package com.minelittlepony.hdskins.resources;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.ITextureObject;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.Texture;
+import net.minecraft.util.Identifier;
 
 public class TextureLoader {
 
-    private static Minecraft mc = Minecraft.getInstance();
+    private static MinecraftClient mc = MinecraftClient.getInstance();
 
-    public static void loadTexture(final ResourceLocation textureLocation, final ITextureObject textureObj) {
-        mc.addScheduledTask((Runnable) () -> mc.getTextureManager().loadTexture(textureLocation, textureObj));
+    public static void loadTexture(final Identifier textureLocation, final Texture texture) {
+        mc.execute(() -> mc.getTextureManager().registerTexture(textureLocation, texture));
     }
 }

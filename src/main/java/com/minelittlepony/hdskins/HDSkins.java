@@ -33,15 +33,15 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.network.NetworkPlayerInfo;
-import net.minecraft.client.renderer.texture.ThreadDownloadImageData;
-import net.minecraft.client.renderer.texture.ITextureObject;
-import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.resources.IReloadableResourceManager;
-import net.minecraft.client.resources.SkinManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.resource.ReloadableResourceManager;
+import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
+import net.minecraft.client.texture.PlayerSkinTexture;
+import net.minecraft.client.texture.Texture;
+import net.minecraft.client.util.DefaultSkinHelper;
+import net.minecraft.util.Identifier;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -126,8 +126,8 @@ public final class HDSkins {
     }
 
     public void postinit() {
-        IReloadableResourceManager irrm = (IReloadableResourceManager) Minecraft.getInstance().getResourceManager();
-        irrm.addReloadListener(resources);
+        ReloadableResourceManager irrm = (ReloadableResourceManager) MinecraftClient.getInstance().getResourceManager();
+        irrm.registerListener(resources);
 
         getUtils().addRenderer(EntityPlayerModel.class, RenderPlayerModel::new);
 
@@ -202,20 +202,20 @@ public final class HDSkins {
         return skins.getUnchecked(profile);
     }
 
-    public void fetchAndLoadSkins(GameProfile profile, SkinManager.SkinAvailableCallback callback) {
+    public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
         loadProfileTextures(profile).thenAcceptAsync(m -> m.forEach((type, pp) -> {
             loadTexture(type, pp, (typeIn, location, profileTexture) -> {
                 parseSkin(profile, typeIn, location, profileTexture)
                         .thenRun(() -> callback.onSkinTextureAvailable(typeIn, location, profileTexture));
             });
-        }), Minecraft.getInstance()::addScheduledTask);
+        }), MinecraftClient.getInstance()::execute);
     }
 
-    public ResourceLocation loadTexture(Type type, MinecraftProfileTexture texture, @Nullable SkinManager.SkinAvailableCallback callback) {
+    public Identifier loadTexture(Type type, MinecraftProfileTexture texture, @Nullable SkinTextureAvailableCallback callback) {
         String skinDir = type.toString().toLowerCase() + "s/";
 
-        final ResourceLocation resource = new ResourceLocation("hdskins", skinDir + texture.getHash());
-        ITextureObject texObj = Minecraft.getInstance().getTextureManager().getTexture(resource);
+        final Identifier resource = new Identifier("hdskins", skinDir + texture.getHash());
+        Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 
         //noinspection ConstantConditions
         if (texObj != null) {
@@ -225,10 +225,10 @@ public final class HDSkins {
         } else {
 
             // schedule texture loading on the main thread.
-            TextureLoader.loadTexture(resource, new ThreadDownloadImageData(
+            TextureLoader.loadTexture(resource, new PlayerSkinTexture(
                     getUtils().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
-                    DefaultPlayerSkin.getDefaultSkinLegacy(),
+                    DefaultSkinHelper.getTexture(),
                     new ImageBufferDownloadHD(type, () -> {
                         if (callback != null) {
                             callback.onSkinTextureAvailable(type, resource, texture);
@@ -239,8 +239,8 @@ public final class HDSkins {
         return resource;
     }
 
-    public Map<Type, ResourceLocation> getTextures(GameProfile profile) {
-        Map<Type, ResourceLocation> map = new HashMap<>();
+    public Map<Type, Identifier> getTextures(GameProfile profile) {
+        Map<Type, Identifier> map = new HashMap<>();
 
         for (Map.Entry<Type, MinecraftProfileTexture> e : loadProfileTextures(profile).getNow(Collections.emptyMap()).entrySet()) {
             map.put(e.getKey(), loadTexture(e.getKey(), e.getValue(), null));
@@ -305,8 +305,8 @@ public final class HDSkins {
         skinParsers.add(parser);
     }
 
-    public ResourceLocation getConvertedSkin(ResourceLocation res) {
-        ResourceLocation loc = resources.getConvertedResource(res);
+    public Identifier getConvertedSkin(Identifier res) {
+        Identifier loc = resources.getConvertedResource(res);
         return loc == null ? res : loc;
     }
 
@@ -317,7 +317,7 @@ public final class HDSkins {
     }
 
     public void parseSkins() {
-        Minecraft mc = Minecraft.getInstance();
+        MinecraftClient mc = MinecraftClient.getInstance();
 
         Streams.concat(getNPCs(mc), getPlayers(mc))
 
@@ -331,20 +331,20 @@ public final class HDSkins {
 
     }
 
-    private Stream<NetworkPlayerInfo> getNPCs(Minecraft mc) {
+    private Stream<PlayerListEntry> getNPCs(MinecraftClient mc) {
         return MoreStreams.ofNullable(mc.world)
-                .flatMap(w -> w.playerEntities.stream())
-                .filter(AbstractClientPlayer.class::isInstance)
-                .map(AbstractClientPlayer.class::cast)
+                .flatMap(w -> w.getPlayers().stream())
+                .filter(AbstractClientPlayerEntity.class::isInstance)
+                .map(AbstractClientPlayerEntity.class::cast)
                 .map(PlayerUtil::getInfo);
     }
 
-    private Stream<NetworkPlayerInfo> getPlayers(Minecraft mc) {
-        return MoreStreams.ofNullable(mc.getConnection())
-                .flatMap(a -> a.getPlayerInfoMap().stream());
+    private Stream<PlayerListEntry> getPlayers(MinecraftClient mc) {
+        return MoreStreams.ofNullable(mc.getNetworkHandler())
+                .flatMap(a -> a.getPlayerList().stream());
     }
 
-    public CompletableFuture<Void> parseSkin(GameProfile profile, Type type, ResourceLocation resource, MinecraftProfileTexture texture) {
+    public CompletableFuture<Void> parseSkin(GameProfile profile, Type type, Identifier resource, MinecraftProfileTexture texture) {
 
         return CallableFutures.scheduleTask(() -> {
 

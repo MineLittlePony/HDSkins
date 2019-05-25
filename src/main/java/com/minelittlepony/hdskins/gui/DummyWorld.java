@@ -1,59 +1,61 @@
 package com.minelittlepony.hdskins.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.DummyClientTickScheduler;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.crafting.RecipeManager;
+import net.minecraft.item.map.MapState;
+import net.minecraft.recipe.RecipeManager;
 import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.tags.NetworkTagManager;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.tag.RegistryTagManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.*;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
-import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.dimension.OverworldDimension;
-import net.minecraft.world.storage.SaveHandlerMP;
-import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.level.LevelGeneratorType;
+import net.minecraft.world.level.LevelInfo;
+import net.minecraft.world.level.LevelProperties;
 
 public class DummyWorld extends World {
 
     public static final World INSTANCE = new DummyWorld();
 
-    private final Chunk chunk = new EmptyChunk(this, 0, 0);
+    private final Chunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
     private final Scoreboard scoreboard = new Scoreboard();
     private final RecipeManager recipeManager = new RecipeManager();
-    private final NetworkTagManager tags = new NetworkTagManager();
+    private final RegistryTagManager tags = new RegistryTagManager();
 
     private DummyWorld() {
-        super(new SaveHandlerMP(),
-                null,
-                new WorldInfo(new WorldSettings(0, GameType.NOT_SET, false, false, WorldType.DEFAULT), "MpServer"),
-                new OverworldDimension(),
-                Minecraft.getInstance().profiler,
+        super(new LevelProperties(new LevelInfo(0, GameMode.INVALID, false, false, LevelGeneratorType.DEFAULT), "MpServer"),
+                DimensionType.OVERWORLD,
+                (w, dim) -> null,
+                MinecraftClient.getInstance().getProfiler(),
                 true);
     }
 
     @Override
-    protected IChunkProvider createChunkProvider() {
-        return new ChunkProviderClient(this);
-    }
-
-    @Override
-    public boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
+    public boolean isChunkLoaded(int x, int z) {
         return true;
     }
 
     @Override
-    public ITickList<Block> getPendingBlockTicks() {
-        return EmptyTickList.get();
+    public TickScheduler<Block> getBlockTickScheduler() {
+        return DummyClientTickScheduler.get();
     }
 
     @Override
-    public ITickList<Fluid> getPendingFluidTicks() {
-        return EmptyTickList.get();
+    public TickScheduler<Fluid> getFluidTickScheduler() {
+        return DummyClientTickScheduler.get();
     }
 
     @Override
@@ -62,7 +64,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public IBlockState getBlockState(BlockPos pos) {
+    public BlockState getBlockState(BlockPos pos) {
         return Blocks.AIR.getDefaultState();
     }
 
@@ -72,7 +74,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public BlockPos getSpawnPoint() {
+    public BlockPos getSpawnPos() {
         return BlockPos.ORIGIN;
     }
 
@@ -85,9 +87,53 @@ public class DummyWorld extends World {
     public RecipeManager getRecipeManager() {
         return recipeManager;
     }
+    
+    @Override
+    public RegistryTagManager getTagManager() {
+        return tags;
+    }
 
     @Override
-    public NetworkTagManager getTags() {
-        return tags;
+    public void playLevelEvent(PlayerEntity arg0, int arg1, BlockPos arg2, int arg3) {
+    }
+
+    @Override
+    public List<? extends PlayerEntity> getPlayers() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Entity getEntityById(int arg0) {
+        return null;
+    }
+
+    @Override
+    public MapState getMapState(String arg0) {
+        return null;
+    }
+
+    @Override
+    public int getNextMapId() {
+        return 0;
+    }
+
+    @Override
+    public void playSound(PlayerEntity arg0, double arg1, double arg2, double arg3, SoundEvent arg4, SoundCategory arg5, float arg6, float arg7) {
+    }
+
+    @Override
+    public void playSoundFromEntity(PlayerEntity arg0, Entity arg1, SoundEvent arg2, SoundCategory arg3, float arg4, float arg5) {
+    }
+
+    @Override
+    public void putMapState(MapState arg0) {
+    }
+
+    @Override
+    public void setBlockBreakingProgress(int arg0, BlockPos arg1, int arg2) {
+    }
+
+    @Override
+    public void updateListeners(BlockPos arg0, BlockState arg1, BlockState arg2, int arg3) {
     }
 }

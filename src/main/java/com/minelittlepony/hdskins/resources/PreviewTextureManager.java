@@ -5,8 +5,8 @@ import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 
-import net.minecraft.client.resources.SkinManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
+import net.minecraft.util.Identifier;
 
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public class PreviewTextureManager {
     }
 
     @Nullable
-    public PreviewTexture getPreviewTexture(ResourceLocation location, MinecraftProfileTexture.Type type, ResourceLocation def, @Nullable SkinManager.SkinAvailableCallback callback) {
+    public PreviewTexture getPreviewTexture(Identifier location, MinecraftProfileTexture.Type type, Identifier def, @Nullable SkinTextureAvailableCallback callback) {
         if (!textures.containsKey(type)) {
             return null;
         }

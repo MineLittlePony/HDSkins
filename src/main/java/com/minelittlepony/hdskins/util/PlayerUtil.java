@@ -1,21 +1,23 @@
 package com.minelittlepony.hdskins.util;
 
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 
+@Deprecated
 public class PlayerUtil {
 
-    private static final Field playerInfo = FieldUtils.getAllFields(AbstractClientPlayer.class)[0];
+    private static final Field playerInfo = FieldUtils.getAllFields(AbstractClientPlayerEntity.class)[0];
 
-    public static NetworkPlayerInfo getInfo(AbstractClientPlayer player) {
+    public static PlayerListEntry getInfo(AbstractClientPlayerEntity player) {
         try {
             if (!playerInfo.isAccessible()) {
                 playerInfo.setAccessible(true);
             }
-            return (NetworkPlayerInfo) FieldUtils.readField(playerInfo, player);
+            return (PlayerListEntry) FieldUtils.readField(playerInfo, player);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
             return null;

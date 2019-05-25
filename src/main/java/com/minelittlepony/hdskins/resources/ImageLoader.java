@@ -1,33 +1,32 @@
 package com.minelittlepony.hdskins.resources;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.util.Identifier;
 
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-public class ImageLoader implements Supplier<ResourceLocation> {
+public class ImageLoader implements Supplier<Identifier> {
 
-    private static final Minecraft mc = Minecraft.getInstance();
+    private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    private final ResourceLocation original;
+    private final Identifier original;
 
-    public ImageLoader(ResourceLocation loc) {
+    public ImageLoader(Identifier loc) {
         this.original = loc;
     }
 
     @Override
     @Nullable
-    public ResourceLocation get() {
+    public Identifier get() {
         NativeImage image = getImage(original);
 
         final NativeImage updated = new ImageBufferDownloadHD().parseUserSkin(image);
@@ -43,19 +42,19 @@ public class ImageLoader implements Supplier<ResourceLocation> {
         return addTaskAndGet(() -> loadSkin(updated));
     }
 
-    private static <V> V addTaskAndGet(Callable<V> callable) {
+    private static <V> V addTaskAndGet(Supplier<V> callable) {
         try {
-            return mc.addScheduledTask(callable).get();
+            return mc.executeFuture(callable).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Nullable
-    private static NativeImage getImage(ResourceLocation res) {
+    private static NativeImage getImage(Identifier res) {
 
         try (InputStream in = mc.getResourceManager().getResource(res).getInputStream()) {
-            return NativeImage.read(in);
+            return NativeImage.fromInputStream(in);
         } catch (IOException e) {
             return null;
         }
@@ -63,10 +62,10 @@ public class ImageLoader implements Supplier<ResourceLocation> {
 
     @SuppressWarnings("resource")
     @Nullable
-    private ResourceLocation loadSkin(NativeImage image) {
-        ResourceLocation conv = new ResourceLocation(original.getNamespace() + "-converted", original.getPath());
-
-        if (mc.getTextureManager().loadTexture(conv, new DynamicTexture(image))) {
+    private Identifier loadSkin(NativeImage image) {
+        Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
+        
+        if (mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(image))) {
             return conv;
         }
 

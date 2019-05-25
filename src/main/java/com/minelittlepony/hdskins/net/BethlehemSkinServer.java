@@ -62,7 +62,7 @@ public class BethlehemSkinServer implements SkinServer {
 
     protected Map<String, ?> createHeaders(SkinUpload upload) {
         Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                .put("accessToken", upload.getSession().getToken())
+                .put("accessToken", upload.getSession().getAccessToken())
                 .put("user", upload.getSession().getUsername())
                 .put("uuid", UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId()))
                 .put("type", upload.getType().toString().toLowerCase(Locale.US));

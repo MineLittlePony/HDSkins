@@ -4,12 +4,12 @@ import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.resources.SkinManager.SkinAvailableCallback;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.TextureManager;
+import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,16 +20,16 @@ import javax.annotation.Nullable;
 
 public class LocalTexture {
 
-    private final TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+    private final TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
 
     @Nullable
-    private DynamicTexture local;
+    private NativeImageBackedTexture local;
 
     @Nullable
     private PreviewTexture remote;
 
-    private ResourceLocation remoteResource;
-    private ResourceLocation localResource;
+    private Identifier remoteResource;
+    private Identifier localResource;
 
     private final IBlankSkinSupplier blank;
 
@@ -43,14 +43,14 @@ public class LocalTexture {
 
         String file = String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase();
 
-        remoteResource = new ResourceLocation(file);
-        textureManager.deleteTexture(remoteResource);
+        remoteResource = new Identifier(file);
+        textureManager.destroyTexture(remoteResource);
 
 
         reset();
     }
 
-    public ResourceLocation getTexture() {
+    public Identifier getTexture() {
         if (hasRemote()) {
             return remoteResource;
         }
@@ -87,7 +87,7 @@ public class LocalTexture {
         return remote;
     }
 
-    public void setRemote(PreviewTextureManager ptm, SkinAvailableCallback callback) {
+    public void setRemote(PreviewTextureManager ptm, SkinTextureAvailableCallback callback) {
         clearRemote();
 
         remote = ptm.getPreviewTexture(remoteResource, type, blank.getBlankSkin(type), (type, location, profileTexture) -> {
@@ -106,10 +106,10 @@ public class LocalTexture {
         clearLocal();
 
         try (InputStream input = Files.newInputStream(file)) {
-            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.read(input));
+            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.fromInputStream(input));
 
-            local = new DynamicTexture(image);
-            localResource = textureManager.getDynamicTextureLocation("localSkinPreview", local);
+            local = new NativeImageBackedTexture(image);
+            localResource = textureManager.registerDynamicTexture("localSkinPreview", local);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -119,20 +119,20 @@ public class LocalTexture {
         remoteLoaded = false;
         if (hasRemote()) {
             remote = null;
-            textureManager.deleteTexture(remoteResource);
+            textureManager.destroyTexture(remoteResource);
         }
     }
 
     public void clearLocal() {
         if (hasLocal()) {
             local = null;
-            textureManager.deleteTexture(localResource);
+            textureManager.destroyTexture(localResource);
             localResource = blank.getBlankSkin(type);
         }
     }
 
     public interface IBlankSkinSupplier {
 
-        ResourceLocation getBlankSkin(Type type);
+        Identifier getBlankSkin(Type type);
     }
 }

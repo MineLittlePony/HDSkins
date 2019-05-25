@@ -1,140 +1,139 @@
 package com.minelittlepony.hdskins.gui;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.model.ModelElytra;
-import net.minecraft.client.renderer.entity.model.ModelPlayer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderLivingBase;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.client.renderer.entity.model.ModelBiped;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.block.entity.BedBlockEntity;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.render.entity.feature.FeatureRenderer;
+import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
+import net.minecraft.client.render.entity.model.ElytraEntityModel;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityBoat;
-import net.minecraft.entity.player.EnumPlayerModelParts;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.item.Items;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityBed;
-import net.minecraft.util.ResourceLocation;
-
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import java.util.Set;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLivingBase<M> {
+public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntityRenderer<M, PlayerEntityModel<M>> {
 
     /**
      * The basic Elytra texture.
      */
-    protected final ResourceLocation TEXTURE_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
+    protected final Identifier TEXTURE_ELYTRA = new Identifier("textures/entity/elytra.png");
 
-    private static final ModelPlayer FAT = new ModelPlayer(0, false);
-    private static final ModelPlayer THIN = new ModelPlayer(0, true);
+    private static final PlayerEntityModel<EntityPlayerModel> FAT = new PlayerEntityModel<>(0, false);
+    private static final PlayerEntityModel<EntityPlayerModel> THIN = new PlayerEntityModel<>(0, true);
 
-    public RenderPlayerModel(RenderManager renderer) {
-        super(renderer, FAT, 0);
-        this.addLayer(this.getElytraLayer());
+    @SuppressWarnings("unchecked")
+    public RenderPlayerModel(EntityRenderDispatcher renderer) {
+        super(renderer, (PlayerEntityModel<M>)FAT, 0);
+        addFeature(getElytraLayer());
     }
 
-    protected LayerRenderer<? extends EntityLivingBase> getElytraLayer() {
-        final ModelElytra modelElytra = new ModelElytra();
-        return new LayerRenderer<EntityLivingBase>() {
+    protected FeatureRenderer<M, PlayerEntityModel<M>> getElytraLayer() {
+        final ElytraEntityModel<M> modelElytra = new ElytraEntityModel<>();
+        return new FeatureRenderer<M, PlayerEntityModel<M>>(this) {
             @Override
-            public void render(EntityLivingBase entityBase, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-                EntityPlayerModel entity = (EntityPlayerModel) entityBase;
-                ItemStack itemstack = entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
+            public void render(M entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+                ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
 
                 if (itemstack.getItem() == Items.ELYTRA) {
-                    GlStateManager.color4f(1, 1, 1, 1);
-                    GlStateManager.enableBlend();
-                    GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+                    color4f(1, 1, 1, 1);
+                    enableBlend();
+                    blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 
                     bindTexture(entity.getLocal(Type.ELYTRA).getTexture());
 
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translatef(0, 0, 0.125F);
+                    pushMatrix();
+                    translatef(0, 0, 0.125F);
 
-                    modelElytra.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entity);
+                    modelElytra.setAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
                     modelElytra.render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
 
-                    GlStateManager.disableBlend();
-                    GlStateManager.popMatrix();
+                    disableBlend();
+                    popMatrix();
                 }
             }
 
             @Override
-            public boolean shouldCombineTextures() {
+            public boolean hasHurtOverlay() {
                 return false;
             }
         };
     }
 
     @Override
-    protected ResourceLocation getEntityTexture(M entity) {
+    protected Identifier getTexture(M entity) {
         return entity.getLocal(Type.SKIN).getTexture();
     }
 
     @Override
-    protected boolean canRenderName(M entity) {
-        return Minecraft.getInstance().player != null && super.canRenderName(entity);
+    protected boolean hasLabel(M entity) {
+        return MinecraftClient.getInstance().player != null && super.hasLabel(entity);
+    }
+
+    // TODO: Where'd it go?
+    //@Override
+    //protected boolean setBrightness(M entity, float partialTicks, boolean combineTextures) {
+    //    return MinecraftClient.getInstance().world != null && super.setBrightness(entity, partialTicks, combineTextures);
+    //}
+
+    @SuppressWarnings("unchecked")
+    public <T extends PlayerEntityModel<M>> T getEntityModel(M entity) {
+        return (T)(entity.usesThinSkin() ? THIN : FAT);
     }
 
     @Override
-    protected boolean setBrightness(M entity, float partialTicks, boolean combineTextures) {
-        return Minecraft.getInstance().world != null && super.setBrightness(entity, partialTicks, combineTextures);
-    }
+    public void render(M entity, double x, double y, double z, float entityYaw, float partialTicks) {
 
-    public ModelPlayer getEntityModel(M entity) {
-        return entity.usesThinSkin() ? THIN : FAT;
-    }
-
-    @Override
-    public void doRender(M entity, double x, double y, double z, float entityYaw, float partialTicks) {
-
-        if (entity.isPlayerSleeping()) {
+        if (entity.isSleeping()) {
             BedHead.instance.render(entity);
         }
 
-        if (entity.isPassenger()) {
+        if (entity.hasVehicle()) {
             MrBoaty.instance.render();
         }
 
-        ModelPlayer player = getEntityModel(entity);
-        mainModel = player;
+        PlayerEntityModel<M> player = getEntityModel(entity);
+        model = player;
 
-        Set<EnumPlayerModelParts> parts = Minecraft.getInstance().gameSettings.getModelParts();
-        player.bipedHeadwear.isHidden = !parts.contains(EnumPlayerModelParts.HAT);
-        player.bipedBodyWear.isHidden = !parts.contains(EnumPlayerModelParts.JACKET);
-        player.bipedLeftLegwear.isHidden = !parts.contains(EnumPlayerModelParts.LEFT_PANTS_LEG);
-        player.bipedRightLegwear.isHidden = !parts.contains(EnumPlayerModelParts.RIGHT_PANTS_LEG);
-        player.bipedLeftArmwear.isHidden = !parts.contains(EnumPlayerModelParts.LEFT_SLEEVE);
-        player.bipedRightArmwear.isHidden = !parts.contains(EnumPlayerModelParts.RIGHT_SLEEVE);
-        player.isSneak = entity.isSneaking();
+        Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
+        player.headwear.field_3664 = !parts.contains(PlayerModelPart.HAT);
+        player.bodyOverlay.field_3664 = !parts.contains(PlayerModelPart.JACKET);
+        player.leftLegOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
+        player.rightLegOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
+        player.leftArmOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
+        player.rightArmOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
+        player.isSneaking = entity.isSneaking();
 
-        player.leftArmPose = ModelBiped.ArmPose.EMPTY;
-        player.rightArmPose = ModelBiped.ArmPose.EMPTY;
+        player.leftArmPose = ArmPose.EMPTY;
+        player.rightArmPose = ArmPose.EMPTY;
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
-        double offset = entity.getYOffset() + entity.posY;
+        double offset = entity.getHeightOffset() + entity.y;
 
-        if (entity.isPassenger()) {
-            offset = entity.getMountedYOffset() - entity.height;
+        if (entity.hasVehicle()) {
+            offset = entity.getMountedHeightOffset() - entity.getHeight();
         }
 
-        if (entity.isPlayerSleeping()) {
+        if (entity.isSleeping()) {
             y--;
             z += 0.75F;
-        } else if (player.isSneak) {
+        } else if (player.isSneaking) {
             y -= 0.125D;
         }
 
@@ -143,11 +142,11 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
         color4f(1, 1, 1, 0.3F);
         translated(0, offset, 0);
 
-        if (entity.isPlayerSleeping()) {
+        if (entity.isSleeping()) {
             rotatef(-90, 1, 0, 0);
         }
 
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+        super.render(entity, x, y, z, entityYaw, partialTicks);
 
         color4f(1, 1, 1, 1);
         disableBlend();
@@ -159,27 +158,20 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
         scalef(1, -1, 1);
         translated(0.001, offset, 0.001);
 
-        if (entity.isPlayerSleeping()) {
+        if (entity.isSleeping()) {
             rotatef(-90, 1, 0, 0);
         }
 
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+        super.render(entity, x, y, z, entityYaw, partialTicks);
         popMatrix();
         GL11.glPopAttrib();
     }
 
-    static class BedHead extends TileEntityBed {
-        public static BedHead instance = new BedHead(Blocks.RED_BED.getDefaultState());
+    static class BedHead extends BedBlockEntity {
+        public static BedHead instance = new BedHead();
 
-        public IBlockState state;
-
-        public BedHead(IBlockState state) {
-            this.state = state;
-        }
-
-        @Override
-        public IBlockState getBlockState() {
-            return state;
+        public BedHead() {
+            this.setColor(DyeColor.RED);
         }
 
         public void render(Entity entity) {
@@ -188,21 +180,25 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
 
             scalef(-1, -1, -1);
 
-            TileEntityRendererDispatcher dispatcher = TileEntityRendererDispatcher.instance;
+            BlockEntityRenderDispatcher dispatcher = BlockEntityRenderDispatcher.INSTANCE;
 
-            dispatcher.prepare(entity.getEntityWorld(), Minecraft.getInstance().getTextureManager(), Minecraft.getInstance().getRenderManager().getFontRenderer(), entity, null, 0);
-            dispatcher.getRenderer(this).render(BedHead.instance, -0.5F, 0, 0, 0, -1);
+            dispatcher.configure(entity.getEntityWorld(),
+                    MinecraftClient.getInstance().getTextureManager(),
+                    MinecraftClient.getInstance().getEntityRenderManager().getTextRenderer(),
+                    MinecraftClient.getInstance().gameRenderer.getCamera(),
+                    MinecraftClient.getInstance().hitResult);
+            dispatcher.get(this).render(BedHead.instance, -0.5F, 0, 0, 0, -1);
 
             popMatrix();
             GL11.glPopAttrib();
         }
     }
 
-    static class MrBoaty extends EntityBoat {
+    static class MrBoaty extends BoatEntity {
         public static MrBoaty instance = new MrBoaty();
 
         public MrBoaty() {
-            super(DummyWorld.INSTANCE);
+            super(EntityType.BOAT, DummyWorld.INSTANCE);
         }
 
         public void render() {
@@ -211,9 +207,9 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends RenderLiving
 
             scalef(-1, -1, -1);
 
-            Render<EntityBoat> render = Minecraft.getInstance().getRenderManager().getEntityRenderObject(this);
+            EntityRenderer<BoatEntity> render = MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
 
-            render.doRender(this, 0, 0, 0, 0, 0);
+            render.render(this, 0, 0, 0, 0, 0);
 
             popMatrix();
             GL11.glPopAttrib();

@@ -4,7 +4,7 @@ import com.minelittlepony.hdskins.upload.FileSystem;
 import com.minelittlepony.hdskins.upload.IFileDialog;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 
-import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class SkinChooser {
         }
 
         try (InputStream in = Files.newInputStream(skinFile)) {
-            NativeImage chosenImage = NativeImage.read(in);
+            NativeImage chosenImage = NativeImage.fromInputStream(in);
 
             if (!acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight())) {
                 return ERR_INVALID;

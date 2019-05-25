@@ -7,11 +7,11 @@ import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinUpload;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.NetClient;
-import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.Items;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,7 +77,7 @@ public class SkinUploader implements Closeable {
 
     private final ISkinUploadHandler listener;
 
-    private final Minecraft mc = Minecraft.getInstance();
+    private final MinecraftClient mc = MinecraftClient.getInstance();
 
     private static <T> Iterator<T> cycle(List<T> list, Predicate<T> filter) {
         return Iterables.cycle(Iterables.filter(list, filter::test)).iterator();
@@ -123,8 +123,8 @@ public class SkinUploader implements Closeable {
 
         ItemStack stack = type == Type.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
         // put on or take off the elytra
-        localPlayer.setItemStackToSlot(EntityEquipmentSlot.CHEST, stack);
-        remotePlayer.setItemStackToSlot(EntityEquipmentSlot.CHEST, stack);
+        localPlayer.setEquippedStack(EquipmentSlot.CHEST, stack);
+        remotePlayer.setEquippedStack(EquipmentSlot.CHEST, stack);
 
         listener.onSkinTypeChanged(type);
     }
@@ -257,7 +257,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setLocalSkin(Path skinFile) {
-        mc.addScheduledTask(localPlayer::releaseTextures);
+        mc.execute(localPlayer::releaseTextures);
 
         synchronized (skinLock) {
             pendingLocalSkin = skinFile;
@@ -292,7 +292,7 @@ public class SkinUploader implements Closeable {
     }
 
     public interface ISkinUploadHandler {
-        default void onSetRemoteSkin(Type type, ResourceLocation location, MinecraftProfileTexture profileTexture) {
+        default void onSetRemoteSkin(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         }
 
         default void onSetLocalSkin(Type type) {

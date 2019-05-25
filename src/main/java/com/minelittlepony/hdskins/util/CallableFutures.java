@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.util;
 
 import com.google.common.util.concurrent.Runnables;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -47,7 +47,7 @@ public class CallableFutures {
     public static CompletableFuture<Void> scheduleTask(Runnable task) {
         // schedule a task for next tick.
         return CompletableFuture.runAsync(Runnables.doNothing(), delayed(50, TimeUnit.MILLISECONDS))
-                .handleAsync(callback(task), Minecraft.getInstance()::addScheduledTask);
+                .handleAsync(callback(task), MinecraftClient.getInstance()::executeSync);
     }
 
     private static Executor delayed(long time, TimeUnit unit) {

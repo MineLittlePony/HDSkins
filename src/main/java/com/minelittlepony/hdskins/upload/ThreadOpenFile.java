@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.upload;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 
 import java.io.File;
 
@@ -32,7 +32,7 @@ class ThreadOpenFile extends Thread implements IFileDialog {
     private Callback callback;
 
     ThreadOpenFile(String dialogTitle) throws IllegalStateException {
-        if (Minecraft.getInstance().mainWindow.isFullscreen()) {
+        if (MinecraftClient.getInstance().window.isFullscreen()) {
             throw new IllegalStateException("Cannot open an awt window whilst minecraft is in full screen mode!");
         }
 

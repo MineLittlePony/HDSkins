@@ -1,22 +1,36 @@
+// Frabric build script
+// 24/05/2019
+// https://github.com/FabricMC/fabric-example-mod/blob/master/build.gradle
+
 buildscript {
-    repositories {
-        jcenter()
-        maven {
-            name = 'forge'
-            url = 'http://files.minecraftforge.net/maven'
-        }
-    }
+	repositories {
+	    jcenter()
+	    maven {
+	        name = 'Fabric'
+	        url = 'https://maven.fabricmc.net/'
+	    }
+	    gradlePluginPortal()
+	}
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    	classpath 'fabric-loom:fabric-loom.gradle.plugin:0.2.2-SNAPSHOT'
+    	classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath 'org.ajoberstar.grgit:grgit-gradle:3.1.1'
     }
 }
 
-apply plugin: 'net.minecraftforge.gradle'
+repositories {
+	maven {
+    	name = 'Jit'
+     	url = 'https://jitpack.io'
+ 	}
+}
+
+apply plugin: 'fabric-loom'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.ajoberstar.grgit'
-apply plugin: 'eclipse'
+
+targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_8
 
 ext {
     revision = grgit.log().size()
@@ -37,72 +51,46 @@ if (project.release == 'SNAPSHOT') {
 
 group = project.group
 description = project.displayname
-
-sourceSets {
-    fml {
-        compileClasspath += main.compileClasspath
-        compileClasspath += main.output
-    }
-}
-
-minecraft {
-    mappings channel: project.mappings_channel, version: project.mappings_version + '-' + project.minecraft_version
-
-    runs {
-        client {
-            workingDirectory file('run')
-
-            property 'forge.logging.markers', 'SCAN'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                hdskins {
-                    source sourceSets.fml
-                    source sourceSets.main
-                }
-            }
-            ideaModule = "HDSkins.fml"
-        }
-    }
-}
-
-// From the forge MDK: Need this here so eclipse task generates correctly.
-targetCompatibility = compileJava.targetCompatibility = 1.8
-sourceCompatibility = compileJava.sourceCompatibility = 1.8
-
-repositories {
-    maven {
-        url = 'https://jitpack.io'
-    }
-    maven {
-        url = 'https://repo.spongepowered.org/maven'
-    }
-}
+archivesBaseName = project.name
 
 dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
+	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+	
+    modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    minecraft "net.minecraftforge:forge:" + project.minecraft_version + "-" + project.forge_version
-
-    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
-        transitive = false
-    }
     // use the same version as httpclient
     compile('org.apache.httpcomponents:httpmime:4.3.2') {
         transitive = false
     }
 
-    compile fg.deobf("com.github.MineLittlePony:Kirin:master-SNAPSHOT")
+    modCompile "com.github.MineLittlePony:Kirin:1.14-fabric-SNAPSHOT"
+    include "com.github.MineLittlePony:Kirin:1.14-fabric-SNAPSHOT"
 }
 
-manifest {
-    attributes(
-        "Implementation-Version": "${version} (git-${project.hash})",
-        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-    )
+processResources {
+	inputs.property "version", project.version
+
+	from(sourceSets.main.resources.srcDirs) {
+		include "fabric.mod.json"
+		expand "version": project.version
+	}
+
+	from(sourceSets.main.resources.srcDirs) {
+		exclude "fabric.mod.json"
+	}
 }
 
-// TODO remove when mixingradle gets updated.
-compileJava.options.compilerArgs += '-proc:none'
+tasks.withType(JavaCompile) {
+	options.encoding = "UTF-8"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
 
 shadowJar {
     classifier 'universal'
@@ -112,3 +100,8 @@ shadowJar {
 
     relocate 'org.apache.http.entity.mime', 'com.minelittlepony.repack.org.apache.http.entity.mime'
 }
+
+jar {
+	from "LICENSE"
+}
+

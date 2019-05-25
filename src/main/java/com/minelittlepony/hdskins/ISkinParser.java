@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 
 import java.util.Map;
 
@@ -21,5 +21,5 @@ public interface ISkinParser {
      * @param resource The texture location
      * @param metadata The metadata previously parsed
      */
-    void parse(GameProfile profile, Type type, ResourceLocation resource, Map<String, String> metadata);
+    void parse(GameProfile profile, Type type, Identifier resource, Map<String, String> metadata);
 }

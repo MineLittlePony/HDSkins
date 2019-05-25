@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.resources;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +22,7 @@ class Skin {
     @Expose
     String skin;
 
-    public ResourceLocation getTexture() {
-        return new ResourceLocation("hdskins", String.format("textures/skins/%s.png", skin));
+    public Identifier getTexture() {
+        return new Identifier("hdskins", String.format("textures/skins/%s.png", skin));
     }
 }

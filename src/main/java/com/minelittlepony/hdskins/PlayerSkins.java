@@ -11,14 +11,14 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
-import net.minecraft.client.resources.SkinManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.texture.PlayerSkinProvider;
+import net.minecraft.util.Identifier;
 
 public class PlayerSkins {
 
     private final INetworkPlayerInfo playerInfo;
 
-    private final Map<Type, ResourceLocation> customTextures = new HashMap<>();
+    private final Map<Type, Identifier> customTextures = new HashMap<>();
 
     private final Map<Type, MinecraftProfileTexture> customProfiles = new HashMap<>();
 
@@ -28,7 +28,7 @@ public class PlayerSkins {
         this.playerInfo = playerInfo;
     }
 
-    public ResourceLocation getSkin(Type type) {
+    public Identifier getSkin(Type type) {
         if (customTextures.containsKey(type)) {
             return customTextures.get(type);
         }
@@ -42,19 +42,19 @@ public class PlayerSkins {
         });
     }
 
-    public void load(SkinManager skinManager, GameProfile profile, boolean requireSecure) {
+    public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {
 
         HDSkins.getInstance().fetchAndLoadSkins(profile, this::onCustomTextureLoaded);
 
-        skinManager.loadProfileTextures(profile, this::onVanillaTextureLoaded, requireSecure);
+        provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);
     }
 
-    private void onCustomTextureLoaded(Type type, ResourceLocation location, MinecraftProfileTexture profileTexture) {
+    private void onCustomTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         customTextures.put(type, location);
         customProfiles.put(type, profileTexture);
     }
 
-    private void onVanillaTextureLoaded(Type type, ResourceLocation location, MinecraftProfileTexture profileTexture) {
+    private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         HDSkins.getInstance().parseSkin(playerInfo.getGameProfile(), type, location, profileTexture).thenAccept(v -> {
             playerInfo.getVanillaTextures().put(type, location);
             vanillaProfiles.put(type, profileTexture);

@@ -8,32 +8,32 @@ import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.SkinManager;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityType;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHandSide;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.AbsoluteHand;
+import net.minecraft.util.Identifier;
 
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("EntityConstructor")
-public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSupplier {
+public class EntityPlayerModel extends LivingEntity implements IBlankSkinSupplier {
 
-    public static final ResourceLocation NO_SKIN = new ResourceLocation("hdskins", "textures/mob/noskin.png");
-    public static final ResourceLocation NO_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
+    public static final Identifier NO_SKIN = new Identifier("hdskins", "textures/mob/noskin.png");
+    public static final Identifier NO_ELYTRA = new Identifier("textures/entity/elytra.png");
 
-    private final Map<EntityEquipmentSlot, ItemStack> armour = Maps.newEnumMap(ImmutableMap.of(
-            EntityEquipmentSlot.HEAD, ItemStack.EMPTY,
-            EntityEquipmentSlot.CHEST, ItemStack.EMPTY,
-            EntityEquipmentSlot.LEGS, ItemStack.EMPTY,
-            EntityEquipmentSlot.FEET, ItemStack.EMPTY,
-            EntityEquipmentSlot.MAINHAND, ItemStack.EMPTY
+    private final Map<EquipmentSlot, ItemStack> armour = Maps.newEnumMap(ImmutableMap.of(
+            EquipmentSlot.HEAD, ItemStack.EMPTY,
+            EquipmentSlot.CHEST, ItemStack.EMPTY,
+            EquipmentSlot.LEGS, ItemStack.EMPTY,
+            EquipmentSlot.FEET, ItemStack.EMPTY,
+            EquipmentSlot.MAINHAND, ItemStack.EMPTY
     ));
 
     protected final LocalTexture skin;
@@ -54,11 +54,11 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
         elytra = new LocalTexture(profile, Type.ELYTRA, this);
     }
 
-    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinManager.SkinAvailableCallback listener) {
+    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinTextureAvailableCallback listener) {
         return uploader.loadTextures(profile).thenAcceptAsync(ptm -> {
             skin.setRemote(ptm, listener);
             elytra.setRemote(ptm, listener);
-        }, Minecraft.getInstance()::addScheduledTask); // run on main thread
+        }, MinecraftClient.getInstance()::execute); // run on main thread
     }
 
     public void setLocalTexture(Path skinTextureFile, Type type) {
@@ -70,7 +70,7 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
     }
 
     @Override
-    public ResourceLocation getBlankSkin(Type type) {
+    public Identifier getBlankSkin(Type type) {
         return type == Type.SKIN ? NO_SKIN : NO_ELYTRA;
     }
 
@@ -116,17 +116,17 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
     }
 
     @Override
-    public boolean isPassenger() {
+    public boolean hasVehicle() {
         return previewRiding;
     }
 
     @Override
-    public boolean isPlayerSleeping() {
+    public boolean isSleeping() {
         return !previewRiding && previewSleeping;
     }
 
     @Override
-    public Entity getRidingEntity() {
+    public Entity getPrimaryPassenger() {
         return previewRiding ? RenderPlayerModel.MrBoaty.instance : null;
     }
 
@@ -136,58 +136,59 @@ public class EntityPlayerModel extends EntityLivingBase implements IBlankSkinSup
     }
 
     public void updateModel() {
-        prevSwingProgress = swingProgress;
-        if (isSwingInProgress) {
-            ++swingProgressInt;
-            if (swingProgressInt >= 8) {
-                swingProgressInt = 0;
-                isSwingInProgress = false;
+        lastHandSwingProgress = handSwingProgress;
+
+        if (isHandSwinging) {
+            ++handSwingTicks;
+            if (handSwingTicks >= 8) {
+                handSwingTicks = 0;
+                isHandSwinging = false;
             }
         } else {
-            swingProgressInt = 0;
+            handSwingTicks = 0;
         }
 
-        swingProgress = swingProgressInt / 8F;
+        handSwingProgress = handSwingTicks / 8F;
 
-        motionY *= 0.98;
-        if (Math.abs(motionY) < 0.003) {
-            motionY = 0;
+        upwardSpeed *= 0.98;
+        if (Math.abs(upwardSpeed) < 0.003) {
+            upwardSpeed = 0;
         }
 
-        if (posY == 0 && isJumping && !previewSleeping && !previewRiding) {
+        if (y == 0 && jumping && !previewSleeping && !previewRiding) {
             jump();
         }
 
-        motionY -= 0.08D;
-        motionY *= 0.9800000190734863D;
+        upwardSpeed -= 0.08D;
+        upwardSpeed *= 0.9800000190734863D;
 
-        posY += motionY;
+        y += upwardSpeed;
 
-        if (posY < 0) {
-            posY = 0;
+        if (y < 0) {
+            y = 0;
         }
-        onGround = posY == 0;
+        onGround = y == 0;
 
-        ticksExisted++;
+        age++;
     }
 
     @Override
-    public EnumHandSide getPrimaryHand() {
-        return Minecraft.getInstance().gameSettings.mainHand;
+    public AbsoluteHand getMainHand() {
+        return MinecraftClient.getInstance().options.mainHand;
     }
 
     @Override
-    public Iterable<ItemStack> getArmorInventoryList() {
+    public Iterable<ItemStack> getArmorItems() {
         return armour.values();
     }
 
     @Override
-    public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn) {
+    public ItemStack getEquippedStack(EquipmentSlot slotIn) {
         return armour.get(slotIn);
     }
 
     @Override
-    public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack) {
+    public void setEquippedStack(EquipmentSlot slotIn, ItemStack stack) {
         armour.put(slotIn, stack);
     }
 }

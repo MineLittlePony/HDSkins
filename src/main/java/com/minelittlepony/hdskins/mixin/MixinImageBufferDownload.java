@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.mixin;
 
-import net.minecraft.client.renderer.IImageBuffer;
-import net.minecraft.client.renderer.ImageBufferDownload;
-import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.texture.ImageFilter;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.SkinRemappingImageFilter;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,10 +12,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.resources.texture.SimpleDrawer;
 
-@Mixin(ImageBufferDownload.class)
-public abstract class MixinImageBufferDownload implements IImageBuffer {
+@Mixin(SkinRemappingImageFilter.class)
+public abstract class MixinImageBufferDownload implements ImageFilter {
 
-    @Inject(method = "parseUserSkin(Lnet/minecraft/client/renderer/texture/NativeImage;)Lnet/minecraft/client/renderer/texture/NativeImage;",
+    @Inject(method = "filterImage(Lnet/minecraft/client/texture/NativeImage;)Lnet/minecraft/client/texture/NativeImage;",
             at = @At("RETURN"),
             cancellable = true)
     private void update(NativeImage image, CallbackInfoReturnable<NativeImage> ci) {

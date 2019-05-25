@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.resources.texture;
 
 import com.minelittlepony.hdskins.HDSkins;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.texture.NativeImage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,7 +42,7 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
         int scale = imageWidth / 64;
 
         NativeImage image = new NativeImage(imageWidth, imageWidth, true);
-        image.copyImageData(downloadedImage);
+        image.copyFrom(downloadedImage);
 
         downloadedImage.close();
         

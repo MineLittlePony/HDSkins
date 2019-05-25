@@ -5,10 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import net.minecraft.resources.IResource;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.IResourceManagerReloadListener;
-import net.minecraft.util.ResourceLocation;
+
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceReloadListener;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.profiler.Profiler;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,11 +22,12 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class SkinResourceManager implements IResourceManagerReloadListener {
+public class SkinResourceManager implements ResourceReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -34,11 +38,20 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
     private Map<UUID, Skin> uuidSkins = Maps.newHashMap();
     private Map<String, Skin> namedSkins = Maps.newHashMap();
 
-    private Map<ResourceLocation, Future<ResourceLocation>> inProgress = Maps.newHashMap();
-    private Map<ResourceLocation, ResourceLocation> converted = Maps.newHashMap();
+    private Map<Identifier, Future<Identifier>> inProgress = Maps.newHashMap();
+    private Map<Identifier, Identifier> converted = Maps.newHashMap();
+
 
     @Override
-    public void onResourceManagerReload(IResourceManager resourceManager) {
+    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender, Profiler profiler, Profiler profile2, Executor executor, Executor executor2) {
+        return CompletableFuture.runAsync(() -> {
+            profiler.push("Reloading User's HD Skins");
+            reloadSkins(sender);
+            profiler.endTick();
+        });
+    }
+
+    public void reloadSkins(ResourceManager resourceManager) {
 
         uuidSkins.clear();
         namedSkins.clear();
@@ -49,14 +62,14 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
         inProgress.clear();
         converted.clear();
 
-        for (String domain : resourceManager.getResourceNamespaces()) {
+        for (String domain : resourceManager.getAllNamespaces()) {
             try {
-                resourceManager.getAllResources(new ResourceLocation(domain, "textures/skins/skins.json")).forEach(this::loadResource);
+                resourceManager.getAllResources(new Identifier(domain, "textures/skins/skins.json")).forEach(this::loadResource);
             } catch (IOException ignored) { }
         }
     }
 
-    private void loadResource(IResource resource) {
+    private void loadResource(Resource resource) {
         SkinData data = getSkinData(resource);
 
         if (data == null) {
@@ -76,26 +89,26 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
     }
 
     @Nullable
-    private SkinData getSkinData(IResource resource) throws JsonParseException {
+    private SkinData getSkinData(Resource resource) throws JsonParseException {
 
         try (InputStream stream = resource.getInputStream()) {
             return gson.fromJson(new InputStreamReader(stream), SkinData.class);
         } catch (JsonParseException e) {
-            logger.warn("Invalid skins.json in " + resource.getPackName(), e);
+            logger.warn("Invalid skins.json in " + resource.getResourcePackName(), e);
         } catch (IOException ignored) {}
 
         return null;
     }
 
     @Nullable
-    public ResourceLocation getPlayerTexture(GameProfile profile, Type type) {
+    public Identifier getPlayerTexture(GameProfile profile, Type type) {
         if (type != Type.SKIN) {
             return null; // not supported
         }
 
         Skin skin = getSkin(profile);
         if (skin != null) {
-            final ResourceLocation res = skin.getTexture();
+            final Identifier res = skin.getTexture();
             return getConvertedResource(res);
         }
         return null;
@@ -108,19 +121,19 @@ public class SkinResourceManager implements IResourceManagerReloadListener {
      * @return The converted resource
      */
     @Nullable
-    public ResourceLocation getConvertedResource(@Nullable ResourceLocation res) {
+    public Identifier getConvertedResource(@Nullable Identifier res) {
         loadSkinResource(res);
 
         return converted.get(res);
     }
 
-    private void loadSkinResource(@Nullable final ResourceLocation res) {
+    private void loadSkinResource(@Nullable final Identifier res) {
         if (res != null) { // read and convert in a new thread
             inProgress.computeIfAbsent(res, this::computeNewSkinResource);
         }
     }
 
-    private CompletableFuture<ResourceLocation> computeNewSkinResource(ResourceLocation res) {
+    private CompletableFuture<Identifier> computeNewSkinResource(Identifier res) {
         return CompletableFuture.supplyAsync(new ImageLoader(res), executor).whenComplete((loc, t) -> {
             if (loc != null) {
                 converted.put(res, loc);

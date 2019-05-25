@@ -3,13 +3,13 @@ package com.minelittlepony.hdskins.resources;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.client.renderer.IImageBuffer;
-import net.minecraft.client.renderer.texture.ThreadDownloadImageData;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.texture.ImageFilter;
+import net.minecraft.client.texture.PlayerSkinTexture;
+import net.minecraft.util.Identifier;
 
 import javax.annotation.Nullable;
 
-public class PreviewTexture extends ThreadDownloadImageData {
+public class PreviewTexture extends PlayerSkinTexture {
 
     private boolean uploaded;
 
@@ -17,7 +17,7 @@ public class PreviewTexture extends ThreadDownloadImageData {
 
     private final String fileUrl;
 
-    public PreviewTexture(MinecraftProfileTexture texture, ResourceLocation fallbackTexture, @Nullable IImageBuffer imageBuffer) {
+    public PreviewTexture(MinecraftProfileTexture texture, Identifier fallbackTexture, @Nullable ImageFilter imageBuffer) {
         super(null, texture.getUrl(), fallbackTexture, imageBuffer);
 
         this.model = VanillaModels.nonNull(texture.getMetadata("model"));
@@ -25,7 +25,7 @@ public class PreviewTexture extends ThreadDownloadImageData {
     }
 
     public boolean isTextureUploaded() {
-        return uploaded && getGlTextureId() > -1;
+        return uploaded && getGlId() > -1;
     }
 
     public String getUrl() {
@@ -33,8 +33,8 @@ public class PreviewTexture extends ThreadDownloadImageData {
     }
 
     @Override
-    public void deleteGlTexture() {
-        super.deleteGlTexture();
+    public void clearGlId() {
+        super.clearGlId();
         uploaded = true;
     }
 

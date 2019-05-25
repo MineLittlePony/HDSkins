@@ -17,7 +17,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
@@ -54,7 +54,7 @@ public class LegacySkinServer implements SkinServer {
     @Override
     public CompletableFuture<MinecraftTexturesPayload> getPreviewTextures(GameProfile profile) {
         return CallableFutures.asyncFailableFuture(() -> {
-            SkinServer.verifyServerConnection(Minecraft.getInstance().getSession(), SERVER_ID);
+            SkinServer.verifyServerConnection(MinecraftClient.getInstance().getSession(), SERVER_ID);
 
             if (Strings.isNullOrEmpty(gateway)) {
                 throw gatewayUnsupported();

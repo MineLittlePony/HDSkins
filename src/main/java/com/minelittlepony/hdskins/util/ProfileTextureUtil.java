@@ -2,8 +2,8 @@ package com.minelittlepony.hdskins.util;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.texture.NativeImage;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+@Deprecated
 public class ProfileTextureUtil {
 
     private static Field metadata = FieldUtils.getDeclaredField(MinecraftProfileTexture.class, "metadata", true);
@@ -33,9 +34,9 @@ public class ProfileTextureUtil {
         }
     }
 
-    public static NativeImage getDynamicBufferedImage(int width, int height, DynamicTexture texture) {
+    public static NativeImage getDynamicBufferedImage(int width, int height, NativeImageBackedTexture texture) {
         NativeImage image = new NativeImage(16, 16, true);
-        image.copyImageData(texture.getTextureData());
+        image.copyFrom(texture.getImage());
         return image;
     }
 }

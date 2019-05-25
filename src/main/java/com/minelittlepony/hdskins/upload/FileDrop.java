@@ -14,8 +14,8 @@ import org.lwjgl.system.MemoryUtil;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.client.MainWindow;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Window;
 
 /**
  * Wrapper around GLFW to handle file drop events.
@@ -55,9 +55,9 @@ public class FileDrop {
      */
     public FileDrop subscribe() {
         if (!cancelled && hook == null) {
-            Minecraft.getInstance().addScheduledTask(() -> {
+            MinecraftClient.getInstance().execute(() -> {
                 if (!cancelled) {
-                    MainWindow window = Minecraft.getInstance().mainWindow;
+                    Window window = MinecraftClient.getInstance().window;
                     hook = GLFW.glfwSetDropCallback(window.getHandle(), nativ);
                 }
             });
@@ -70,8 +70,8 @@ public class FileDrop {
         cancelled = true;
 
         if (hook != null) {
-            Minecraft.getInstance().addScheduledTask(() -> {
-                MainWindow window = Minecraft.getInstance().mainWindow;
+            MinecraftClient.getInstance().execute(() -> {
+                Window window = MinecraftClient.getInstance().window;
                 hook = GLFW.glfwSetDropCallback(window.getHandle(), null);
             });
         }

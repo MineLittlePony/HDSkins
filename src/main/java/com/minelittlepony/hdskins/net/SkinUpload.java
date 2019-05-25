@@ -1,9 +1,9 @@
 package com.minelittlepony.hdskins.net;
 
-import net.minecraft.util.Session;
-
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+
+import net.minecraft.client.util.Session;
 
 import java.net.URI;
 import java.util.Map;

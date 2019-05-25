@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.util;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import static net.minecraft.util.text.TextFormatting.*;
+import static net.minecraft.ChatFormat.*;
 
 public class IndentedToStringStyle extends ToStringStyle {
 

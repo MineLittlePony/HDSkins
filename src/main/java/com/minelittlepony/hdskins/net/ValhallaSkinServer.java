@@ -12,8 +12,8 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.Session;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Session;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -123,7 +123,7 @@ public class ValhallaSkinServer implements SkinServer {
             return;
         }
         GameProfile profile = session.getProfile();
-        String token = session.getToken();
+        String token = session.getAccessToken();
         AuthHandshake handshake = authHandshake(profile.getName());
 
         if (handshake.offline) {
@@ -131,7 +131,7 @@ public class ValhallaSkinServer implements SkinServer {
         }
 
         // join the session server
-        Minecraft.getInstance().getSessionService().joinServer(profile, token, handshake.serverId);
+        MinecraftClient.getInstance().getSessionService().joinServer(profile, token, handshake.serverId);
 
         AuthResponse response = authResponse(profile.getName(), handshake.verifyToken);
         if (!response.userId.equals(profile.getId())) {

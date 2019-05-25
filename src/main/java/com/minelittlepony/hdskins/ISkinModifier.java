@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins;
 
-import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.texture.NativeImage;
 
 @FunctionalInterface
 public interface ISkinModifier {

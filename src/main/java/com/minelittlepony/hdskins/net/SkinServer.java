@@ -12,8 +12,8 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.Session;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Session;
 
 import java.io.IOException;
 import java.util.List;
@@ -93,7 +93,7 @@ public interface SkinServer {
      * @throws AuthenticationException if authentication failed or the session is invalid.
      */
     static void verifyServerConnection(Session session, String serverId) throws AuthenticationException {
-        MinecraftSessionService service = Minecraft.getInstance().getSessionService();
-        service.joinServer(session.getProfile(), session.getToken(), serverId);
+        MinecraftSessionService service = MinecraftClient.getInstance().getSessionService();
+        service.joinServer(session.getProfile(), session.getAccessToken(), serverId);
     }
 }
