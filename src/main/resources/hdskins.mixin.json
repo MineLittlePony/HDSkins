@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "com.minelittlepony.hdskins.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinEntityRenderDispatcher",
+    "MixinGuiMainMenu",
+    "MixinImageBufferDownload",
+    "MixinNetworkPlayerInfo",
+    "MixinSkullRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

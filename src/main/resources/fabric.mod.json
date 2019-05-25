@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "hdskins",
+  "version": "${version}",
+  "name": "HD Skins",
+  "description": "Faster, stronger, more res skin servers for Minecraft. Access via the main menu.",
+  "authors": [
+    "Mumfrey", "Killjoy1221", "Sollace"
+  ],
+  "contact": {
+    "homepage": "https://minelittlepony-mod.com/",
+    "sources": "http://github.com/MineLittlePony/HDSkins"
+  },
+  "license": "CC0-1.0",
+  "icon": "hdskins_logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.minelittlepony.hdskins.FabMod"
+    ]
+  },
+  "mixins": [
+    "hdskins.mixins.json"
+  ],
+  "requires": {
+    "fabricloader": ">=0.4.0",
+    "fabric": "*"
+  },
+  "suggests": { }
+}
