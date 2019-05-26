@@ -14,17 +14,20 @@ import net.minecraft.entity.Entity;
 
 public class FabMod implements ClientModInitializer, IModUtilities {
 
-    private final HDSkins hdskins = new HDSkins(this, FabricLoader.getInstance().getConfigDirectory().toPath());
-
     @Override
     public void onInitializeClient() {
-        hdskins.postinit();
+        new HDSkins(this);
     }
 
     @Override
     public <T extends Entity> void addRenderer(Class<T> type, Function<EntityRenderDispatcher, EntityRenderer<T>> renderer) {
         EntityRenderDispatcher mx = MinecraftClient.getInstance().getEntityRenderManager();
         ((MixinEntityRenderDispatcher)mx).getRenderers().put(type, renderer.apply(mx));
+    }
+
+    @Override
+    public Path getConfigDirectory() {
+        return FabricLoader.getInstance().getConfigDirectory().toPath();
     }
 
     @Override

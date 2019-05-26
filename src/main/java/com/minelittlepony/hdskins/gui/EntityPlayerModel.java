@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AbsoluteHand;
 import net.minecraft.util.Identifier;
@@ -123,6 +124,11 @@ public class EntityPlayerModel extends LivingEntity implements IBlankSkinSupplie
     @Override
     public boolean isSleeping() {
         return !previewRiding && previewSleeping;
+    }
+    
+    @Override
+    public boolean canSeePlayer(PlayerEntity player) {
+        return false; // we're not in game. The player might be null and we don't really care about name plates anyway.
     }
 
     @Override

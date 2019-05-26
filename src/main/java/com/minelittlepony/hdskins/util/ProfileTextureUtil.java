@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-@Deprecated
 public class ProfileTextureUtil {
 
     private static Field metadata = FieldUtils.getDeclaredField(MinecraftProfileTexture.class, "metadata", true);

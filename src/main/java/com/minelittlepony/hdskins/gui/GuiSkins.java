@@ -395,7 +395,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         jumpKey.update();
         sneakKey.update();
 
-        panorama.render(partialTick, 0);
+        panorama.render(partialTick, 1);
 
         float deltaTime = updateCounter + partialTick - lastPartialTick;
         lastPartialTick = updateCounter + partialTick;

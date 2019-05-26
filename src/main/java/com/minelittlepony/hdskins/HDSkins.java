@@ -16,6 +16,7 @@ import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.minelittlepony.hdskins.gui.EntityPlayerModel;
 import com.minelittlepony.hdskins.gui.GuiSkins;
 import com.minelittlepony.hdskins.gui.RenderPlayerModel;
+import com.minelittlepony.hdskins.mixin.MixinClientPlayer;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
@@ -25,7 +26,6 @@ import com.minelittlepony.hdskins.net.ServerType;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.ValhallaSkinServer;
 import com.minelittlepony.hdskins.util.CallableFutures;
-import com.minelittlepony.hdskins.util.PlayerUtil;
 import com.minelittlepony.hdskins.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,7 +104,7 @@ public final class HDSkins {
 
     private final IModUtilities utils;
 
-    public HDSkins(IModUtilities utils, Path config) {
+    public HDSkins(IModUtilities utils) {
         instance = this;
         this.utils = utils;
 
@@ -114,7 +113,7 @@ public final class HDSkins {
         addSkinServerType(ValhallaSkinServer.class);
         addSkinServerType(BethlehemSkinServer.class);
 
-        this.config = Config.of(config);
+        this.config = Config.of(utils.getConfigDirectory().resolve("hdskins.json"));
     }
 
     public IModUtilities getUtils() {
@@ -335,8 +334,8 @@ public final class HDSkins {
         return MoreStreams.ofNullable(mc.world)
                 .flatMap(w -> w.getPlayers().stream())
                 .filter(AbstractClientPlayerEntity.class::isInstance)
-                .map(AbstractClientPlayerEntity.class::cast)
-                .map(PlayerUtil::getInfo);
+                .map(MixinClientPlayer.class::cast)
+                .map(MixinClientPlayer::getBackingClientData);
     }
 
     private Stream<PlayerListEntry> getPlayers(MinecraftClient mc) {

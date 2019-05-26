@@ -11,5 +11,7 @@ public interface IModUtilities {
 
     <T extends Entity> void addRenderer(Class<T> type, Function<EntityRenderDispatcher, EntityRenderer<T>> renderer);
 
+    Path getConfigDirectory();
+    
     Path getAssetsDirectory();
 }

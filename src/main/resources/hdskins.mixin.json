@@ -5,9 +5,11 @@
   "mixins": [
   ],
   "client": [
+  	"MixinClientPlayer",
     "MixinEntityRenderDispatcher",
     "MixinGuiMainMenu",
     "MixinImageBufferDownload",
+    "MixinMinecraftClient",
     "MixinNetworkPlayerInfo",
     "MixinSkullRenderer"
   ],

@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.gui;
 
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -15,6 +16,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.Items;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DyeColor;
@@ -94,6 +96,11 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
     @SuppressWarnings("unchecked")
     public <T extends PlayerEntityModel<M>> T getEntityModel(M entity) {
         return (T)(entity.usesThinSkin() ? THIN : FAT);
+    }
+    
+    @Override
+    protected boolean method_4055(M entity) {
+        return MinecraftClient.getInstance().player != null && super.method_4055(entity);
     }
 
     @Override

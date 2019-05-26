@@ -13,18 +13,20 @@
   },
   "license": "CC0-1.0",
   "icon": "hdskins_logo.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
-    "main": [
+    "client": [
       "com.minelittlepony.hdskins.FabMod"
     ]
   },
   "mixins": [
-    "hdskins.mixins.json"
+    "hdskins.mixin.json"
   ],
   "requires": {
     "fabricloader": ">=0.4.0",
     "fabric": "*"
   },
-  "suggests": { }
+  "depends": {
+  	"kirin": "*"
+   }
 }
