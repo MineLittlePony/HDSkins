@@ -22,14 +22,14 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     private PlayerSkins hdskinsPlayerSkins = new PlayerSkins(this);
 
     @Override
-    @Accessor("playerTextures")
+    @Accessor("textures")
     public abstract Map<Type, Identifier> getVanillaTextures();
 
     @Override
-    @Accessor("gameProfile")
+    @Accessor("profile")
     public abstract GameProfile getGameProfile();
 
-    @Redirect(method = {"getLocationSkin", "getLocationCape", "getLocationElytra"},
+    @Redirect(method = {"getSkinTexture", "getCapeTexture", "getElytraTexture"},
             at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", remap = false)
     )
     // synthetic
@@ -38,18 +38,18 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     }
 
     @Nullable
-    @Redirect(method = "getSkinType",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/NetworkPlayerInfo;skinType:Ljava/lang/String;")
+    @Redirect(method = "getModel",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/PlayerListEntry;model:Ljava/lang/String;")
     )
     private String getTextureModel(PlayerListEntry sender) {
         return hdskinsPlayerSkins.getModel();
     }
 
-    @Redirect(method = "loadPlayerTextures",
+    @Redirect(method = "loadTextures",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/resources/SkinManager;loadProfileTextures("
+                    target = "Lnet/minecraft/client/texture/PlayerSkinProvider;loadSkin("
                             + "Lcom/mojang/authlib/GameProfile;"
-                            + "Lnet/minecraft/client/resources/SkinManager$SkinAvailableCallback;"
+                            + "Lnet/minecraft/client/texture/PlayerSkinProvider$SkinTextureAvailableCallback;"
                             + "Z)V")
     )
     private void redirectLoadPlayerTextures(PlayerSkinProvider sender, GameProfile profile, PlayerSkinProvider.SkinTextureAvailableCallback callback, boolean requireSecure) {
