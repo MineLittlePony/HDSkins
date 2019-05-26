@@ -3,25 +3,25 @@
 // https://github.com/FabricMC/fabric-example-mod/blob/master/build.gradle
 
 buildscript {
-	repositories {
-	    jcenter()
-	    maven {
-	        name = 'Fabric'
-	        url = 'https://maven.fabricmc.net/'
-	    }
-	    gradlePluginPortal()
-	}
-    dependencies {
-    	classpath 'fabric-loom:fabric-loom.gradle.plugin:0.2.2-SNAPSHOT'
-        classpath 'org.ajoberstar.grgit:grgit-gradle:3.1.1'
-    }
+  repositories {
+      jcenter()
+      maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+      }
+      gradlePluginPortal()
+  }
+  dependencies {
+    classpath 'fabric-loom:fabric-loom.gradle.plugin:0.2.2-SNAPSHOT'
+    classpath 'org.ajoberstar.grgit:grgit-gradle:3.1.1'
+  }
 }
 
 repositories {
-	maven {
-    	name = 'Jit'
-     	url = 'https://jitpack.io'
- 	}
+  maven {
+    name = 'Jit'
+    url = 'https://jitpack.io'
+  }
 }
 
 apply plugin: 'fabric-loom'
@@ -31,20 +31,20 @@ targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 ext {
-    revision = grgit.log().size()
-    hash = grgit.head().abbreviatedId
-    if (file('.git/shallow').exists()) {
-        // don't clone with --depth
-        revision = -1
-        hash += ' shallow'
-    }
+  revision = grgit.log().size()
+  hash = grgit.head().abbreviatedId
+  if (file('.git/shallow').exists()) {
+    // don't clone with --depth
+    revision = -1
+    hash += ' shallow'
+  }
 }
 
 if (project.release != 'RELEASE') {
-    version += "-${project.release}"
+  version += "-${project.release}"
 }
 if (project.release == 'SNAPSHOT') {
-    version += "-${project.revision}-${project.hash}"
+  version += "-${project.revision}-${project.hash}"
 }
 
 group = project.group
@@ -52,44 +52,44 @@ description = project.displayname
 archivesBaseName = project.name
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
+  minecraft "com.mojang:minecraft:${project.minecraft_version}"
+  mappings "net.fabricmc:yarn:${project.yarn_mappings}"
 
-	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
-	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
-	
-    modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+  modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+  compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
-    compile "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-    include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
+  modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modCompile "com.github.MineLittlePony:Kirin:${project.kirin_version}"
-    include "com.github.MineLittlePony:Kirin:${project.kirin_version}"
+  compile "org.apache.httpcomponents:httpmime:${project.http_client_version}"
+  include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
+
+  modCompile "com.github.MineLittlePony:Kirin:${project.kirin_version}"
+  include "com.github.MineLittlePony:Kirin:${project.kirin_version}"
 }
 
 processResources {
-	inputs.property 'version', project.version
+  inputs.property 'version', project.version
 
-	from(sourceSets.main.resources.srcDirs) {
-		include 'fabric.mod.json'
-		expand 'version': project.version
-	}
+  from(sourceSets.main.resources.srcDirs) {
+    include 'fabric.mod.json'
+    expand 'version': project.version
+  }
 
-	from(sourceSets.main.resources.srcDirs) {
-		exclude 'fabric.mod.json'
-	}
+  from(sourceSets.main.resources.srcDirs) {
+    exclude 'fabric.mod.json'
+  }
 }
 
 tasks.withType(JavaCompile) {
-	options.encoding = "UTF-8"
+  options.encoding = "UTF-8"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 
 jar {
-	from 'LICENSE'
+  from 'LICENSE'
 }
 
