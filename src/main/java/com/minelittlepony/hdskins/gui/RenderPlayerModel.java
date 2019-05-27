@@ -27,7 +27,7 @@ import java.util.Set;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntityRenderer<M, PlayerEntityModel<M>> {
+public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
     /**
      * The basic Elytra texture.
@@ -39,15 +39,15 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
 
     @SuppressWarnings("unchecked")
     public RenderPlayerModel(EntityRenderDispatcher renderer) {
-        super(renderer, (PlayerEntityModel<M>)FAT, 0);
+        super(renderer, (M)FAT, 0);
         addFeature(getElytraLayer());
     }
 
-    protected FeatureRenderer<M, PlayerEntityModel<M>> getElytraLayer() {
-        final ElytraEntityModel<M> modelElytra = new ElytraEntityModel<>();
-        return new FeatureRenderer<M, PlayerEntityModel<M>>(this) {
+    protected FeatureRenderer<T, M> getElytraLayer() {
+        final ElytraEntityModel<T> modelElytra = new ElytraEntityModel<>();
+        return new FeatureRenderer<T, M>(this) {
             @Override
-            public void render(M entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+            public void render(T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
                 ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
 
                 if (itemstack.getItem() == Items.ELYTRA) {
@@ -76,12 +76,12 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
     }
 
     @Override
-    protected Identifier getTexture(M entity) {
+    protected Identifier getTexture(T entity) {
         return entity.getLocal(Type.SKIN).getTexture();
     }
 
     @Override
-    protected boolean hasLabel(M entity) {
+    protected boolean hasLabel(T entity) {
         return MinecraftClient.getInstance().player != null && super.hasLabel(entity);
     }
 
@@ -92,17 +92,17 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
     //}
 
     @SuppressWarnings("unchecked")
-    public <T extends PlayerEntityModel<M>> T getEntityModel(M entity) {
-        return (T)(entity.usesThinSkin() ? THIN : FAT);
+    public M getEntityModel(T entity) {
+        return (M)(entity.usesThinSkin() ? THIN : FAT);
     }
-    
+
     @Override
-    protected boolean method_4055(M entity) {
+    protected boolean method_4055(T entity) {
         return MinecraftClient.getInstance().player != null && super.method_4055(entity);
     }
 
     @Override
-    public void render(M entity, double x, double y, double z, float entityYaw, float partialTicks) {
+    public void render(T entity, double x, double y, double z, float entityYaw, float partialTicks) {
 
         if (entity.isSleeping()) {
             BedHead.instance.render(entity);
@@ -112,20 +112,19 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
             MrBoaty.instance.render();
         }
 
-        PlayerEntityModel<M> player = getEntityModel(entity);
-        model = player;
+        model = getEntityModel(entity);
 
         Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
-        player.headwear.field_3664 = !parts.contains(PlayerModelPart.HAT);
-        player.bodyOverlay.field_3664 = !parts.contains(PlayerModelPart.JACKET);
-        player.leftLegOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
-        player.rightLegOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
-        player.leftArmOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
-        player.rightArmOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
-        player.isSneaking = entity.isSneaking();
+        model.headwear.field_3664 = !parts.contains(PlayerModelPart.HAT);
+        model.bodyOverlay.field_3664 = !parts.contains(PlayerModelPart.JACKET);
+        model.leftLegOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
+        model.rightLegOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
+        model.leftArmOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
+        model.rightArmOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
+        model.isSneaking = entity.isSneaking();
 
-        player.leftArmPose = ArmPose.EMPTY;
-        player.rightArmPose = ArmPose.EMPTY;
+        model.leftArmPose = ArmPose.EMPTY;
+        model.rightArmPose = ArmPose.EMPTY;
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
@@ -138,7 +137,7 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
         if (entity.isSleeping()) {
             y--;
             z += 0.75F;
-        } else if (player.isSneaking) {
+        } else if (model.isSneaking) {
             y -= 0.125D;
         }
 
@@ -187,11 +186,12 @@ public class RenderPlayerModel<M extends EntityPlayerModel> extends LivingEntity
 
             BlockEntityRenderDispatcher dispatcher = BlockEntityRenderDispatcher.INSTANCE;
 
+            MinecraftClient mc = MinecraftClient.getInstance();
             dispatcher.configure(entity.getEntityWorld(),
-                    MinecraftClient.getInstance().getTextureManager(),
-                    MinecraftClient.getInstance().getEntityRenderManager().getTextRenderer(),
-                    MinecraftClient.getInstance().gameRenderer.getCamera(),
-                    MinecraftClient.getInstance().hitResult);
+                    mc.getTextureManager(),
+                    mc.getEntityRenderManager().getTextRenderer(),
+                    mc.gameRenderer.getCamera(),
+                    mc.hitResult);
             dispatcher.get(this).render(BedHead.instance, -0.5F, 0, 0, 0, -1);
 
             popMatrix();
