@@ -56,7 +56,7 @@ public class DummyPlayer extends LivingEntity {
 
     @Override
     public Entity getPrimaryPassenger() {
-        return textures.previewRiding ? RenderPlayerModel.MrBoaty.instance : null;
+        return textures.previewRiding ? RenderDummyPlayer.MrBoaty.instance : null;
     }
 
     @Override

@@ -28,7 +28,7 @@ import java.util.Set;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-public class RenderPlayerModel<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
+public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
     /**
      * The basic Elytra texture.
@@ -39,7 +39,7 @@ public class RenderPlayerModel<T extends DummyPlayer, M extends PlayerEntityMode
     private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
     @SuppressWarnings("unchecked")
-    public RenderPlayerModel(EntityRenderDispatcher renderer) {
+    public RenderDummyPlayer(EntityRenderDispatcher renderer) {
         super(renderer, (M)FAT, 0);
         addFeature(getElytraLayer());
     }
