@@ -55,7 +55,7 @@ public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEnti
                     enableBlend();
                     blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 
-                    bindTexture(entity.getLocal(Type.ELYTRA).getTexture());
+                    bindTexture(entity.getTexture(Type.ELYTRA).getTexture());
 
                     pushMatrix();
                     translatef(0, 0, 0.125F);
@@ -77,7 +77,7 @@ public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEnti
 
     @Override
     protected Identifier getTexture(T entity) {
-        return entity.getLocal(Type.SKIN).getTexture();
+        return entity.getTexture(Type.SKIN).getTexture();
     }
 
     @Override

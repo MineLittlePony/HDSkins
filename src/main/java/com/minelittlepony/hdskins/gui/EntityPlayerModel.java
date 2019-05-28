@@ -92,7 +92,7 @@ public class EntityPlayerModel extends LivingEntity implements IBlankSkinSupplie
         elytra.clearLocal();
     }
 
-    public LocalTexture getLocal(Type type) {
+    public LocalTexture getTexture(Type type) {
         return type == Type.SKIN ? skin : elytra;
     }
 

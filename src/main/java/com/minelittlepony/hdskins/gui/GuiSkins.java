@@ -16,7 +16,6 @@ import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.MinecraftClient;
@@ -24,15 +23,12 @@ import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.MainMenuScreen;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.Screen;
-import net.minecraft.client.render.GuiLighting;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.BufferUtils;
@@ -63,9 +59,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     private FeatureSwitch btnModeSkin;
     private FeatureSwitch btnModeElytra;
 
-    protected EntityPlayerModel localPlayer;
-    protected EntityPlayerModel remotePlayer;
-
     private DoubleBuffer doubleBuffer;
 
     private float msgFadeOpacity = 0;
@@ -75,6 +68,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     private boolean jumpState = false;
     private boolean sneakState = false;
 
+    protected final PlayerPreview previewer;
     protected final SkinUploader uploader;
     protected final SkinChooser chooser;
 
@@ -105,25 +99,17 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         super(new TranslatableComponent("hdskins.gui.title"));
 
         minecraft = MinecraftClient.getInstance();
-        GameProfile profile = minecraft.getSession().getProfile();
-
-        localPlayer = getModel(profile);
-        remotePlayer = getModel(profile);
-
-        EntityRenderDispatcher rm = minecraft.getEntityRenderManager();
-        rm.gameOptions = minecraft.options;
-        rm.targetedEntity = localPlayer;
-
-        uploader = new SkinUploader(servers, localPlayer, remotePlayer, this);
+        previewer = createPreviewer();
+        uploader = new SkinUploader(servers, previewer, this);
         chooser = new SkinChooser(uploader);
+    }
+    
+    public PlayerPreview createPreviewer() {
+        return new PlayerPreview();
     }
 
     protected Identifier getBackground() {
         return new Identifier(HDSkins.MOD_ID, "textures/cubemaps/cubemap0");
-    }
-
-    protected EntityPlayerModel getModel(GameProfile profile) {
-        return new EntityPlayerModel(profile);
     }
 
     @Override
@@ -228,21 +214,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setTooltipOffset(0, 10);
 
         addButton(new IconicToggle(width - 25, 118))
-                .setValue(localPlayer.isSleeping() ? 1 : 0)
+                .setValue(previewer.getPose())
                 .setStyles(
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
                         new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
                         new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10))
                 .onClick((Consumer<IconicToggle>)sender -> {
                     playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-
-                    boolean sleep = sender.getValue() == 1;
-                    boolean ride = sender.getValue() == 2;
-                    localPlayer.setSleeping(sleep);
-                    remotePlayer.setSleeping(sleep);
-
-                    localPlayer.setRiding(ride);
-                    remotePlayer.setRiding(ride);
+                    previewer.setPose(sender.getValue());
                 });
 
         addButton(new Button(width - 25, height - 65, 20, 20))
@@ -296,8 +275,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         btnModeAlex.active = !thinArmType;
 
         uploader.setMetadataField("model", model);
-        localPlayer.setPreviewThinArms(thinArmType);
-        remotePlayer.setPreviewThinArms(thinArmType);
+        previewer.setModelType(model);
     }
 
     protected boolean canTakeEvents() {
@@ -313,8 +291,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             int mid = width / 2;
 
             if ((mouseX > 30 && mouseX < mid - 30 || mouseX > mid + 30 && mouseX < width - 30) && mouseY > 30 && mouseY < bottom) {
-                localPlayer.swingHand(Hand.MAIN_HAND);
-                remotePlayer.swingHand(Hand.MAIN_HAND);
+                previewer.swingHand();
             }
 
             return true;
@@ -362,8 +339,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         jumping |= jumpState;
 
-        localPlayer.setJumping(jumping);
-        remotePlayer.setJumping(jumping);
+        previewer.setJumping(jumping);
     }
 
     private void sneakToggled(boolean sneaking) {
@@ -373,8 +349,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         sneaking |= sneakState;
 
-        localPlayer.setSneaking(sneaking);
-        remotePlayer.setSneaking(sneaking);
+        previewer.setSneaking(sneaking);
+
     }
 
     private void ctrlToggled(boolean ctrl) {
@@ -414,13 +390,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         enableClipping(bottom);
 
-        float yPos = height * 0.75F;
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
-        float scale = height / 4F;
-
-        renderPlayerModel(localPlayer, xPos1, yPos, scale, horizon - mouseY, mouseX, partialTick);
-        renderPlayerModel(remotePlayer, xPos2, yPos, scale, horizon - mouseY, mouseX, partialTick);
+        
+        previewer.render(width, height, horizon, mouseX, mouseY, updateCounter, partialTick);
 
         disableClipping();
 
@@ -480,45 +453,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         depthMask(true);
         enableDepthTest();
     }
-
-    private void renderPlayerModel(EntityPlayerModel thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, float partialTick) {
-        minecraft.getTextureManager().bindTexture(thePlayer.getLocal(Type.SKIN).getTexture());
-
-        enableColorMaterial();
-        pushMatrix();
-        translatef(xPosition, yPosition, 300);
-
-        scalef(scale, scale, scale);
-        rotatef(-15, 1, 0, 0);
-
-        GuiLighting.enableForItems();
-
-        float rot = ((updateCounter + partialTick) * 2.5F) % 360;
-
-        rotatef(rot, 0, 1, 0);
-
-        float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
-        float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
-
-        thePlayer.headYaw = lookX * lookFactor;
-        thePlayer.pitch = (float)Math.atan(mouseY / 40) * -20;
-
-        minecraft.getEntityRenderManager().render(thePlayer, 0, 0, 0, 0, 1, false);
-
-        popMatrix();
-        GuiLighting.disable();
-        disableColorMaterial();
-    }
-
-    /*
-     *       /   |
-     *     1/    |o      Q = t + q
-     *     /q    |       x = xPosition - mouseX
-     *     *-----*       sin(q) = o             cos(q) = x        tan(q) = o/x
-     *   --|--x------------------------------------
-     *     |
-     *      mouseX
-     */
 
     private void enableClipping(int yBottom) {
         GL11.glPopAttrib();

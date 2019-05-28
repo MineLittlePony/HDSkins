@@ -8,9 +8,6 @@ import com.minelittlepony.hdskins.net.SkinUpload;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.NetClient;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Items;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
 import org.apache.logging.log4j.LogManager;
@@ -67,8 +64,7 @@ public class SkinUploader implements Closeable {
     private int reloadCounter = 0;
     private int retries = 1;
 
-    private final EntityPlayerModel remotePlayer;
-    private final EntityPlayerModel localPlayer;
+    private final IPreviewModel previewer;
 
     private final Object skinLock = new Object();
 
@@ -83,16 +79,14 @@ public class SkinUploader implements Closeable {
         return Iterables.cycle(Iterables.filter(list, filter::test)).iterator();
     }
 
-    public SkinUploader(List<SkinServer> servers, EntityPlayerModel local, EntityPlayerModel remote, ISkinUploadHandler listener) {
-
-        localPlayer = local;
-        remotePlayer = remote;
-
+    public SkinUploader(List<SkinServer> servers, IPreviewModel previewer, ISkinUploadHandler listener) {
+        this.previewer = previewer;
+        this.listener = listener;
+        
         skinType = Type.SKIN;
         skinMetadata.put("model", "default");
-
-        this.listener = listener;
         skinServers = cycle(servers, SkinServer::verifyGateway);
+
         cycleGateway();
     }
 
@@ -121,11 +115,7 @@ public class SkinUploader implements Closeable {
     public void setSkinType(Type type) {
         skinType = type;
 
-        ItemStack stack = type == Type.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
-        // put on or take off the elytra
-        localPlayer.setEquippedStack(EquipmentSlot.CHEST, stack);
-        remotePlayer.setEquippedStack(EquipmentSlot.CHEST, stack);
-
+        previewer.setSkinType(type);
         listener.onSkinTypeChanged(type);
     }
 
@@ -150,11 +140,19 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean canUpload() {
-        return !isOffline() && !hasStatus() && !uploadInProgress() && pendingLocalSkin == null && localSkin != null && localPlayer.isUsingLocalTexture();
+        return !isOffline()
+                && !hasStatus()
+                && !uploadInProgress()
+                && pendingLocalSkin == null
+                && localSkin != null
+                && previewer.getLocal().isUsingLocalTexture();
     }
 
     public boolean canClear() {
-        return !isOffline() && !hasStatus() && !downloadInProgress() && remotePlayer.isUsingRemoteTexture();
+        return !isOffline()
+                && !hasStatus()
+                && !downloadInProgress()
+                && previewer.getRemote().isUsingRemoteTexture();
     }
 
     public boolean hasStatus() {
@@ -166,7 +164,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setMetadataField(String field, String value) {
-        localPlayer.releaseTextures();
+        previewer.getLocal().releaseTextures();
         skinMetadata.put(field, value);
     }
 
@@ -205,7 +203,7 @@ public class SkinUploader implements Closeable {
     }
 
     public CompletableFuture<MoreHttpResponses> downloadSkin() {
-        String loc = remotePlayer.getLocal(skinType).getRemote().getUrl();
+        String loc = previewer.getRemote().getTexture(skinType).getRemote().getUrl();
 
         return new NetClient("GET", loc).async(HDSkins.skinDownloadExecutor);
     }
@@ -215,7 +213,7 @@ public class SkinUploader implements Closeable {
         throttlingNeck = false;
         offline = false;
 
-        remotePlayer.reloadRemoteSkin(this, (type, location, profileTexture) -> {
+        previewer.getRemote().reloadRemoteSkin(this, (type, location, profileTexture) -> {
             fetchingSkin = false;
             listener.onSetRemoteSkin(type, location, profileTexture);
         }).handle((a, throwable) -> {
@@ -252,12 +250,12 @@ public class SkinUploader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        localPlayer.releaseTextures();
-        remotePlayer.releaseTextures();
+        previewer.getLocal().releaseTextures();
+        previewer.getRemote().releaseTextures();
     }
 
     public void setLocalSkin(Path skinFile) {
-        mc.execute(localPlayer::releaseTextures);
+        mc.execute(previewer.getLocal()::releaseTextures);
 
         synchronized (skinLock) {
             pendingLocalSkin = skinFile;
@@ -265,13 +263,13 @@ public class SkinUploader implements Closeable {
     }
 
     public void update() {
-        localPlayer.updateModel();
-        remotePlayer.updateModel();
+        previewer.getLocal().updateModel();
+        previewer.getRemote().updateModel();
 
         synchronized (skinLock) {
             if (pendingLocalSkin != null) {
                 System.out.println("Set " + skinType + " " + pendingLocalSkin);
-                localPlayer.setLocalTexture(pendingLocalSkin, skinType);
+                previewer.getLocal().setLocalTexture(pendingLocalSkin, skinType);
                 localSkin = pendingLocalSkin.toUri();
                 pendingLocalSkin = null;
                 listener.onSetLocalSkin(skinType);
@@ -289,6 +287,14 @@ public class SkinUploader implements Closeable {
 
     public CompletableFuture<PreviewTextureManager> loadTextures(GameProfile profile) {
         return gateway.getPreviewTextures(profile).thenApply(PreviewTextureManager::new);
+    }
+    
+    public interface IPreviewModel {
+        void setSkinType(Type type);
+        
+        EntityPlayerModel getRemote();
+        
+        EntityPlayerModel getLocal();
     }
 
     public interface ISkinUploadHandler {
