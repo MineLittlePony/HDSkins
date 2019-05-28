@@ -109,7 +109,7 @@ public class LocalTexture {
             NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.fromInputStream(input));
 
             local = new NativeImageBackedTexture(image);
-            localResource = textureManager.registerDynamicTexture("localSkinPreview", local);
+            localResource = textureManager.registerDynamicTexture("local_skin_preview", local);
         } catch (IOException e) {
             e.printStackTrace();
         }

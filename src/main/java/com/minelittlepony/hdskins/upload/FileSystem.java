@@ -9,13 +9,13 @@ public class FileSystem {
      * Creates a new dialogue for selecting and reading a file.
      */
     public static IFileDialog openRead(String windowTitle) {
-        return new ThreadOpenFile(windowTitle);
+        return new FileChooser(windowTitle);
     }
 
     /**
      * Creates a new dialogue for selecting a location to save a file.
      */
     public static IFileDialog openWrite(String windowTitle, String filename) {
-        return new ThreadSaveFile(windowTitle, filename);
+        return new FileSaver(windowTitle, filename);
     }
 }
