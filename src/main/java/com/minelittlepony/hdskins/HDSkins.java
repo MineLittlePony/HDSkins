@@ -13,9 +13,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.minelittlepony.common.util.MoreStreams;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
-import com.minelittlepony.hdskins.gui.EntityPlayerModel;
+import com.minelittlepony.hdskins.dummy.DummyPlayer;
+import com.minelittlepony.hdskins.dummy.RenderPlayerModel;
 import com.minelittlepony.hdskins.gui.GuiSkins;
-import com.minelittlepony.hdskins.gui.RenderPlayerModel;
 import com.minelittlepony.hdskins.mixin.MixinClientPlayer;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.resources.TextureLoader;
@@ -128,7 +128,7 @@ public final class HDSkins {
         ReloadableResourceManager irrm = (ReloadableResourceManager) MinecraftClient.getInstance().getResourceManager();
         irrm.registerListener(resources);
 
-        getUtils().addRenderer(EntityPlayerModel.class, RenderPlayerModel::new);
+        getUtils().addRenderer(DummyPlayer.class, RenderPlayerModel::new);
 
         // register skin servers.
         config.skin_servers.forEach(this::addSkinServer);

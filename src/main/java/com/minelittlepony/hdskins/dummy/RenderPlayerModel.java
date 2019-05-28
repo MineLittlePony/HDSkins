@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.gui;
+package com.minelittlepony.hdskins.dummy;
 
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -21,21 +21,22 @@ import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11;
 
+import com.minelittlepony.hdskins.gui.DummyWorld;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import java.util.Set;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
+public class RenderPlayerModel<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
     /**
      * The basic Elytra texture.
      */
     protected final Identifier TEXTURE_ELYTRA = new Identifier("textures/entity/elytra.png");
 
-    private static final PlayerEntityModel<EntityPlayerModel> FAT = new PlayerEntityModel<>(0, false);
-    private static final PlayerEntityModel<EntityPlayerModel> THIN = new PlayerEntityModel<>(0, true);
+    private static final PlayerEntityModel<DummyPlayer> FAT = new PlayerEntityModel<>(0, false);
+    private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
     @SuppressWarnings("unchecked")
     public RenderPlayerModel(EntityRenderDispatcher renderer) {
@@ -55,7 +56,7 @@ public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEnti
                     enableBlend();
                     blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 
-                    bindTexture(entity.getTexture(Type.ELYTRA).getTexture());
+                    bindTexture(entity.getTextures().get(Type.ELYTRA).getId());
 
                     pushMatrix();
                     translatef(0, 0, 0.125F);
@@ -77,7 +78,7 @@ public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEnti
 
     @Override
     protected Identifier getTexture(T entity) {
-        return entity.getTexture(Type.SKIN).getTexture();
+        return entity.getTextures().get(Type.SKIN).getId();
     }
 
     @Override
@@ -93,7 +94,7 @@ public class RenderPlayerModel<T extends EntityPlayerModel, M extends PlayerEnti
 
     @SuppressWarnings("unchecked")
     public M getEntityModel(T entity) {
-        return (M)(entity.usesThinSkin() ? THIN : FAT);
+        return (M)(entity.getTextures().usesThinSkin() ? THIN : FAT);
     }
 
     @Override

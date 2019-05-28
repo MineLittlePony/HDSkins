@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.gui;
+package com.minelittlepony.hdskins.dummy;
 
 import static com.mojang.blaze3d.platform.GlStateManager.disableColorMaterial;
 import static com.mojang.blaze3d.platform.GlStateManager.enableColorMaterial;
@@ -9,7 +9,9 @@ import static com.mojang.blaze3d.platform.GlStateManager.scalef;
 import static com.mojang.blaze3d.platform.GlStateManager.translatef;
 
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
+import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.minelittlepony.hdskins.VanillaModels;
+import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.MinecraftClient;
@@ -19,15 +21,26 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 
-public class PlayerPreview implements IPreviewModel {
+/**
+ * Player previewer that renders the models to the screen.
+ */
+public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
 
+    public static final Identifier NO_SKIN = new Identifier("hdskins", "textures/mob/noskin.png");
+    public static final Identifier NO_ELYTRA = new Identifier("textures/entity/elytra.png");
+    
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
+    protected final GameProfile profile = minecraft.getSession().getProfile();
     
-    private final EntityPlayerModel localPlayer = new EntityPlayerModel(minecraft.getSession().getProfile());
-    private final EntityPlayerModel remotePlayer = new EntityPlayerModel(minecraft.getSession().getProfile());
+    protected final TextureProxy localTextures = new TextureProxy(profile, this);
+    protected final TextureProxy remoteTextures = new TextureProxy(profile, this);
     
-    protected PlayerPreview() {
+    private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
+    private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
+    
+    public PlayerPreview() {
         EntityRenderDispatcher rm = minecraft.getEntityRenderManager();
         rm.gameOptions = minecraft.options;
         rm.targetedEntity = localPlayer;
@@ -37,11 +50,11 @@ public class PlayerPreview implements IPreviewModel {
         boolean sleeping = pose == 1;
         boolean riding = pose == 2;
         
-        getLocal().setSleeping(sleeping);
-        getRemote().setSleeping(sleeping);
+        localTextures.setSleeping(sleeping);
+        remoteTextures.setSleeping(sleeping);
         
-        getLocal().setRiding(riding);
-        getRemote().setRiding(riding);
+        localTextures.setRiding(riding);
+        remoteTextures.setRiding(riding);
     }
     
     public int getPose() {
@@ -56,8 +69,8 @@ public class PlayerPreview implements IPreviewModel {
     public void setModelType(String model) {
         boolean thinArmType = VanillaModels.isSlim(model);
 
-        getLocal().setPreviewThinArms(thinArmType);
-        getRemote().setPreviewThinArms(thinArmType);
+        localTextures.setPreviewThinArms(thinArmType);
+        remoteTextures.setPreviewThinArms(thinArmType);
     }
     
     public void setJumping(boolean jumping) {
@@ -68,6 +81,11 @@ public class PlayerPreview implements IPreviewModel {
     public void setSneaking(boolean sneaking) {
         getLocal().setSneaking(sneaking);
         getRemote().setSneaking(sneaking);
+    }
+
+    @Override
+    public Identifier getBlankSkin(Type type) {
+        return type == Type.SKIN ? NO_SKIN : NO_ELYTRA;
     }
     
     public void render(int width, int height, int horizon, int mouseX, int mouseY, int ticks, float partialTick) {
@@ -89,8 +107,8 @@ public class PlayerPreview implements IPreviewModel {
      *     |
      *      mouseX
      */
-    private void renderPlayerModel(EntityPlayerModel thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
-        minecraft.getTextureManager().bindTexture(thePlayer.getTexture(Type.SKIN).getTexture());
+    private void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
+        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(Type.SKIN).getId());
 
         enableColorMaterial();
         pushMatrix();
@@ -126,13 +144,13 @@ public class PlayerPreview implements IPreviewModel {
     }
 
     @Override
-    public EntityPlayerModel getRemote() {
+    public DummyPlayer getRemote() {
         return remotePlayer;
     }
 
 
     @Override
-    public EntityPlayerModel getLocal() {
+    public DummyPlayer getLocal() {
         return localPlayer;
     }
 }

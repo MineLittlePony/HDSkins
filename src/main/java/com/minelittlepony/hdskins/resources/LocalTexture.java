@@ -50,7 +50,7 @@ public class LocalTexture {
         reset();
     }
 
-    public Identifier getTexture() {
+    public Identifier getId() {
         if (hasRemote()) {
             return remoteResource;
         }
