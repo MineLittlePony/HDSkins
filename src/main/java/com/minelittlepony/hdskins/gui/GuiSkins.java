@@ -106,7 +106,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     protected Identifier getBackground() {
-        return new Identifier(HDSkins.MOD_ID, "textures/cubemaps/cubemap0");
+        return new Identifier(HDSkins.MOD_ID, "textures/cubemaps/panorama");
     }
 
     @Override
