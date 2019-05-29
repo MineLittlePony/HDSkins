@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.gui;
+package com.minelittlepony.hdskins.dummy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +70,7 @@ public class DummyWorld extends World {
 
     @Override
     public float getBrightness(BlockPos pos) {
-        return 1;
+        return 16;
     }
 
     @Override

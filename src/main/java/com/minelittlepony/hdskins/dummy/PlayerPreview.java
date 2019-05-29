@@ -1,20 +1,21 @@
 package com.minelittlepony.hdskins.dummy;
 
-import static com.mojang.blaze3d.platform.GlStateManager.disableColorMaterial;
-import static com.mojang.blaze3d.platform.GlStateManager.enableColorMaterial;
-import static com.mojang.blaze3d.platform.GlStateManager.popMatrix;
-import static com.mojang.blaze3d.platform.GlStateManager.pushMatrix;
-import static com.mojang.blaze3d.platform.GlStateManager.rotatef;
-import static com.mojang.blaze3d.platform.GlStateManager.scalef;
-import static com.mojang.blaze3d.platform.GlStateManager.translatef;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
+
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
+import com.minelittlepony.hdskins.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.GuiLighting;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.entity.EquipmentSlot;
@@ -26,7 +27,7 @@ import net.minecraft.util.Identifier;
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
+public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBlankSkinSupplier {
 
     public static final Identifier NO_SKIN = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_ELYTRA = new Identifier("textures/entity/elytra.png");
@@ -39,7 +40,7 @@ public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
     
     private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
     private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
-    
+
     public PlayerPreview() {
         EntityRenderDispatcher rm = minecraft.getEntityRenderManager();
         rm.gameOptions = minecraft.options;
@@ -88,14 +89,41 @@ public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
         return type == Type.SKIN ? NO_SKIN : NO_ELYTRA;
     }
     
-    public void render(int width, int height, int horizon, int mouseX, int mouseY, int ticks, float partialTick) {
+    public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
+        enableRescaleNormal();
+
+        int mid = width / 2;
+        int horizon = height / 2 + height / 5;
+        int frameBottom = height - 40;
+
         float yPos = height * 0.75F;
-        float xPos1 = width / 4F;
-        float xPos2 = width * 0.75F;
         float scale = height / 4F;
 
-        renderPlayerModel(getLocal(), xPos1, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick);
-        renderPlayerModel(getRemote(), xPos2, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick);
+        renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
+                width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale);
+
+        renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
+                width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale);
+
+        disableDepthTest();
+    }
+    
+    public void renderWorldAndPlayer(DummyPlayer thePlayer,
+            int frameLeft, int frameRight, int frameBottom, int frameTop,
+            float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale) {
+
+        ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
+            drawBackground(frameLeft, frameRight, frameBottom, frameTop, horizon);
+    
+            renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick);
+        });
+    }
+
+    protected void drawBackground(int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        fill(        frameLeft, frameTop, frameRight, frameBottom, Integer.MIN_VALUE);
+        fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x80FFFFFF, 0xffffff);
+        GL11.glPopAttrib();
     }
     
     /*
@@ -107,17 +135,16 @@ public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
      *     |
      *      mouseX
      */
-    private void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
+    protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(Type.SKIN).getId());
 
         enableColorMaterial();
+        GuiLighting.enable();
         pushMatrix();
-        translatef(xPosition, yPosition, 300);
 
+        translatef(xPosition, yPosition, 300);
         scalef(scale, scale, scale);
         rotatef(-15, 1, 0, 0);
-
-        GuiLighting.enableForItems();
 
         float rot = ((ticks + partialTick) * 2.5F) % 360;
 
@@ -129,7 +156,29 @@ public class PlayerPreview implements IPreviewModel, IBlankSkinSupplier {
         thePlayer.headYaw = lookX * lookFactor;
         thePlayer.pitch = (float)Math.atan(mouseY / 40) * -20;
 
-        minecraft.getEntityRenderManager().render(thePlayer, 0, 0, 0, 0, 1, false);
+        EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
+        
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        
+        pushMatrix();
+        GL14.glBlendColor(0, 0, 0, 0.6F);
+        blendFuncSeparate(
+                SourceFactor.ONE, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
+                SourceFactor.ZERO, DestFactor.ONE);
+        enableBlend();
+        scalef(-1, -1, 1);
+        translatef(0, 0, 0);
+        
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
+        disableBlend();
+        GL14.glBlendColor(255, 255, 255, 1);
+        popMatrix();
+        GL11.glPopAttrib();
+        
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        color4f(1, 1, 1, 1);
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
+        GL11.glPopAttrib();
 
         popMatrix();
         GuiLighting.disable();

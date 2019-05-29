@@ -19,9 +19,9 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+
 import org.lwjgl.opengl.GL11;
 
-import com.minelittlepony.hdskins.gui.DummyWorld;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import java.util.Set;
@@ -86,12 +86,6 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         return MinecraftClient.getInstance().player != null && super.hasLabel(entity);
     }
 
-    // TODO: Where'd it go?
-    //@Override
-    //protected boolean setBrightness(M entity, float partialTicks, boolean combineTextures) {
-    //    return MinecraftClient.getInstance().world != null && super.setBrightness(entity, partialTicks, combineTextures);
-    //}
-
     @SuppressWarnings("unchecked")
     public M getEntityModel(T entity) {
         return (M)(entity.getTextures().usesThinSkin() ? THIN : FAT);
@@ -127,8 +121,6 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         model.leftArmPose = ArmPose.EMPTY;
         model.rightArmPose = ArmPose.EMPTY;
 
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-
         double offset = entity.getHeightOffset() + entity.y;
 
         if (entity.hasVehicle()) {
@@ -141,22 +133,6 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         } else if (model.isSneaking) {
             y -= 0.125D;
         }
-
-        pushMatrix();
-        enableBlend();
-        color4f(1, 1, 1, 0.3F);
-        translated(0, offset, 0);
-
-        if (entity.isSleeping()) {
-            rotatef(-90, 1, 0, 0);
-        }
-
-        super.render(entity, x, y, z, entityYaw, partialTicks);
-
-        color4f(1, 1, 1, 1);
-        disableBlend();
-        popMatrix();
-        GL11.glPopAttrib();
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         pushMatrix();

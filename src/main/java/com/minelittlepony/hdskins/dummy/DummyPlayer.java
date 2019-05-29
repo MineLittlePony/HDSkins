@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.dummy;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.minelittlepony.hdskins.gui.DummyWorld;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;

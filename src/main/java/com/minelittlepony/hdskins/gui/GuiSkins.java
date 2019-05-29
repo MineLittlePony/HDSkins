@@ -32,12 +32,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
-import java.nio.DoubleBuffer;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
@@ -59,8 +56,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
     private FeatureSwitch btnModeSkin;
     private FeatureSwitch btnModeElytra;
-
-    private DoubleBuffer doubleBuffer;
 
     private float msgFadeOpacity = 0;
 
@@ -377,31 +372,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         float deltaTime = updateCounter + partialTick - lastPartialTick;
         lastPartialTick = updateCounter + partialTick;
 
-        int bottom = height - 40;
-        int mid = width / 2;
-        int horizon = height / 2 + height / 5;
-
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-
-        fill(30, 30, mid - 30, bottom, Integer.MIN_VALUE);
-        fill(mid + 30, 30, width - 30, bottom, Integer.MIN_VALUE);
-
-        fillGradient(30, horizon, mid - 30, bottom, 0x80FFFFFF, 0xffffff);
-        fillGradient(mid + 30, horizon, width - 30, bottom, 0x80FFFFFF, 0xffffff);
-
-        enableClipping(bottom);
+        previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
 
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
         
-        previewer.render(width, height, horizon, mouseX, mouseY, updateCounter, partialTick);
-
-        disableClipping();
-
-        super.render(mouseX, mouseY, partialTick);
-
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
+            enableBlend();
             drawCenteredString(font, I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
         }
 
@@ -410,6 +388,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
             fill((int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
+            enableBlend();
 
             if (uploader.isThrottled()) {
                 drawCenteredString(font, I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
@@ -420,6 +399,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 drawCenteredString(font, I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
             }
         }
+
+        
+        super.render(mouseX, mouseY, partialTick);
 
         boolean uploadInProgress = uploader.uploadInProgress();
         boolean showError = uploader.hasStatus();
@@ -450,37 +432,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 font.drawStringBounded(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
-
-        depthMask(true);
-        enableDepthTest();
-    }
-
-    private void enableClipping(int yBottom) {
-        GL11.glPopAttrib();
-
-        if (doubleBuffer == null) {
-            doubleBuffer = BufferUtils.createByteBuffer(32).asDoubleBuffer();
-        }
-
-        doubleBuffer.clear();
-        doubleBuffer.put(0).put(1).put(0).put(-30).flip();
-
-        GL11.glClipPlane(GL11.GL_CLIP_PLANE0, doubleBuffer);
-        doubleBuffer.clear();
-        doubleBuffer.put(0).put(-1).put(0).put(yBottom).flip();
-
-        GL11.glClipPlane(GL11.GL_CLIP_PLANE1, doubleBuffer);
-        GL11.glEnable(GL11.GL_CLIP_PLANE0);
-        GL11.glEnable(GL11.GL_CLIP_PLANE1);
-    }
-
-    private void disableClipping() {
-        GL11.glDisable(GL11.GL_CLIP_PLANE1);
-        GL11.glDisable(GL11.GL_CLIP_PLANE0);
-
-        disableDepthTest();
-        enableBlend();
-        depthMask(false);
     }
 
     private void punchServer(String uploadMsg) {
