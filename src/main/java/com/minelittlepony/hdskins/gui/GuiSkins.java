@@ -128,7 +128,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         addButton(new Label(width / 2, 10)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
         addButton(new Label(34, 34)).getStyle().setText("hdskins.local").setColor(0xffffff);
-        addButton(new Label(width / 2 + 34, 34)).getStyle().setText("hdskins.net").setColor(0xffffff);
+        addButton(new Label(width / 2 + 34, 34)).getStyle().setText("hdskins.server").setColor(0xffffff);
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
                 .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
