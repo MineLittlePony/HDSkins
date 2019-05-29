@@ -121,8 +121,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
 
     protected void drawBackground(int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        fill(        frameLeft, frameTop, frameRight, frameBottom, Integer.MIN_VALUE);
-        fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x80FFFFFF, 0xffffff);
+        fill(        frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
+        fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
         GL11.glPopAttrib();
     }
     
