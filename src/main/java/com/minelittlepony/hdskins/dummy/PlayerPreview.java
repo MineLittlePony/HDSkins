@@ -161,10 +161,10 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         
         pushMatrix();
-        GL14.glBlendColor(0, 0, 0, 0.6F);
+        GL14.glBlendColor(1, 1, 1, 0.3F);
         blendFuncSeparate(
-                SourceFactor.ONE, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
-                SourceFactor.ZERO, DestFactor.ONE);
+                SourceFactor.DST_COLOR, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
+                SourceFactor.ONE, DestFactor.ZERO);
         enableBlend();
         scalef(-1, -1, 1);
         translatef(0, 0, 0);
