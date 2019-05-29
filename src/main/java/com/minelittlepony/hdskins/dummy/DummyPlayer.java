@@ -86,6 +86,8 @@ public class DummyPlayer extends LivingEntity {
 
         if (y == 0 && jumping && !textures.previewSleeping && !textures.previewRiding) {
             jump();
+
+            upwardSpeed = (float)getVelocity().y;
         }
 
         upwardSpeed -= 0.08D;
