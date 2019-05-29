@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins;
 
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.gui.Feature;
+import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.HttpException;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinUpload;

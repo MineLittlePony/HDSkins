@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.HDSkins;
-import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;

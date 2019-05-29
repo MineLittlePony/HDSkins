@@ -13,6 +13,7 @@ import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.VanillaModels;
+import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;

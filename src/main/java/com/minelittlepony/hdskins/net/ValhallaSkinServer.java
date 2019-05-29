@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.net;
 import com.google.common.base.Preconditions;
 import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.HDSkins;
-import com.minelittlepony.hdskins.gui.Feature;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
