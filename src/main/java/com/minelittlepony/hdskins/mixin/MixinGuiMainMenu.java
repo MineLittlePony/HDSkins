@@ -22,7 +22,7 @@ public class MixinGuiMainMenu extends Screen {
     @Inject(method = "init()V", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         addButton(new IconicButton(width - 50, height - 50).onClick(sender -> {
-            MinecraftClient.getInstance().disconnect(HDSkins.getInstance().createSkinsGui());
+            MinecraftClient.getInstance().openScreen(HDSkins.getInstance().createSkinsGui());
         }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
     }
 }
