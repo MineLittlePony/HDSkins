@@ -166,7 +166,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
                 SourceFactor.DST_COLOR, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
                 SourceFactor.ONE, DestFactor.ZERO);
         enableBlend();
-        scalef(-1, -1, 1);
+        scalef(1, -1, 1);
         translatef(0, 0, 0);
         
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
