@@ -37,6 +37,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -167,14 +168,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .getStyle()
                 .setText("hdskins.options.clear");
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
-                .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
-                .setEnabled(!minecraft.window.isFullscreen())
-                .getStyle()
-                .setText("hdskins.options.browse");
-
         addButton(new Button(width / 2 - 50, height - 25, 100, 20))
-                .onClick(sender -> minecraft.disconnect(new MainMenuScreen()))
+                .onClick(sender -> minecraft.openScreen(new MainMenuScreen()))
                 .getStyle()
                 .setText("hdskins.options.close");
 
