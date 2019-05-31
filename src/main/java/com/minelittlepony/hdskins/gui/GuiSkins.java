@@ -22,7 +22,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
-import net.minecraft.client.gui.MainMenuScreen;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.resource.language.I18n;
@@ -37,7 +36,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -136,7 +134,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setEnabled(!minecraft.window.isFullscreen())
                 .getStyle().setText("hdskins.options.browse");
 
-        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 20, 48, 20))
+        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
                 .setEnabled(uploader.canUpload())
                 .onClick(sender -> {
                     if (uploader.canUpload()) {
@@ -169,7 +167,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setText("hdskins.options.clear");
 
         addButton(new Button(width / 2 - 50, height - 25, 100, 20))
-                .onClick(sender -> minecraft.openScreen(new MainMenuScreen()))
+                .onClick(sender -> minecraft.openScreen(null))
                 .getStyle()
                 .setText("hdskins.options.close");
 

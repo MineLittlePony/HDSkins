@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL14;
 
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
-import com.minelittlepony.hdskins.util.render.ClippingSpace;
+import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;

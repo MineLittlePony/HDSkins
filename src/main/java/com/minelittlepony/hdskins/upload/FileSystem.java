@@ -1,5 +1,7 @@
 package com.minelittlepony.hdskins.upload;
 
+import com.minelittlepony.hdskins.gui.GuiFileSelector;
+
 //TODO: No more swing
 /**
  * Access point for launching file open/save dialogues.
@@ -9,7 +11,7 @@ public class FileSystem {
      * Creates a new dialogue for selecting and reading a file.
      */
     public static IFileDialog openRead(String windowTitle) {
-        return new FileChooser(windowTitle);
+        return new GuiFileSelector(windowTitle);
     }
 
     /**
