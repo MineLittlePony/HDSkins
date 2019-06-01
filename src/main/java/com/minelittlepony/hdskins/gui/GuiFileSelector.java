@@ -30,32 +30,32 @@ import net.minecraft.network.chat.TranslatableComponent;
 
 public class GuiFileSelector extends GameGui implements IFileDialog {
 
-    private Path currentDirectory = Paths.get("/");
-    
+    protected Path currentDirectory = Paths.get("/");
+
     private IFileDialog.Callback callback = (f, b) -> {};
-    
+
     @Nullable
-    private final Screen parent;
-    
+    protected final Screen parent;
+
     private Button parentBtn;
-    
-    private TextFieldWidget textInput;
-    
-    private final ScrollContainer filesList = new ScrollContainer();
-    
+
+    protected TextFieldWidget textInput;
+
+    protected final ScrollContainer filesList = new ScrollContainer();
+
     private String extensionFilter = "";
     private String filterMessage = "";
-    
+
     public GuiFileSelector(String title) {
         super(new TranslatableComponent(title));
-        
+
         this.parent = MinecraftClient.getInstance().currentScreen;
-        
+
         filesList.margin.top = 60;
         filesList.margin.bottom = 30;
-        
+
         filesList.padding.setAll(10);
-        
+
         AbstractConfig config = HDSkins.getInstance().getConfig();
 
         String last = config.lastChosenFile;
@@ -63,13 +63,13 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
             currentDirectory = Paths.get(last);
         }
     }
-    
+
     @Override
-    public void init() {
+    protected void init() {
         children.add(filesList);
 
         renderDirectory();
-        
+
         addButton(new Label(width/2, 10).setCentered()).getStyle().setText(getTitle().getString());
         addButton(textInput = new TextFieldWidget(font, 10, 30, width - 50, 18, ""));
         textInput.setIsEditable(true);
@@ -83,24 +83,24 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         addButton(new Label(width/2, 10).setCentered())
             .getStyle()
             .setText(getTitle().getString());
-        
-        addButton(parentBtn = new Button(width/2 - 160, height - 25, 150, 20))
+
+        addButton(parentBtn = new Button(width/2 - 160, height - 25, 100, 20))
             .onClick(p -> navigateTo(currentDirectory.getParent()))
             .setEnabled(currentDirectory.getParent() != null)
             .getStyle()
                 .setText("hdskins.directory.up");
-        
-        addButton(new Button(width/2 + 10, height - 25, 150, 20))
+
+        addButton(new Button(width/2 + 60, height - 25, 100, 20))
             .onClick(p -> {
                 minecraft.openScreen(parent);
                 callback.onDialogClosed(currentDirectory, false);
             })
             .getStyle()
                 .setText("hdskins.options.close");
-        
+
         if (!filterMessage.isEmpty()) {
             filesList.margin.bottom = 60;
-            
+
             addButton(new Label(10, height - 50))
                 .getStyle()
                     .setColor(0x88EEEEEE)
@@ -116,84 +116,105 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         filesList.render(mouseX, mouseY, partialTicks);
     }
-    
+
     protected void renderDirectory() {
         filesList.buttons().clear();
         filesList.children().clear();
         filesList.init();
 
         int buttonX = filesList.width / 2 - 110;
-        
+
         listFiles().forEach(path -> {
             int buttonY = filesList.buttons().size() * 20;
-            
+
             filesList.addButton(new PathButton(buttonX, buttonY, 200, 20, path));
         });
         filesList.init();
     }
 
     protected Stream<Path> listFiles() {
+        Path directory = currentDirectory;
+
+        if (!Files.isDirectory(directory)) {
+            directory = directory.getParent();
+        }
+
         File[] files = null;
         try {
-            files = currentDirectory.toFile().listFiles();
+            files = directory.toFile().listFiles();
         } catch (Throwable e) {}
-        
+
         if (files == null) {
             return Stream.empty();
         }
-        
+
         return Lists.newArrayList(files).stream()
                 .map(File::toPath)
-                .filter(path -> {
-                    try {
-                        return !Files.isHidden(path);
-                    } catch (IOException e) {
-                        return false;
-                    }
-                })
-                .filter(path -> extensionFilter.isEmpty() || Files.isDirectory(path) || path.getFileName().toString().endsWith(extensionFilter));
+                .filter(this::filterPath);
     }
-    
+
+    protected boolean filterPath(Path path) {
+        try {
+            if (Files.isHidden(path)) {
+                return false;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+
+        return extensionFilter.isEmpty()
+                || Files.isDirectory(path)
+                || path.getFileName().toString().endsWith(extensionFilter);
+    }
+
     public void navigateTo(Path path) {
         if (path == null) {
             return;
         }
 
         path = path.toAbsolutePath();
-        
+
         textInput.setText(path.toString());
-        
+
         AbstractConfig config = HDSkins.getInstance().getConfig();
-        
+
         if (Files.isDirectory(path)) {
             currentDirectory = path;
-            
+
             config.lastChosenFile = path.toString();
-            
+
             parentBtn.setEnabled(currentDirectory.getParent() != null);
             renderDirectory();
         } else {
             config.lastChosenFile = path.getParent().toString();
-            
-            minecraft.openScreen(parent);
-            callback.onDialogClosed(path, true);
+
+            onFileSelected(path);
         }
-        
+
         config.save();
     }
-    
+
+    protected void onFileSelected(Path fileLocation) {
+        minecraft.openScreen(parent);
+        callback.onDialogClosed(fileLocation, true);
+    }
+
+    protected void onPathSelected(PathButton sender) {
+        navigateTo(sender.path);
+    }
+
     class PathButton extends Button {
 
         protected final Path path;
-        
+
         public PathButton(int x, int y, int width, int height, Path path) {
             super(x, y, width, height);
-            
+
             this.path = path;
-            
+
             String name = path.getFileName().toString();
 
-            onClick(self -> navigateTo(path));
+            onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
             getStyle()
                 .setText(minecraft.textRenderer.trimToWidth(name, width))
@@ -202,17 +223,21 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
                         ChatFormat.GRAY + "" + ChatFormat.ITALIC + describeFile(path))
                 );
         }
-        
+
+        public void clearFocus() {
+            super.setFocused(false);
+        }
+
         protected String describeFile(Path path) {
             if (Files.isDirectory(path)) {
                 return I18n.translate("hdskins.filetype.directory");
             }
-            
+
             String[] split = path.getFileName().toString().split("\\.");
             if (split.length > 1) {
                 return I18n.translate("hdskins.filetype.file", split[1].toUpperCase());
             }
-            
+
             return I18n.translate("hdskins.filetype.unknown");
         }
     }
@@ -221,7 +246,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     public IFileDialog filter(String extension, String description) {
         extensionFilter = Strings.nullToEmpty(extension);
         filterMessage = Strings.nullToEmpty(description);
-        
+
         if (!filterMessage.isEmpty()) {
             filesList.margin.bottom = 60;
         } else {
