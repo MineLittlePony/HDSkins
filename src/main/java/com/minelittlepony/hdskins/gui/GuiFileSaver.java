@@ -44,7 +44,7 @@ public class GuiFileSaver extends GuiFileSelector {
     }
 
     protected void updateButtonStates(String value) {
-        Path selection = Paths.get(value);
+        Path selection = Paths.get(value.trim());
 
         saveBtn.setEnabled(selection != null && !Files.isDirectory(selection));
     }
