@@ -203,7 +203,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase())
                 .setTooltipOffset(0, 10);
 
-        addButton(new IconicToggle(width - 25, 118))
+        addButton(new IconicToggle(width - 25, 118, 20, 20))
                 .setValue(previewer.getPose())
                 .setStyles(
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
@@ -468,7 +468,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     protected class FeatureSwitch extends Button {
 
         public FeatureSwitch(int x, int y) {
-            super(x, y);
+            super(x, y, 20, 20);
 
             setStyle(new FeatureStyle(this));
         }
