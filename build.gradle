@@ -1,20 +1,6 @@
-// Frabric build script
-// 24/05/2019
-// https://github.com/FabricMC/fabric-example-mod/blob/master/build.gradle
-
-buildscript {
-  repositories {
-      jcenter()
-      maven {
-        name = 'Fabric'
-        url = 'https://maven.fabricmc.net/'
-      }
-      gradlePluginPortal()
-  }
-  dependencies {
-    classpath 'fabric-loom:fabric-loom.gradle.plugin:0.2.2-SNAPSHOT'
-    classpath 'org.ajoberstar.grgit:grgit-gradle:3.1.1'
-  }
+plugins {
+  id 'fabric-loom' version '0.2.2-SNAPSHOT'
+  id 'org.ajoberstar.grgit' version '3.1.1'
 }
 
 repositories {
@@ -80,6 +66,8 @@ processResources {
   from(sourceSets.main.resources.srcDirs) {
     exclude 'fabric.mod.json'
   }
+
+  from 'LICENSE'
 }
 
 tasks.withType(JavaCompile) {
@@ -91,7 +79,4 @@ task sourcesJar(type: Jar, dependsOn: classes) {
   from sourceSets.main.allSource
 }
 
-jar {
-  from 'LICENSE'
-}
 

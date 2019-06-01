@@ -7,7 +7,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Screen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.network.chat.TranslatableComponent;
 
 public class GuiConfirmation extends GameGui {
@@ -32,7 +32,7 @@ public class GuiConfirmation extends GameGui {
 
     @Override
     protected void init() {
-        addButton(new Label(width/2, height/2 - 10).setCentered())
+        addButton(new Label(this.width/2, height/2 - 10).setCentered())
             .getStyle().setText(getTitle().getString());
 
         addButton(new Button(width/2 - 110, height/2 + 20, 100, 20))

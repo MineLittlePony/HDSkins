@@ -36,7 +36,7 @@ public class DummyWorld extends World {
     private final RegistryTagManager tags = new RegistryTagManager();
 
     private DummyWorld() {
-        super(new LevelProperties(new LevelInfo(0, GameMode.INVALID, false, false, LevelGeneratorType.DEFAULT), "MpServer"),
+        super(new LevelProperties(new LevelInfo(0, GameMode.NOT_SET, false, false, LevelGeneratorType.DEFAULT), "MpServer"),
                 DimensionType.OVERWORLD,
                 (w, dim) -> null,
                 MinecraftClient.getInstance().getProfiler(),

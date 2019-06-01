@@ -10,12 +10,12 @@ import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.HDSkins;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.MainMenuScreen;
-import net.minecraft.client.gui.Screen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
-@Mixin(MainMenuScreen.class)
+@Mixin(TitleScreen.class)
 public class MixinGuiMainMenu extends Screen {
 
     protected MixinGuiMainMenu() { super(null); }
