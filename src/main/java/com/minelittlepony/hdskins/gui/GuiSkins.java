@@ -1,9 +1,17 @@
 package com.minelittlepony.hdskins.gui;
 
+import static com.mojang.blaze3d.platform.GlStateManager.enableBlend;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.function.Consumer;
+
+import org.lwjgl.glfw.GLFW;
+
 import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.common.client.gui.element.IconicButton;
 import com.minelittlepony.common.client.gui.element.IconicToggle;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.style.Style;
@@ -11,8 +19,8 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinChooser;
 import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
-import com.minelittlepony.hdskins.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.VanillaModels;
+import com.minelittlepony.hdskins.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.upload.FileDrop;
@@ -26,20 +34,12 @@ import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.item.Items;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.glfw.GLFW;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.function.Consumer;
-
-import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
 
@@ -99,7 +99,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         uploader = new SkinUploader(servers, previewer, this);
         chooser = new SkinChooser(uploader);
     }
-    
+
     public PlayerPreview createPreviewer() {
         return new PlayerPreview();
     }
@@ -370,7 +370,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
-        
+
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
             enableBlend();
@@ -394,7 +394,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             }
         }
 
-        
+
         super.render(mouseX, mouseY, partialTick);
 
         boolean uploadInProgress = uploader.uploadInProgress();
@@ -465,7 +465,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         }
     }
 
-    protected class FeatureSwitch extends IconicButton {
+    protected class FeatureSwitch extends Button {
 
         public FeatureSwitch(int x, int y) {
             super(x, y);
