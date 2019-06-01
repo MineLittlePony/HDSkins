@@ -1,6 +1,10 @@
 HD Skins
 ========
 
+[![Build Status](https://travis-ci.org/MineLittlePony/HDSkins.svg?branch=master)](https://travis-ci.org/MineLittlePony/HDSkins)
+[![Jitpack](https://jitpack.io/v/MineLittlePony/HDSkins.svg)](https://jitpack.io/#MineLittlePony/HDSkins)
+
+
 The Minecraft HDSkins mod from the VoxelModPack.
 
 ## Building
