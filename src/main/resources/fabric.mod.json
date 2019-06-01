@@ -11,7 +11,7 @@
     "homepage": "https://minelittlepony-mod.com/",
     "sources": "http://github.com/MineLittlePony/HDSkins"
   },
-  "license": "CC0-1.0",
+  "license": "MIT",
   "icon": "hdskins_logo.png",
   "environment": "client",
   "entrypoints": {

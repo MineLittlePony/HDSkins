@@ -3,16 +3,6 @@ plugins {
   id 'org.ajoberstar.grgit' version '3.1.1'
 }
 
-repositories {
-  maven {
-    name = 'Jit'
-    url = 'https://jitpack.io'
-  }
-}
-
-apply plugin: 'fabric-loom'
-apply plugin: 'org.ajoberstar.grgit'
-
 targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -38,6 +28,17 @@ if (project.release == 'SNAPSHOT') {
 group = project.group
 description = project.displayname
 archivesBaseName = project.name
+
+minecraft {
+  refmapName = "hdskins.mixin.refmap.json"
+}
+
+repositories {
+  maven {
+    name = 'Jit'
+    url = 'https://jitpack.io'
+  }
+}
 
 dependencies {
   minecraft "com.mojang:minecraft:${project.minecraft_version}"

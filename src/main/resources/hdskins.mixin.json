@@ -1,11 +1,11 @@
 {
   "required": true,
+  "minVersion": "0.7",
   "package": "com.minelittlepony.hdskins.mixin",
+  "refmap": "hdskins.mixin.refmap.json",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-  ],
   "client": [
-  	"MixinClientPlayer",
+    "MixinClientPlayer",
     "MixinEntityRenderDispatcher",
     "MixinGuiMainMenu",
     "MixinImageBufferDownload",
