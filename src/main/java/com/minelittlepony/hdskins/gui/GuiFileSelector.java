@@ -70,7 +70,6 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         renderDirectory();
 
-        addButton(new Label(width/2, 10).setCentered()).getStyle().setText(getTitle().getString());
         addButton(textInput = new TextFieldWidget(font, 10, 30, width - 50, 18, ""));
         textInput.setIsEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
@@ -80,7 +79,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
             .getStyle()
                 .setText("hdskins.directory.go");
 
-        addButton(new Label(width/2, 10).setCentered())
+        addButton(new Label(width/2, 5).setCentered())
             .getStyle()
             .setText(getTitle().getString());
 
@@ -101,7 +100,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         if (!filterMessage.isEmpty()) {
             filesList.margin.bottom = 60;
 
-            addButton(new Label(10, height - 50))
+            addButton(new Label(10, height - 55))
                 .getStyle()
                     .setColor(0x88EEEEEE)
                     .setText("* " + filterMessage);
