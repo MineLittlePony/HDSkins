@@ -9,7 +9,6 @@
     "MixinEntityRenderDispatcher",
     "MixinGuiMainMenu",
     "MixinImageBufferDownload",
-    "MixinMinecraftClient",
     "MixinNetworkPlayerInfo",
     "MixinSkullRenderer"
   ],

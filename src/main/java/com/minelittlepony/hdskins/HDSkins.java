@@ -1,53 +1,5 @@
 package com.minelittlepony.hdskins;
 
-import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Streams;
-import com.minelittlepony.common.util.MoreStreams;
-import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
-import com.minelittlepony.hdskins.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
-import com.minelittlepony.hdskins.gui.GuiSkins;
-import com.minelittlepony.hdskins.mixin.MixinClientPlayer;
-import com.minelittlepony.hdskins.resources.SkinResourceManager;
-import com.minelittlepony.hdskins.resources.TextureLoader;
-import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
-import com.minelittlepony.hdskins.net.BethlehemSkinServer;
-import com.minelittlepony.hdskins.net.LegacySkinServer;
-import com.minelittlepony.hdskins.net.ServerType;
-import com.minelittlepony.hdskins.net.SkinServer;
-import com.minelittlepony.hdskins.net.ValhallaSkinServer;
-import com.minelittlepony.hdskins.util.CallableFutures;
-import com.minelittlepony.hdskins.util.ProfileTextureUtil;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.resource.ReloadableResourceManager;
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
-import net.minecraft.client.texture.PlayerSkinTexture;
-import net.minecraft.client.texture.Texture;
-import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.util.Identifier;
-
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
@@ -65,7 +17,56 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
+
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Streams;
+import com.minelittlepony.common.util.MoreStreams;
+import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.dummy.DummyPlayer;
+import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
+import com.minelittlepony.hdskins.gui.GuiSkins;
+import com.minelittlepony.hdskins.mixin.MixinClientPlayer;
+import com.minelittlepony.hdskins.net.BethlehemSkinServer;
+import com.minelittlepony.hdskins.net.LegacySkinServer;
+import com.minelittlepony.hdskins.net.ServerType;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.ValhallaSkinServer;
+import com.minelittlepony.hdskins.resources.SkinResourceManager;
+import com.minelittlepony.hdskins.resources.TextureLoader;
+import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
+import com.minelittlepony.hdskins.util.CallableFutures;
+import com.minelittlepony.hdskins.util.ProfileTextureUtil;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
+import net.minecraft.client.texture.PlayerSkinTexture;
+import net.minecraft.client.texture.Texture;
+import net.minecraft.client.util.DefaultSkinHelper;
+import net.minecraft.resource.ReloadableResourceManager;
+import net.minecraft.util.Identifier;
 
 public final class HDSkins {
     public static final String MOD_ID = "hdskins";
@@ -124,8 +125,8 @@ public final class HDSkins {
         return config;
     }
 
-    public void postinit() {
-        ReloadableResourceManager irrm = (ReloadableResourceManager) MinecraftClient.getInstance().getResourceManager();
+    void postInit(MinecraftClient client) {
+        ReloadableResourceManager irrm = (ReloadableResourceManager) client.getResourceManager();
         irrm.registerListener(resources);
 
         getUtils().addRenderer(DummyPlayer.class, RenderDummyPlayer::new);
