@@ -72,24 +72,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
     private final FileDrop dropper = FileDrop.newDropEvent(this);
 
-    private final Edge ctrlKey = new Edge(this::ctrlToggled) {
-        @Override
-        protected boolean nextState() {
-            return Screen.hasControlDown();
-        }
-    };
-    private final Edge jumpKey = new Edge(this::jumpToggled) {
-        @Override
-        protected boolean nextState() {
-            return InputUtil.isKeyPressed(minecraft.window.getHandle(), GLFW.GLFW_KEY_SPACE);
-        }
-    };
-    private final Edge sneakKey = new Edge(this::sneakToggled) {
-        @Override
-        protected boolean nextState() {
-            return Screen.hasShiftDown();
-        }
-    };
+    private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
+    private final Edge jumpKey = new Edge(this::jumpToggled, () -> {
+        return InputUtil.isKeyPressed(minecraft.window.getHandle(), GLFW.GLFW_KEY_SPACE);
+    });
+    private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
 
     public GuiSkins(List<SkinServer> servers) {
         super(new TranslatableComponent("hdskins.gui.title"));
