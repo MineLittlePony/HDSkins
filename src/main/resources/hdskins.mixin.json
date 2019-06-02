@@ -6,7 +6,6 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinClientPlayer",
-    "MixinEntityRenderDispatcher",
     "MixinGuiMainMenu",
     "MixinImageBufferDownload",
     "MixinNetworkPlayerInfo",

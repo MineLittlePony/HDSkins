@@ -36,6 +36,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
+import com.minelittlepony.common.client.IModUtilities;
 import com.minelittlepony.common.util.MoreStreams;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
