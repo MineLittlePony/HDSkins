@@ -1,19 +1,22 @@
 package com.minelittlepony.hdskins.util;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public abstract class Edge {
+public class Edge {
 
     private boolean previousState;
 
-    private Consumer<Boolean> callback;
+    private final Consumer<Boolean> callback;
+    private final Supplier<Boolean> nextState;
 
-    public Edge(Consumer<Boolean> callback) {
+    public Edge(Consumer<Boolean> callback, Supplier<Boolean> nextState) {
         this.callback = callback;
+        this.nextState = nextState;
     }
 
     public void update() {
-        boolean state = nextState();
+        boolean state = nextState.get();
 
         if (state != previousState) {
             previousState = state;
@@ -24,7 +27,4 @@ public abstract class Edge {
     public boolean getState() {
         return previousState;
     }
-
-    protected abstract boolean nextState();
-
 }
