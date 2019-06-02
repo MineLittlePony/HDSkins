@@ -1,28 +1,15 @@
 plugins {
-  id 'fabric-loom' version '0.2.2-SNAPSHOT'
-  id 'org.ajoberstar.grgit' version '3.1.1'
+  id 'fabric-loom' version '0.2.4-SNAPSHOT'
+  id 'maven-publish'
 }
 
 targetCompatibility = JavaVersion.VERSION_1_8
 sourceCompatibility = JavaVersion.VERSION_1_8
 
-ext {
-  if (grgit == null) {
-    revision = "nogit"
-  } else {
-    revision = "${grgit.log().size()}-${grgit.head().abbreviatedId}"
-    if (file('.git/shallow').exists()) {
-      // don't clone with --depth
-      revision = "-1-shallow"
-    }
-  }
-}
+version = "$project.minecraft_version-$project.version"
 
 if (project.release != 'RELEASE') {
   version += "-${project.release}"
-}
-if (project.release == 'SNAPSHOT') {
-  version += "-${project.revision}"
 }
 
 group = project.group
@@ -35,8 +22,8 @@ minecraft {
 
 repositories {
   maven {
-    name = 'Jit'
-    url = 'https://jitpack.io'
+    name = 'minelp'
+    url = 'https://repo.minelittlepony-mod.com/maven/snapshot'
   }
 }
 
@@ -80,4 +67,56 @@ task sourcesJar(type: Jar, dependsOn: classes) {
   from sourceSets.main.allSource
 }
 
+publishing {
+  publications {
+    maven(MavenPublication) {
+      afterEvaluate {
+        artifact(remapJar.output)
+      }
+      artifact(sourcesJar) {
+        builtBy remapSourcesJar
+      }
 
+      pom {
+        name = "HDSkins"
+        description = "Ponyfy your Minecraft"
+        url = "http://minelittlepony-mod.com"
+        licenses {
+          license {
+            name = "MIT Public License"
+            url = "https://tlo.mit.edu/learn-about-intellectual-property/software-and-open-source-licensing"
+
+          }
+        }
+        developers {
+          developer {
+            id = "killjoy1221"
+            name = "Matthew Messinger"
+            email = "mattmess1221@gmail.com"
+          }
+          developer {
+            id = "sollace"
+          }
+        }
+        scm {
+          connection = 'scm:git:git://github.com/MineLittlePony/HDSkins.git'
+          developerConnection = 'scm:git:ssh://github.com/MineLittlePony/HDSkins.git'
+          url = 'https://github.com/MineLittlePony/HDSkins'
+        }
+      }
+    }
+  }
+
+  repositories {
+    maven {
+      name = "MineLittlePony"
+      def mvn = 's3://repo.minelittlepony-mod.com/maven'
+      url = release == 'SNAPSHOT' ? "$mvn/snapshot" : "$mvn/release"
+
+      credentials(AwsCredentials) {
+        accessKey = System.env.ACCESS_KEY
+        secretKey = System.env.SECRET_KEY
+      }
+    }
+  }
+}
