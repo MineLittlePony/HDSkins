@@ -1,3 +1,7 @@
+// Fabric build script
+// 24/05/2019
+// https://github.com/FabricMC/fabric-example-mod/blob/master/build.gradle
+
 plugins {
     id 'fabric-loom' version '0.2.4-SNAPSHOT'
     id 'maven-publish'
