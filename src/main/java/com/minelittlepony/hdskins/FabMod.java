@@ -3,10 +3,10 @@ package com.minelittlepony.hdskins;
 import javax.annotation.Nullable;
 
 import com.minelittlepony.common.client.IModUtilities;
-
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.event.ScreenInitCallback;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.event.client.ClientTickCallback;
 import net.minecraft.client.MinecraftClient;
@@ -45,7 +45,7 @@ public class FabMod implements ClientModInitializer, IModUtilities {
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
         if (screen instanceof TitleScreen) {
             buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20).onClick(sender -> {
-                MinecraftClient.getInstance().openScreen(HDSkins.getInstance().createSkinsGui());
+                MinecraftClient.getInstance().openScreen(hd.createSkinsGui());
             }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
         }
     }
