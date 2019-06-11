@@ -1,13 +1,17 @@
 package com.minelittlepony.hdskins.resources;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+import javax.annotation.Nullable;
+
 import com.minelittlepony.hdskins.VanillaModels;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.client.texture.ImageFilter;
 import net.minecraft.client.texture.PlayerSkinTexture;
 import net.minecraft.util.Identifier;
-
-import javax.annotation.Nullable;
 
 public class PreviewTexture extends PlayerSkinTexture {
 
@@ -18,7 +22,11 @@ public class PreviewTexture extends PlayerSkinTexture {
     private final String fileUrl;
 
     public PreviewTexture(MinecraftProfileTexture texture, Identifier fallbackTexture, @Nullable ImageFilter imageBuffer) {
-        super(null, texture.getUrl(), fallbackTexture, imageBuffer);
+        // Always provided a cache file to force skin textures to load correctly.
+        //  Mojang closes the http connection before MinecraftClient.getInstance().execute(..) comes back
+        //  if we don't provide a file location, it will attempt to read from the http connection's input stream
+        //  which will have been closed before prior to their callback executing.
+        super(tempFile(texture.getHash()), texture.getUrl(), fallbackTexture, imageBuffer);
 
         this.model = VanillaModels.nonNull(texture.getMetadata("model"));
         this.fileUrl = texture.getUrl();
@@ -44,5 +52,15 @@ public class PreviewTexture extends PlayerSkinTexture {
 
     public boolean usesThinArms() {
         return VanillaModels.isSlim(model);
+    }
+
+    @Nullable
+    private static File tempFile(String filename) {
+        try {
+            File f = Files.createTempFile(filename, "skin-preview").toFile();
+            f.delete();
+            return f;
+        } catch (IOException ignored) {}
+        return null;
     }
 }

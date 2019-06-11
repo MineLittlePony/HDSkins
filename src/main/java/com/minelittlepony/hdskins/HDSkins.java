@@ -224,8 +224,6 @@ public final class HDSkins {
                 callback.onSkinTextureAvailable(type, resource, texture);
             }
         } else {
-
-            // schedule texture loading on the main thread.
             TextureLoader.loadTexture(resource, new PlayerSkinTexture(
                     getUtils().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
