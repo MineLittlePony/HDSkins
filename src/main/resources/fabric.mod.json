@@ -9,7 +9,8 @@
   ],
   "contact": {
     "homepage": "https://minelittlepony-mod.com/",
-    "sources": "http://github.com/MineLittlePony/HDSkins"
+    "sources": "http://github.com/MineLittlePony/HDSkins",
+    "issues": "https://github.com/MineLittlePony/HDSkins/issues"
   },
   "license": "MIT",
   "icon": "hdskins_logo.png",
@@ -28,5 +29,8 @@
   },
   "depends": {
   	"kirin": "*"
-   }
+  },
+  "custom": {
+    "modmenu:clientsideOnly": true
+  }
 }
