@@ -10,6 +10,7 @@ import com.minelittlepony.hdskins.VanillaModels;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.client.texture.ImageFilter;
+import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.PlayerSkinTexture;
 import net.minecraft.util.Identifier;
 
@@ -30,6 +31,12 @@ public class PreviewTexture extends PlayerSkinTexture {
 
         this.model = VanillaModels.nonNull(texture.getMetadata("model"));
         this.fileUrl = texture.getUrl();
+    }
+
+    @Override
+    public void method_4534(NativeImage nativeImage_1) {
+        super.method_4534(nativeImage_1);
+        uploaded = true;
     }
 
     public boolean isTextureUploaded() {
