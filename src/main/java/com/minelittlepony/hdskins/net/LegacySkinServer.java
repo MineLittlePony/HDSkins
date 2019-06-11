@@ -1,5 +1,21 @@
 package com.minelittlepony.hdskins.net;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -17,20 +33,6 @@ import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
 
 @ServerType("legacy")
 public class LegacySkinServer implements SkinServer {
@@ -96,7 +98,7 @@ public class LegacySkinServer implements SkinServer {
             logger.debug("Found skin for {} at {}", profile.getName(), url);
 
             Header eTagHeader = resp.getResponse().getFirstHeader(HttpHeaders.ETAG);
-            final String eTag = eTagHeader == null ? "" : StringUtils.strip(eTagHeader.getValue(), "\"");
+            final String eTag = eTagHeader == null ? "" : StringUtils.strip(eTagHeader.getValue(), "\"").replaceAll("[^a-z0-9/._-]", "");
 
             // Add the ETag onto the end of the texture hash. Should properly cache the textures.
             return new MinecraftProfileTexture(url, null) {
