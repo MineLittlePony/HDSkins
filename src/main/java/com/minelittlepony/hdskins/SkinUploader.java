@@ -1,27 +1,5 @@
 package com.minelittlepony.hdskins;
 
-import com.minelittlepony.hdskins.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.net.Feature;
-import com.minelittlepony.hdskins.net.HttpException;
-import com.minelittlepony.hdskins.net.SkinServer;
-import com.minelittlepony.hdskins.net.SkinUpload;
-import com.minelittlepony.hdskins.util.MoreHttpResponses;
-import com.minelittlepony.hdskins.util.NetClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.minelittlepony.hdskins.resources.PreviewTextureManager;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
@@ -32,6 +10,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.minelittlepony.hdskins.dummy.DummyPlayer;
+import com.minelittlepony.hdskins.net.Feature;
+import com.minelittlepony.hdskins.net.HttpException;
+import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinUpload;
+import com.minelittlepony.hdskins.resources.PreviewTextureManager;
+import com.minelittlepony.hdskins.util.MoreHttpResponses;
+import com.minelittlepony.hdskins.util.NetClient;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.exceptions.AuthenticationException;
+import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
 
 public class SkinUploader implements Closeable {
 
@@ -53,7 +53,7 @@ public class SkinUploader implements Closeable {
 
     private Type skinType;
 
-    private Map<String, String> skinMetadata = new HashMap<String, String>();
+    private Map<String, String> skinMetadata = new HashMap<>();
 
     private volatile boolean fetchingSkin = false;
     private volatile boolean throttlingNeck = false;
@@ -82,7 +82,7 @@ public class SkinUploader implements Closeable {
     public SkinUploader(List<SkinServer> servers, IPreviewModel previewer, ISkinUploadHandler listener) {
         this.previewer = previewer;
         this.listener = listener;
-        
+
         skinType = Type.SKIN;
         skinMetadata.put("model", "default");
         skinServers = cycle(servers, SkinServer::verifyGateway);
@@ -222,8 +222,6 @@ public class SkinUploader implements Closeable {
             if (throwable != null) {
                 throwable = throwable.getCause();
 
-                throwable.printStackTrace();
-
                 if (throwable instanceof AuthenticationUnavailableException) {
                     offline = true;
                 } else if (throwable instanceof AuthenticationException) {
@@ -241,6 +239,7 @@ public class SkinUploader implements Closeable {
                         setError(ex.getReasonPhrase());
                     }
                 } else {
+                    throwable.printStackTrace();
                     setError(throwable.toString());
                 }
             }
@@ -288,12 +287,12 @@ public class SkinUploader implements Closeable {
     public CompletableFuture<PreviewTextureManager> loadTextures(GameProfile profile) {
         return gateway.getPreviewTextures(profile).thenApply(PreviewTextureManager::new);
     }
-    
+
     public interface IPreviewModel {
         void setSkinType(Type type);
-        
+
         DummyPlayer getRemote();
-        
+
         DummyPlayer getLocal();
     }
 
