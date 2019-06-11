@@ -229,7 +229,7 @@ public class SkinUploader implements Closeable {
                 } else if (throwable instanceof HttpException) {
                     HttpException ex = (HttpException)throwable;
 
-                    HDSkins.logger.error(ex.getReasonPhrase(), ex);
+                    logger.error(ex.getReasonPhrase(), ex);
 
                     int code = ex.getStatusCode();
 
@@ -239,7 +239,7 @@ public class SkinUploader implements Closeable {
                         setError(ex.getReasonPhrase());
                     }
                 } else {
-                    throwable.printStackTrace();
+                    logger.error("Unhandled exception", throwable);
                     setError(throwable.toString());
                 }
             }
@@ -267,7 +267,7 @@ public class SkinUploader implements Closeable {
 
         synchronized (skinLock) {
             if (pendingLocalSkin != null) {
-                System.out.println("Set " + skinType + " " + pendingLocalSkin);
+                logger.debug("Set %s %s", skinType, pendingLocalSkin);
                 previewer.getLocal().getTextures().setLocal(pendingLocalSkin, skinType);
                 localSkin = pendingLocalSkin.toUri();
                 pendingLocalSkin = null;
