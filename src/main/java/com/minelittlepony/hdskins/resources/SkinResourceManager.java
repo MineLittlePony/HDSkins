@@ -1,5 +1,21 @@
 package com.minelittlepony.hdskins.resources;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import javax.annotation.Nullable;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
@@ -11,21 +27,6 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceReloadListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class SkinResourceManager implements ResourceReloadListener {
 
@@ -41,14 +42,19 @@ public class SkinResourceManager implements ResourceReloadListener {
     private Map<Identifier, Future<Identifier>> inProgress = Maps.newHashMap();
     private Map<Identifier, Identifier> converted = Maps.newHashMap();
 
-
     @Override
-    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender, Profiler profiler, Profiler profile2, Executor executor, Executor executor2) {
-        return CompletableFuture.runAsync(() -> {
-            profiler.push("Reloading User's HD Skins");
+    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender,
+            Profiler serverProfiler, Profiler clientProfiler,
+            Executor serverExecutor, Executor clientExecutor) {
+
+        sync.getClass();
+        return sync.whenPrepared(null).thenRunAsync(() -> {
+            clientProfiler.startTick();
+            clientProfiler.push("Reloading User's HD Skins");
             reloadSkins(sender);
-            profiler.endTick();
-        });
+            clientProfiler.pop();
+            clientProfiler.endTick();
+        }, clientExecutor);
     }
 
     public void reloadSkins(ResourceManager resourceManager) {
