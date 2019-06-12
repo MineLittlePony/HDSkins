@@ -225,7 +225,7 @@ public final class HDSkins {
             }
         } else {
             TextureLoader.loadTexture(resource, new PlayerSkinTexture(
-                    getUtils().getAssetsDirectory().resolveSibling("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
+                    getUtils().getAssetsDirectory().resolve("hd/" + skinDir + texture.getHash().substring(0, 2) + "/" + texture.getHash()).toFile(),
                     texture.getUrl(),
                     DefaultSkinHelper.getTexture(),
                     new ImageBufferDownloadHD(type, () -> {
