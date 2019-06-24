@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 public abstract class MixinSkullRenderer extends BlockEntityRenderer<SkullBlockEntity> {
 
     @Inject(method = "method_3578(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/util/Identifier;",
+            cancellable = true,
             at = @At(value = "HEAD"))
     private void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<Identifier> info) {
         if (type == SkullBlock.Type.PLAYER && profile != null) {
