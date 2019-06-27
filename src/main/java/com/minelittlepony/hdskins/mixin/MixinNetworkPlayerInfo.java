@@ -1,5 +1,14 @@
 package com.minelittlepony.hdskins.mixin;
 
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
 import com.minelittlepony.hdskins.PlayerSkins;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.mojang.authlib.GameProfile;
@@ -8,13 +17,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.util.Identifier;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.Map;
-import javax.annotation.Nullable;
 
 @Mixin(PlayerListEntry.class)
 public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {

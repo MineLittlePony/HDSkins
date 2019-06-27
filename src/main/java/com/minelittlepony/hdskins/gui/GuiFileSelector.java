@@ -17,16 +17,18 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.ScrollContainer;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
+import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.AbstractConfig;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.upload.IFileDialog;
 
-import net.minecraft.ChatFormat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.text.LiteralText;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 
 public class GuiFileSelector extends GameGui implements IFileDialog {
 
@@ -47,7 +49,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     private String filterMessage = "";
 
     public GuiFileSelector(String title) {
-        super(new TranslatableComponent(title));
+        super(new LiteralText(title));
 
         this.parent = MinecraftClient.getInstance().currentScreen;
 
@@ -202,6 +204,8 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         navigateTo(sender.path);
     }
 
+    private static final Identifier ICONS = new Identifier("hdskins", "textures/gui/files.png");
+
     class PathButton extends Button {
 
         protected final Path path;
@@ -213,13 +217,30 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
             String name = path.getFileName().toString();
 
+            TextureSprite sprite = new TextureSprite()
+                    .setPosition(6, 6)
+                    .setTexture(ICONS)
+                    .setTextureSize(22, 22)
+                    .setSize(10, 8);
+
+            if (!Files.isDirectory(path)) {
+                sprite.setTextureOffset(0, 14);
+
+                String[] splitten = path.toString().split("\\.");
+                String ext = splitten[splitten.length - 1];
+                if (ext.matches("png|jpg|bmp")) {
+                    sprite.setTextureOffset(13, 0);
+                }
+            }
+
             onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
             getStyle()
                 .setText(minecraft.textRenderer.trimToWidth(name, width))
+                .setIcon(sprite)
                 .setTooltip(Lists.newArrayList(
                         name,
-                        ChatFormat.GRAY + "" + ChatFormat.ITALIC + describeFile(path))
+                        Formatting.GRAY + "" + Formatting.ITALIC + describeFile(path))
                 );
         }
 

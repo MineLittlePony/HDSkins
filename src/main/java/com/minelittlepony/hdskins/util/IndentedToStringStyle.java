@@ -1,9 +1,11 @@
 package com.minelittlepony.hdskins.util;
 
+import static net.minecraft.util.Formatting.ITALIC;
+import static net.minecraft.util.Formatting.RESET;
+import static net.minecraft.util.Formatting.YELLOW;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-
-import static net.minecraft.ChatFormat.*;
 
 public class IndentedToStringStyle extends ToStringStyle {
 

@@ -36,8 +36,8 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -79,7 +79,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
 
     public GuiSkins(List<SkinServer> servers) {
-        super(new TranslatableComponent("hdskins.gui.title"));
+        super(new TranslatableText("hdskins.gui.title"));
 
         minecraft = MinecraftClient.getInstance();
         previewer = createPreviewer();

@@ -8,7 +8,7 @@ import com.minelittlepony.common.client.gui.element.Label;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.text.LiteralText;
 
 public class GuiConfirmation extends GameGui {
 
@@ -18,7 +18,7 @@ public class GuiConfirmation extends GameGui {
     private final Screen parent;
 
     public GuiConfirmation(@Nonnull Screen parent, String title, Runnable action) {
-        super(new TranslatableComponent(title));
+        super(new LiteralText(title));
 
         this.parent = parent;
         this.action = action;
