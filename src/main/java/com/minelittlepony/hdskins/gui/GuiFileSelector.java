@@ -17,6 +17,7 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.ScrollContainer;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
+import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.AbstractConfig;
 import com.minelittlepony.hdskins.HDSkins;
@@ -35,6 +36,10 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     protected Path currentDirectory = Paths.get("/");
 
     private IFileDialog.Callback callback = (f, b) -> {};
+
+    private final GridPacker packer = new GridPacker()
+            .setItemWidth(150)
+            .setItemHeight(20);
 
     @Nullable
     protected final Screen parent;
@@ -111,7 +116,6 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
-        //renderDirtBackground(0);
         renderBackground(0);
         super.render(mouseX, mouseY, partialTicks);
 
@@ -119,18 +123,17 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     }
 
     protected void renderDirectory() {
-        filesList.buttons().clear();
-        filesList.children().clear();
-        filesList.init();
+        filesList.init(() -> {
+            int buttonX = filesList.width / 2 - 110;
 
-        int buttonX = filesList.width / 2 - 110;
+            listFiles().forEach(path -> {
+                int buttonY = filesList.buttons().size() * 20;
 
-        listFiles().forEach(path -> {
-            int buttonY = filesList.buttons().size() * 20;
+                filesList.addButton(new PathButton(buttonX, buttonY, 150, 20, path));
+            });
 
-            filesList.addButton(new PathButton(buttonX, buttonY, 200, 20, path));
+            packer.setListWidth(width).pack(filesList);
         });
-        filesList.init();
     }
 
     protected Stream<Path> listFiles() {
@@ -236,7 +239,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
             onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
             getStyle()
-                .setText(minecraft.textRenderer.trimToWidth(name, width))
+                .setText(minecraft.textRenderer.trimToWidth(name, width - 70))
                 .setIcon(sprite)
                 .setTooltip(Lists.newArrayList(
                         name,
