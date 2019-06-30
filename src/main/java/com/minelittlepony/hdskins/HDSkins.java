@@ -38,6 +38,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.minelittlepony.common.client.IModUtilities;
 import com.minelittlepony.common.util.MoreStreams;
+import com.minelittlepony.common.util.TextureConverter;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
@@ -94,7 +95,7 @@ public final class HDSkins {
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::loadProfileData));
 
-    private final List<ISkinModifier> skinModifiers = Lists.newArrayList();
+    private final List<TextureConverter> skinModifiers = Lists.newArrayList();
 
     private final List<ISkinParser> skinParsers = Lists.newArrayList();
 
@@ -296,7 +297,7 @@ public final class HDSkins {
         skinServers.add(skinServer);
     }
 
-    public void addSkinModifier(ISkinModifier modifier) {
+    public void addSkinModifier(TextureConverter modifier) {
         skinModifiers.add(modifier);
     }
 
@@ -309,10 +310,8 @@ public final class HDSkins {
         return loc == null ? res : loc;
     }
 
-    public void convertSkin(ISkinModifier.IDrawer drawer) {
-        for (ISkinModifier skin : skinModifiers) {
-            skin.convertSkin(drawer);
-        }
+    public void convertSkin(TextureConverter.Drawer drawer) {
+        skinModifiers.forEach(converter -> converter.convertTexture(drawer));
     }
 
     public void parseSkins() {

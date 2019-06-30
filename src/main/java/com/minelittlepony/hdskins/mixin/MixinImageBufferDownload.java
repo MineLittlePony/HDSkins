@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.minelittlepony.hdskins.HDSkins;
-import com.minelittlepony.hdskins.resources.texture.SimpleDrawer;
+import com.minelittlepony.hdskins.resources.texture.HDDrawer;
 
 import net.minecraft.client.texture.ImageFilter;
 import net.minecraft.client.texture.NativeImage;
@@ -23,7 +23,7 @@ public abstract class MixinImageBufferDownload implements ImageFilter {
         NativeImage image2 = ci.getReturnValue();
         boolean isLegacy = image.getHeight() == 32;
         if (isLegacy) {
-            HDSkins.getInstance().convertSkin((SimpleDrawer)(() -> image2));
+            HDSkins.getInstance().convertSkin((HDDrawer)(() -> image2));
         }
     }
 }
