@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.dummy;
 
+import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
@@ -38,6 +39,12 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
     private static final PlayerEntityModel<DummyPlayer> FAT = new PlayerEntityModel<>(0, false);
     private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
+    @SuppressWarnings("deprecated")
+    public RenderDummyPlayer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
+        this(renderer);
+    }
+
+    @Deprecated
     @SuppressWarnings("unchecked")
     public RenderDummyPlayer(EntityRenderDispatcher renderer) {
         super(renderer, (M)FAT, 0);
