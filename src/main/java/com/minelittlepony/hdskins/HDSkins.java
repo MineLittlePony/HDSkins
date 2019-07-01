@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -132,7 +131,7 @@ public final class HDSkins {
         ReloadableResourceManager irrm = (ReloadableResourceManager) client.getResourceManager();
         irrm.registerListener(resources);
 
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
+        utils.addRenderer(DummyPlayer.class, RenderDummyPlayer::new);
 
         // register skin servers.
         config.skin_servers.forEach(this::addSkinServer);

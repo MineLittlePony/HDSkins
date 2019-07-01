@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.dummy;
 
-import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
@@ -14,10 +13,10 @@ import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.Items;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 
@@ -39,12 +38,6 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
     private static final PlayerEntityModel<DummyPlayer> FAT = new PlayerEntityModel<>(0, false);
     private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
-    @SuppressWarnings("deprecated")
-    public RenderDummyPlayer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
-        this(renderer);
-    }
-
-    @Deprecated
     @SuppressWarnings("unchecked")
     public RenderDummyPlayer(EntityRenderDispatcher renderer) {
         super(renderer, (M)FAT, 0);
