@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.dummy;
 
+import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
@@ -39,7 +40,7 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
     private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
     @SuppressWarnings("unchecked")
-    public RenderDummyPlayer(EntityRenderDispatcher renderer) {
+    public RenderDummyPlayer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
         super(renderer, (M)FAT, 0);
         addFeature(getElytraLayer());
     }

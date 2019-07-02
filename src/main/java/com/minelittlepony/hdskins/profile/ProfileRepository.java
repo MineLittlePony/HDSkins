@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
@@ -35,7 +36,7 @@ public class ProfileRepository {
     }
 
     public Path getHDSkinsCache() {
-        return hd.getUtils().getAssetsDirectory().resolve("hd");
+        return GamePaths.getAssetsDirectory().resolve("hd");
     }
 
     private Path getCachedSkinLocation(Type type, MinecraftProfileTexture texture) {

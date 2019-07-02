@@ -2,8 +2,6 @@ package com.minelittlepony.hdskins;
 
 import javax.annotation.Nullable;
 
-import com.minelittlepony.vendor.fabricmc.ModImpl;
-
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.event.ScreenInitCallback;
@@ -16,7 +14,7 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
-public class FabMod implements ClientModInitializer, ModImpl {
+public class FabMod implements ClientModInitializer {
 
     @Nullable
     private HDSkins hd;
@@ -28,7 +26,7 @@ public class FabMod implements ClientModInitializer, ModImpl {
         ClientTickCallback.EVENT.register(this::onClientTick);
         ScreenInitCallback.EVENT.register(this::onScreenInit);
 
-        hd = new HDSkins(this);
+        hd = new HDSkins();
     }
 
     private void onClientTick(MinecraftClient client) {

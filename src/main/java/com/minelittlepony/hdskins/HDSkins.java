@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+
+import com.minelittlepony.common.util.GamePaths;
+import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.minelittlepony.common.client.IModUtilities;
 import com.minelittlepony.common.util.TextureConverter;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
@@ -57,16 +59,9 @@ public final class HDSkins {
 
     private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
-    private final IModUtilities utils;
-
-    public HDSkins(IModUtilities utils) {
+    public HDSkins() {
         instance = this;
-        this.utils = utils;
-        this.config = Config.of(utils.getConfigDirectory().resolve("hdskins.json"));
-    }
-
-    public IModUtilities getUtils() {
-        return utils;
+        this.config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
     }
 
     public AbstractConfig getConfig() {
@@ -76,7 +71,7 @@ public final class HDSkins {
     void postInit(MinecraftClient client) {
         ((ReloadableResourceManager) client.getResourceManager()).registerListener(resources);
 
-        utils.addRenderer(DummyPlayer.class, RenderDummyPlayer::new);
+        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
 
         // register skin servers.
         config.skin_servers.forEach(this::addSkinServer);
