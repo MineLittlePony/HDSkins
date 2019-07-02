@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.profile.skin.SkinParsingService;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -65,13 +66,15 @@ public class PlayerSkins {
 
             GameProfile profile = playerInfo.getGameProfile();
 
-            customProfiles.entrySet().stream().forEach(entry -> {
-                HDSkins.getInstance().getSkinParser().parseSkinAsync(profile, entry.getKey(),
+            SkinParsingService parser = HDSkins.getInstance().getSkinParser();
+
+            customProfiles.entrySet().forEach(entry -> {
+                parser.parseSkinAsync(profile, entry.getKey(),
                         customTextures.get(entry.getKey()), entry.getValue());
             });
 
-            vanillaProfiles.entrySet().stream().forEach(entry -> {
-                HDSkins.getInstance().getSkinParser().parseSkinAsync(profile, entry.getKey(),
+            vanillaProfiles.entrySet().forEach(entry -> {
+                parser.parseSkinAsync(profile, entry.getKey(),
                         playerInfo.getVanillaTextures().get(entry.getKey()), entry.getValue());
             });
         }
