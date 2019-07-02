@@ -64,7 +64,7 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
         drawer.copy(52, 20, -8, 32, 4, 12, true, false); // back
 
         // mod things
-        HDSkins.getInstance().convertSkin(drawer);
+        HDSkins.getInstance().getSkinParser().modifySkin(drawer);
 
         return callback.parseUserSkin(image);
     }

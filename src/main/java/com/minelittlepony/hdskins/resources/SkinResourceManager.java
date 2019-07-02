@@ -28,6 +28,10 @@ import net.minecraft.resource.ResourceReloadListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 
+/**
+ * TODO: What do we even need this for?
+ */
+@Deprecated
 public class SkinResourceManager implements ResourceReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
@@ -57,7 +61,7 @@ public class SkinResourceManager implements ResourceReloadListener {
         }, clientExecutor);
     }
 
-    public void reloadSkins(ResourceManager resourceManager) {
+    private void reloadSkins(ResourceManager resourceManager) {
 
         uuidSkins.clear();
         namedSkins.clear();
@@ -106,6 +110,7 @@ public class SkinResourceManager implements ResourceReloadListener {
         return null;
     }
 
+    @Deprecated
     @Nullable
     public Identifier getPlayerTexture(GameProfile profile, Type type) {
         if (type != Type.SKIN) {
@@ -126,6 +131,7 @@ public class SkinResourceManager implements ResourceReloadListener {
      * @param res The skin resource to convert
      * @return The converted resource
      */
+    @Deprecated
     @Nullable
     public Identifier getConvertedResource(@Nullable Identifier res) {
         loadSkinResource(res);

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.profile.EtagProfileTexture;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
@@ -101,12 +102,7 @@ public class LegacySkinServer implements SkinServer {
             final String eTag = eTagHeader == null ? "" : StringUtils.strip(eTagHeader.getValue(), "\"").replaceAll("[^a-z0-9/._-]", "");
 
             // Add the ETag onto the end of the texture hash. Should properly cache the textures.
-            return new MinecraftProfileTexture(url, null) {
-                @Override
-                public String getHash() {
-                    return super.getHash() + eTag;
-                }
-            };
+            return new EtagProfileTexture(url, eTag, null);
         }
     }
 

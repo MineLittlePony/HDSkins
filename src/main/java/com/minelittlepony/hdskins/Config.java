@@ -15,7 +15,7 @@ public class Config extends AbstractConfig {
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
-            .registerTypeAdapter(SkinServer.class, new SkinServerSerializer())
+            .registerTypeAdapter(SkinServer.class, SkinServerSerializer.instance)
             .create();
 
     private Path configFile;

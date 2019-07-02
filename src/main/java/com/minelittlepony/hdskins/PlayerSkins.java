@@ -55,10 +55,9 @@ public class PlayerSkins {
     }
 
     private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
-        HDSkins.getInstance().parseSkin(playerInfo.getGameProfile(), type, location, profileTexture).thenAccept(v -> {
-            playerInfo.getVanillaTextures().put(type, location);
-            vanillaProfiles.put(type, profileTexture);
-        });
+        HDSkins.getInstance().getSkinParser().parseSkin(playerInfo.getGameProfile(), type, location, profileTexture);
+        playerInfo.getVanillaTextures().put(type, location);
+        vanillaProfiles.put(type, profileTexture);
     }
 
     public void reload() {
@@ -66,19 +65,15 @@ public class PlayerSkins {
 
             GameProfile profile = playerInfo.getGameProfile();
 
-            for (Map.Entry<Type, MinecraftProfileTexture> entry : customProfiles.entrySet()) {
-                HDSkins.getInstance().parseSkin(profile,
-                        entry.getKey(),
-                        customTextures.get(entry.getKey()),
-                        entry.getValue());
-            }
+            customProfiles.entrySet().stream().forEach(entry -> {
+                HDSkins.getInstance().getSkinParser().parseSkinAsync(profile, entry.getKey(),
+                        customTextures.get(entry.getKey()), entry.getValue());
+            });
 
-            for (Map.Entry<Type, MinecraftProfileTexture> entry : vanillaProfiles.entrySet()) {
-                HDSkins.getInstance().parseSkin(profile,
-                        entry.getKey(),
-                        playerInfo.getVanillaTextures().get(entry.getKey()),
-                        entry.getValue());
-            }
+            vanillaProfiles.entrySet().stream().forEach(entry -> {
+                HDSkins.getInstance().getSkinParser().parseSkinAsync(profile, entry.getKey(),
+                        playerInfo.getVanillaTextures().get(entry.getKey()), entry.getValue());
+            });
         }
     }
 

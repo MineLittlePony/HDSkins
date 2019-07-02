@@ -23,7 +23,7 @@ public abstract class MixinImageBufferDownload implements ImageFilter {
         NativeImage image2 = ci.getReturnValue();
         boolean isLegacy = image.getHeight() == 32;
         if (isLegacy) {
-            HDSkins.getInstance().convertSkin((HDDrawer)(() -> image2));
+            HDSkins.getInstance().getSkinParser().modifySkin((HDDrawer)(() -> image2));
         }
     }
 }
