@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,8 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.google.gson.annotations.Expose;
+import com.minelittlepony.hdskins.resources.SkinResourceManager.SkinData.Skin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
@@ -166,4 +169,27 @@ public class SkinResourceManager implements ResourceReloadListener {
 
         return skin;
     }
+
+    @Deprecated
+    static class SkinData {
+        @Expose
+        List<Skin> skins;
+
+        @Deprecated
+        static class Skin {
+            @Expose
+            String name;
+
+            @Expose
+            UUID uuid;
+
+            @Expose
+            String skin;
+
+            public Identifier getTexture() {
+                return new Identifier("hdskins", String.format("textures/skins/%s.png", skin));
+            }
+        }
+    }
+
 }

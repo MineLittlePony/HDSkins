@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+@Deprecated
 public class ImageLoader implements Supplier<Identifier> {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
@@ -64,7 +65,7 @@ public class ImageLoader implements Supplier<Identifier> {
     @Nullable
     private Identifier loadSkin(NativeImage image) {
         Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
-        
+
         if (mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(image))) {
             return conv;
         }

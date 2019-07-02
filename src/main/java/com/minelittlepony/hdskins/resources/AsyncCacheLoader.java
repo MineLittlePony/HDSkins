@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+@Deprecated
 public class AsyncCacheLoader<K, V> extends CacheLoader<K, V> {
 
     public static <K, V> AsyncCacheLoader<K, V> create(CacheLoader<K, V> loader, V placeholder, Executor executor) {
