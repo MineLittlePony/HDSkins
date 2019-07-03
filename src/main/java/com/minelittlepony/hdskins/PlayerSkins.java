@@ -62,9 +62,10 @@ public class PlayerSkins {
     }
 
     private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
-        HDSkins.getInstance().getSkinParser().parseSkin(playerInfo.getGameProfile(), type, location, profileTexture);
-        playerInfo.getVanillaTextures().put(type, location);
-        vanillaProfiles.put(type, profileTexture);
+        HDSkins.getInstance().getSkinParser().parseSkinAsync(playerInfo.getGameProfile(), type, location, profileTexture).thenRunAsync(() -> {
+            playerInfo.getVanillaTextures().put(type, location);
+            vanillaProfiles.put(type, profileTexture);
+        });
     }
 
     public void reload() {

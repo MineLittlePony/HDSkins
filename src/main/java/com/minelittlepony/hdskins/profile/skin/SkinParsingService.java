@@ -46,33 +46,31 @@ public class SkinParsingService {
     }
 
     public CompletableFuture<Void> parseSkinAsync(GameProfile profile, Type type, Identifier resource, MinecraftProfileTexture texture) {
-        return CallableFutures.scheduleTask(() -> parseSkin(profile, type, resource, texture));
-    }
+        return CallableFutures.scheduleTask(() -> {
+            // grab the metadata object via reflection. Object is live.
+            Map<String, String> metadata = ProfileTextureUtil.getMetadata(texture);
 
-    public void parseSkin(GameProfile profile, Type type, Identifier resource, MinecraftProfileTexture texture) {
-        // grab the metadata object via reflection. Object is live.
-        Map<String, String> metadata = ProfileTextureUtil.getMetadata(texture);
+            boolean wasNull = metadata == null;
 
-        boolean wasNull = metadata == null;
-
-        if (wasNull) {
-            metadata = new HashMap<>();
-        } else if (metadata.containsKey("model")) {
-            // try to reset the model.
-            metadata.put("model", VanillaModels.of(metadata.get("model")));
-        }
-
-        for (ISkinParser parser : skinParsers) {
-            try {
-                parser.parse(profile, type, resource, metadata);
-            } catch (Throwable t) {
-                HDSkins.logger.error("Exception thrown while parsing skin: ", t);
+            if (wasNull) {
+                metadata = new HashMap<>();
+            } else if (metadata.containsKey("model")) {
+                // try to reset the model.
+                metadata.put("model", VanillaModels.of(metadata.get("model")));
             }
-        }
 
-        if (wasNull && !metadata.isEmpty()) {
-            ProfileTextureUtil.setMetadata(texture, metadata);
-        }
+            for (ISkinParser parser : skinParsers) {
+                try {
+                    parser.parse(profile, type, resource, metadata);
+                } catch (Throwable t) {
+                    HDSkins.logger.error("Exception thrown while parsing skin: ", t);
+                }
+            }
+
+            if (wasNull && !metadata.isEmpty()) {
+                ProfileTextureUtil.setMetadata(texture, metadata);
+            }
+        });
     }
 
     public void execute() {
