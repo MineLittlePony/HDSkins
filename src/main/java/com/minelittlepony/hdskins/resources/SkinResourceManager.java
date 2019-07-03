@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.resources;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.EnumMap;
 import java.util.List;
@@ -95,8 +94,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
     @Nullable
     private Optional<SkinData> loadSkinData(Resource res) throws JsonParseException {
-        try (InputStream stream = res.getInputStream()) {
-            return Optional.ofNullable(gson.fromJson(new InputStreamReader(stream), SkinData.class));
+        try (Resource resource = res) {
+            return Optional.ofNullable(gson.fromJson(new InputStreamReader(resource.getInputStream()), SkinData.class));
         } catch (JsonParseException e) {
             logger.warn("Invalid skins.json in " + res.getResourcePackName(), e);
         } catch (IOException ignored) {}
