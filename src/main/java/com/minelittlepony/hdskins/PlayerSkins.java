@@ -30,6 +30,12 @@ public class PlayerSkins {
     }
 
     public Identifier getSkin(Type type) {
+        return HDSkins.getInstance().getResourceManager()
+                .getCustomPlayerTexture(playerInfo.getGameProfile(), type)
+                .orElseGet(() -> lookupSkin(type));
+    }
+
+    private Identifier lookupSkin(Type type) {
         if (customTextures.containsKey(type)) {
             return customTextures.get(type);
         }

@@ -3,15 +3,13 @@ package com.minelittlepony.hdskins.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,29 +23,36 @@ import com.minelittlepony.hdskins.resources.SkinResourceManager.SkinData.Skin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceReloadListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 
 /**
- * TODO: What do we even need this for?
+ * A resource manager for players to specify their own skin overrides.
+ *
+ * hdskins:textures/skins/skins.json
+ * {
+ *      "skins": [
+ *          { "type": "SKIN", "name": "Sollace", "skin": "hdskins:textures/skins/super_silly_pony.png" }
+ *      ]
+ * }
+ *
  */
-@Deprecated
-public class SkinResourceManager implements ResourceReloadListener {
+public class SkinResourceManager implements IdentifiableResourceReloadListener {
+
+    private static final Identifier ID = new Identifier("hdskins", "skins");
 
     private static final Logger logger = LogManager.getLogger();
 
     private static final Gson gson = new Gson();
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ImageLoader loader = new ImageLoader();
 
-    private Map<UUID, Skin> uuidSkins = Maps.newHashMap();
-    private Map<String, Skin> namedSkins = Maps.newHashMap();
+    private final Map<Type, SkinStore> store = new EnumMap<>(Type.class);
 
-    private Map<Identifier, Future<Identifier>> inProgress = Maps.newHashMap();
-    private Map<Identifier, Identifier> converted = Maps.newHashMap();
+    private final Map<Identifier, Identifier> textures = Maps.newHashMap();
 
     @Override
     public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender,
@@ -58,125 +63,117 @@ public class SkinResourceManager implements ResourceReloadListener {
         return sync.whenPrepared(null).thenRunAsync(() -> {
             clientProfiler.startTick();
             clientProfiler.push("Reloading User's HD Skins");
-            reloadSkins(sender);
+
+            store.clear();
+            loader.stop();
+
+            textures.clear();
+
+            sender.getAllNamespaces().stream().map(domain -> new Identifier(domain, "textures/skins/skins.json")).forEach(identifier -> {
+                try {
+                    sender.getAllResources(identifier).stream()
+                        .map(this::loadSkinData)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .forEach(data -> {
+                            data.skins.forEach(s -> {
+                                store.computeIfAbsent(s.getType(), SkinStore::new).addSkin(s);
+                            });
+                        });
+                } catch (IOException ignored) { }
+            });
+
             clientProfiler.pop();
             clientProfiler.endTick();
         }, clientExecutor);
     }
 
-    private void reloadSkins(ResourceManager resourceManager) {
-
-        uuidSkins.clear();
-        namedSkins.clear();
-
-        executor.shutdownNow();
-        executor = Executors.newSingleThreadExecutor();
-
-        inProgress.clear();
-        converted.clear();
-
-        for (String domain : resourceManager.getAllNamespaces()) {
-            try {
-                resourceManager.getAllResources(new Identifier(domain, "textures/skins/skins.json")).forEach(this::loadResource);
-            } catch (IOException ignored) { }
-        }
-    }
-
-    private void loadResource(Resource resource) {
-        SkinData data = getSkinData(resource);
-
-        if (data == null) {
-            return;
-        }
-
-        for (Skin s : data.skins) {
-
-            if (s.uuid != null) {
-                uuidSkins.put(s.uuid, s);
-            }
-
-            if (s.name != null) {
-                namedSkins.put(s.name, s);
-            }
-        }
+    @Override
+    public Identifier getFabricId() {
+        return ID;
     }
 
     @Nullable
-    private SkinData getSkinData(Resource resource) throws JsonParseException {
-
-        try (InputStream stream = resource.getInputStream()) {
-            return gson.fromJson(new InputStreamReader(stream), SkinData.class);
+    private Optional<SkinData> loadSkinData(Resource res) throws JsonParseException {
+        try (InputStream stream = res.getInputStream()) {
+            return Optional.ofNullable(gson.fromJson(new InputStreamReader(stream), SkinData.class));
         } catch (JsonParseException e) {
-            logger.warn("Invalid skins.json in " + resource.getResourcePackName(), e);
+            logger.warn("Invalid skins.json in " + res.getResourcePackName(), e);
         } catch (IOException ignored) {}
 
-        return null;
-    }
-
-    @Deprecated
-    @Nullable
-    public Identifier getPlayerTexture(GameProfile profile, Type type) {
-        if (type != Type.SKIN) {
-            return null; // not supported
-        }
-
-        Skin skin = getSkin(profile);
-        if (skin != null) {
-            final Identifier res = skin.getTexture();
-            return getConvertedResource(res);
-        }
-        return null;
+        return Optional.empty();
     }
 
     /**
-     * Convert older resources to a newer format.
-     *
-     * @param res The skin resource to convert
-     * @return The converted resource
+     * Gets a custom texture for the given profile as defined in the current resourcepack(s).
      */
-    @Deprecated
-    @Nullable
-    public Identifier getConvertedResource(@Nullable Identifier res) {
-        loadSkinResource(res);
-
-        return converted.get(res);
+    public Optional<Identifier> getCustomPlayerTexture(GameProfile profile, Type type) {
+        return store.computeIfAbsent(type, SkinStore::new).getSkin(profile)
+                .map(Skin::getTexture)
+                .map(id -> convertTexture(type, id));
     }
 
-    private void loadSkinResource(@Nullable final Identifier res) {
-        if (res != null) { // read and convert in a new thread
-            inProgress.computeIfAbsent(res, this::computeNewSkinResource);
+    /**
+     * Pushes the given texture through the skin parsing + conversion pipeline.
+     *
+     * Returns the passed identifier, otherwise the new identifier following conversion.
+     */
+    public Identifier convertTexture(Type type, Identifier identifier) {
+        if (type != Type.SKIN) {
+            return identifier;
         }
-    }
 
-    private CompletableFuture<Identifier> computeNewSkinResource(Identifier res) {
-        return CompletableFuture.supplyAsync(new ImageLoader(res), executor).whenComplete((loc, t) -> {
-            if (loc != null) {
-                converted.put(res, loc);
-            } else {
-                LogManager.getLogger().warn("Errored while processing {}. Using original.", res, t);
-                converted.put(res, res);
-            }
+        return textures.computeIfAbsent(identifier, id -> {
+            loader.loadAsync(id).whenComplete((loc, throwable) -> {
+                if (throwable != null) {
+                    LogManager.getLogger().warn("Errored while processing {}. Using original.", identifier, throwable);
+                }
+
+                textures.put(identifier, loc);
+            });
+
+            return id;
         });
     }
 
-    @Nullable
-    private Skin getSkin(GameProfile profile) {
-        Skin skin = uuidSkins.get(profile.getId());
+    static class SkinStore {
+        private final Map<UUID, Skin> uuids = Maps.newHashMap();
+        private final Map<String, Skin> names = Maps.newHashMap();
 
-        if (skin == null) {
-            return namedSkins.get(profile.getName());
+        SkinStore(Type type) { }
+
+        public void addSkin(Skin skin) {
+            if (skin.skin != null) {
+                if (skin.uuid != null) {
+                    uuids.put(skin.uuid, skin);
+                }
+
+                if (skin.name != null) {
+                    names.put(skin.name, skin);
+                }
+            }
         }
 
-        return skin;
+        @Nullable
+        public Optional<Skin> getSkin(GameProfile profile) {
+            Skin skin = uuids.get(profile.getId());
+
+            if (skin == null) {
+                return Optional.ofNullable(names.get(profile.getName()));
+            }
+
+            return Optional.ofNullable(skin);
+        }
     }
 
-    @Deprecated
     static class SkinData {
         @Expose
         List<Skin> skins;
 
-        @Deprecated
         static class Skin {
+            @Expose
+            Type type;
+
             @Expose
             String name;
 
@@ -186,10 +183,35 @@ public class SkinResourceManager implements ResourceReloadListener {
             @Expose
             String skin;
 
+            @Nullable
+            private Identifier texture;
+
             public Identifier getTexture() {
+                if (texture == null) {
+                    texture = createTexture();
+                }
+
+                return texture;
+            }
+
+            private Identifier createTexture() {
+                if (skin.indexOf('/') > -1 || skin.indexOf(':') > -1 || skin.indexOf('.') > -1) {
+                    if (skin.indexOf('.') == -1) {
+                        skin += ".png";
+                    }
+                    if (skin.indexOf(':') == -1) {
+                        return new Identifier("hdskins", skin);
+                    }
+
+                    return new Identifier(skin);
+                }
+
                 return new Identifier("hdskins", String.format("textures/skins/%s.png", skin));
+            }
+
+            public Type getType() {
+                return type == null ? Type.SKIN : type;
             }
         }
     }
-
 }

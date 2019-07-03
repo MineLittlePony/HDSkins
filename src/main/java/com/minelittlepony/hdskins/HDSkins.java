@@ -8,6 +8,8 @@ import java.util.function.Function;
 
 import com.minelittlepony.common.util.GamePaths;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +30,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
-import net.minecraft.resource.ReloadableResourceManager;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 
 public final class HDSkins {
@@ -52,7 +54,6 @@ public final class HDSkins {
 
     private AbstractConfig config;
 
-    @Deprecated
     private final SkinResourceManager resources = new SkinResourceManager();
     private final SkinParsingService skinParser = new SkinParsingService();
     private final ProfileRepository repository = new ProfileRepository(this);
@@ -61,7 +62,11 @@ public final class HDSkins {
 
     public HDSkins() {
         instance = this;
-        this.config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+
+        config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
+        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
     }
 
     public AbstractConfig getConfig() {
@@ -69,10 +74,6 @@ public final class HDSkins {
     }
 
     void postInit(MinecraftClient client) {
-        ((ReloadableResourceManager) client.getResourceManager()).registerListener(resources);
-
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
-
         // register skin servers.
         config.skin_servers.forEach(this::addSkinServer);
     }
@@ -118,6 +119,10 @@ public final class HDSkins {
         return skinParser;
     }
 
+    public SkinResourceManager getResourceManager() {
+        return resources;
+    }
+
     public void addClearListener(ISkinCacheClearListener listener) {
         clearListeners.add(listener);
     }
@@ -136,11 +141,5 @@ public final class HDSkins {
 
     public void addSkinParser(ISkinParser parser) {
         skinParser.addParser(parser);
-    }
-
-    @Deprecated
-    public Identifier getConvertedSkin(Identifier res) {
-        Identifier loc = resources.getConvertedResource(res);
-        return loc == null ? res : loc;
     }
 }

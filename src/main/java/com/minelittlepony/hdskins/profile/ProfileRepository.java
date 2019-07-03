@@ -45,7 +45,7 @@ public class ProfileRepository {
         return getHDSkinsCache().resolve(skinDir + texture.getHash().substring(0, 2)).resolve(texture.getHash());
     }
 
-    public void supplyProfileTextures(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
+    private void supplyProfileTextures(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
         offline.loadProfileAsync(profile, callback);
         online.loadProfileAsync(profile).thenAcceptAsync(callback, MinecraftClient.getInstance()::execute);
     }
@@ -64,7 +64,7 @@ public class ProfileRepository {
         return map;
     }
 
-    public Identifier loadTexture(Type type, MinecraftProfileTexture texture, @Nullable SkinTextureAvailableCallback callback) {
+    private Identifier loadTexture(Type type, MinecraftProfileTexture texture, @Nullable SkinTextureAvailableCallback callback) {
         Identifier resource = new Identifier("hdskins", type.toString().toLowerCase() + "s/" + texture.getHash());
         Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 
