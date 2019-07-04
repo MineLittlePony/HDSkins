@@ -12,6 +12,4 @@ public interface INetworkPlayerInfo {
     Map<Type, Identifier> getVanillaTextures();
 
     GameProfile getGameProfile();
-
-    void reloadTextures();
 }

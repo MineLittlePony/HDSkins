@@ -88,17 +88,12 @@ public final class HDSkins {
     }
 
     public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
-        repository.fetchSkins(profile, (type, location, profileTexture) -> {
-            skinParser.parseSkinAsync(type, location, profileTexture).thenRun(() -> {
-                callback.onSkinTextureAvailable(type, location, profileTexture);
-            });
-        });
+        repository.fetchSkins(profile, callback);
     }
 
     public void clearSkinCache() {
         logger.info("Clearing local player skin cache");
         repository.clear();
-        skinParser.execute();
         clearListeners.removeIf(this::onCacheCleared);
     }
 

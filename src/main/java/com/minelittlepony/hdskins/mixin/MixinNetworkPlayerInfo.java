@@ -57,9 +57,4 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     private void redirectLoadPlayerTextures(PlayerSkinProvider sender, GameProfile profile, PlayerSkinProvider.SkinTextureAvailableCallback callback, boolean requireSecure) {
         hdskinsPlayerSkins.load(sender, profile, requireSecure);
     }
-
-    @Override
-    public void reloadTextures() {
-        hdskinsPlayerSkins.reload();
-    }
 }

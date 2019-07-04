@@ -66,24 +66,6 @@ public class PlayerSkins {
         vanillaProfiles.put(type, profileTexture);
     }
 
-    public void reload() {
-        synchronized (this) {
-
-            SkinParsingService parser = HDSkins.getInstance().getSkinParser();
-
-            customProfiles.entrySet().forEach(entry -> {
-                parser.parseSkinAsync(entry.getKey(),
-                        customTextures.get(entry.getKey()), entry.getValue());
-            });
-
-            vanillaProfiles.entrySet().forEach(entry -> {
-                parser.parseSkinAsync(entry.getKey(),
-                        playerInfo.getVanillaTextures().get(entry.getKey()), entry.getValue());
-            });
-        }
-    }
-
-    @Nullable
     private Optional<String> getModelFrom(Map<Type, MinecraftProfileTexture> texture) {
         if (texture.containsKey(Type.SKIN)) {
             String model = texture.get(Type.SKIN).getMetadata("model");
