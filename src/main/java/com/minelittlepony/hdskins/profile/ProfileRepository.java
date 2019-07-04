@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.profile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -47,7 +46,7 @@ public class ProfileRepository {
 
     private void supplyProfileTextures(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
         offline.loadProfileAsync(profile, callback);
-        online.loadProfileAsync(profile).thenAcceptAsync(callback, MinecraftClient.getInstance()::execute);
+        MinecraftClient.getInstance().execute(() -> callback.accept(online.loadProfileAsync(profile)));
     }
 
     public void fetchSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
@@ -57,7 +56,7 @@ public class ProfileRepository {
     public Map<Type, Identifier> getTextures(GameProfile profile) {
         Map<Type, Identifier> map = new HashMap<>();
 
-        for (Map.Entry<Type, MinecraftProfileTexture> e : online.loadProfileAsync(profile).getNow(Collections.emptyMap()).entrySet()) {
+        for (Map.Entry<Type, MinecraftProfileTexture> e : online.loadProfileAsync(profile).entrySet()) {
             map.put(e.getKey(), loadTexture(e.getKey(), e.getValue(), null));
         }
 

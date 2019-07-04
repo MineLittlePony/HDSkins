@@ -89,7 +89,7 @@ public final class HDSkins {
 
     public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
         repository.fetchSkins(profile, (type, location, profileTexture) -> {
-            skinParser.parseSkinAsync(profile, type, location, profileTexture).thenRun(() -> {
+            skinParser.parseSkinAsync(type, location, profileTexture).thenRun(() -> {
                 callback.onSkinTextureAvailable(type, location, profileTexture);
             });
         });
@@ -139,7 +139,4 @@ public final class HDSkins {
         skinParser.addModifier(modifier);
     }
 
-    public void addSkinParser(ISkinParser parser) {
-        skinParser.addParser(parser);
-    }
 }

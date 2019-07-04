@@ -1,16 +1,11 @@
 package com.minelittlepony.hdskins.profile;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -23,7 +18,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.minelittlepony.hdskins.HDSkins;
-import com.minelittlepony.hdskins.util.ProfileTextureUtil;
+import com.minelittlepony.common.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -35,7 +30,7 @@ public class OfflineProfileCache {
 
     private static final Gson gson = new Gson();
 
-    private final LoadingCache<GameProfile, Optional<CachedProfile>> profiles = CacheBuilder.newBuilder()
+    private final LoadingCache<GameProfile, CompletableFuture<CachedProfile>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::fetchOfflineData));
 
@@ -45,25 +40,28 @@ public class OfflineProfileCache {
         this.repository = repository;
     }
 
-    private Optional<CachedProfile> fetchOfflineData(GameProfile profile) {
-        if (profile.getId() == null) {
-            return Optional.empty();
-        }
-
-        Path cachedLocation = getCachedProfileLocation(profile);
-
-        if (Files.exists(cachedLocation)) {
-            try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(cachedLocation.toFile())))) {
-                return Optional.ofNullable(gson.fromJson(reader, CachedProfile.class));
-            } catch (IOException e) {
-                HDSkins.logger.error("Exception loading cached profile data", e);
-                try {
-                    Files.delete(cachedLocation);
-                } catch (IOException ignored) { }
+    private CompletableFuture<CachedProfile> fetchOfflineData(GameProfile profile) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (profile.getId() == null) {
+                return null;
             }
-        }
 
-        return Optional.empty();
+            Path cachedLocation = getCachedProfileLocation(profile);
+
+            if (Files.exists(cachedLocation)) {
+                try (JsonReader reader = new JsonReader(Files.newBufferedReader(cachedLocation))) {
+                    return gson.fromJson(reader, CachedProfile.class);
+                } catch (IOException e) {
+                    HDSkins.logger.error("Exception loading cached profile data", e);
+                    try {
+                        Files.delete(cachedLocation);
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+
+            return null;
+        }, HDSkins.skinDownloadExecutor);
     }
 
     public Path getCachedProfileLocation(GameProfile profile) {
@@ -74,13 +72,9 @@ public class OfflineProfileCache {
     public void storeCachedProfileData(GameProfile profile, Map<Type, MinecraftProfileTexture> textureMap) {
         try {
             Path cacheLocation = getCachedProfileLocation(profile);
-            if (Files.exists(cacheLocation)) {
-                Files.delete(cacheLocation);
-            }
             Files.createDirectories(cacheLocation.getParent());
-            Files.createFile(cacheLocation);
 
-            try (JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(cacheLocation.toFile())))) {
+            try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(cacheLocation))) {
                 gson.toJson(new CachedProfile(textureMap), CachedProfile.class, writer);
             }
         } catch (IOException e) {
@@ -89,9 +83,11 @@ public class OfflineProfileCache {
     }
 
     public void loadProfileAsync(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
-        CompletableFuture.runAsync(() -> {
-            profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).map(CachedProfile::getFiles).ifPresent(callback);
-        }, MinecraftClient.getInstance()::execute);
+        profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).thenAcceptAsync(skins -> {
+            if (skins != null) {
+                callback.accept(skins.getFiles());
+            }
+        }, MinecraftClient.getInstance());
     }
 
     public void clear() {

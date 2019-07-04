@@ -17,7 +17,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 public class OnlineProfileCache {
-    private LoadingCache<GameProfile, Map<Type, MinecraftProfileTexture>> profiles = CacheBuilder.newBuilder()
+    private LoadingCache<GameProfile, CompletableFuture<Map<Type, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::fetchOnlineData));
 
@@ -28,32 +28,34 @@ public class OnlineProfileCache {
         this.repository = repository;
     }
 
-    private Map<Type, MinecraftProfileTexture> fetchOnlineData(GameProfile profile) {
-        if (profile.getId() == null) {
-            return Collections.emptyMap();
-        }
-
-        Map<Type, MinecraftProfileTexture> textureMap = Maps.newEnumMap(Type.class);
-
-        for (SkinServer server : repository.hd.getSkinServers()) {
-            try {
-                server.loadProfileData(profile).getTextures().forEach(textureMap::putIfAbsent);
-
-                if (textureMap.size() == Type.values().length) {
-                    break;
-                }
-            } catch (IOException e) {
-                HDSkins.logger.trace(e);
+    private CompletableFuture<Map<Type, MinecraftProfileTexture>> fetchOnlineData(GameProfile profile) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (profile.getId() == null) {
+                return Collections.emptyMap();
             }
-        }
 
-        repository.offline.storeCachedProfileData(profile, textureMap);
+            Map<Type, MinecraftProfileTexture> textureMap = Maps.newEnumMap(Type.class);
 
-        return textureMap;
+            for (SkinServer server : repository.hd.getSkinServers()) {
+                try {
+                    server.loadProfileData(profile).getTextures().forEach(textureMap::putIfAbsent);
+
+                    if (textureMap.size() == Type.values().length) {
+                        break;
+                    }
+                } catch (IOException e) {
+                    HDSkins.logger.trace(e);
+                }
+            }
+
+            repository.offline.storeCachedProfileData(profile, textureMap);
+
+            return textureMap;
+        }, HDSkins.skinDownloadExecutor);
     }
 
-    public CompletableFuture<Map<Type, MinecraftProfileTexture>> loadProfileAsync(GameProfile profile) {
-        return CompletableFuture.supplyAsync(() -> profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)), HDSkins.skinDownloadExecutor);
+    public Map<Type, MinecraftProfileTexture> loadProfileAsync(GameProfile profile) {
+        return profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).getNow(Collections.emptyMap());
     }
 
     public void clear() {
