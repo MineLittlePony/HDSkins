@@ -3,10 +3,11 @@ package com.minelittlepony.hdskins.resources.texture;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.minelittlepony.hdskins.HDSkins;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.texture.NativeImage;
+
+import static com.minelittlepony.common.event.SkinFilterCallback.*;
 
 public class ImageBufferDownloadHD implements ISkinAvailableCallback {
 
@@ -26,47 +27,45 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
 
     @Override
     @Nullable
-    public NativeImage parseUserSkin(@Nullable NativeImage downloadedImage) {
+    public NativeImage parseUserSkin(@Nullable NativeImage image) {
 
         // TODO: Do we want to convert other skin types?
-        if (downloadedImage == null || skinType != Type.SKIN) {
-            return downloadedImage;
+        if (image == null || skinType != Type.SKIN) {
+            return image;
         }
 
-        int imageWidth = downloadedImage.getWidth();
-        int imageHeight = downloadedImage.getHeight();
+        int imageWidth = image.getWidth();
+        int imageHeight = image.getHeight();
+        boolean legacy = imageWidth != imageHeight;
 
-        if (imageHeight == imageWidth) {
-            return downloadedImage;
+        if (imageHeight != imageWidth) {
+
+            NativeImage image2 = new NativeImage(imageWidth, imageWidth, true);
+            image2.copyFrom(image);
+            image.close();
+            image = image2;
+
+            // copy layers
+            // leg
+            copy(image, 4, 16, 16, 32, 4, 4, true, false); // top
+            copy(image, 8, 16, 16, 32, 4, 4, true, false); // bottom
+            copy(image, 0, 20, 24, 32, 4, 12, true, false); // inside
+            copy(image, 4, 20, 16, 32, 4, 12, true, false); // front
+            copy(image, 8, 20, 8, 32, 4, 12, true, false); // outside
+            copy(image, 12, 20, 16, 32, 4, 12, true, false); // back
+            // arm
+            copy(image, 44, 16, -8, 32, 4, 4, true, false); // top
+            copy(image, 48, 16, -8, 32, 4, 4, true, false); // bottom
+            copy(image, 40, 20, 0, 32, 4, 12, true, false);// inside
+            copy(image, 44, 20, -8, 32, 4, 12, true, false);// front
+            copy(image, 48, 20, -16, 32, 4, 12, true, false);// outside
+            copy(image, 52, 20, -8, 32, 4, 12, true, false); // back
+
         }
-
-        NativeImage image = new NativeImage(imageWidth, imageWidth, true);
-        image.copyFrom(downloadedImage);
-
-        downloadedImage.close();
-
-        HDDrawer drawer = () -> image;
-
-        // copy layers
-        // leg
-        drawer.copy(4, 16, 16, 32, 4, 4, true, false); // top
-        drawer.copy(8, 16, 16, 32, 4, 4, true, false); // bottom
-        drawer.copy(0, 20, 24, 32, 4, 12, true, false); // inside
-        drawer.copy(4, 20, 16, 32, 4, 12, true, false); // front
-        drawer.copy(8, 20, 8, 32, 4, 12, true, false); // outside
-        drawer.copy(12, 20, 16, 32, 4, 12, true, false); // back
-        // arm
-        drawer.copy(44, 16, -8, 32, 4, 4, true, false); // top
-        drawer.copy(48, 16, -8, 32, 4, 4, true, false); // bottom
-        drawer.copy(40, 20, 0, 32, 4, 12, true, false);// inside
-        drawer.copy(44, 20, -8, 32, 4, 12, true, false);// front
-        drawer.copy(48, 20, -16, 32, 4, 12, true, false);// outside
-        drawer.copy(52, 20, -8, 32, 4, 12, true, false); // back
-
         // mod things
-        HDSkins.getInstance().getSkinParser().modifySkin(drawer);
+        EVENT.invoker().processImage(image, legacy);
 
-        return callback.parseUserSkin(image);
+        return image;
     }
 
     @Override

@@ -18,13 +18,11 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.minelittlepony.common.util.TextureConverter;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
 import com.minelittlepony.hdskins.gui.GuiSkins;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.profile.ProfileRepository;
-import com.minelittlepony.hdskins.profile.skin.SkinParsingService;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -55,7 +53,6 @@ public final class HDSkins {
     private AbstractConfig config;
 
     private final SkinResourceManager resources = new SkinResourceManager();
-    private final SkinParsingService skinParser = new SkinParsingService();
     private final ProfileRepository repository = new ProfileRepository(this);
 
     private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
@@ -110,10 +107,6 @@ public final class HDSkins {
         return repository.getTextures(profile);
     }
 
-    public SkinParsingService getSkinParser() {
-        return skinParser;
-    }
-
     public SkinResourceManager getResourceManager() {
         return resources;
     }
@@ -128,10 +121,6 @@ public final class HDSkins {
 
     public void addSkinServer(SkinServer skinServer) {
         builtInSkinServers.add(skinServer);
-    }
-
-    public void addSkinModifier(TextureConverter modifier) {
-        skinParser.addModifier(modifier);
     }
 
 }

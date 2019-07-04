@@ -4,10 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
-import com.minelittlepony.hdskins.profile.skin.SkinParsingService;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
