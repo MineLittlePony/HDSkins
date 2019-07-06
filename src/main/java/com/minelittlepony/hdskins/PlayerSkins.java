@@ -41,9 +41,11 @@ public class PlayerSkins {
     }
 
     public String getModel() {
-        return getModelFrom(customProfiles).orElseGet(() -> {
-            return getModelFrom(vanillaProfiles).orElse(null);
-        });
+        return HDSkins.getInstance().getResourceManager()
+                .getCustomPlayerModel(playerInfo.getGameProfile())
+                .orElseGet(() -> getModelFrom(customProfiles)
+                .orElseGet(() -> getModelFrom(vanillaProfiles)
+                .orElse(null)));
     }
 
     public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {

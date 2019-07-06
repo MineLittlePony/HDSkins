@@ -34,7 +34,7 @@ import net.minecraft.util.profiler.Profiler;
  * hdskins:textures/skins/skins.json
  * {
  *      "skins": [
- *          { "type": "SKIN", "name": "Sollace", "skin": "hdskins:textures/skins/super_silly_pony.png" }
+ *          { "type": "SKIN", "model": "default", "name": "Sollace", "skin": "hdskins:textures/skins/super_silly_pony.png" }
  *      ]
  * }
  *
@@ -113,6 +113,14 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     }
 
     /**
+     * Gets a custom model type for the given profile as defined in the current resourcepacks(s).
+     */
+    public Optional<String> getCustomPlayerModel(GameProfile profile) {
+        return store.computeIfAbsent(Type.SKIN, SkinStore::new).getSkin(profile)
+            .map(Skin::getModel);
+    }
+
+    /**
      * Pushes the given texture through the skin parsing + conversion pipeline.
      *
      * Returns the passed identifier, otherwise the new identifier following conversion.
@@ -182,8 +190,15 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             @Expose
             String skin;
 
+            @Expose
+            String model;
+
             @Nullable
             private Identifier texture;
+
+            public String getModel() {
+                return model;
+            }
 
             public Identifier getTexture() {
                 if (texture == null) {
