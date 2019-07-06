@@ -122,7 +122,7 @@ public class OfflineProfileCache {
 
             public CachedProfileTexture(MinecraftProfileTexture file) {
                 this.file = file.getUrl();
-                this.metadata = ProfileTextureUtil.getMetadata(file).orElseGet(Collections::emptyMap);
+                this.metadata = ProfileTextureUtil.getMetadataFrom(file).orElseGet(Collections::emptyMap);
                 if (file instanceof EtagProfileTexture) {
                     this.etag = ((EtagProfileTexture)file).getEtag();
                 }
