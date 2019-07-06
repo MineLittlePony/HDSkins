@@ -184,7 +184,7 @@ public class SkinUploader implements Closeable {
 
     public boolean tryClearStatus() {
         if (!hasStatus() || !uploadInProgress()) {
-            status = null;
+            status = ERR_ALL_FINE;
             return true;
         }
 
