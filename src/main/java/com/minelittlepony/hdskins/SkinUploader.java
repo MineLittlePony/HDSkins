@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,10 +23,8 @@ import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.HttpException;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinUpload;
-import com.minelittlepony.hdskins.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.NetClient;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -39,6 +39,7 @@ public class SkinUploader implements Closeable {
 
     private final Iterator<SkinServer> skinServers;
 
+    public static final String ERR_ALL_FINE = "";
     public static final String ERR_NO_SERVER = "hdskins.error.noserver";
     public static final String ERR_OFFLINE = "hdskins.error.offline";
 
@@ -47,9 +48,10 @@ public class SkinUploader implements Closeable {
 
     public static final String STATUS_FETCH = "hdskins.fetch";
 
+    @Nullable
     private SkinServer gateway;
 
-    private String status;
+    private String status = ERR_ALL_FINE;
 
     private Type skinType;
 
@@ -99,8 +101,12 @@ public class SkinUploader implements Closeable {
         }
     }
 
-    public String getGateway() {
+    public String getGatewayText() {
         return gateway == null ? "" : gateway.toString();
+    }
+
+    public SkinServer getGateway() {
+        return gateway;
     }
 
     public boolean supportsFeature(Feature feature) {
@@ -156,11 +162,11 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean hasStatus() {
-        return status != null;
+        return !status.isEmpty();
     }
 
     public String getStatusMessage() {
-        return hasStatus() ? status : "";
+        return status;
     }
 
     public void setMetadataField(String field, String value) {
@@ -192,7 +198,7 @@ public class SkinUploader implements Closeable {
         return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handle((response, throwable) -> {
             if (throwable == null) {
                 logger.info("Upload completed with: %s", response);
-                setError(null);
+                setError(ERR_ALL_FINE);
             } else {
                 setError(Throwables.getRootCause(throwable).toString());
             }
@@ -282,10 +288,6 @@ public class SkinUploader implements Closeable {
                 fetchRemote();
             }
         }
-    }
-
-    public CompletableFuture<PreviewTextureManager> loadTextures(GameProfile profile) {
-        return gateway.getPreviewTextures(profile).thenApply(PreviewTextureManager::new);
     }
 
     public interface IPreviewModel {

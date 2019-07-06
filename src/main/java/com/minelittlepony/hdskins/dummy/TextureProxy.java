@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 
 import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.resources.LocalTexture;
+import com.minelittlepony.hdskins.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -23,17 +24,17 @@ public class TextureProxy implements IBlankSkinSupplier {
     protected boolean previewThinArms = false;
     protected boolean previewSleeping = false;
     protected boolean previewRiding = false;
-    
+
     private final IBlankSkinSupplier blankSupplier;
 
     TextureProxy(GameProfile gameprofile, IBlankSkinSupplier blank) {
         profile = gameprofile;
         blankSupplier = blank;
-        
+
         skin = new LocalTexture(profile, Type.SKIN, blankSupplier);
         elytra = new LocalTexture(profile, Type.ELYTRA, blankSupplier);
     }
-    
+
     @Override
     public Identifier getBlankSkin(Type type) {
         return blankSupplier.getBlankSkin(type);
@@ -60,7 +61,9 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinTextureAvailableCallback listener) {
-        return uploader.loadTextures(profile).thenAcceptAsync(ptm -> {
+        return uploader.getGateway().getPreviewTextures(profile)
+                .thenApply(PreviewTextureManager::new)
+                .thenAcceptAsync(ptm -> {
             skin.setRemote(ptm, listener);
             elytra.setRemote(ptm, listener);
         }, MinecraftClient.getInstance()::execute); // run on main thread

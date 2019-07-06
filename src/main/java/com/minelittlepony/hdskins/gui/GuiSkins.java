@@ -205,11 +205,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .onClick(sender -> {
                     uploader.cycleGateway();
                     playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                    sender.getStyle().setTooltip(uploader.getGateway());
+                    sender.getStyle().setTooltip(uploader.getGatewayText());
                 })
                 .getStyle()
                 .setText("?")
-                .setTooltip(uploader.getGateway(), 0, 10);
+                .setTooltip(uploader.getGatewayText(), 0, 10);
     }
 
     @Override
