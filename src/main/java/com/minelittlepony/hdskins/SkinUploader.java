@@ -195,7 +195,7 @@ public class SkinUploader implements Closeable {
         sendingSkin = true;
         status = statusMsg;
 
-        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handle((response, throwable) -> {
+        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handleAsync((response, throwable) -> {
             if (throwable == null) {
                 logger.info("Upload completed with: %s", response);
                 setError(ERR_ALL_FINE);
@@ -205,7 +205,7 @@ public class SkinUploader implements Closeable {
 
             fetchRemote();
             return null;
-        });
+        }, MinecraftClient.getInstance());
     }
 
     public CompletableFuture<MoreHttpResponses> downloadSkin() {
@@ -222,7 +222,7 @@ public class SkinUploader implements Closeable {
         previewer.getRemote().getTextures().reloadRemoteSkin(this, (type, location, profileTexture) -> {
             fetchingSkin = false;
             listener.onSetRemoteSkin(type, location, profileTexture);
-        }).handle((a, throwable) -> {
+        }).handleAsync((a, throwable) -> {
             fetchingSkin = false;
 
             if (throwable != null) {
@@ -250,7 +250,7 @@ public class SkinUploader implements Closeable {
                 }
             }
             return a;
-        });
+        }, MinecraftClient.getInstance());
     }
 
     @Override
