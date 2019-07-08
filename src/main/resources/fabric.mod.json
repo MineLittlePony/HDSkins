@@ -17,7 +17,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "com.minelittlepony.hdskins.FabMod"
+      "com.minelittlepony.hdskins.HDSkins"
     ]
   },
   "mixins": [

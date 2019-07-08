@@ -6,10 +6,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
+import com.minelittlepony.common.client.gui.element.Button;
+import com.minelittlepony.common.client.gui.style.Style;
+import com.minelittlepony.common.event.ClientReadyCallback;
+import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +40,7 @@ import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallb
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 
-public final class HDSkins {
+public final class HDSkins implements ClientModInitializer {
     public static final String MOD_ID = "hdskins";
 
     public static final Logger logger = LogManager.getLogger();
@@ -59,20 +68,34 @@ public final class HDSkins {
 
     public HDSkins() {
         instance = this;
-
-        config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
-
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
     }
 
     public AbstractConfig getConfig() {
         return config;
     }
 
-    void postInit(MinecraftClient client) {
+    @Override
+    public void onInitializeClient() {
+        config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
+        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
+        ClientReadyCallback.Handler.register();
+        ClientReadyCallback.EVENT.register(this::postInit);
+        ScreenInitCallback.EVENT.register(this::onScreenInit);
+    }
+
+    private void postInit(MinecraftClient client) {
         // register skin servers.
         config.skin_servers.forEach(this::addSkinServer);
+    }
+
+    private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
+        if (screen instanceof TitleScreen) {
+            buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20).onClick(sender -> {
+                MinecraftClient.getInstance().openScreen(this.createSkinsGui());
+            }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
+        }
     }
 
     public void setSkinsGui(Function<List<SkinServer>, GuiSkins> skinsGuiFunc) {
