@@ -18,6 +18,9 @@
   "entrypoints": {
     "client": [
       "com.minelittlepony.hdskins.HDSkins"
+    ],
+    "modmenu": [
+      "com.minelittlepony.hdskins.modmenu.HDSkinsMenuFactory"
     ]
   },
   "mixins": [
@@ -31,6 +34,9 @@
   },
   "depends": {
   	"kirin": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
   },
   "custom": {
     "modmenu:clientsideOnly": true
