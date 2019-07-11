@@ -8,6 +8,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
+import com.minelittlepony.common.util.settings.JsonConfig;
 import com.minelittlepony.hdskins.net.SkinServerList;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
@@ -48,7 +49,7 @@ public final class HDSkins implements ClientModInitializer {
         return instance;
     }
 
-    private AbstractConfig config;
+    private HDConfig config;
 
     private final SkinServerList skinServerList = new SkinServerList();
     private final SkinResourceManager resources = new SkinResourceManager();
@@ -58,13 +59,13 @@ public final class HDSkins implements ClientModInitializer {
         instance = this;
     }
 
-    public AbstractConfig getConfig() {
+    public HDConfig getConfig() {
         return config;
     }
 
     @Override
     public void onInitializeClient() {
-        config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+        config = JsonConfig.of(GamePaths.getConfigDirectory().resolve("hdskins.json"), HDConfig::new);
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);

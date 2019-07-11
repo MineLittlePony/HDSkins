@@ -9,8 +9,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.minelittlepony.common.client.gui.GameGui;
@@ -19,7 +17,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
-import com.minelittlepony.hdskins.AbstractConfig;
+import com.minelittlepony.hdskins.HDConfig;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.upload.IFileDialog;
 
@@ -63,12 +61,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         filesList.padding.setAll(10);
 
-        AbstractConfig config = HDSkins.getInstance().getConfig();
-
-        String last = config.lastChosenFile;
-        if (!StringUtils.isBlank(last)) {
-            currentDirectory = Paths.get(last);
-        }
+        currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
     }
 
     @Override
@@ -180,18 +173,17 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         textInput.setText(path.toString());
 
-        AbstractConfig config = HDSkins.getInstance().getConfig();
+        HDConfig config = HDSkins.getInstance().getConfig();
 
         if (Files.isDirectory(path)) {
             currentDirectory = path;
 
-            config.lastChosenFile = path.toString();
+            config.lastChosenFile.set(path);
 
             parentBtn.setEnabled(currentDirectory.getParent() != null);
             renderDirectory();
         } else {
-            config.lastChosenFile = path.getParent().toString();
-
+            config.lastChosenFile.set(path.getParent());
             onFileSelected(path);
         }
 
