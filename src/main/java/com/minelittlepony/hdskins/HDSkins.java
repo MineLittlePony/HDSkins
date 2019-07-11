@@ -1,14 +1,11 @@
 package com.minelittlepony.hdskins;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.style.Style;
-import com.minelittlepony.common.event.ClientReadyCallback;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.net.SkinServerList;
@@ -25,11 +22,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.Lists;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
-import com.minelittlepony.hdskins.gui.GuiSkins;
-import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.profile.ProfileRepository;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.mojang.authlib.GameProfile;
@@ -54,14 +48,11 @@ public final class HDSkins implements ClientModInitializer {
         return instance;
     }
 
-    private final List<ISkinCacheClearListener> clearListeners = Lists.newArrayList();
-
     private AbstractConfig config;
 
     private final SkinServerList skinServerList = new SkinServerList();
     private final SkinResourceManager resources = new SkinResourceManager();
     private final ProfileRepository repository = new ProfileRepository(this);
-
 
     public HDSkins() {
         instance = this;
@@ -90,11 +81,6 @@ public final class HDSkins implements ClientModInitializer {
         }
     }
 
-    @Deprecated
-    public void setSkinsGui(Function<List<SkinServer>, GuiSkins> skinsGuiFunc) {
-        getSkinServerList().setSkinsGui(skinsGuiFunc);
-    }
-
     public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
         repository.fetchSkins(profile, callback);
     }
@@ -102,16 +88,7 @@ public final class HDSkins implements ClientModInitializer {
     public void clearSkinCache() {
         logger.info("Clearing local player skin cache");
         repository.clear();
-        clearListeners.removeIf(this::onCacheCleared);
-    }
-
-    private boolean onCacheCleared(ISkinCacheClearListener callback) {
-        try {
-            return !callback.onSkinCacheCleared();
-        } catch (Exception e) {
-            logger.warn("Exception encountered calling skin listener '{}'. It will be removed.", callback.getClass().getName(), e);
-            return true;
-        }
+        SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 
     public Map<Type, Identifier> getTextures(GameProfile profile) {
@@ -122,21 +99,8 @@ public final class HDSkins implements ClientModInitializer {
         return resources;
     }
 
-    public void addClearListener(ISkinCacheClearListener listener) {
-        clearListeners.add(listener);
-    }
-
     public SkinServerList getSkinServerList() {
         return skinServerList;
     }
 
-    @Deprecated
-    public List<SkinServer> getSkinServers() {
-        return skinServerList.getSkinServers();
-    }
-
-    @Deprecated
-    public void addSkinServer(SkinServer skinServer) {
-        // noop
-    }
 }
