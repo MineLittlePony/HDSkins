@@ -36,7 +36,7 @@ public class OnlineProfileCache {
 
             Map<Type, MinecraftProfileTexture> textureMap = Maps.newEnumMap(Type.class);
 
-            for (SkinServer server : repository.hd.getSkinServers()) {
+            for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
                 try {
                     server.loadProfileData(profile).getTextures().forEach(textureMap::putIfAbsent);
 

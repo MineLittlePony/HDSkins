@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.net;
 
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.HDSkins;
@@ -15,7 +14,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Session;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,11 +22,6 @@ public interface SkinServer {
     Gson gson = new GsonBuilder()
             .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
             .create();
-
-    List<SkinServer> defaultServers = Lists.newArrayList(new LegacySkinServer(
-            "http://skins.voxelmodpack.com",
-            "http://skinmanager.voxelmodpack.com")
-    );
 
     /**
      * Returns true for any features that this skin net supports.

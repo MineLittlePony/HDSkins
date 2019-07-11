@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
@@ -29,7 +28,6 @@ import java.util.UUID;
 @ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
 
-    @Expose
     private final String address;
 
     private transient String accessToken;

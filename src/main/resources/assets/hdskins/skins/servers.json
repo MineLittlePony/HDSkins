@@ -1,0 +1,15 @@
+{
+  "overwrite": false,
+  "insert": "END",
+  "servers": [
+    {
+      "type": "valhalla",
+      "address": "http://skins.minelittlepony-mod.com"
+    },
+    {
+      "type": "legacy",
+      "address": "http://skins.voxelmodpack.com",
+      "gateway": "http://skinmanager.voxelmodpack.com"
+    }
+  ]
+}

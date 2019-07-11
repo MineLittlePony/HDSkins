@@ -2,7 +2,6 @@ package com.minelittlepony.hdskins.net;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.NetClient;
@@ -20,7 +19,6 @@ public class BethlehemSkinServer implements SkinServer {
 
     private static final String SERVER_ID = "7853dfddc358333843ad55a2c7485c4aa0380a51";
 
-    @Expose
     private final String address;
 
     private BethlehemSkinServer(String address) {

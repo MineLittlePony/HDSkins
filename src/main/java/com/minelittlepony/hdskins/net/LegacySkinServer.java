@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.profile.EtagProfileTexture;
 import com.minelittlepony.hdskins.util.CallableFutures;
@@ -42,10 +41,7 @@ public class LegacySkinServer implements SkinServer {
 
     private static final Logger logger = LogManager.getLogger();
 
-    @Expose
     private final String address;
-
-    @Expose
     private final String gateway;
 
     public LegacySkinServer(String address, @Nullable String gateway) {

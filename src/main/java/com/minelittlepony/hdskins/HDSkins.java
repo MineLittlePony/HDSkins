@@ -11,6 +11,7 @@ import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.event.ClientReadyCallback;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
+import com.minelittlepony.hdskins.net.SkinServerList;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -24,8 +25,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
@@ -57,14 +56,12 @@ public final class HDSkins implements ClientModInitializer {
 
     private final List<ISkinCacheClearListener> clearListeners = Lists.newArrayList();
 
-    private final List<SkinServer> builtInSkinServers = Lists.newArrayList();
-
     private AbstractConfig config;
 
+    private final SkinServerList skinServerList = new SkinServerList();
     private final SkinResourceManager resources = new SkinResourceManager();
     private final ProfileRepository repository = new ProfileRepository(this);
 
-    private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
     public HDSkins() {
         instance = this;
@@ -79,32 +76,23 @@ public final class HDSkins implements ClientModInitializer {
         config = Config.of(GamePaths.getConfigDirectory().resolve("hdskins.json"));
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
-        ClientReadyCallback.Handler.register();
-        ClientReadyCallback.EVENT.register(this::postInit);
-        ScreenInitCallback.EVENT.register(this::onScreenInit);
-    }
 
-    private void postInit(MinecraftClient client) {
-        // register skin servers.
-        config.skin_servers.forEach(this::addSkinServer);
+        ScreenInitCallback.EVENT.register(this::onScreenInit);
     }
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
         if (screen instanceof TitleScreen) {
             buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20).onClick(sender -> {
-                MinecraftClient.getInstance().openScreen(this.createSkinsGui());
+                MinecraftClient.getInstance().openScreen(getSkinServerList().createSkinsGui());
             }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
         }
     }
 
+    @Deprecated
     public void setSkinsGui(Function<List<SkinServer>, GuiSkins> skinsGuiFunc) {
-        Preconditions.checkNotNull(skinsGuiFunc, "skinsGuiFunc");
-        this.skinsGuiFunc = skinsGuiFunc;
-    }
-
-    public GuiSkins createSkinsGui() {
-        return skinsGuiFunc.apply(getSkinServers());
+        getSkinServerList().setSkinsGui(skinsGuiFunc);
     }
 
     public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
@@ -138,12 +126,17 @@ public final class HDSkins implements ClientModInitializer {
         clearListeners.add(listener);
     }
 
+    public SkinServerList getSkinServerList() {
+        return skinServerList;
+    }
+
+    @Deprecated
     public List<SkinServer> getSkinServers() {
-        return ImmutableList.copyOf(builtInSkinServers);
+        return skinServerList.getSkinServers();
     }
 
+    @Deprecated
     public void addSkinServer(SkinServer skinServer) {
-        builtInSkinServers.add(skinServer);
+        // noop
     }
-
 }
