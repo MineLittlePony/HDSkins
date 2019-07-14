@@ -160,25 +160,22 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        disableAlphaTest();
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
+        GL11.glPopAttrib();
+
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
         pushMatrix();
         GL14.glBlendColor(1, 1, 1, 0.3F);
         blendFuncSeparate(
                 SourceFactor.DST_COLOR, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
-                SourceFactor.ONE, DestFactor.ZERO);
+                SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA);
         enableBlend();
-        scalef(1, -1, 1);
-        translatef(0, 0, 0);
+        scalef(0.99F, -1, 0.99F);
 
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
-        disableBlend();
-        GL14.glBlendColor(255, 255, 255, 1);
         popMatrix();
-        GL11.glPopAttrib();
-
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        color4f(1, 1, 1, 1);
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
         GL11.glPopAttrib();
 
         popMatrix();
