@@ -2,13 +2,18 @@ package com.minelittlepony.hdskins.resources;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
@@ -144,8 +149,10 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     }
 
     static class SkinStore {
-        private final Map<UUID, Skin> uuids = Maps.newHashMap();
-        private final Map<String, Skin> names = Maps.newHashMap();
+        private final List<Skin> predicates = new ArrayList<>();
+
+        private final Map<UUID, Skin> uuids = new HashMap<>();
+        private final Map<String, Skin> names = new HashMap<>();
 
         SkinStore(Type type) { }
 
@@ -158,6 +165,10 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
                 if (skin.name != null) {
                     names.put(skin.name, skin);
                 }
+
+                if (skin.getPredicate() != null) {
+                    predicates.add(skin);
+                }
             }
         }
 
@@ -166,7 +177,11 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             Skin skin = uuids.get(profile.getId());
 
             if (skin == null) {
-                return Optional.ofNullable(names.get(profile.getName()));
+                skin = names.get(profile.getName());
+
+                if (skin == null) {
+                    return predicates.stream().filter(f -> f.getPredicate().test(profile.getName())).findFirst();
+                }
             }
 
             return Optional.ofNullable(skin);
@@ -179,25 +194,35 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
         static class Skin {
             @Expose
-            Type type;
+            private Type type;
 
+            @Nullable
             @Expose
             String name;
 
+            @Nullable
             @Expose
             UUID uuid;
 
             @Expose
-            String skin;
+            private String skin;
 
+            @Nullable
             @Expose
-            String model;
+            private String model;
 
             @Nullable
             private Identifier texture;
 
+            @Nullable
+            @Expose
+            private String pattern;
+
+            @Nullable
+            private Predicate<String> predicate;
+
             public String getModel() {
-                return model;
+                return model == null ? "default" : model;
             }
 
             public Identifier getTexture() {
@@ -221,6 +246,15 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
                 }
 
                 return new Identifier("hdskins", String.format("textures/skins/%s.png", skin));
+            }
+
+            @Nullable
+            public Predicate<String> getPredicate() {
+                if (predicate == null && pattern != null) {
+                    predicate = Pattern.compile(pattern).asPredicate();
+                }
+
+                return predicate;
             }
 
             public Type getType() {
