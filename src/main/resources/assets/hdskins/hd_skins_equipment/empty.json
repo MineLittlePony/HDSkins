@@ -1,0 +1,9 @@
+{
+	"item": "minecraft:player_head",
+	"equipment": [
+		{ "slot": "HEAD", "item": "minecraft:air" },
+		{ "slot": "CHEST", "item": "minecraft:air" },
+		{ "slot": "LEGS", "item": "minecraft:air" },
+		{ "slot": "FEET", "item": "minecraft:air" }
+	]
+}

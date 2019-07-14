@@ -1,0 +1,9 @@
+{
+	"item": "minecraft:turtle_helmet",
+	"equipment": [
+		{ "slot": "HEAD", "item": "minecraft:turtle_helmet" },
+		{ "slot": "CHEST", "item": "minecraft:air" },
+		{ "slot": "LEGS", "item": "minecraft:air" },
+		{ "slot": "FEET", "item": "minecraft:air" }
+	]
+}

@@ -8,7 +8,9 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.render.entity.feature.ArmorBipedFeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
 import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -43,6 +45,14 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
     public RenderDummyPlayer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
         super(renderer, (M)FAT, 0);
         addFeature(getElytraLayer());
+        addFeature(getArmourLayer());
+    }
+
+    protected FeatureRenderer<T, M> getArmourLayer() {
+        return new ArmorBipedFeatureRenderer<>(this,
+                new BipedEntityModel<>(0.5F),
+                new BipedEntityModel<>(1F)
+        );
     }
 
     protected FeatureRenderer<T, M> getElytraLayer() {
@@ -79,6 +89,7 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
 
     @Override
     protected Identifier getTexture(T entity) {
+
         return entity.getTextures().get(Type.SKIN).getId();
     }
 

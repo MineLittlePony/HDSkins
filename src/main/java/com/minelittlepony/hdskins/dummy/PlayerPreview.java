@@ -9,6 +9,7 @@ import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
+import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
@@ -31,13 +32,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
 
     public static final Identifier NO_SKIN = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_ELYTRA = new Identifier("textures/entity/elytra.png");
-    
+
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
-    
+
     protected final TextureProxy localTextures = new TextureProxy(profile, this);
     protected final TextureProxy remoteTextures = new TextureProxy(profile, this);
-    
+
     private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
     private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
 
@@ -50,35 +51,35 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     public void setPose(int pose) {
         boolean sleeping = pose == 1;
         boolean riding = pose == 2;
-        
+
         localTextures.setSleeping(sleeping);
         remoteTextures.setSleeping(sleeping);
-        
+
         localTextures.setRiding(riding);
         remoteTextures.setRiding(riding);
     }
-    
+
     public int getPose() {
         return getLocal().isSleeping() ? 1 : 0;
     }
-    
+
     public void swingHand() {
         getLocal().swingHand(Hand.MAIN_HAND);
         getRemote().swingHand(Hand.MAIN_HAND);
     }
-    
+
     public void setModelType(String model) {
         boolean thinArmType = VanillaModels.isSlim(model);
 
         localTextures.setPreviewThinArms(thinArmType);
         remoteTextures.setPreviewThinArms(thinArmType);
     }
-    
+
     public void setJumping(boolean jumping) {
         getLocal().setJumping(jumping);
         getRemote().setJumping(jumping);
     }
-    
+
     public void setSneaking(boolean sneaking) {
         getLocal().setSneaking(sneaking);
         getRemote().setSneaking(sneaking);
@@ -88,7 +89,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     public Identifier getBlankSkin(Type type) {
         return type == Type.SKIN ? NO_SKIN : NO_ELYTRA;
     }
-    
+
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
         enableRescaleNormal();
 
@@ -107,14 +108,14 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
 
         disableDepthTest();
     }
-    
+
     public void renderWorldAndPlayer(DummyPlayer thePlayer,
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale) {
 
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             drawBackground(frameLeft, frameRight, frameBottom, frameTop, horizon);
-    
+
             renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick);
         });
     }
@@ -125,7 +126,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
         GL11.glPopAttrib();
     }
-    
+
     /*
      *       /   |
      *     1/    |o      Q = t + q
@@ -157,9 +158,9 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         thePlayer.pitch = (float)Math.atan(mouseY / 40) * -20;
 
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
-        
+
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        
+
         pushMatrix();
         GL14.glBlendColor(1, 1, 1, 0.3F);
         blendFuncSeparate(
@@ -168,13 +169,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         enableBlend();
         scalef(1, -1, 1);
         translatef(0, 0, 0);
-        
+
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
         disableBlend();
         GL14.glBlendColor(255, 255, 255, 1);
         popMatrix();
         GL11.glPopAttrib();
-        
+
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         color4f(1, 1, 1, 1);
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
@@ -185,6 +186,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         disableColorMaterial();
     }
 
+    @Override
     public void setSkinType(Type type) {
         ItemStack stack = type == Type.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
         // put on or take off the elytra
@@ -201,5 +203,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     @Override
     public DummyPlayer getLocal() {
         return localPlayer;
+    }
+
+    @Override
+    public ItemStack setEquipment(EquipmentSet set) {
+        set.apply(getLocal());
+        set.apply(getRemote());
+
+        return set.getStack();
     }
 }

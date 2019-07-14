@@ -1,0 +1,9 @@
+{
+	"item": "minecraft:iron_helmet",
+	"equipment": [
+		{ "slot": "HEAD", "item": "minecraft:iron_helmet" },
+		{ "slot": "CHEST", "item": "minecraft:iron_chestplate" },
+		{ "slot": "LEGS", "item": "minecraft:iron_leggings" },
+		{ "slot": "FEET", "item": "minecraft:iron_boots" }
+	]
+}

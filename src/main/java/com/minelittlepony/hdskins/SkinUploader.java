@@ -9,8 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
-
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +16,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
+import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.HttpException;
 import com.minelittlepony.hdskins.net.SkinServer;
@@ -31,13 +31,12 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
 public class SkinUploader implements Closeable {
 
     private static final Logger logger = LogManager.getLogger();
-
-    private final Iterator<SkinServer> skinServers;
 
     public static final String ERR_ALL_FINE = "";
     public static final String ERR_NO_SERVER = "hdskins.error.noserver";
@@ -53,7 +52,7 @@ public class SkinUploader implements Closeable {
 
     private String status = ERR_ALL_FINE;
 
-    private Type skinType;
+    private Type skinType = Type.SKIN;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
@@ -73,21 +72,23 @@ public class SkinUploader implements Closeable {
     private Path pendingLocalSkin;
     private URI localSkin;
 
+    private final Iterator<SkinServer> skinServers;
+    private final Iterator<EquipmentSet> equipmentSets;
+
+    private EquipmentSet activeEquipmentSet;
+
     private final ISkinUploadHandler listener;
 
     private final MinecraftClient mc = MinecraftClient.getInstance();
-
-    private static <T> Iterator<T> cycle(List<T> list, Predicate<T> filter) {
-        return Iterables.cycle(Iterables.filter(list, filter::test)).iterator();
-    }
 
     public SkinUploader(List<SkinServer> servers, IPreviewModel previewer, ISkinUploadHandler listener) {
         this.previewer = previewer;
         this.listener = listener;
 
-        skinType = Type.SKIN;
         skinMetadata.put("model", "default");
-        skinServers = cycle(servers, SkinServer::verifyGateway);
+        skinServers = Iterators.cycle(Iterables.filter(servers, SkinServer::verifyGateway));
+        activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
+        equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
         cycleGateway();
     }
@@ -123,6 +124,18 @@ public class SkinUploader implements Closeable {
 
         previewer.setSkinType(type);
         listener.onSkinTypeChanged(type);
+    }
+
+    public ItemStack cycleEquipment() {
+        activeEquipmentSet = equipmentSets.next();
+        return previewer.setEquipment(activeEquipmentSet);
+    }
+
+    public ItemStack getEquipmentIcon() {
+        if (activeEquipmentSet == null) {
+            return ItemStack.EMPTY;
+        }
+        return activeEquipmentSet.getStack();
     }
 
     public boolean uploadInProgress() {
@@ -292,6 +305,8 @@ public class SkinUploader implements Closeable {
 
     public interface IPreviewModel {
         void setSkinType(Type type);
+
+        ItemStack setEquipment(EquipmentSet set);
 
         DummyPlayer getRemote();
 
