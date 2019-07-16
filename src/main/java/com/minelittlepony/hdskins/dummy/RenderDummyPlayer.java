@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.dummy;
 
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -155,11 +156,14 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
             x += 1;
         }
         if (entity.isSwimming()) {
+            DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
             rotatef(45, 1, 0, 0);
 
             y -= 0.5F;
             x -= 0;
             z -= 1;
+        } else {
+            DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
         }
 
         super.render(entity, x, y, z, entityYaw, partialTicks);

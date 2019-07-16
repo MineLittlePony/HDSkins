@@ -10,6 +10,7 @@ import net.minecraft.client.world.DummyClientTickScheduler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.map.MapState;
 import net.minecraft.recipe.RecipeManager;
 import net.minecraft.scoreboard.Scoreboard;
@@ -28,12 +29,14 @@ import net.minecraft.world.level.LevelProperties;
 
 public class DummyWorld extends World {
 
-    public static final World INSTANCE = new DummyWorld();
+    public static final DummyWorld INSTANCE = new DummyWorld();
 
     private final Chunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
     private final Scoreboard scoreboard = new Scoreboard();
     private final RecipeManager recipeManager = new RecipeManager();
     private final RegistryTagManager tags = new RegistryTagManager();
+
+    private BlockState worldBlockState = Blocks.ACACIA_STAIRS.getDefaultState();
 
     private DummyWorld() {
         super(new LevelProperties(new LevelInfo(0, GameMode.NOT_SET, false, false, LevelGeneratorType.DEFAULT), "MpServer"),
@@ -41,6 +44,12 @@ public class DummyWorld extends World {
                 (w, dim) -> null,
                 MinecraftClient.getInstance().getProfiler(),
                 true);
+    }
+
+    public DummyWorld fillWith(BlockState state) {
+        worldBlockState = state;
+
+        return this;
     }
 
     @Override
@@ -65,7 +74,12 @@ public class DummyWorld extends World {
 
     @Override
     public BlockState getBlockState(BlockPos pos) {
-        return Blocks.AIR.getDefaultState();
+        return worldBlockState;
+    }
+
+    @Override
+    public FluidState getFluidState(BlockPos pos) {
+        return getBlockState(pos).getFluidState();
     }
 
     @Override
@@ -87,7 +101,7 @@ public class DummyWorld extends World {
     public RecipeManager getRecipeManager() {
         return recipeManager;
     }
-    
+
     @Override
     public RegistryTagManager getTagManager() {
         return tags;
