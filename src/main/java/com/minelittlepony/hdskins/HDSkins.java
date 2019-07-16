@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.common.util.settings.JsonConfig;
@@ -13,7 +12,6 @@ import com.minelittlepony.hdskins.net.SkinServerList;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.item.ItemStack;
@@ -79,9 +77,11 @@ public final class HDSkins implements ClientModInitializer {
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
         if (screen instanceof TitleScreen) {
-            buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20).onClick(sender -> {
-                MinecraftClient.getInstance().openScreen(getSkinServerList().createSkinsGui());
-            }).setStyle(new Style().setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)));
+            Button button = buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20))
+                .onClick(sender -> MinecraftClient.getInstance().openScreen(getSkinServerList().createSkinsGui()));
+            button.getStyle()
+                    .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb);
+            button.y = screen.height - 50; // ModMenu;
         }
     }
 
