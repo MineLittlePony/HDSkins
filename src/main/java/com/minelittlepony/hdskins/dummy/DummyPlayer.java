@@ -31,10 +31,10 @@ public class DummyPlayer extends LivingEntity {
 
     public DummyPlayer(TextureProxy textures) {
         super(EntityType.PLAYER, DummyWorld.INSTANCE);
-        
+
         this.textures = textures;
     }
-    
+
     public TextureProxy getTextures() {
         return textures;
     }
@@ -48,7 +48,7 @@ public class DummyPlayer extends LivingEntity {
     public boolean isSleeping() {
         return !textures.previewRiding && textures.previewSleeping;
     }
-    
+
     @Override
     public boolean canSeePlayer(PlayerEntity player) {
         return false; // we're not in game. The player might be null and we don't really care about name plates anyway.
@@ -57,6 +57,11 @@ public class DummyPlayer extends LivingEntity {
     @Override
     public Entity getPrimaryPassenger() {
         return textures.previewRiding ? RenderDummyPlayer.MrBoaty.instance : null;
+    }
+
+    @Override
+    public boolean isInSneakingPose() {
+        return isSneaking();
     }
 
     @Override
