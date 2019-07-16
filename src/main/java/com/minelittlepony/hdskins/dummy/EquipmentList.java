@@ -38,7 +38,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     private static final Logger logger = LogManager.getLogger();
 
     private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Identifier.class, new ToStringAdapter<Identifier>(Identifier::new))
+            .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
+            .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
     private EquipmentSet emptySet = new EquipmentSet();
