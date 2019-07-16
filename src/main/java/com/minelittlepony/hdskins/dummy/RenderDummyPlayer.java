@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.dummy;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -25,6 +24,7 @@ import net.minecraft.util.Identifier;
 
 import org.lwjgl.opengl.GL11;
 
+import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import java.util.Set;
@@ -173,15 +173,9 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
 
             scalef(-1, -1, -1);
 
-            BlockEntityRenderDispatcher dispatcher = BlockEntityRenderDispatcher.INSTANCE;
-
-            MinecraftClient mc = MinecraftClient.getInstance();
-            dispatcher.configure(entity.getEntityWorld(),
-                    mc.getTextureManager(),
-                    mc.getEntityRenderManager().getTextRenderer(),
-                    mc.gameRenderer.getCamera(),
-                    mc.hitResult);
-            dispatcher.get(this).render(BedHead.instance, -0.5F, 0, 0, 0, -1);
+            OutsideWorldRenderer.configure(entity.getEntityWorld())
+                .get(this)
+                .render(this, -0.5F, 0, 0, 0, -1);
 
             popMatrix();
             GL11.glPopAttrib();
