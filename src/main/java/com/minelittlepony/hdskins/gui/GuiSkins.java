@@ -206,11 +206,13 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         addButton(new Button(width - 25, height - 40, 20, 20))
                 .onClick(sender -> {
-                    sender.getStyle().setIcon(uploader.cycleEquipment());
+                    sender.getStyle()
+                        .setIcon(uploader.cycleEquipment())
+                        .setTooltip(I18n.translate("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
                 })
                 .getStyle()
-                .setIcon(uploader.getEquipmentIcon())
-                .setTooltip("hdskins.equipment")
+                .setIcon(uploader.getEquipment().getStack())
+                .setTooltip(I18n.translate("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())))
                 .setTooltipOffset(0, 10);
 
         addButton(new Button(width - 25, height - 65, 20, 20))

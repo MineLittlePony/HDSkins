@@ -72,9 +72,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
                EquipmentSet set = gson.fromJson(entry.getValue(), EquipmentSet.class);
 
                if (set != null) {
+                   set.id = entry.getKey();
                    equipmentSets.add(set);
 
-                   if (entry.getKey().getPath().endsWith("empty.json")) {
+                   if ("empty".equals(entry.getKey().getPath())) {
                        emptySet = set;
                    }
                }
@@ -113,6 +114,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
         private int damage;
 
+        transient Identifier id;
+
         @Nullable
         private transient ItemStack stack;
 
@@ -125,6 +128,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
                 stack = createStack(item, damage);
             }
             return stack;
+        }
+
+        public Identifier getId() {
+            return id;
         }
 
         private static class Equipment {

@@ -131,11 +131,8 @@ public class SkinUploader implements Closeable {
         return previewer.setEquipment(activeEquipmentSet);
     }
 
-    public ItemStack getEquipmentIcon() {
-        if (activeEquipmentSet == null) {
-            return ItemStack.EMPTY;
-        }
-        return activeEquipmentSet.getStack();
+    public EquipmentSet getEquipment() {
+        return activeEquipmentSet;
     }
 
     public boolean uploadInProgress() {
