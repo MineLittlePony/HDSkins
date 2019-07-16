@@ -133,7 +133,7 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         model.leftArmPose = ArmPose.EMPTY;
         model.rightArmPose = ArmPose.EMPTY;
 
-        double offset = entity.getHeightOffset() + entity.y;
+        double offset = entity.y;
 
         if (entity.hasVehicle()) {
             offset = entity.getMountedHeightOffset() - entity.getHeight();

@@ -43,6 +43,11 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
+    public double getHeightOffset() {
+        return -0.35D;
+    }
+
+    @Override
     public boolean hasVehicle() {
         return textures.previewRiding;
     }
