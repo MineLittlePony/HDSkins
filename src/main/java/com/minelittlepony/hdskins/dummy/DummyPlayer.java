@@ -3,8 +3,11 @@ package com.minelittlepony.hdskins.dummy;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -46,7 +49,42 @@ public class DummyPlayer extends LivingEntity {
 
     @Override
     public boolean isSleeping() {
-        return !textures.previewRiding && textures.previewSleeping;
+        return textures.previewSleeping;
+    }
+
+    @Override
+    public EntityPose getPose() {
+        if (isSleeping()) {
+            return EntityPose.SLEEPING;
+        }
+        if (isSwimming()) {
+            return EntityPose.SWIMMING;
+        }
+        if (isSneaking()) {
+            return EntityPose.SNEAKING;
+        }
+        return EntityPose.STANDING;
+    }
+
+    @Override
+    @Environment(EnvType.CLIENT)
+    public float method_6024(float float_1) {
+       return isSwimming() ? 1 : 0;
+    }
+
+    @Override
+    public boolean isInWater() {
+        return isSwimming();
+    }
+
+    @Override
+    public boolean isSwimming() {
+        return textures.previewSwimming;
+    }
+
+    @Override
+    public boolean isInsideWater() {
+        return isSwimming();
     }
 
     @Override
@@ -60,13 +98,8 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public boolean isInSneakingPose() {
-        return isSneaking();
-    }
-
-    @Override
     public boolean isSneaking() {
-        return !textures.previewRiding && !textures.previewSleeping && super.isSneaking();
+        return !textures.previewSwimming && !textures.previewRiding && !textures.previewSleeping && super.isSneaking();
     }
 
     public void updateModel() {
@@ -82,6 +115,8 @@ public class DummyPlayer extends LivingEntity {
             handSwingTicks = 0;
         }
 
+        limbAngle = (limbAngle + 1) % 360;
+
         handSwingProgress = handSwingTicks / 8F;
 
         upwardSpeed *= 0.98;
@@ -89,7 +124,7 @@ public class DummyPlayer extends LivingEntity {
             upwardSpeed = 0;
         }
 
-        if (y == 0 && jumping && !textures.previewSleeping && !textures.previewRiding) {
+        if (y == 0 && jumping && !textures.previewSleeping && !textures.previewRiding && !textures.previewSwimming) {
             jump();
 
             upwardSpeed = (float)getVelocity().y;

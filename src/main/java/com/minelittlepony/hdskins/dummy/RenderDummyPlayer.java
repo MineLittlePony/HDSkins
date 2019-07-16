@@ -139,10 +139,7 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
             offset = entity.getMountedHeightOffset() - entity.getHeight();
         }
 
-        if (entity.isSleeping()) {
-            y--;
-            z += 0.75F;
-        } else if (model.isSneaking) {
+        if (model.isSneaking) {
             y -= 0.125D;
         }
 
@@ -152,7 +149,17 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         translated(0.001, offset, 0.001);
 
         if (entity.isSleeping()) {
-            rotatef(-90, 1, 0, 0);
+            rotatef(-90, 0, 1, 0);
+
+            y += 0.7F;
+            x += 1;
+        }
+        if (entity.isSwimming()) {
+            rotatef(45, 1, 0, 0);
+
+            y -= 0.5F;
+            x -= 0;
+            z -= 1;
         }
 
         super.render(entity, x, y, z, entityYaw, partialTicks);

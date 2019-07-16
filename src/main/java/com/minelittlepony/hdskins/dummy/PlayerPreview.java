@@ -42,6 +42,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
     private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
 
+    private int pose;
+
     public PlayerPreview() {
         EntityRenderDispatcher rm = minecraft.getEntityRenderManager();
         rm.gameOptions = minecraft.options;
@@ -49,18 +51,14 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     }
 
     public void setPose(int pose) {
-        boolean sleeping = pose == 1;
-        boolean riding = pose == 2;
+        this.pose = pose;
 
-        localTextures.setSleeping(sleeping);
-        remoteTextures.setSleeping(sleeping);
-
-        localTextures.setRiding(riding);
-        remoteTextures.setRiding(riding);
+        localTextures.setPose(pose);
+        remoteTextures.setPose(pose);
     }
 
     public int getPose() {
-        return getLocal().isSleeping() ? 1 : 0;
+        return pose;
     }
 
     public void swingHand() {
@@ -139,9 +137,10 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(Type.SKIN).getId());
 
+        pushMatrix();
+
         enableColorMaterial();
         GuiLighting.enable();
-        pushMatrix();
 
         translatef(xPosition, yPosition, 300);
         scalef(scale, scale, scale);
@@ -155,18 +154,20 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
 
         thePlayer.headYaw = lookX * lookFactor;
-        thePlayer.pitch = (float)Math.atan(mouseY / 40) * -20;
+        thePlayer.pitch = thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20;
 
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
 
+        pushMatrix();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         disableAlphaTest();
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
         GL11.glPopAttrib();
+        popMatrix();
 
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
         pushMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL14.glBlendColor(1, 1, 1, 0.3F);
         blendFuncSeparate(
                 SourceFactor.DST_COLOR, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
@@ -175,12 +176,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         scalef(0.99F, -1, 0.99F);
 
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, false);
-        popMatrix();
-        GL11.glPopAttrib();
 
+        GL11.glPopAttrib();
         popMatrix();
         GuiLighting.disable();
         disableColorMaterial();
+
+        popMatrix();
     }
 
     @Override
