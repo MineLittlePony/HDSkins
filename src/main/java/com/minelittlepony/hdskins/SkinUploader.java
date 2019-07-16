@@ -6,7 +6,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -15,13 +14,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.HttpException;
 import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinServerList;
 import com.minelittlepony.hdskins.net.SkinUpload;
 import com.minelittlepony.hdskins.util.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.NetClient;
@@ -81,12 +79,12 @@ public class SkinUploader implements Closeable {
 
     private final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public SkinUploader(List<SkinServer> servers, IPreviewModel previewer, ISkinUploadHandler listener) {
+    public SkinUploader(SkinServerList servers, IPreviewModel previewer, ISkinUploadHandler listener) {
         this.previewer = previewer;
         this.listener = listener;
 
         skinMetadata.put("model", "default");
-        skinServers = Iterators.cycle(Iterables.filter(servers, SkinServer::verifyGateway));
+        skinServers = servers.getCycler();
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 

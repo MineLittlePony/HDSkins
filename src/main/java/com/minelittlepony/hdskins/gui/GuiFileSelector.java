@@ -7,8 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.minelittlepony.common.client.gui.GameGui;
@@ -22,7 +20,6 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.upload.IFileDialog;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.LiteralText;
@@ -39,9 +36,6 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
             .setItemWidth(150)
             .setItemHeight(20);
 
-    @Nullable
-    protected final Screen parent;
-
     private Button parentBtn;
 
     protected TextFieldWidget textInput;
@@ -53,8 +47,6 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
     public GuiFileSelector(String title) {
         super(new LiteralText(title));
-
-        this.parent = MinecraftClient.getInstance().currentScreen;
 
         filesList.margin.top = 60;
         filesList.margin.bottom = 30;
@@ -91,7 +83,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         addButton(new Button(width/2 + 60, height - 25, 100, 20))
             .onClick(p -> {
-                minecraft.openScreen(parent);
+                finish();
                 callback.onDialogClosed(currentDirectory, false);
             })
             .getStyle()

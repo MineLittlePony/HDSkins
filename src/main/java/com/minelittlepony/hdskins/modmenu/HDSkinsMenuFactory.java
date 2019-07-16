@@ -17,6 +17,6 @@ public class HDSkinsMenuFactory implements ModMenuApi {
 
     @Override
     public Function<Screen, ? extends Screen> getConfigScreenFactory() {
-        return screen -> HDSkins.getInstance().getSkinServerList().createSkinsGui();
+        return HDSkins.getInstance().getSkinServerList()::createSkinsGui;
     }
 }

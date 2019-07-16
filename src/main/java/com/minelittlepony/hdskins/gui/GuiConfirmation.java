@@ -14,13 +14,9 @@ public class GuiConfirmation extends GameGui {
 
     private final Runnable action;
 
-    @Nonnull
-    private final Screen parent;
-
     public GuiConfirmation(@Nonnull Screen parent, String title, Runnable action) {
-        super(new LiteralText(title));
+        super(new LiteralText(title), parent);
 
-        this.parent = parent;
         this.action = action;
     }
 
@@ -37,7 +33,7 @@ public class GuiConfirmation extends GameGui {
 
         addButton(new Button(width/2 - 110, height/2 + 20, 100, 20))
             .onClick(p -> {
-                minecraft.openScreen(parent);
+                finish();
                 action.run();
             })
             .getStyle()

@@ -22,7 +22,7 @@ import com.minelittlepony.hdskins.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.net.Feature;
-import com.minelittlepony.hdskins.net.SkinServer;
+import com.minelittlepony.hdskins.net.SkinServerList;
 import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
@@ -78,13 +78,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     });
     private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
 
-    private final Screen parent;
-
-    public GuiSkins(List<SkinServer> servers) {
-        super(new TranslatableText("hdskins.gui.title"));
+    public GuiSkins(Screen parent, SkinServerList servers) {
+        super(new TranslatableText("hdskins.gui.title"), parent);
 
         minecraft = MinecraftClient.getInstance();
-        parent = minecraft.currentScreen;
         previewer = createPreviewer();
         uploader = new SkinUploader(servers, previewer, this);
         chooser = new SkinChooser(uploader);
@@ -157,7 +154,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setText("hdskins.options.clear");
 
         addButton(new Button(width / 2 - 50, height - 25, 100, 20))
-                .onClick(sender -> minecraft.openScreen(parent))
+                .onClick(sender -> finish())
                 .getStyle()
                 .setText("hdskins.options.close");
 

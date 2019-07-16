@@ -2,11 +2,14 @@ package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.gui.GuiSkins;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.SynchronousResourceReloadListener;
@@ -17,10 +20,11 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 public class SkinServerList implements SynchronousResourceReloadListener, IdentifiableResourceReloadListener {
 
@@ -33,7 +37,7 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
 
     private List<SkinServer> skinServers = new LinkedList<>();
 
-    private Function<List<SkinServer>, GuiSkins> skinsGuiFunc = GuiSkins::new;
+    private BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
     @Override
     public Identifier getFabricId() {
@@ -63,14 +67,18 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
     public List<SkinServer> getSkinServers() {
         return ImmutableList.copyOf(skinServers);
     }
+    
+    public Iterator<SkinServer> getCycler() {
+        return Iterators.cycle(Iterables.filter(getSkinServers(), SkinServer::verifyGateway));
+    }
 
-    public void setSkinsGui(Function<List<SkinServer>, GuiSkins> skinsGuiFunc) {
+    public void setSkinsGui(BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc) {
         Preconditions.checkNotNull(skinsGuiFunc, "skinsGuiFunc");
         this.skinsGuiFunc = skinsGuiFunc;
     }
 
-    public GuiSkins createSkinsGui() {
-        return skinsGuiFunc.apply(getSkinServers());
+    public GuiSkins createSkinsGui(Screen parent) {
+        return skinsGuiFunc.apply(parent, this);
     }
 
     private static <T> void addAllStart(List<T> list, List<T> toAdd) {
