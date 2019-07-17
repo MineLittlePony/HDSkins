@@ -17,14 +17,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.LowercaseEnumTypeAdapterFactory;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
             .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registry.ITEM))
-            .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
+            .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
     private EquipmentSet emptySet = new EquipmentSet();
@@ -94,7 +93,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     }
 
     public static class EquipmentSet {
-        private Map<EquipmentSlot, Item> equipment = Collections.emptyMap();
+        private Map<EquipmentSlot, Item> equipment = new HashMap<>();
 
         private Item item;
 
