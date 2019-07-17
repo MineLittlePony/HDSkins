@@ -38,7 +38,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
             .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registry.ITEM))
-            .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(s -> EquipmentSlot.byName(s.toLowerCase())))
+            .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
     private EquipmentSet emptySet = new EquipmentSet();
