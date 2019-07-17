@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.dummy;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -17,14 +18,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.SystemUtil;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +44,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
     private EquipmentSet emptySet = new EquipmentSet();
 
-    private final List<EquipmentSet> equipmentSets = SystemUtil.consume(new ArrayList<>(), list -> list.add(emptySet));
+    private final List<EquipmentSet> equipmentSets = Lists.newArrayList(emptySet);
 
     public EquipmentList() {
         super(gson, "hd_skins_equipment");
