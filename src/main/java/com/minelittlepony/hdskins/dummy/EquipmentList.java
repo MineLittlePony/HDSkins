@@ -17,8 +17,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.SystemUtil;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,7 +45,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
     private EquipmentSet emptySet = new EquipmentSet();
 
-    private final List<EquipmentSet> equipmentSets = new ArrayList<>();
+    private final List<EquipmentSet> equipmentSets = SystemUtil.consume(new ArrayList<>(), list -> list.add(emptySet));
 
     public EquipmentList() {
         super(gson, "hd_skins_equipment");
@@ -64,7 +66,6 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     protected void apply(Map<Identifier, JsonObject> resources, ResourceManager manager, Profiler profiler) {
         emptySet = new EquipmentSet();
         equipmentSets.clear();
-        logger.info("Loading player equipment sets");
 
         for (Entry<Identifier, JsonObject> entry : resources.entrySet()) {
            try {
@@ -81,6 +82,11 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
            } catch (IllegalArgumentException | JsonParseException e) {
                logger.error("Unable to read {} from resource packs", EQUIPMENT, e);
            }
+        }
+        logger.info("Loaded {} player equipment sets", equipmentSets.size());
+
+        if (equipmentSets.isEmpty()) {
+            equipmentSets.add(emptySet);
         }
     }
 
