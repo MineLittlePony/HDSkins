@@ -1,9 +1,9 @@
 {
-	"item": "minecraft:leather_helmet",
-	"equipment": [
-		{ "slot": "HEAD", "item": "minecraft:leather_helmet" },
-		{ "slot": "CHEST", "item": "minecraft:leather_chestplate" },
-		{ "slot": "LEGS", "item": "minecraft:leather_leggings" },
-		{ "slot": "FEET", "item": "minecraft:leather_boots" }
-	]
+  "item": "minecraft:leather_helmet",
+  "equipment": {
+    "head": "minecraft:leather_helmet",
+    "chest": "minecraft:leather_chestplate",
+    "legs": "minecraft:leather_leggings",
+    "feet": "minecraft:leather_boots"
+  }
 }
