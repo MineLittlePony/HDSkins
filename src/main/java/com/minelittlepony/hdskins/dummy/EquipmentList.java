@@ -2,7 +2,6 @@ package com.minelittlepony.hdskins.dummy;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -15,6 +14,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
@@ -24,7 +24,7 @@ import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,14 +98,16 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     }
 
     public static class EquipmentSet {
-        private Map<EquipmentSlot, Item> equipment = new HashMap<>();
+        private Map<EquipmentSlot, Item> equipment = new EnumMap<>(EquipmentSlot.class);
 
         private Item item;
 
         private transient Identifier id;
 
         public void apply(LivingEntity entity) {
-            Maps.transformValues(equipment, ItemStack::new).forEach(entity::setEquippedStack);
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                entity.setEquippedStack(slot, new ItemStack(equipment.getOrDefault(slot, Items.AIR)));
+            }
         }
 
         public ItemStack getStack() {
