@@ -22,8 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.minelittlepony.hdskins.dummy.DummyPlayer;
+import com.minelittlepony.hdskins.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.dummy.EquipmentList;
-import com.minelittlepony.hdskins.dummy.RenderDummyPlayer;
 import com.minelittlepony.hdskins.profile.ProfileRepository;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.mojang.authlib.GameProfile;
@@ -70,7 +70,7 @@ public final class HDSkins implements ClientModInitializer {
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, RenderDummyPlayer::new);
+        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, DummyPlayerRenderer::new);
 
         ScreenInitCallback.EVENT.register(this::onScreenInit);
     }

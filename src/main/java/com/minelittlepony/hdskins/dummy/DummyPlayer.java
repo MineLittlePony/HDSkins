@@ -1,8 +1,5 @@
 package com.minelittlepony.hdskins.dummy;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +11,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AbsoluteHand;
+
+import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -22,13 +21,7 @@ import java.util.Map;
 @SuppressWarnings("EntityConstructor")
 public class DummyPlayer extends LivingEntity {
 
-    private final Map<EquipmentSlot, ItemStack> armour = Maps.newEnumMap(ImmutableMap.of(
-            EquipmentSlot.HEAD, ItemStack.EMPTY,
-            EquipmentSlot.CHEST, ItemStack.EMPTY,
-            EquipmentSlot.LEGS, ItemStack.EMPTY,
-            EquipmentSlot.FEET, ItemStack.EMPTY,
-            EquipmentSlot.MAINHAND, ItemStack.EMPTY
-    ));
+    private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
     private final TextureProxy textures;
 
@@ -99,7 +92,7 @@ public class DummyPlayer extends LivingEntity {
 
     @Override
     public Entity getPrimaryPassenger() {
-        return textures.previewRiding ? RenderDummyPlayer.MrBoaty.instance : null;
+        return textures.previewRiding ? DummyPlayerRenderer.MrBoaty.instance : null;
     }
 
     @Override
@@ -159,12 +152,12 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public ItemStack getEquippedStack(EquipmentSlot slotIn) {
-        return armour.get(slotIn);
+    public ItemStack getEquippedStack(EquipmentSlot slot) {
+        return armour.getOrDefault(slot, ItemStack.EMPTY);
     }
 
     @Override
-    public void setEquippedStack(EquipmentSlot slotIn, ItemStack stack) {
-        armour.put(slotIn, stack);
+    public void setEquippedStack(EquipmentSlot slot, ItemStack stack) {
+        armour.put(slot, stack == null ? ItemStack.EMPTY : stack);
     }
 }

@@ -1,6 +1,8 @@
 package com.minelittlepony.hdskins.dummy;
 
 import java.nio.file.Path;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.minelittlepony.hdskins.SkinUploader;
@@ -16,8 +18,7 @@ import net.minecraft.util.Identifier;
 
 public class TextureProxy implements IBlankSkinSupplier {
 
-    private final LocalTexture skin;
-    private final LocalTexture elytra;
+    private final Map<Type, LocalTexture> textures = new EnumMap<>(Type.class);
 
     private final GameProfile profile;
 
@@ -31,9 +32,6 @@ public class TextureProxy implements IBlankSkinSupplier {
     TextureProxy(GameProfile gameprofile, IBlankSkinSupplier blank) {
         profile = gameprofile;
         blankSupplier = blank;
-
-        skin = new LocalTexture(profile, Type.SKIN, blankSupplier);
-        elytra = new LocalTexture(profile, Type.ELYTRA, blankSupplier);
     }
 
     @Override
@@ -52,6 +50,8 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public boolean usesThinSkin() {
+        LocalTexture skin = get(Type.SKIN);
+
         if (skin.uploadComplete() && skin.getRemote().hasModel()) {
             return skin.getRemote().usesThinArms();
         }
@@ -63,37 +63,36 @@ public class TextureProxy implements IBlankSkinSupplier {
         return uploader.getGateway().getPreviewTextures(profile)
                 .thenApply(PreviewTextureManager::new)
                 .thenAcceptAsync(ptm -> {
-            skin.setRemote(ptm, listener);
-            elytra.setRemote(ptm, listener);
+            get(Type.SKIN).setRemote(ptm, listener);
+            get(Type.ELYTRA).setRemote(ptm, listener);
         }, MinecraftClient.getInstance()::execute); // run on main thread
     }
 
     public void setLocal(Path skinTextureFile, Type type) {
-        if (type == Type.SKIN) {
-            skin.setLocal(skinTextureFile);
-        } else if (type == Type.ELYTRA) {
-            elytra.setLocal(skinTextureFile);
-        }
+        get(type).setLocal(skinTextureFile);
     }
 
     public boolean isSetupComplete() {
-        return skin.uploadComplete() && elytra.uploadComplete();
+        return textures.values().stream().allMatch(LocalTexture::uploadComplete);
     }
 
     public boolean isUsingLocal() {
-        return skin.usingLocal() || elytra.usingLocal();
+        return textures.values().stream().anyMatch(LocalTexture::usingLocal);
     }
 
     public boolean isUsingRemote() {
-        return skin.hasRemoteTexture() || elytra.hasRemoteTexture();
+        return textures.values().stream().anyMatch(LocalTexture::hasRemoteTexture);
     }
 
     public void release() {
-        skin.clearLocal();
-        elytra.clearLocal();
+        textures.values().forEach(LocalTexture::clearLocal);
     }
 
     public LocalTexture get(Type type) {
-        return type == Type.SKIN ? skin : elytra;
+        return textures.computeIfAbsent(type, this::supplyNewTexture);
+    }
+
+    private LocalTexture supplyNewTexture(Type type) {
+        return new LocalTexture(profile, type, this);
     }
 }

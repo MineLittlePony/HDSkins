@@ -10,16 +10,13 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.render.entity.feature.ArmorBipedFeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
+import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
-import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 
@@ -32,7 +29,7 @@ import java.util.Set;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
+public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
     /**
      * The basic Elytra texture.
@@ -43,10 +40,11 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
     private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
 
     @SuppressWarnings("unchecked")
-    public RenderDummyPlayer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
+    public DummyPlayerRenderer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
         super(renderer, (M)FAT, 0);
         addFeature(getElytraLayer());
         addFeature(getArmourLayer());
+        addFeature(getHeldItemLayer());
     }
 
     protected FeatureRenderer<T, M> getArmourLayer() {
@@ -56,41 +54,16 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         );
     }
 
+    protected FeatureRenderer<T, M> getHeldItemLayer() {
+        return new HeldItemFeatureRenderer<>(this);
+    }
+
     protected FeatureRenderer<T, M> getElytraLayer() {
-        final ElytraEntityModel<T> modelElytra = new ElytraEntityModel<>();
-        return new FeatureRenderer<T, M>(this) {
-            @Override
-            public void render(T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-                ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
-
-                if (itemstack.getItem() == Items.ELYTRA) {
-                    color4f(1, 1, 1, 1);
-                    enableBlend();
-                    blendFunc(SourceFactor.ONE, DestFactor.ZERO);
-
-                    bindTexture(entity.getTextures().get(Type.ELYTRA).getId());
-
-                    pushMatrix();
-                    translatef(0, 0, 0.125F);
-
-                    modelElytra.setAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
-                    modelElytra.render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
-
-                    disableBlend();
-                    popMatrix();
-                }
-            }
-
-            @Override
-            public boolean hasHurtOverlay() {
-                return false;
-            }
-        };
+        return new DummyPlayerElytraLayer<>(this);
     }
 
     @Override
     protected Identifier getTexture(T entity) {
-
         return entity.getTextures().get(Type.SKIN).getId();
     }
 
@@ -193,7 +166,7 @@ public class RenderDummyPlayer<T extends DummyPlayer, M extends PlayerEntityMode
         }
     }
 
-    static class MrBoaty extends BoatEntity {
+    public static class MrBoaty extends BoatEntity {
         public static MrBoaty instance = new MrBoaty();
 
         public MrBoaty() {
