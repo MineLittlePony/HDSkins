@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL14;
 
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
+import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
@@ -111,6 +112,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale) {
 
+        OutsideWorldRenderer.configure(thePlayer.world);
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             drawBackground(frameLeft, frameRight, frameBottom, frameTop, horizon);
 
