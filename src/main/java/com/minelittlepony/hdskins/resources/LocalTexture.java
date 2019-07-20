@@ -106,7 +106,7 @@ public class LocalTexture {
         clearLocal();
 
         try (InputStream input = Files.newInputStream(file)) {
-            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.fromInputStream(input));
+            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.read(input));
 
             local = new NativeImageBackedTexture(image);
             localResource = textureManager.registerDynamicTexture("local_skin_preview", local);

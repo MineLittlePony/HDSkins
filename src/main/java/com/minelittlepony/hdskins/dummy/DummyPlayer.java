@@ -10,7 +10,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AbsoluteHand;
+import net.minecraft.util.Arm;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -142,8 +142,8 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public AbsoluteHand getMainHand() {
-        return MinecraftClient.getInstance().options.mainHand;
+    public Arm getMainArm() {
+        return MinecraftClient.getInstance().options.mainArm;
     }
 
     @Override

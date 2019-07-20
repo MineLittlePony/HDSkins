@@ -53,7 +53,7 @@ public class ImageLoader {
     @Nullable
     private NativeImage getImage(Identifier res) {
         try (InputStream in = mc.getResourceManager().getResource(res).getInputStream()) {
-            return NativeImage.fromInputStream(in);
+            return NativeImage.read(in);
         } catch (IOException e) {
             return null;
         }

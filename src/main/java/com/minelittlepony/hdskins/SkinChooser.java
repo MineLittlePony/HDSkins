@@ -94,7 +94,7 @@ public class SkinChooser {
         }
 
         try (InputStream in = Files.newInputStream(skinFile)) {
-            NativeImage chosenImage = NativeImage.fromInputStream(in);
+            NativeImage chosenImage = NativeImage.read(in);
 
             if (!acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight())) {
                 return ERR_INVALID;
