@@ -9,4 +9,8 @@ import java.nio.file.Paths;
 public class HDConfig extends JsonConfig {
 
     public final Setting<Path> lastChosenFile = value("lastChosenFile", Paths.get("/"));
+
+    public HDConfig(Path path) {
+        super(path);
+    }
 }
