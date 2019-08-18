@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
  * Current values are:
  *  - legacy
  *  - valhalla
- *  - bethlehem
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
