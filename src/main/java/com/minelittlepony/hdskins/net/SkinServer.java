@@ -47,7 +47,7 @@ public interface SkinServer {
      * @throws IOException  If any authentication or network error occurs.
      * @throws AuthenticationException
      */
-    SkinUploadResponse performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
+    SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
 
     /**
      * Asynchronously uploads a skin to the net.
@@ -57,7 +57,7 @@ public interface SkinServer {
      *
      * @param upload The payload to send.
      */
-    default CompletableFuture<SkinUploadResponse> uploadSkin(SkinUpload upload) {
+    default CompletableFuture<SkinUpload.Response> uploadSkin(SkinUpload upload) {
         return CallableFutures.asyncFailableFuture(() -> performSkinUpload(upload), HDSkins.skinUploadExecutor);
     }
 

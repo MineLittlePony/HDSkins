@@ -103,7 +103,7 @@ public class LegacySkinServer implements SkinServer {
     }
 
     @Override
-    public SkinUploadResponse performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
         if (Strings.isNullOrEmpty(gateway)) {
             throw gatewayUnsupported();
         }
@@ -129,7 +129,7 @@ public class LegacySkinServer implements SkinServer {
             throw new HttpException(response, resp.getResponseCode(), null);
         }
 
-        return new SkinUploadResponse(response);
+        return new SkinUpload.Response(response);
     }
 
     private UnsupportedOperationException gatewayUnsupported() {

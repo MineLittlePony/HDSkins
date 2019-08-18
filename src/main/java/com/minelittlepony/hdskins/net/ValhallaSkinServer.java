@@ -49,7 +49,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public SkinUploadResponse performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
         try {
             return uploadPlayerSkin(upload);
         } catch (IOException e) {
@@ -62,7 +62,7 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private SkinUploadResponse uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
+    private SkinUpload.Response uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.getSession());
 
         switch (upload.getSchemaAction()) {
@@ -78,14 +78,14 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private SkinUploadResponse resetSkin(SkinUpload upload) throws IOException {
+    private SkinUpload.Response resetSkin(SkinUpload upload) throws IOException {
         return upload(RequestBuilder.delete()
                 .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .build());
     }
 
-    private SkinUploadResponse uploadFile(SkinUpload upload) throws IOException {
+    private SkinUpload.Response uploadFile(SkinUpload upload) throws IOException {
         final File file = new File(upload.getImage());
 
         MultipartEntityBuilder b = MultipartEntityBuilder.create()
@@ -100,7 +100,7 @@ public class ValhallaSkinServer implements SkinServer {
                 .build());
     }
 
-    private SkinUploadResponse uploadUrl(SkinUpload upload) throws IOException {
+    private SkinUpload.Response uploadUrl(SkinUpload upload) throws IOException {
         return upload(RequestBuilder.post()
                 .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
@@ -109,9 +109,9 @@ public class ValhallaSkinServer implements SkinServer {
                 .build());
     }
 
-    private SkinUploadResponse upload(HttpUriRequest request) throws IOException {
+    private SkinUpload.Response upload(HttpUriRequest request) throws IOException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
-            return response.unwrapAsJson(SkinUploadResponse.class);
+            return response.unwrapAsJson(SkinUpload.Response.class);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.net;
 
+import com.google.common.base.MoreObjects;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
@@ -45,5 +46,25 @@ public class SkinUpload {
 
     public String getSchemaAction() {
         return image == null ? "none" : image.getScheme();
+    }
+
+    public static class Response {
+
+        private final String message;
+
+        public Response(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("message", message)
+                    .toString();
+        }
     }
 }
