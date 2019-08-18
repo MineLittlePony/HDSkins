@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.util;
+package com.minelittlepony.hdskins.util.net;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;

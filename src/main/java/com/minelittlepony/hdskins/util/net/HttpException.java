@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.net;
+package com.minelittlepony.hdskins.util.net;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;

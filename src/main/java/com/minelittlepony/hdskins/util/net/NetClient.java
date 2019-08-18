@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.util;
+package com.minelittlepony.hdskins.util.net;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -7,6 +7,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.util.CallableFutures;
 
 import java.io.File;
 import java.io.IOException;

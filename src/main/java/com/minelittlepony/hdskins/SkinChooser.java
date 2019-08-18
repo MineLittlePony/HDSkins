@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins;
 
 import com.minelittlepony.hdskins.upload.FileSystem;
 import com.minelittlepony.hdskins.upload.IFileDialog;
-import com.minelittlepony.hdskins.util.MoreHttpResponses;
+import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 
 import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
