@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.net;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -21,16 +21,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.profile.EtagProfileTexture;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
-import com.minelittlepony.hdskins.util.TexturesPayloadBuilder;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.net.NetClient;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
@@ -51,7 +50,7 @@ public class LegacySkinServer implements SkinServer {
     }
 
     @Override
-    public CompletableFuture<MinecraftTexturesPayload> getPreviewTextures(GameProfile profile) {
+    public CompletableFuture<TexturePayload> getPreviewTextures(GameProfile profile) {
         return CallableFutures.asyncFailableFuture(() -> {
             SkinServer.verifyServerConnection(MinecraftClient.getInstance().getSession(), SERVER_ID);
 
@@ -59,19 +58,20 @@ public class LegacySkinServer implements SkinServer {
                 throw gatewayUnsupported();
             }
 
-            Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> map = new EnumMap<>(MinecraftProfileTexture.Type.class);
-            for (MinecraftProfileTexture.Type type : MinecraftProfileTexture.Type.values()) {
+            Map<SkinType, MinecraftProfileTexture> map = new HashMap<>();
+
+            for (SkinType type : SkinType.values()) {
                 map.put(type, new MinecraftProfileTexture(getPath(gateway, type, profile), null));
             }
 
-            return TexturesPayloadBuilder.createTexturesPayload(profile, map);
+            return new TexturePayload(profile, map);
         }, HDSkins.skinDownloadExecutor);
     }
 
     @Override
-    public MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException {
-        ImmutableMap.Builder<MinecraftProfileTexture.Type, MinecraftProfileTexture> builder = ImmutableMap.builder();
-        for (MinecraftProfileTexture.Type type : MinecraftProfileTexture.Type.values()) {
+    public TexturePayload loadProfileData(GameProfile profile) throws IOException {
+        ImmutableMap.Builder<SkinType, MinecraftProfileTexture> builder = ImmutableMap.builder();
+        for (SkinType type : SkinType.values()) {
 
             String url = getPath(address, type, profile);
             try {
@@ -81,11 +81,12 @@ public class LegacySkinServer implements SkinServer {
             }
         }
 
-        Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> map = builder.build();
+        Map<SkinType, MinecraftProfileTexture> map = builder.build();
         if (map.isEmpty()) {
             throw new HttpException(String.format("No textures found for %s at %s", profile, this.address), 404, null);
         }
-        return TexturesPayloadBuilder.createTexturesPayload(profile, map);
+
+        return new TexturePayload(profile, map);
     }
 
     private MinecraftProfileTexture loadProfileTexture(GameProfile profile, String url) throws IOException {
@@ -150,9 +151,9 @@ public class LegacySkinServer implements SkinServer {
         return builder.build();
     }
 
-    private static String getPath(String address, MinecraftProfileTexture.Type type, GameProfile profile) {
+    private static String getPath(String address, SkinType type, GameProfile profile) {
         String uuid = UUIDTypeAdapter.fromUUID(profile.getId());
-        String path = type.toString().toLowerCase() + "s";
+        String path = type.name().toLowerCase() + "s";
         return String.format("%s/%s/%s.png?%s", address, path, uuid, Long.toString(new Date().getTime() / 1000));
     }
 

@@ -8,7 +8,7 @@ import static com.mojang.blaze3d.platform.GlStateManager.popMatrix;
 import static com.mojang.blaze3d.platform.GlStateManager.pushMatrix;
 import static com.mojang.blaze3d.platform.GlStateManager.translatef;
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 
@@ -37,7 +37,7 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
             enableBlend();
             blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 
-            bindTexture(entity.getTextures().get(Type.ELYTRA).getId());
+            bindTexture(entity.getTextures().get(SkinType.ELYTRA).getId());
 
             pushMatrix();
             translatef(0, 0, 0.125F);

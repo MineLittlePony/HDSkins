@@ -3,8 +3,7 @@ package com.minelittlepony.hdskins.resources.texture;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
+import com.minelittlepony.hdskins.profile.SkinType;
 import net.minecraft.client.texture.NativeImage;
 
 import static com.minelittlepony.common.event.SkinFilterCallback.*;
@@ -14,13 +13,13 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
     @Nonnull
     private ISkinAvailableCallback callback = ISkinAvailableCallback.NULL;
 
-    private Type skinType = Type.SKIN;
+    private SkinType skinType = SkinType.SKIN;
 
     public ImageBufferDownloadHD() {
 
     }
 
-    public ImageBufferDownloadHD(Type type, @Nonnull ISkinAvailableCallback callback) {
+    public ImageBufferDownloadHD(SkinType type, @Nonnull ISkinAvailableCallback callback) {
         this.callback = callback;
         this.skinType = type;
     }
@@ -30,7 +29,7 @@ public class ImageBufferDownloadHD implements ISkinAvailableCallback {
     public NativeImage parseUserSkin(@Nullable NativeImage image) {
 
         // TODO: Do we want to convert other skin types?
-        if (image == null || skinType != Type.SKIN) {
+        if (image == null || skinType != SkinType.SKIN) {
             return image;
         }
 

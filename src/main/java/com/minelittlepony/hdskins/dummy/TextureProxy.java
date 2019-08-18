@@ -1,24 +1,23 @@
 package com.minelittlepony.hdskins.dummy;
 
 import java.nio.file.Path;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.minelittlepony.hdskins.SkinUploader;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.LocalTexture;
 import com.minelittlepony.hdskins.resources.PreviewTextureManager;
+import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.util.Identifier;
 
 public class TextureProxy implements IBlankSkinSupplier {
 
-    private final Map<Type, LocalTexture> textures = new EnumMap<>(Type.class);
+    private final Map<SkinType, LocalTexture> textures = new HashMap<>();
 
     private final GameProfile profile;
 
@@ -35,7 +34,7 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     @Override
-    public Identifier getBlankSkin(Type type) {
+    public Identifier getBlankSkin(SkinType type) {
         return blankSupplier.getBlankSkin(type);
     }
 
@@ -50,7 +49,7 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public boolean usesThinSkin() {
-        LocalTexture skin = get(Type.SKIN);
+        LocalTexture skin = get(SkinType.SKIN);
 
         if (skin.uploadComplete() && skin.getRemote().hasModel()) {
             return skin.getRemote().usesThinArms();
@@ -59,16 +58,17 @@ public class TextureProxy implements IBlankSkinSupplier {
         return previewThinArms;
     }
 
-    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinTextureAvailableCallback listener) {
+    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinAvailableCallback listener) {
         return uploader.getGateway().getPreviewTextures(profile)
                 .thenApply(PreviewTextureManager::new)
                 .thenAcceptAsync(ptm -> {
-            get(Type.SKIN).setRemote(ptm, listener);
-            get(Type.ELYTRA).setRemote(ptm, listener);
+                    SkinType.values().forEach(type -> {
+                        get(type).setRemote(ptm, listener);
+                    });
         }, MinecraftClient.getInstance()::execute); // run on main thread
     }
 
-    public void setLocal(Path skinTextureFile, Type type) {
+    public void setLocal(Path skinTextureFile, SkinType type) {
         get(type).setLocal(skinTextureFile);
     }
 
@@ -88,11 +88,11 @@ public class TextureProxy implements IBlankSkinSupplier {
         textures.values().forEach(LocalTexture::clearLocal);
     }
 
-    public LocalTexture get(Type type) {
+    public LocalTexture get(SkinType type) {
         return textures.computeIfAbsent(type, this::supplyNewTexture);
     }
 
-    private LocalTexture supplyNewTexture(Type type) {
+    private LocalTexture supplyNewTexture(SkinType type) {
         return new LocalTexture(profile, type, this);
     }
 }

@@ -23,6 +23,7 @@ import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.SkinServerList;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
@@ -175,16 +176,16 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 .setTooltipOffset(0, 10);
 
         addButton(btnModeSkin = new FeatureSwitch(width - 25, 75))
-                .onClick(sender -> uploader.setSkinType(Type.SKIN))
-                .setEnabled(uploader.getSkinType() == Type.ELYTRA)
+                .onClick(sender -> uploader.setSkinType(SkinType.SKIN))
+                .setEnabled(uploader.getSkinType() == SkinType.ELYTRA)
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
                 .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase())
                 .setTooltipOffset(0, 10);
 
         addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
-                .onClick(sender -> uploader.setSkinType(Type.ELYTRA))
-                .setEnabled(uploader.getSkinType() == Type.SKIN)
+                .onClick(sender -> uploader.setSkinType(SkinType.ELYTRA))
+                .setEnabled(uploader.getSkinType() == SkinType.SKIN)
                 .getStyle()
                 .setIcon(new ItemStack(Items.ELYTRA))
                 .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase())
@@ -248,11 +249,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     @Override
-    public void onSkinTypeChanged(Type newType) {
+    public void onSkinTypeChanged(SkinType newType) {
         playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
 
-        btnModeSkin.active = newType == Type.ELYTRA;
-        btnModeElytra.active = newType == Type.SKIN;
+        btnModeSkin.active = newType == SkinType.ELYTRA;
+        btnModeElytra.active = newType == SkinType.SKIN;
     }
 
     protected void switchSkinMode(String model) {

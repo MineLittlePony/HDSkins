@@ -3,11 +3,11 @@ package com.minelittlepony.hdskins.net;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
@@ -21,6 +21,7 @@ public interface SkinServer {
 
     Gson gson = new GsonBuilder()
             .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
     /**
@@ -35,7 +36,7 @@ public interface SkinServer {
      *
      * @throws IOException  If any authentication or network error occurs.
      */
-    MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException;
+    TexturePayload loadProfileData(GameProfile profile) throws IOException;
 
     /**
      * Synchronously uploads a skin to this net.
@@ -67,7 +68,7 @@ public interface SkinServer {
      * Returns an incomplete future for chaining other actions to be performed after this method completes.
      * Actions are dispatched to the default skinDownloadExecutor
      */
-    default CompletableFuture<MinecraftTexturesPayload> getPreviewTextures(GameProfile profile) {
+    default CompletableFuture<TexturePayload> getPreviewTextures(GameProfile profile) {
         return CallableFutures.asyncFailableFuture(() -> loadProfileData(profile), HDSkins.skinDownloadExecutor);
     }
 

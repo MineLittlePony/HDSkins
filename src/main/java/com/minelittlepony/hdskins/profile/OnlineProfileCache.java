@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.profile;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -9,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Maps;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.mojang.authlib.GameProfile;
@@ -17,7 +17,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 public class OnlineProfileCache {
-    private LoadingCache<GameProfile, CompletableFuture<Map<Type, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
+    private LoadingCache<GameProfile, CompletableFuture<Map<SkinType, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::fetchOnlineData));
 
@@ -28,13 +28,13 @@ public class OnlineProfileCache {
         this.repository = repository;
     }
 
-    private CompletableFuture<Map<Type, MinecraftProfileTexture>> fetchOnlineData(GameProfile profile) {
+    private CompletableFuture<Map<SkinType, MinecraftProfileTexture>> fetchOnlineData(GameProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
             if (profile.getId() == null) {
                 return Collections.emptyMap();
             }
 
-            Map<Type, MinecraftProfileTexture> textureMap = Maps.newEnumMap(Type.class);
+            Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
 
             for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
                 try {
@@ -54,7 +54,7 @@ public class OnlineProfileCache {
         }, HDSkins.skinDownloadExecutor);
     }
 
-    public Map<Type, MinecraftProfileTexture> loadProfileAsync(GameProfile profile) {
+    public Map<SkinType, MinecraftProfileTexture> loadProfileAsync(GameProfile profile) {
         return profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).getNow(Collections.emptyMap());
     }
 

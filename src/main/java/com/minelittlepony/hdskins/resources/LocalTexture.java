@@ -1,12 +1,10 @@
 package com.minelittlepony.hdskins.resources;
 
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
@@ -33,11 +31,11 @@ public class LocalTexture {
 
     private final IBlankSkinSupplier blank;
 
-    private final Type type;
+    private final SkinType type;
 
     private boolean remoteLoaded = false;
 
-    public LocalTexture(GameProfile profile, Type type, IBlankSkinSupplier blank) {
+    public LocalTexture(GameProfile profile, SkinType type, IBlankSkinSupplier blank) {
         this.blank = blank;
         this.type = type;
 
@@ -87,15 +85,19 @@ public class LocalTexture {
         return remote;
     }
 
-    public void setRemote(PreviewTextureManager ptm, SkinTextureAvailableCallback callback) {
+    public void setRemote(PreviewTextureManager ptm, SkinAvailableCallback callback) {
         clearRemote();
 
-        remote = ptm.getPreviewTexture(remoteResource, type, blank.getBlankSkin(type), (type, location, profileTexture) -> {
-            if (callback != null) {
-                callback.onSkinTextureAvailable(type, location, profileTexture);
-            }
-            remoteLoaded = true;
-        });
+        Identifier blank = this.blank.getBlankSkin(type);
+
+        if (blank != null) {
+            remote = ptm.getPreviewTexture(remoteResource, type, blank, (type, location, profileTexture) -> {
+                if (callback != null) {
+                    callback.onSkinAvailable(type, location, profileTexture);
+                }
+                remoteLoaded = true;
+            });
+        }
     }
 
     public void setLocal(Path file) {
@@ -133,6 +135,6 @@ public class LocalTexture {
 
     public interface IBlankSkinSupplier {
 
-        Identifier getBlankSkin(Type type);
+        Identifier getBlankSkin(SkinType type);
     }
 }

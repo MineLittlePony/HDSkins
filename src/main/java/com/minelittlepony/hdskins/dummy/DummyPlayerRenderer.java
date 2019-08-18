@@ -23,8 +23,7 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11;
 
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
+import com.minelittlepony.hdskins.profile.SkinType;
 import java.util.Set;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
@@ -64,7 +63,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
     @Override
     protected Identifier getTexture(T entity) {
-        return entity.getTextures().get(Type.SKIN).getId();
+        return entity.getTextures().get(SkinType.SKIN).getId();
     }
 
     @Override

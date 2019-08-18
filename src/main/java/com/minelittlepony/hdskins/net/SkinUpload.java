@@ -1,9 +1,7 @@
 package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.MoreObjects;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
+import com.minelittlepony.hdskins.profile.SkinType;
 import net.minecraft.client.util.Session;
 
 import java.net.URI;
@@ -18,9 +16,9 @@ public class SkinUpload {
     private final Session session;
     private final URI image;
     private final Map<String, String> metadata;
-    private final Type type;
+    private final SkinType type;
 
-    public SkinUpload(Session session, Type type, @Nullable URI image, Map<String, String> metadata) {
+    public SkinUpload(Session session, SkinType type, @Nullable URI image, Map<String, String> metadata) {
         this.session = session;
         this.image = image;
         this.metadata = metadata;
@@ -40,7 +38,7 @@ public class SkinUpload {
         return metadata;
     }
 
-    public MinecraftProfileTexture.Type getType() {
+    public SkinType getType() {
         return type;
     }
 

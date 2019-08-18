@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -16,28 +17,28 @@ public class PlayerSkins {
 
     private final INetworkPlayerInfo playerInfo;
 
-    private final Map<Type, Identifier> customTextures = new HashMap<>();
+    private final Map<SkinType, Identifier> customTextures = new HashMap<>();
 
-    private final Map<Type, MinecraftProfileTexture> customProfiles = new HashMap<>();
+    private final Map<SkinType, MinecraftProfileTexture> customProfiles = new HashMap<>();
 
-    private final Map<Type, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
+    private final Map<SkinType, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
 
     public PlayerSkins(INetworkPlayerInfo playerInfo) {
         this.playerInfo = playerInfo;
     }
 
-    public Identifier getSkin(Type type) {
+    public Identifier getSkin(SkinType type) {
         return HDSkins.getInstance().getResourceManager()
                 .getCustomPlayerTexture(playerInfo.getGameProfile(), type)
                 .orElseGet(() -> lookupSkin(type));
     }
 
-    private Identifier lookupSkin(Type type) {
+    private Identifier lookupSkin(SkinType type) {
         if (customTextures.containsKey(type)) {
             return customTextures.get(type);
         }
 
-        return playerInfo.getVanillaTextures().get(type);
+        return playerInfo.getVanillaTextures().get(type.getEnum());
     }
 
     public String getModel() {
@@ -55,19 +56,19 @@ public class PlayerSkins {
         provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);
     }
 
-    private void onCustomTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
+    private void onCustomTextureLoaded(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
         customTextures.put(type, location);
         customProfiles.put(type, profileTexture);
     }
 
     private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         playerInfo.getVanillaTextures().put(type, location);
-        vanillaProfiles.put(type, profileTexture);
+        vanillaProfiles.put(SkinType.forVanilla(type), profileTexture);
     }
 
-    private Optional<String> getModelFrom(Map<Type, MinecraftProfileTexture> texture) {
-        if (texture.containsKey(Type.SKIN)) {
-            String model = texture.get(Type.SKIN).getMetadata("model");
+    private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {
+        if (texture.containsKey(SkinType.SKIN)) {
+            String model = texture.get(SkinType.SKIN).getMetadata("model");
 
             return Optional.of(model != null ? model : "default");
         }

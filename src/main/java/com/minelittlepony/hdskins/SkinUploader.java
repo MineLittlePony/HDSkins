@@ -20,14 +20,13 @@ import com.minelittlepony.hdskins.net.Feature;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinServerList;
 import com.minelittlepony.hdskins.net.SkinUpload;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.minelittlepony.hdskins.util.net.NetClient;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -50,7 +49,7 @@ public class SkinUploader implements Closeable {
 
     private String status = ERR_ALL_FINE;
 
-    private Type skinType = Type.SKIN;
+    private SkinType skinType = SkinType.SKIN;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
@@ -117,7 +116,7 @@ public class SkinUploader implements Closeable {
         sendingSkin = false;
     }
 
-    public void setSkinType(Type type) {
+    public void setSkinType(SkinType type) {
         skinType = type;
 
         previewer.setSkinType(type);
@@ -186,7 +185,7 @@ public class SkinUploader implements Closeable {
         return skinMetadata.getOrDefault(field, "");
     }
 
-    public Type getSkinType() {
+    public SkinType getSkinType() {
         return skinType;
     }
 
@@ -299,7 +298,7 @@ public class SkinUploader implements Closeable {
     }
 
     public interface IPreviewModel {
-        void setSkinType(Type type);
+        void setSkinType(SkinType type);
 
         ItemStack setEquipment(EquipmentSet set);
 
@@ -309,13 +308,13 @@ public class SkinUploader implements Closeable {
     }
 
     public interface ISkinUploadHandler {
-        default void onSetRemoteSkin(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
+        default void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
         }
 
-        default void onSetLocalSkin(Type type) {
+        default void onSetLocalSkin(SkinType type) {
         }
 
-        default void onSkinTypeChanged(Type newType) {
+        default void onSkinTypeChanged(SkinType newType) {
 
         }
     }

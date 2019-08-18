@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import com.minelittlepony.hdskins.PlayerSkins;
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
@@ -31,12 +32,17 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
     @Accessor("profile")
     public abstract GameProfile getGameProfile();
 
+    @Override
+    public PlayerSkins getSkins() {
+        return hdskinsPlayerSkins;
+    }
+
     @Redirect(method = {"getSkinTexture", "getCapeTexture", "getElytraTexture"},
             at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", remap = false)
     )
     // synthetic
     private Object getSkin(Map<Type, Identifier> sender, Object key) {
-        return hdskinsPlayerSkins.getSkin((Type) key);
+        return getSkins().getSkin(SkinType.forVanilla((Type)key));
     }
 
     @Nullable
@@ -44,7 +50,7 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/PlayerListEntry;model:Ljava/lang/String;")
     )
     private String getTextureModel(PlayerListEntry sender) {
-        return hdskinsPlayerSkins.getModel();
+        return getSkins().getModel();
     }
 
     @Redirect(method = "loadTextures",
@@ -55,6 +61,6 @@ public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
                             + "Z)V")
     )
     private void redirectLoadPlayerTextures(PlayerSkinProvider sender, GameProfile profile, PlayerSkinProvider.SkinTextureAvailableCallback callback, boolean requireSecure) {
-        hdskinsPlayerSkins.load(sender, profile, requireSecure);
+        getSkins().load(sender, profile, requireSecure);
     }
 }

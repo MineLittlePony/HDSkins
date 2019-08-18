@@ -2,13 +2,12 @@ package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
@@ -38,11 +37,11 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public MinecraftTexturesPayload loadProfileData(GameProfile profile) throws IOException {
+    public TexturePayload loadProfileData(GameProfile profile) throws IOException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, new HttpGet(getTexturesURI(profile)))) {
 
             if (response.ok()) {
-                return response.unwrapAsJson(MinecraftTexturesPayload.class);
+                return response.unwrapAsJson(TexturePayload.class);
             }
 
             throw new HttpException(response.getResponse());
@@ -157,7 +156,7 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private URI buildUserTextureUri(GameProfile profile, MinecraftProfileTexture.Type textureType) {
+    private URI buildUserTextureUri(GameProfile profile, SkinType textureType) {
         String user = UUIDTypeAdapter.fromUUID(profile.getId());
         String skinType = textureType.name().toLowerCase(Locale.US);
         return URI.create(String.format("%s/user/%s/%s", this.address, user, skinType));

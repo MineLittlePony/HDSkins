@@ -11,15 +11,14 @@ import javax.annotation.Nullable;
 
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.PlayerSkinTexture;
 import net.minecraft.client.texture.Texture;
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
@@ -38,39 +37,39 @@ public class ProfileRepository {
         return GamePaths.getAssetsDirectory().resolve("hd");
     }
 
-    private Path getCachedSkinLocation(Type type, MinecraftProfileTexture texture) {
-        String skinDir = type.toString().toLowerCase() + "s/";
+    private Path getCachedSkinLocation(SkinType type, MinecraftProfileTexture texture) {
+        String skinDir = type.name().toLowerCase() + "s/";
 
         return getHDSkinsCache().resolve(skinDir + texture.getHash().substring(0, 2)).resolve(texture.getHash());
     }
 
-    private void supplyProfileTextures(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
+    private void supplyProfileTextures(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
         offline.loadProfileAsync(profile, callback);
         MinecraftClient.getInstance().execute(() -> callback.accept(online.loadProfileAsync(profile)));
     }
 
-    public void fetchSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
+    public void fetchSkins(GameProfile profile, SkinAvailableCallback callback) {
         supplyProfileTextures(profile, m -> m.forEach((type, pp) -> loadTexture(type, pp, callback)));
     }
 
-    public Map<Type, Identifier> getTextures(GameProfile profile) {
-        Map<Type, Identifier> map = new HashMap<>();
+    public Map<SkinType, Identifier> getTextures(GameProfile profile) {
+        Map<SkinType, Identifier> map = new HashMap<>();
 
-        for (Map.Entry<Type, MinecraftProfileTexture> e : online.loadProfileAsync(profile).entrySet()) {
+        for (Map.Entry<SkinType, MinecraftProfileTexture> e : online.loadProfileAsync(profile).entrySet()) {
             map.put(e.getKey(), loadTexture(e.getKey(), e.getValue(), null));
         }
 
         return map;
     }
 
-    private Identifier loadTexture(Type type, MinecraftProfileTexture texture, @Nullable SkinTextureAvailableCallback callback) {
-        Identifier resource = new Identifier("hdskins", type.toString().toLowerCase() + "s/" + texture.getHash());
+    private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, @Nullable SkinAvailableCallback callback) {
+        Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
         Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 
         //noinspection ConstantConditions
         if (texObj != null) {
             if (callback != null) {
-                callback.onSkinTextureAvailable(type, resource, texture);
+                callback.onSkinAvailable(type, resource, texture);
             }
         } else {
             TextureLoader.loadTexture(resource, new PlayerSkinTexture(
@@ -79,7 +78,7 @@ public class ProfileRepository {
                     DefaultSkinHelper.getTexture(),
                     new ImageBufferDownloadHD(type, () -> {
                         if (callback != null) {
-                            callback.onSkinTextureAvailable(type, resource, texture);
+                            callback.onSkinAvailable(type, resource, texture);
                         }
                     })));
         }

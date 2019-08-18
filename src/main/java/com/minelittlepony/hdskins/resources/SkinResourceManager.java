@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.resources;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +22,9 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.Expose;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.SkinResourceManager.SkinData.Skin;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
@@ -54,7 +52,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
     private final ImageLoader loader = new ImageLoader();
 
-    private final Map<Type, SkinStore> store = new EnumMap<>(Type.class);
+    private final Map<SkinType, SkinStore> store = new HashMap<>();
 
     private final Map<Identifier, Identifier> textures = Maps.newHashMap();
 
@@ -111,7 +109,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     /**
      * Gets a custom texture for the given profile as defined in the current resourcepack(s).
      */
-    public Optional<Identifier> getCustomPlayerTexture(GameProfile profile, Type type) {
+    public Optional<Identifier> getCustomPlayerTexture(GameProfile profile, SkinType type) {
         return store.computeIfAbsent(type, SkinStore::new).getSkin(profile)
                 .map(Skin::getTexture)
                 .map(id -> convertTexture(type, id));
@@ -121,7 +119,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
      * Gets a custom model type for the given profile as defined in the current resourcepacks(s).
      */
     public Optional<String> getCustomPlayerModel(GameProfile profile) {
-        return store.computeIfAbsent(Type.SKIN, SkinStore::new).getSkin(profile)
+        return store.computeIfAbsent(SkinType.SKIN, SkinStore::new).getSkin(profile)
             .map(Skin::getModel);
     }
 
@@ -130,8 +128,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
      *
      * Returns the passed identifier, otherwise the new identifier following conversion.
      */
-    public Identifier convertTexture(Type type, Identifier identifier) {
-        if (type != Type.SKIN) {
+    public Identifier convertTexture(SkinType type, Identifier identifier) {
+        if (type != SkinType.SKIN) {
             return identifier;
         }
 
@@ -154,7 +152,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
         private final Map<UUID, Skin> uuids = new HashMap<>();
         private final Map<String, Skin> names = new HashMap<>();
 
-        SkinStore(Type type) { }
+        SkinStore(SkinType type) { }
 
         public void addSkin(Skin skin) {
             if (skin.skin != null) {
@@ -194,7 +192,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
         static class Skin {
             @Expose
-            private Type type;
+            private SkinType type;
 
             @Nullable
             @Expose
@@ -257,8 +255,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
                 return predicate;
             }
 
-            public Type getType() {
-                return type == null ? Type.SKIN : type;
+            public SkinType getType() {
+                return type == null ? SkinType.SKIN : type;
             }
         }
     }

@@ -2,6 +2,9 @@ package com.minelittlepony.hdskins.dummy;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
@@ -11,8 +14,8 @@ import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 
@@ -25,14 +28,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.SystemUtil;
 
 /**
  * Player previewer that renders the models to the screen.
  */
 public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBlankSkinSupplier {
 
-    public static final Identifier NO_SKIN = new Identifier("hdskins", "textures/mob/noskin.png");
-    public static final Identifier NO_ELYTRA = new Identifier("textures/entity/elytra.png");
+    public static final Map<SkinType, Identifier> NO_TEXTURES = SystemUtil.consume(new HashMap<>(), map -> {
+        map.put(SkinType.SKIN, new Identifier("hdskins", "textures/mob/noskin.png"));
+        map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
+    });
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
@@ -85,8 +91,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     }
 
     @Override
-    public Identifier getBlankSkin(Type type) {
-        return type == Type.SKIN ? NO_SKIN : NO_ELYTRA;
+    public Identifier getBlankSkin(SkinType type) {
+        return NO_TEXTURES.get(type);
     }
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
@@ -137,7 +143,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
      *      mouseX
      */
     protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick) {
-        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(Type.SKIN).getId());
+        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
 
         pushMatrix();
 
@@ -188,8 +194,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     }
 
     @Override
-    public void setSkinType(Type type) {
-        ItemStack stack = type == Type.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
+    public void setSkinType(SkinType type) {
+        ItemStack stack = type == SkinType.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
         // put on or take off the elytra
         getLocal().setEquippedStack(EquipmentSlot.CHEST, stack);
         getRemote().setEquippedStack(EquipmentSlot.CHEST, stack);

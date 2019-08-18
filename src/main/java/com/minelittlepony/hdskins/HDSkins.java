@@ -24,11 +24,11 @@ import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.dummy.EquipmentList;
 import com.minelittlepony.hdskins.profile.ProfileRepository;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 
@@ -85,7 +85,7 @@ public final class HDSkins implements ClientModInitializer {
         }
     }
 
-    public void fetchAndLoadSkins(GameProfile profile, SkinTextureAvailableCallback callback) {
+    public void fetchAndLoadSkins(GameProfile profile, SkinAvailableCallback callback) {
         repository.fetchSkins(profile, callback);
     }
 
@@ -95,7 +95,7 @@ public final class HDSkins implements ClientModInitializer {
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 
-    public Map<Type, Identifier> getTextures(GameProfile profile) {
+    public Map<SkinType, Identifier> getTextures(GameProfile profile) {
         return repository.getTextures(profile);
     }
 

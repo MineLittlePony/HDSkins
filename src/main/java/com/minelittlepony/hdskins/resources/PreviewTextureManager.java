@@ -1,11 +1,10 @@
 package com.minelittlepony.hdskins.resources;
 
 import com.google.common.collect.Maps;
+import com.minelittlepony.hdskins.net.TexturePayload;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
-
-import net.minecraft.client.texture.PlayerSkinProvider.SkinTextureAvailableCallback;
 import net.minecraft.util.Identifier;
 
 import java.util.Map;
@@ -18,14 +17,15 @@ import javax.annotation.Nullable;
  */
 public class PreviewTextureManager {
 
-    private final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures;
+    private final Map<SkinType, MinecraftProfileTexture> textures;
 
-    public PreviewTextureManager(MinecraftTexturesPayload payload) {
+    public PreviewTextureManager(TexturePayload payload) {
         this.textures = payload.getTextures();
     }
 
     @Nullable
-    public PreviewTexture getPreviewTexture(Identifier location, MinecraftProfileTexture.Type type, Identifier def, @Nullable SkinTextureAvailableCallback callback) {
+    public PreviewTexture getPreviewTexture(Identifier location, SkinType type, Identifier def, @Nullable SkinAvailableCallback callback) {
+
         if (!textures.containsKey(type)) {
             return null;
         }
@@ -34,7 +34,7 @@ public class PreviewTextureManager {
 
         PreviewTexture skinTexture = new PreviewTexture(texture, def, new ImageBufferDownloadHD(type, () -> {
             if (callback != null) {
-                callback.onSkinTextureAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
+                callback.onSkinAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
             }
         }));
 

@@ -14,6 +14,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -21,14 +22,14 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.common.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.SystemUtil;
 
 public class OfflineProfileCache {
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(SkinType.class, SkinTypes.ADAPTER)
+            .create();
 
     private final LoadingCache<GameProfile, CompletableFuture<CachedProfile>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
@@ -69,7 +70,7 @@ public class OfflineProfileCache {
         return repository.getHDSkinsCache().resolve("profiles").resolve(id + ".json");
     }
 
-    public void storeCachedProfileData(GameProfile profile, Map<Type, MinecraftProfileTexture> textureMap) {
+    public void storeCachedProfileData(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textureMap) {
         try {
             Path cacheLocation = getCachedProfileLocation(profile);
             Files.createDirectories(cacheLocation.getParent());
@@ -82,7 +83,7 @@ public class OfflineProfileCache {
         }
     }
 
-    public void loadProfileAsync(GameProfile profile, Consumer<Map<Type, MinecraftProfileTexture>> callback) {
+    public void loadProfileAsync(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
         profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).thenAcceptAsync(skins -> {
             if (skins != null) {
                 callback.accept(skins.getFiles());
@@ -96,16 +97,16 @@ public class OfflineProfileCache {
 
     static class CachedProfile {
         @Expose
-        final Map<Type, CachedProfileTexture> files = new HashMap<>();
+        final Map<SkinType, CachedProfileTexture> files = new HashMap<>();
 
-        CachedProfile(Map<Type, MinecraftProfileTexture> textures) {
+        CachedProfile(Map<SkinType, MinecraftProfileTexture> textures) {
             textures.forEach((type, texture) -> {
                 files.put(type, new CachedProfileTexture(texture));
             });
         }
 
-        Map<Type, MinecraftProfileTexture> getFiles() {
-            return SystemUtil.consume(new HashMap<Type, MinecraftProfileTexture>(), m -> {
+        Map<SkinType, MinecraftProfileTexture> getFiles() {
+            return SystemUtil.consume(new HashMap<SkinType, MinecraftProfileTexture>(), m -> {
                 files.forEach((type, file) -> m.put(type, file.toProfileTexture()));
             });
         }
