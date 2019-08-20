@@ -54,8 +54,8 @@ public class OnlineProfileCache {
         }, HDSkins.skinDownloadExecutor);
     }
 
-    public Map<SkinType, MinecraftProfileTexture> loadProfileAsync(GameProfile profile) {
-        return profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).getNow(Collections.emptyMap());
+    public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> loadProfile(GameProfile profile) {
+        return profiles.getUnchecked(ProfileUtils.fixGameProfile(profile));
     }
 
     public void clear() {

@@ -8,11 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
@@ -22,7 +21,6 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.common.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.SystemUtil;
 
 public class OfflineProfileCache {
@@ -83,12 +81,10 @@ public class OfflineProfileCache {
         }
     }
 
-    public void loadProfileAsync(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
-        profiles.getUnchecked(ProfileUtils.fixGameProfile(profile)).thenAcceptAsync(skins -> {
-            if (skins != null) {
-                callback.accept(skins.getFiles());
-            }
-        }, MinecraftClient.getInstance());
+    public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> loadProfile(GameProfile profile) {
+        return profiles
+                .getUnchecked(ProfileUtils.fixGameProfile(profile))
+                .thenApply(f -> f == null ? Maps.newHashMap() : f.getFiles());
     }
 
     public void clear() {
@@ -106,7 +102,7 @@ public class OfflineProfileCache {
         }
 
         Map<SkinType, MinecraftProfileTexture> getFiles() {
-            return SystemUtil.consume(new HashMap<SkinType, MinecraftProfileTexture>(), m -> {
+            return SystemUtil.consume(new HashMap<>(), m -> {
                 files.forEach((type, file) -> m.put(type, file.toProfileTexture()));
             });
         }

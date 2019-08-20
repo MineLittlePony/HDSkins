@@ -3,11 +3,10 @@ package com.minelittlepony.hdskins.profile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
@@ -45,8 +44,8 @@ public class ProfileRepository {
     }
 
     private void supplyProfileTextures(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
-        offline.loadProfileAsync(profile, callback);
-        MinecraftClient.getInstance().execute(() -> callback.accept(online.loadProfileAsync(profile)));
+        offline.loadProfile(profile).thenAcceptAsync(callback, MinecraftClient.getInstance());
+        online.loadProfile(profile).thenAcceptAsync(callback, MinecraftClient.getInstance());
     }
 
     public void fetchSkins(GameProfile profile, SkinAvailableCallback callback) {
@@ -54,34 +53,25 @@ public class ProfileRepository {
     }
 
     public Map<SkinType, Identifier> getTextures(GameProfile profile) {
-        Map<SkinType, Identifier> map = new HashMap<>();
-
-        for (Map.Entry<SkinType, MinecraftProfileTexture> e : online.loadProfileAsync(profile).entrySet()) {
-            map.put(e.getKey(), loadTexture(e.getKey(), e.getValue(), null));
-        }
-
-        return map;
+        return online.loadProfile(profile).getNow(Collections.emptyMap()).entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            e -> loadTexture(e.getKey(), e.getValue(), SkinAvailableCallback.NOOP))
+        );
     }
 
-    private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, @Nullable SkinAvailableCallback callback) {
+    private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinAvailableCallback callback) {
         Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
         Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 
         //noinspection ConstantConditions
         if (texObj != null) {
-            if (callback != null) {
-                callback.onSkinAvailable(type, resource, texture);
-            }
+            callback.onSkinAvailable(type, resource, texture);
         } else {
             TextureLoader.loadTexture(resource, new PlayerSkinTexture(
                     getCachedSkinLocation(type, texture).toFile(),
                     texture.getUrl(),
                     DefaultSkinHelper.getTexture(),
-                    new ImageBufferDownloadHD(type, () -> {
-                        if (callback != null) {
-                            callback.onSkinAvailable(type, resource, texture);
-                        }
-                    })));
+                    new ImageBufferDownloadHD(type, () -> callback.onSkinAvailable(type, resource, texture))));
         }
 
         return resource;
