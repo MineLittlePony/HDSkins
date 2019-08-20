@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.SkinCacheClearCallback;
 import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
@@ -87,6 +88,7 @@ public class ProfileRepository {
     }
 
     public void clear() {
+        HDSkins.logger.info("Clearing local player skin cache");
         try {
             Files.deleteIfExists(getHDSkinsCache());
         } catch (IOException e) {
@@ -94,5 +96,6 @@ public class ProfileRepository {
         }
         offline.clear();
         online.clear();
+        SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 }

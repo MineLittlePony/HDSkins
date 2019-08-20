@@ -24,7 +24,7 @@ public abstract class MixinSkullRenderer extends BlockEntityRenderer<SkullBlockE
             at = @At(value = "HEAD"))
     private void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<Identifier> info) {
         if (type == SkullBlock.Type.PLAYER && profile != null) {
-            Identifier skin = HDSkins.getInstance().getTextures(profile).get(SkinType.SKIN);
+            Identifier skin = HDSkins.getInstance().getProfileRepository().getTextures(profile).get(SkinType.SKIN);
 
             if (skin != null) {
                 info.setReturnValue(skin);

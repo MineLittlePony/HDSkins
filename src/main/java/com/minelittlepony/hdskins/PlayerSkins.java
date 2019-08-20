@@ -51,7 +51,7 @@ public class PlayerSkins {
 
     public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {
 
-        HDSkins.getInstance().fetchAndLoadSkins(profile, this::onCustomTextureLoaded);
+        HDSkins.getInstance().getProfileRepository().fetchSkins(profile, this::onCustomTextureLoaded);
 
         provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);
     }

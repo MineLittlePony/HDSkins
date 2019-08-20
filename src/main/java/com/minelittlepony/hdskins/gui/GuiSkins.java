@@ -235,7 +235,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             e.printStackTrace();
         }
 
-        HDSkins.getInstance().clearSkinCache();
+        HDSkins.getInstance().getProfileRepository().clear();
 
         dropper.cancel();
     }

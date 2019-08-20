@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,13 +23,9 @@ import com.minelittlepony.hdskins.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.dummy.EquipmentList;
 import com.minelittlepony.hdskins.profile.ProfileRepository;
-import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
 import com.minelittlepony.hdskins.resources.SkinResourceManager;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
 
 public final class HDSkins implements ClientModInitializer {
     public static final String MOD_ID = "hdskins";
@@ -47,7 +42,7 @@ public final class HDSkins implements ClientModInitializer {
         return instance;
     }
 
-    private HDConfig config;
+    private final HDConfig config = new HDConfig(GamePaths.getConfigDirectory().resolve("hdskins.json"));
 
     private final SkinServerList skinServerList = new SkinServerList();
     private final EquipmentList equipmentList = new EquipmentList();
@@ -64,14 +59,12 @@ public final class HDSkins implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        config = new HDConfig(GamePaths.getConfigDirectory().resolve("hdskins.json"));
         config.load();
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, DummyPlayerRenderer::new);
-
         ScreenInitCallback.EVENT.register(this::onScreenInit);
     }
 
@@ -85,22 +78,12 @@ public final class HDSkins implements ClientModInitializer {
         }
     }
 
-    public void fetchAndLoadSkins(GameProfile profile, SkinAvailableCallback callback) {
-        repository.fetchSkins(profile, callback);
-    }
-
-    public void clearSkinCache() {
-        logger.info("Clearing local player skin cache");
-        repository.clear();
-        SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
-    }
-
-    public Map<SkinType, Identifier> getTextures(GameProfile profile) {
-        return repository.getTextures(profile);
-    }
-
     public SkinResourceManager getResourceManager() {
         return resources;
+    }
+
+    public ProfileRepository getProfileRepository() {
+        return repository;
     }
 
     public SkinServerList getSkinServerList() {
