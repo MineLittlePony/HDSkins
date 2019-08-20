@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.net;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,12 +14,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.profile.EtagProfileTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -26,7 +29,6 @@ import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
-import com.minelittlepony.hdskins.util.net.NetClient;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -112,15 +114,20 @@ public class LegacySkinServer implements SkinServer {
 
         SkinServer.verifyServerConnection(upload.getSession(), SERVER_ID);
 
-        NetClient client = new NetClient("POST", gateway);
+        RequestBuilder request = RequestBuilder.post().setUri(gateway);
+        MultipartEntityBuilder entity = MultipartEntityBuilder.create();
 
-        client.putFormData(createHeaders(upload), "image/png");
+        putFormData(entity, upload);
 
         if (upload.getImage() != null) {
-            client.putFile(upload.getType().toString().toLowerCase(Locale.US), "image/png", upload.getImage());
+            File f = new File(upload.getImage());
+            entity.addBinaryBody(upload.getType().toString().toLowerCase(Locale.US), f,
+                    ContentType.create("image/png"), f.getName());
         }
 
-        MoreHttpResponses resp = client.send();
+        MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient,
+                request.setEntity(entity.build()).build());
+
         String response = resp.text();
 
         if (response.startsWith("ERROR: ")) {
@@ -138,17 +145,15 @@ public class LegacySkinServer implements SkinServer {
         return new UnsupportedOperationException("Server does not have a gateway.");
     }
 
-    private Map<String, ?> createHeaders(SkinUpload upload) {
-        Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                .put("user", upload.getSession().getUsername())
-                .put("uuid", UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId()))
-                .put("type", upload.getType().toString().toLowerCase(Locale.US));
+    private void putFormData(MultipartEntityBuilder entity, SkinUpload upload) {
+
+        entity.addTextBody("user", upload.getSession().getUsername())
+              .addTextBody("uuid", UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId()))
+              .addTextBody("type", upload.getType().toString().toLowerCase(Locale.US));
 
         if (upload.getImage() == null) {
-            builder.put("clear", "1");
+            entity.addTextBody("clear", "1");
         }
-
-        return builder.build();
     }
 
     private static String getPath(String address, SkinType type, GameProfile profile) {

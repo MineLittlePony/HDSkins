@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,9 +22,9 @@ import com.minelittlepony.hdskins.net.SkinServer;
 import com.minelittlepony.hdskins.net.SkinServerList;
 import com.minelittlepony.hdskins.net.SkinUpload;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
-import com.minelittlepony.hdskins.util.net.NetClient;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -218,7 +219,9 @@ public class SkinUploader implements Closeable {
     public CompletableFuture<MoreHttpResponses> downloadSkin() {
         String loc = previewer.getRemote().getTextures().get(skinType).getRemote().getUrl();
 
-        return new NetClient("GET", loc).async(HDSkins.skinDownloadExecutor);
+        return CallableFutures.asyncFailableFuture(() -> {
+            return MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.get().setUri(loc).build());
+        }, HDSkins.skinDownloadExecutor);
     }
 
     protected void fetchRemote() {
