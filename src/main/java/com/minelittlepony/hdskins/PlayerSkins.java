@@ -38,7 +38,7 @@ public class PlayerSkins {
             return customTextures.get(type);
         }
 
-        return playerInfo.getVanillaTextures().get(type.getEnum());
+        return playerInfo.getVanillaTextures().get(type.getEnum().orElse(Type.SKIN));
     }
 
     public String getModel() {

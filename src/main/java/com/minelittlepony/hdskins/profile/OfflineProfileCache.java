@@ -26,7 +26,7 @@ import net.minecraft.util.SystemUtil;
 public class OfflineProfileCache {
 
     private static final Gson gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(SkinType.class, SkinTypes.ADAPTER)
+            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
     private final LoadingCache<GameProfile, CompletableFuture<CachedProfile>> profiles = CacheBuilder.newBuilder()
