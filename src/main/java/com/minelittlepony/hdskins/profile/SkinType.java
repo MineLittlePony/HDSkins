@@ -48,7 +48,7 @@ public class SkinType implements Comparable<SkinType> {
 
     @Override
     public final int compareTo(SkinType o) {
-        return o.name().compareTo(name());
+        return name().compareTo(o.name());
     }
 
     @Override
