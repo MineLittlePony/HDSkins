@@ -25,25 +25,25 @@ public interface SkinServer {
             .create();
 
     /**
-     * Returns true for any features that this skin net supports.
+     * Returns true for any features that this skin server supports.
      */
     boolean supportsFeature(Feature feature);
 
     /**
      * Synchronously loads texture information for the provided profile.
      *
-     * @return The parsed net response as a textures payload.
+     * @return The parsed server response as a textures payload.
      *
      * @throws IOException  If any authentication or network error occurs.
      */
     TexturePayload loadProfileData(GameProfile profile) throws IOException;
 
     /**
-     * Synchronously uploads a skin to this net.
+     * Synchronously uploads a skin to this server.
      *
      * @param upload The payload to send.
      *
-     * @return A net response object.
+     * @return A server response object.
      *
      * @throws IOException  If any authentication or network error occurs.
      * @throws AuthenticationException
@@ -51,7 +51,7 @@ public interface SkinServer {
     SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
 
     /**
-     * Asynchronously uploads a skin to the net.
+     * Asynchronously uploads a skin to the server.
      *
      * Returns an incomplete future for chaining other actions to be performed after this method completes.
      * Actions are dispatched to the default skinUploadExecutor
@@ -73,7 +73,7 @@ public interface SkinServer {
     }
 
     /**
-     * Called to validate this skin net's state.
+     * Called to validate this skin server's state.
      * Any servers with an invalid gateway format will not be loaded and generate an exception.
      */
     default boolean verifyGateway() {

@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The remote net API level that this skin net implements.
+ * The remote server API level that this skin server implements.
  *
  * Current values are:
  *  - legacy
