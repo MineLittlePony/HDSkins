@@ -20,8 +20,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import com.google.gson.annotations.Expose;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.SkinResourceManager.SkinData.Skin;
 import com.mojang.authlib.GameProfile;
@@ -48,7 +48,9 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
+            .create();
 
     private final ImageLoader loader = new ImageLoader();
 
@@ -187,37 +189,32 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     }
 
     static class SkinData {
-        @Expose
+
         List<Skin> skins;
 
         static class Skin {
-            @Expose
+            @Nullable
             private SkinType type;
 
             @Nullable
-            @Expose
             String name;
 
             @Nullable
-            @Expose
             UUID uuid;
 
-            @Expose
             private String skin;
 
             @Nullable
-            @Expose
             private String model;
 
             @Nullable
-            private Identifier texture;
+            private transient Identifier texture;
 
             @Nullable
-            @Expose
             private String pattern;
 
             @Nullable
-            private Predicate<String> predicate;
+            private transient Predicate<String> predicate;
 
             public String getModel() {
                 return model == null ? "default" : model;
