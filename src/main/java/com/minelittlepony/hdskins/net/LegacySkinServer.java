@@ -36,6 +36,7 @@ import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
 
+@Deprecated
 @ServerType("legacy")
 public class LegacySkinServer implements SkinServer {
 
