@@ -14,7 +14,6 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.net.SkinServer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 public class OnlineProfileCache {
     private LoadingCache<GameProfile, CompletableFuture<Map<SkinType, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
@@ -40,7 +39,7 @@ public class OnlineProfileCache {
                 try {
                     server.loadProfileData(profile).getTextures().forEach(textureMap::putIfAbsent);
 
-                    if (textureMap.size() == Type.values().length) {
+                    if (textureMap.size() == SkinType.values().size()) {
                         break;
                     }
                 } catch (IOException e) {
