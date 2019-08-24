@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinCacheClearCallback;
-import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
+import com.minelittlepony.hdskins.resources.SkinCallback;
 import com.minelittlepony.hdskins.resources.TextureLoader;
 import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
@@ -48,18 +48,18 @@ public class ProfileRepository {
         online.loadProfile(profile).thenAcceptAsync(callback, MinecraftClient.getInstance());
     }
 
-    public void fetchSkins(GameProfile profile, SkinAvailableCallback callback) {
+    public void fetchSkins(GameProfile profile, SkinCallback callback) {
         supplyProfileTextures(profile, m -> m.forEach((type, pp) -> loadTexture(type, pp, callback)));
     }
 
     public Map<SkinType, Identifier> getTextures(GameProfile profile) {
         return online.loadProfile(profile).getNow(Collections.emptyMap()).entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey,
-            e -> loadTexture(e.getKey(), e.getValue(), SkinAvailableCallback.NOOP))
+            e -> loadTexture(e.getKey(), e.getValue(), SkinCallback.NOOP))
         );
     }
 
-    private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinAvailableCallback callback) {
+    private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinCallback callback) {
         Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
         Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 

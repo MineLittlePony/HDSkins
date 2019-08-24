@@ -85,18 +85,13 @@ public class LocalTexture {
         return remote;
     }
 
-    public void setRemote(PreviewTextureManager ptm, SkinAvailableCallback callback) {
+    public void setRemote(PreviewTextureManager ptm, SkinCallback callback) {
         clearRemote();
 
         Identifier blank = this.blank.getBlankSkin(type);
 
         if (blank != null) {
-            remote = ptm.getPreviewTexture(remoteResource, type, blank, (type, location, profileTexture) -> {
-                if (callback != null) {
-                    callback.onSkinAvailable(type, location, profileTexture);
-                }
-                remoteLoaded = true;
-            });
+            remote = ptm.getPreviewTexture(remoteResource, type, blank, callback.andThen(() -> remoteLoaded = true));
         }
     }
 
@@ -108,7 +103,7 @@ public class LocalTexture {
         clearLocal();
 
         try (InputStream input = Files.newInputStream(file)) {
-            NativeImage image = new ImageBufferDownloadHD().parseUserSkin(NativeImage.read(input));
+            NativeImage image = new ImageBufferDownloadHD().filterImage(NativeImage.read(input));
 
             local = new NativeImageBackedTexture(image);
             localResource = textureManager.registerDynamicTexture("local_skin_preview", local);

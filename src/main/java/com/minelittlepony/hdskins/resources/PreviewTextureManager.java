@@ -24,7 +24,7 @@ public class PreviewTextureManager {
     }
 
     @Nullable
-    public PreviewTexture getPreviewTexture(Identifier location, SkinType type, Identifier def, @Nullable SkinAvailableCallback callback) {
+    public PreviewTexture getPreviewTexture(Identifier location, SkinType type, Identifier def, SkinCallback callback) {
 
         if (!textures.containsKey(type)) {
             return null;
@@ -33,9 +33,7 @@ public class PreviewTextureManager {
         MinecraftProfileTexture texture = textures.get(type);
 
         PreviewTexture skinTexture = new PreviewTexture(texture, def, new ImageBufferDownloadHD(type, () -> {
-            if (callback != null) {
-                callback.onSkinAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
-            }
+            callback.onSkinAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
         }));
 
         TextureLoader.loadTexture(location, skinTexture);

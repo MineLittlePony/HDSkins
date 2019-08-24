@@ -32,7 +32,7 @@ public class ImageLoader {
         return CallableFutures.asyncFailableFuture(() -> {
             NativeImage image = getImage(original);
 
-            final NativeImage updated = new ImageBufferDownloadHD().parseUserSkin(image);
+            final NativeImage updated = new ImageBufferDownloadHD().filterImage(image);
 
             if (updated == null || updated == image) {
                 return original; // don't load a new image

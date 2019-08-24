@@ -9,7 +9,7 @@ import com.minelittlepony.hdskins.SkinUploader;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.resources.LocalTexture;
 import com.minelittlepony.hdskins.resources.PreviewTextureManager;
-import com.minelittlepony.hdskins.resources.SkinAvailableCallback;
+import com.minelittlepony.hdskins.resources.SkinCallback;
 import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
@@ -58,13 +58,11 @@ public class TextureProxy implements IBlankSkinSupplier {
         return previewThinArms;
     }
 
-    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinAvailableCallback listener) {
+    public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinCallback listener) {
         return uploader.getGateway().getPreviewTextures(profile)
                 .thenApply(PreviewTextureManager::new)
                 .thenAcceptAsync(ptm -> {
-                    SkinType.values().forEach(type -> {
-                        get(type).setRemote(ptm, listener);
-                    });
+            SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
         }, MinecraftClient.getInstance()::execute); // run on main thread
     }
 
