@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import com.minelittlepony.hdskins.ducks.INetworkPlayerInfo;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -27,20 +29,16 @@ public class PlayerSkins {
         this.playerInfo = playerInfo;
     }
 
+    @Nullable
     public Identifier getSkin(SkinType type) {
         return HDSkins.getInstance().getResourceManager()
                 .getCustomPlayerTexture(playerInfo.getGameProfile(), type)
-                .orElseGet(() -> lookupSkin(type));
+                .orElseGet(() -> Optional.ofNullable(customTextures.get(type))
+                .orElseGet(() -> type.getEnum().map(playerInfo.getVanillaTextures()::get)
+                .orElse(null)));
     }
 
-    private Identifier lookupSkin(SkinType type) {
-        if (customTextures.containsKey(type)) {
-            return customTextures.get(type);
-        }
-
-        return playerInfo.getVanillaTextures().get(type.getEnum().orElse(Type.SKIN));
-    }
-
+    @Nullable
     public String getModel() {
         return HDSkins.getInstance().getResourceManager()
                 .getCustomPlayerModel(playerInfo.getGameProfile())
@@ -67,12 +65,8 @@ public class PlayerSkins {
     }
 
     private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {
-        if (texture.containsKey(SkinType.SKIN)) {
-            String model = texture.get(SkinType.SKIN).getMetadata("model");
-
-            return Optional.of(model != null ? model : "default");
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(texture.get(SkinType.SKIN))
+                .map(t -> t.getMetadata("model"))
+                .map(VanillaModels::of);
     }
 }
