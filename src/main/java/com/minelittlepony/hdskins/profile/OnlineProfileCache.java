@@ -3,9 +3,11 @@ package com.minelittlepony.hdskins.profile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,13 +35,21 @@ public class OnlineProfileCache {
                 return Collections.emptyMap();
             }
 
+            List<SkinType> requestedSkinTypes = SkinType.values().stream()
+                    .filter(SkinType::isKnown)
+                    .collect(Collectors.toList());
+
             Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
 
             for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
                 try {
-                    server.loadProfileData(profile).getTextures().forEach(textureMap::putIfAbsent);
+                    server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
+                        if (requestedSkinTypes.remove(type)) {
+                            textureMap.putIfAbsent(type, texture);
+                        }
+                    });
 
-                    if (textureMap.size() == SkinType.values().size()) {
+                    if (requestedSkinTypes.isEmpty()) {
                         break;
                     }
                 } catch (IOException e) {
