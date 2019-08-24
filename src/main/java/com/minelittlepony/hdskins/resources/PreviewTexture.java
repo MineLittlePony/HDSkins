@@ -29,7 +29,7 @@ public class PreviewTexture extends PlayerSkinTexture {
         //  which will have been closed before prior to their callback executing.
         super(tempFile(texture.getHash()), texture.getUrl(), fallbackTexture, imageBuffer);
 
-        this.model = VanillaModels.nonNull(texture.getMetadata("model"));
+        this.model = VanillaModels.of(texture.getMetadata("model"));
         this.fileUrl = texture.getUrl();
     }
 

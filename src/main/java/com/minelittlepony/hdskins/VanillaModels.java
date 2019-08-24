@@ -5,11 +5,7 @@ public class VanillaModels {
     public static final String DEFAULT = "default";
 
     public static String of(String model) {
-        return model != null && model.contains(SLIM) ? SLIM : DEFAULT;
-    }
-
-    public static String nonNull(String model) {
-        return model == null ? DEFAULT : SLIM;
+        return isFat(model) ? DEFAULT : SLIM;
     }
 
     public static boolean isSlim(String model) {
@@ -17,6 +13,6 @@ public class VanillaModels {
     }
 
     public static boolean isFat(String model) {
-        return DEFAULT.equals(model);
+        return model == null || DEFAULT.equals(model);
     }
 }
