@@ -18,6 +18,7 @@ import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.HDConfig;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.upload.IFileDialog;
+import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -27,6 +28,14 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 public class GuiFileSelector extends GameGui implements IFileDialog {
+
+    private static final Identifier ICONS = new Identifier("hdskins", "textures/gui/files.png");
+
+    private static final TextureSprite FOLDER = new TextureSprite();
+    private static final TextureSprite FILE = new TextureSprite() .setTextureOffset( 0, 14);
+    private static final TextureSprite IMAGE = new TextureSprite().setTextureOffset(14, 0);
+    private static final TextureSprite AUDIO = new TextureSprite().setTextureOffset(14, 14);
+    private static final TextureSprite VIDEO = new TextureSprite().setTextureOffset(28, 14);
 
     protected Path currentDirectory = Paths.get("/");
 
@@ -191,7 +200,26 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         navigateTo(sender.path);
     }
 
-    private static final Identifier ICONS = new Identifier("hdskins", "textures/gui/files.png");
+    protected TextureSprite getIcon(Path path) {
+
+        if (Files.isDirectory(path)) {
+            return FOLDER;
+        }
+
+        String mime = FileTypes.getMimeType(path);
+
+        if (mime.contains("image")) {
+            return IMAGE;
+        }
+        if (mime.contains("audio")) {
+            return AUDIO;
+        }
+        if (mime.contains("video")) {
+            return VIDEO;
+        }
+
+        return FILE;
+    }
 
     class PathButton extends Button {
 
@@ -204,26 +232,16 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
             String name = path.getFileName().toString();
 
-            TextureSprite sprite = new TextureSprite()
+            TextureSprite sprite = getIcon(path)
                     .setPosition(6, 6)
                     .setTexture(ICONS)
-                    .setTextureSize(22, 22)
-                    .setSize(10, 8);
-
-            if (!Files.isDirectory(path)) {
-                sprite.setTextureOffset(0, 14);
-
-                String[] splitten = path.toString().split("\\.");
-                String ext = splitten[splitten.length - 1];
-                if (ext.matches("png|jpg|bmp")) {
-                    sprite.setTextureOffset(13, 0);
-                }
-            }
+                    .setTextureSize(53, 53)
+                    .setSize(14, 11);
 
             onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
             getStyle()
-                .setText(minecraft.textRenderer.trimToWidth(name, width - 70))
+                .setText(trimLabel(name))
                 .setIcon(sprite)
                 .setTooltip(Lists.newArrayList(
                         name,
@@ -231,8 +249,19 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
                 );
         }
 
+        private String trimLabel(String name) {
+
+            int maxWidth = width - 35;
+
+            if (font.getStringWidth(name) > maxWidth) {
+                name = font.trimToWidth(name, maxWidth - font.getStringWidth("...")) + "...";
+            }
+
+            return name.replace("%", "%%");
+        }
+
         public void clearFocus() {
-            super.setFocused(false);
+            setFocused(false);
         }
 
         protected String describeFile(Path path) {
@@ -240,12 +269,13 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
                 return I18n.translate("hdskins.filetype.directory");
             }
 
-            String[] split = path.getFileName().toString().split("\\.");
-            if (split.length > 1) {
-                return I18n.translate("hdskins.filetype.file", split[1].toUpperCase());
+            String extension = FileTypes.getExtension(path);
+
+            if (extension.isEmpty()) {
+                return I18n.translate("hdskins.filetype.unknown");
             }
 
-            return I18n.translate("hdskins.filetype.unknown");
+            return I18n.translate("hdskins.filetype.file", extension.toUpperCase());
         }
     }
 
@@ -273,4 +303,5 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         MinecraftClient.getInstance().openScreen(this);
         return this;
     }
+
 }
