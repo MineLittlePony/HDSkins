@@ -45,13 +45,13 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
             .setItemWidth(150)
             .setItemHeight(20);
 
-    private Button parentBtn;
+    protected Button parentBtn;
 
     protected TextFieldWidget textInput;
 
     protected final ScrollContainer filesList = new ScrollContainer();
 
-    private String extensionFilter = "";
+    protected String extensionFilter = "";
     private String filterMessage = "";
 
     public GuiFileSelector(String title) {
@@ -86,7 +86,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         addButton(parentBtn = new Button(width/2 - 160, height - 25, 100, 20))
             .onClick(p -> navigateTo(currentDirectory.getParent()))
-            .setEnabled(currentDirectory.getParent() != null)
+            .setEnabled(canNavigateUp())
             .getStyle()
                 .setText("hdskins.directory.up");
 
@@ -172,26 +172,36 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         path = path.toAbsolutePath();
 
-        textInput.setText(path.toString());
-
-        HDConfig config = HDSkins.getInstance().getConfig();
-
         if (Files.isDirectory(path)) {
-            currentDirectory = path;
-
-            config.lastChosenFile.set(path);
-
-            parentBtn.setEnabled(currentDirectory.getParent() != null);
-            renderDirectory();
+            onDirectorySelected(path);
         } else {
-            config.lastChosenFile.set(path.getParent());
             onFileSelected(path);
         }
+    }
 
+    protected void onDirectorySelected(Path path) {
+        textInput.setText(path.toString());
+        currentDirectory = path;
+
+        HDConfig config = HDSkins.getInstance().getConfig();
+        config.lastChosenFile.set(path);
         config.save();
+
+        parentBtn.setEnabled(canNavigateUp());
+        renderDirectory();
+    }
+
+    protected boolean canNavigateUp() {
+        return currentDirectory.getParent() != null
+                && (Files.isDirectory(currentDirectory) || currentDirectory.getParent().getParent() != null);
     }
 
     protected void onFileSelected(Path fileLocation) {
+
+        HDConfig config = HDSkins.getInstance().getConfig();
+        config.lastChosenFile.set(fileLocation);
+        config.save();
+
         minecraft.openScreen(parent);
         callback.onDialogClosed(fileLocation, true);
     }

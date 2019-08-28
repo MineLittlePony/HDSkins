@@ -5,18 +5,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.minelittlepony.common.client.gui.element.Button;
+import com.minelittlepony.hdskins.upload.IFileDialog;
+import com.minelittlepony.hdskins.util.net.FileTypes;
 
 public class GuiFileSaver extends GuiFileSelector {
 
     private Button saveBtn;
 
+    private String savingFileName;
+
     public GuiFileSaver(String title, String filename) {
         super(title);
 
-        if (Files.exists(currentDirectory)) {
-            if (Files.isDirectory(currentDirectory)) {
-                currentDirectory = currentDirectory.resolve(filename);
-            }
+        savingFileName = filename;
+
+        if (Files.isDirectory(currentDirectory)) {
+            currentDirectory = currentDirectory.resolve(savingFileName);
+        } else {
+            currentDirectory = currentDirectory.getParent().resolve(savingFileName);
         }
     }
 
@@ -43,6 +49,12 @@ public class GuiFileSaver extends GuiFileSelector {
         updateButtonStates(textInput.getText());
     }
 
+    @Override
+    public IFileDialog filter(String extension, String description) {
+        currentDirectory = FileTypes.changeExtension(currentDirectory, extension);
+        return super.filter(extension, description);
+    }
+
     protected void updateButtonStates(String value) {
         Path selection = Paths.get(value.trim());
 
@@ -60,6 +72,39 @@ public class GuiFileSaver extends GuiFileSelector {
             sender.changeFocus(true);
             saveBtn.setEnabled(true);
             textInput.setText(sender.path.toString());
+        }
+    }
+
+    @Override
+    public void navigateTo(Path path) {
+        Path userInput = Paths.get(textInput.getText());
+        String fileName = "";
+
+        if (userInput != null) {
+            fileName = userInput.getFileName().toString().trim();
+        }
+        if (fileName.isEmpty()) {
+            fileName = savingFileName;
+        } else {
+            savingFileName = fileName;
+        }
+
+        if (path != null && Files.isDirectory(path)) {
+            if (!Files.isDirectory(currentDirectory)) {
+                if (path.equals(currentDirectory.getParent()) && path.getParent() != null) {
+                    path = path.getParent();
+                }
+            }
+
+            path = path.resolve(savingFileName);
+
+            if (!extensionFilter.isEmpty()) {
+                path = FileTypes.changeExtension(path, extensionFilter);
+            }
+
+            onDirectorySelected(path.toAbsolutePath());
+        } else {
+            super.navigateTo(path);
         }
     }
 
