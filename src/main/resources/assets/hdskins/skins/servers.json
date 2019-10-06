@@ -4,7 +4,7 @@
   "servers": [
     {
       "type": "valhalla",
-      "address": "http://skins.minelittlepony-mod.com"
+      "address": "https://skins.minelittlepony-mod.com"
     }
   ]
 }
