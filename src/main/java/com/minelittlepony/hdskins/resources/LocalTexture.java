@@ -96,11 +96,12 @@ public class LocalTexture {
     }
 
     public void setLocal(Path file) {
+
+        clearLocal();
+
         if (!Files.exists(file)) {
             return;
         }
-
-        clearLocal();
 
         try (InputStream input = Files.newInputStream(file)) {
             NativeImage image = new ImageBufferDownloadHD().filterImage(NativeImage.read(input));

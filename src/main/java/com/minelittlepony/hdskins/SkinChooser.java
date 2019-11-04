@@ -18,9 +18,14 @@ public class SkinChooser {
 
     public static final int MAX_SKIN_DIMENSION = 1024;
 
+    public static final String[] EXTENSIONS = new String[]{"png", "PNG"};
+
     public static final String ERR_UNREADABLE = "hdskins.error.unreadable";
     public static final String ERR_EXT = "hdskins.error.ext";
     public static final String ERR_OPEN = "hdskins.error.open";
+    public static final String ERR_INVALID_TOO_LARGE = "hdskins.error.invalid.too_large";
+    public static final String ERR_INVALID_SHAPE = "hdskins.error.invalid.shape";
+    public static final String ERR_INVALID_POWER_OF_TWO = "hdskins.error.invalid.power_of_two";
     public static final String ERR_INVALID = "hdskins.error.invalid";
 
     public static final String MSG_CHOOSE = "hdskins.choose";
@@ -44,7 +49,6 @@ public class SkinChooser {
         return openFileThread != null;
     }
 
-    @Nullable
     public String getStatus() {
         return status;
     }
@@ -83,26 +87,26 @@ public class SkinChooser {
         status = evaluateAndSelect(skinFile);
     }
 
-    @Nullable
     private String evaluateAndSelect(Path skinFile) {
         if (!Files.exists(skinFile)) {
             return ERR_UNREADABLE;
         }
 
-        if (!FilenameUtils.isExtension(skinFile.getFileName().toString(), new String[]{"png", "PNG"})) {
+        if (!FilenameUtils.isExtension(skinFile.getFileName().toString(), EXTENSIONS)) {
             return ERR_EXT;
         }
 
         try (InputStream in = Files.newInputStream(skinFile)) {
             NativeImage chosenImage = NativeImage.read(in);
 
-            if (!acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight())) {
-                return ERR_INVALID;
+            String err = acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight());
+            if (err != null) {
+                return err;
             }
 
             uploader.setLocalSkin(skinFile);
 
-            return null;
+            return MSG_CHOOSE;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -110,7 +114,17 @@ public class SkinChooser {
         return ERR_OPEN;
     }
 
-    protected boolean acceptsSkinDimensions(int w, int h) {
-        return isPowerOfTwo(w) && w == h * 2 || w == h && w <= MAX_SKIN_DIMENSION && h <= MAX_SKIN_DIMENSION;
+    @Nullable
+    protected String acceptsSkinDimensions(int w, int h) {
+        if (!isPowerOfTwo(w)) {
+            return ERR_INVALID_POWER_OF_TWO;
+        }
+        if (w > MAX_SKIN_DIMENSION) {
+            return ERR_INVALID_TOO_LARGE;
+        }
+        if (!(w == h || w == h * 2)) {
+            return ERR_INVALID_SHAPE;
+        }
+        return null;
     }
 }
