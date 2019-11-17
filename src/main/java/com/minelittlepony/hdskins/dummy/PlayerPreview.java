@@ -26,6 +26,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -118,6 +119,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
                 width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
                 matrixStack, context);
 
+        context.draw();
+
         disableDepthTest();
     }
 
@@ -151,6 +154,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
      *      mouseX
      */
     protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, MatrixStack matrixStack, VertexConsumerProvider renderContext) {
+
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
 
         matrixStack.push();
@@ -158,13 +162,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         enableColorMaterial();
         GuiLighting.enable();
 
-        translatef(xPosition, yPosition, 300);
-        scalef(scale, scale, scale);
-        rotatef(-15, 1, 0, 0);
+        matrixStack.translate(xPosition, yPosition, 300);
+        matrixStack.scale(scale, scale, scale);
+        matrixStack.multiply(Vector3f.POSITIVE_X.getRotationQuaternion(-15));
 
         float rot = ((ticks + partialTick) * 2.5F) % 360;
 
-        rotatef(rot, 0, 1, 0);
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(rot));
 
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
