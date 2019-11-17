@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.profile;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -79,11 +77,6 @@ public class ProfileRepository {
 
     public void clear() {
         HDSkins.logger.info("Clearing local player skin cache");
-        try {
-            Files.deleteIfExists(getHDSkinsCache());
-        } catch (IOException e) {
-            HDSkins.logger.warn(e);
-        }
         offline.clear();
         online.clear();
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
