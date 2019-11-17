@@ -109,17 +109,14 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         float scale = height / 4F;
 
         MatrixStack matrixStack = new MatrixStack();
-        Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
         renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
                 width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack, context);
+                matrixStack);
 
         renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
                 width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack, context);
-
-        context.draw();
+                matrixStack);
 
         disableDepthTest();
     }
@@ -127,13 +124,17 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
     public void renderWorldAndPlayer(DummyPlayer thePlayer,
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
-            MatrixStack matrixStack, VertexConsumerProvider renderContext) {
+            MatrixStack matrixStack) {
 
         OutsideWorldRenderer.configure(thePlayer.world);
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
+            Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+
             drawBackground(frameLeft, frameRight, frameBottom, frameTop, horizon);
 
-            renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, renderContext);
+            renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+
+            context.draw();
         });
     }
 
