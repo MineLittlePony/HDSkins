@@ -11,14 +11,13 @@ import java.util.stream.Collectors;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.SkinCacheClearCallback;
+import com.minelittlepony.hdskins.resources.HDPlayerSkinTexture;
 import com.minelittlepony.hdskins.resources.SkinCallback;
 import com.minelittlepony.hdskins.resources.TextureLoader;
-import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.PlayerSkinTexture;
-import net.minecraft.client.texture.Texture;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
@@ -61,17 +60,18 @@ public class ProfileRepository {
 
     private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinCallback callback) {
         Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
-        Texture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
+        AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
 
         //noinspection ConstantConditions
         if (texObj != null) {
             callback.onSkinAvailable(type, resource, texture);
         } else {
-            TextureLoader.loadTexture(resource, new PlayerSkinTexture(
+            TextureLoader.loadTexture(resource, new HDPlayerSkinTexture(
                     getCachedSkinLocation(type, texture).toFile(),
                     texture.getUrl(),
+                    type,
                     DefaultSkinHelper.getTexture(),
-                    new ImageBufferDownloadHD(type, () -> callback.onSkinAvailable(type, resource, texture))));
+                    () -> callback.onSkinAvailable(type, resource, texture)));
         }
 
         return resource;

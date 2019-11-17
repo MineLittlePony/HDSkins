@@ -75,7 +75,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
     private final Edge jumpKey = new Edge(this::jumpToggled, () -> {
-        return InputUtil.isKeyPressed(minecraft.window.getHandle(), GLFW.GLFW_KEY_SPACE);
+        return InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_SPACE);
     });
     private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
 
@@ -99,8 +99,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     @Override
     public void tick() {
 
-        if (!( InputUtil.isKeyPressed(minecraft.window.getHandle(), GLFW.GLFW_KEY_LEFT)
-            || InputUtil.isKeyPressed(minecraft.window.getHandle(), GLFW.GLFW_KEY_RIGHT))) {
+        if (!( InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT)
+            || InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT))) {
             updateCounter++;
         }
 
@@ -119,7 +119,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
                 .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
-                .setEnabled(!minecraft.window.isFullscreen())
+                .setEnabled(!minecraft.getWindow().isFullscreen())
                 .getStyle().setText("hdskins.options.browse");
 
         addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
@@ -423,7 +423,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
                 drawCenteredString(font, I18n.translate("hdskins.failed"), width / 2, blockHeight - font.fontHeight * 2, 0xffff55);
-                font.drawStringBounded(errorMsg, 5, blockHeight, width - 10, 0xff5555);
+                font.drawTrimmed(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
     }

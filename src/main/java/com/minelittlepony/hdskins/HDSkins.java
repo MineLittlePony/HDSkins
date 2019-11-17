@@ -8,7 +8,7 @@ import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.net.SkinServerList;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -60,11 +60,10 @@ public final class HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         config.load();
-
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.class, DummyPlayerRenderer::new);
+        EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, DummyPlayerRenderer::new);
         ScreenInitCallback.EVENT.register(this::onScreenInit);
     }
 

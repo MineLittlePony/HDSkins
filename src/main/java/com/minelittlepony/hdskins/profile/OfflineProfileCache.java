@@ -21,7 +21,7 @@ import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.common.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import net.minecraft.util.SystemUtil;
+import net.minecraft.util.Util;
 
 public class OfflineProfileCache {
 
@@ -102,7 +102,7 @@ public class OfflineProfileCache {
         }
 
         Map<SkinType, MinecraftProfileTexture> getFiles() {
-            return SystemUtil.consume(new HashMap<>(), m -> {
+            return Util.create(new HashMap<>(), m -> {
                 files.forEach((type, file) -> m.put(type, file.toProfileTexture()));
             });
         }

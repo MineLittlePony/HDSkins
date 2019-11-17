@@ -1,9 +1,10 @@
 package com.minelittlepony.hdskins.dummy;
 
-import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -13,6 +14,8 @@ import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -26,7 +29,7 @@ import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.hdskins.profile.SkinType;
 import java.util.Set;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.mojang.blaze3d.systems.RenderSystem.*;
 
 public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
@@ -62,7 +65,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
     }
 
     @Override
-    protected Identifier getTexture(T entity) {
+    public Identifier getTexture(T entity) {
         return entity.getTextures().get(SkinType.SKIN).getId();
     }
 
@@ -82,44 +85,48 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
     }
 
     @Override
-    public void render(T entity, double x, double y, double z, float entityYaw, float partialTicks) {
+    public void render(T entity, float entityYaw, float partialTick, MatrixStack stack, VertexConsumerProvider renderContext, int lightValue) {
 
         if (entity.isSleeping()) {
-            BedHead.instance.render(entity);
+            BedHead.instance.render(entity, stack, renderContext);
         }
 
         if (entity.hasVehicle()) {
-            MrBoaty.instance.render();
+            MrBoaty.instance.render(stack, renderContext);
         }
 
         model = getEntityModel(entity);
 
         Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
-        model.headwear.field_3664 = !parts.contains(PlayerModelPart.HAT);
-        model.bodyOverlay.field_3664 = !parts.contains(PlayerModelPart.JACKET);
-        model.leftLegOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
-        model.rightLegOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
-        model.leftArmOverlay.field_3664 = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
-        model.rightArmOverlay.field_3664 = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
+        model.headwear.visible = !parts.contains(PlayerModelPart.HAT);
+        model.bodyOverlay.visible = !parts.contains(PlayerModelPart.JACKET);
+        model.leftLegOverlay.visible = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
+        model.rightLegOverlay.visible = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
+        model.leftArmOverlay.visible = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
+        model.rightArmOverlay.visible = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
         model.isSneaking = entity.isSneaking();
 
         model.leftArmPose = ArmPose.EMPTY;
         model.rightArmPose = ArmPose.EMPTY;
 
-        double offset = entity.y;
+        double offset = entity.getY();
 
         if (entity.hasVehicle()) {
             offset = entity.getMountedHeightOffset() - entity.getHeight();
         }
+
+        float x = 0;
+        float y = 0;
+        float z = 0;
 
         if (model.isSneaking) {
             y -= 0.125D;
         }
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        pushMatrix();
-        scalef(1, -1, 1);
-        translated(0.001, offset, 0.001);
+        stack.push();
+        stack.scale(1, -1, 1);
+        stack.translate(0.001, offset, 0.001);
 
         if (entity.isSleeping()) {
             rotatef(-90, 0, 1, 0);
@@ -129,7 +136,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         }
         if (entity.isSwimming()) {
             DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
-            rotatef(45, 1, 0, 0);
+            stack.multiply(Vector3f.POSITIVE_X.getRotationQuaternion(45));
 
             y -= 0.5F;
             x -= 0;
@@ -138,8 +145,10 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
         }
 
-        super.render(entity, x, y, z, entityYaw, partialTicks);
-        popMatrix();
+
+        stack.translate(x, y, z);
+        super.render(entity, entityYaw, partialTick, stack, renderContext, lightValue);
+        stack.pop();
         GL11.glPopAttrib();
     }
 
@@ -150,7 +159,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             this.setColor(DyeColor.RED);
         }
 
-        public void render(Entity entity) {
+        public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             pushMatrix();
 
@@ -158,7 +167,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
             OutsideWorldRenderer.configure(entity.getEntityWorld())
                 .get(this)
-                .render(this, -0.5F, 0, 0, 0, -1);
+                .render(this, 1, stack, renderContext, 0, 0);
 
             popMatrix();
             GL11.glPopAttrib();
@@ -172,15 +181,16 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             super(EntityType.BOAT, DummyWorld.INSTANCE);
         }
 
-        public void render() {
+        public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             pushMatrix();
 
             scalef(-1, -1, -1);
 
-            EntityRenderer<BoatEntity> render = MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
+            @SuppressWarnings("unchecked")
+            EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
 
-            render.render(this, 0, 0, 0, 0, 0);
+            render.render(this, 0, 0, stack, renderContext, 0);
 
             popMatrix();
             GL11.glPopAttrib();

@@ -72,7 +72,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         renderDirectory();
 
         addButton(textInput = new TextFieldWidget(font, 10, 30, width - 50, 18, ""));
-        textInput.setIsEditable(true);
+        textInput.setEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
         textInput.setText(currentDirectory.toAbsolutePath().toString());
         addButton(new Button(width - 30, 29, 20, 20))

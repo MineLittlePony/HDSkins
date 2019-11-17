@@ -5,7 +5,6 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 
-import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.minelittlepony.hdskins.util.CallableFutures;
 
 import java.io.IOException;
@@ -32,13 +31,13 @@ public class ImageLoader {
         return CallableFutures.asyncFailableFuture(() -> {
             NativeImage image = getImage(original);
 
-            final NativeImage updated = new ImageBufferDownloadHD().filterImage(image);
+            final NativeImage updated = HDPlayerSkinTexture.filterPlayerSkins(image);
 
             if (updated == null || updated == image) {
                 return original; // don't load a new image
             }
 
-            return mc.executeFuture(() -> {
+            return CompletableFuture.supplyAsync(() -> {
                 Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
 
                 if (mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(updated))) {
@@ -46,7 +45,7 @@ public class ImageLoader {
                 }
 
                 return original;
-            }).get();
+            }, mc).get();
         }, executor);
     }
 

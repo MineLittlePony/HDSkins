@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.resources;
 import com.google.common.collect.Maps;
 import com.minelittlepony.hdskins.net.TexturePayload;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Identifier;
 
@@ -32,9 +31,9 @@ public class PreviewTextureManager {
 
         MinecraftProfileTexture texture = textures.get(type);
 
-        PreviewTexture skinTexture = new PreviewTexture(texture, def, new ImageBufferDownloadHD(type, () -> {
+        PreviewTexture skinTexture = PreviewTexture.create(texture, type, def, () -> {
             callback.onSkinAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), Maps.newHashMap()));
-        }));
+        });
 
         TextureLoader.loadTexture(location, skinTexture);
 

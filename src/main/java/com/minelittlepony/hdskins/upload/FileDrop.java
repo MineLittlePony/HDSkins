@@ -57,7 +57,7 @@ public class FileDrop {
         if (!cancelled && hook == null) {
             MinecraftClient.getInstance().execute(() -> {
                 if (!cancelled) {
-                    Window window = MinecraftClient.getInstance().window;
+                    Window window = MinecraftClient.getInstance().getWindow();
                     hook = GLFW.glfwSetDropCallback(window.getHandle(), nativ);
                 }
             });
@@ -71,7 +71,7 @@ public class FileDrop {
 
         if (hook != null) {
             MinecraftClient.getInstance().execute(() -> {
-                Window window = MinecraftClient.getInstance().window;
+                Window window = MinecraftClient.getInstance().getWindow();
                 hook = GLFW.glfwSetDropCallback(window.getHandle(), null);
             });
         }

@@ -1,35 +1,41 @@
-package com.minelittlepony.hdskins.resources.texture;
+package com.minelittlepony.hdskins.resources;
+
+import static com.minelittlepony.common.event.SkinFilterCallback.EVENT;
+import static com.minelittlepony.common.event.SkinFilterCallback.copy;
+
+import java.io.File;
 
 import javax.annotation.Nullable;
 
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.client.texture.ImageFilter;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.PlayerSkinTexture;
+import net.minecraft.util.Identifier;
 
-import static com.minelittlepony.common.event.SkinFilterCallback.*;
-
-public class ImageBufferDownloadHD implements ImageFilter {
-
-    private final Runnable callback;
+public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilter {
 
     private final SkinType skinType;
 
-    public ImageBufferDownloadHD() {
-        this(SkinType.SKIN, () -> {});
+    public HDPlayerSkinTexture(File cacheFile, String url, SkinType skinType, Identifier fallbackSkin, Runnable runnable) {
+        super(cacheFile, url, fallbackSkin, false, runnable);
+        this.skinType = skinType;
     }
 
-    public ImageBufferDownloadHD(SkinType type, Runnable callback) {
-        this.callback = callback;
-        this.skinType = type;
-    }
-
-    @Override
     @Nullable
+    @Override
     public NativeImage filterImage(@Nullable NativeImage image) {
-
         // TODO: Do we want to convert other skin types?
-        if (image == null || skinType != SkinType.SKIN) {
+        if (skinType != SkinType.SKIN) {
+            return image;
+        }
+        return filterPlayerSkins(image);
+    }
+
+    @Nullable
+    public static NativeImage filterPlayerSkins(@Nullable NativeImage image) {
+
+        if (image == null) {
             return image;
         }
 
@@ -67,8 +73,4 @@ public class ImageBufferDownloadHD implements ImageFilter {
         return image;
     }
 
-    @Override
-    public void method_3238() {
-        callback.run();
-    }
 }

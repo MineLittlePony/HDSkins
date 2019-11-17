@@ -5,6 +5,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.SkullBlock;
 import net.minecraft.block.entity.SkullBlockEntity;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.SkullBlockEntityRenderer;
 import net.minecraft.util.Identifier;
@@ -19,15 +20,17 @@ import javax.annotation.Nullable;
 @Mixin(SkullBlockEntityRenderer.class)
 public abstract class MixinSkullRenderer extends BlockEntityRenderer<SkullBlockEntity> {
 
-    @Inject(method = "method_3578(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/util/Identifier;",
+    public MixinSkullRenderer() { super(null); }
+
+    @Inject(method = "method_3578(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/client/render/RenderLayer;",
             cancellable = true,
             at = @At(value = "HEAD"))
-    private void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<Identifier> info) {
+    private static void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<RenderLayer> info) {
         if (type == SkullBlock.Type.PLAYER && profile != null) {
             Identifier skin = HDSkins.getInstance().getProfileRepository().getTextures(profile).get(SkinType.SKIN);
 
             if (skin != null) {
-                info.setReturnValue(skin);
+                info.setReturnValue(RenderLayer.getEntityCutout(skin));
             }
         }
     }

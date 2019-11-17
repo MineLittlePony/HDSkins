@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.resources;
 
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.resources.texture.ImageBufferDownloadHD;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -104,7 +103,7 @@ public class LocalTexture {
         }
 
         try (InputStream input = Files.newInputStream(file)) {
-            NativeImage image = new ImageBufferDownloadHD().filterImage(NativeImage.read(input));
+            NativeImage image = HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input));
 
             local = new NativeImageBackedTexture(image);
             localResource = textureManager.registerDynamicTexture("local_skin_preview", local);

@@ -20,6 +20,8 @@ import net.minecraft.tag.RegistryTagManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.*;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.dimension.DimensionType;
@@ -144,10 +146,17 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public void setBlockBreakingProgress(int arg0, BlockPos arg1, int arg2) {
+    public void updateListeners(BlockPos arg0, BlockState arg1, BlockState arg2, int arg3) {
     }
 
     @Override
-    public void updateListeners(BlockPos arg0, BlockState arg1, BlockState arg2, int arg3) {
+    public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
+        return Biomes.OCEAN;
+    }
+
+    @Override
+    public void setBlockBreakingInfo(int entityId, BlockPos pos, int progress) {
+        // TODO Auto-generated method stub
+
     }
 }

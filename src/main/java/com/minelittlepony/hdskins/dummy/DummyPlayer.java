@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -21,12 +22,18 @@ import java.util.Map;
 @SuppressWarnings("EntityConstructor")
 public class DummyPlayer extends LivingEntity {
 
+    public static EntityType<DummyPlayer> TYPE = EntityType.Builder
+            .<DummyPlayer>create((t, w) -> new DummyPlayer(null), EntityCategory.MISC)
+            .disableSaving()
+            .disableSummon()
+            .build("hdskins:dummy_player");
+
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
     private final TextureProxy textures;
 
     public DummyPlayer(TextureProxy textures) {
-        super(EntityType.PLAYER, DummyWorld.INSTANCE);
+        super(TYPE, DummyWorld.INSTANCE);
 
         this.textures = textures;
     }
@@ -59,14 +66,14 @@ public class DummyPlayer extends LivingEntity {
             return EntityPose.SWIMMING;
         }
         if (isSneaking()) {
-            return EntityPose.SNEAKING;
+            return EntityPose.CROUCHING;
         }
         return EntityPose.STANDING;
     }
 
     @Override
     @Environment(EnvType.CLIENT)
-    public float method_6024(float float_1) {
+    public float getLeaningPitch(float float_1) {
        return isSwimming() ? 1 : 0;
     }
 
@@ -122,6 +129,8 @@ public class DummyPlayer extends LivingEntity {
             upwardSpeed = 0;
         }
 
+        double y = getY();
+
         if (y == 0 && jumping && !textures.previewSleeping && !textures.previewRiding && !textures.previewSwimming) {
             jump();
 
@@ -137,6 +146,8 @@ public class DummyPlayer extends LivingEntity {
             y = 0;
         }
         onGround = y == 0;
+
+        setPos(getX(), y, getZ());
 
         age++;
     }
@@ -157,7 +168,7 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public void setEquippedStack(EquipmentSlot slot, ItemStack stack) {
+    public void equipStack(EquipmentSlot slot, ItemStack stack) {
         armour.put(slot, stack == null ? ItemStack.EMPTY : stack);
     }
 }

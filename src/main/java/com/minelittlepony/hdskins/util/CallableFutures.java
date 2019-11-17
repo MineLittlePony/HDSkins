@@ -47,7 +47,7 @@ public class CallableFutures {
     public static CompletableFuture<Void> scheduleTask(Runnable task) {
         // schedule a task for next tick.
         return CompletableFuture.runAsync(Runnables.doNothing(), delayed(50, TimeUnit.MILLISECONDS))
-                .handleAsync(callback(task), MinecraftClient.getInstance()::executeSync);
+                .handleAsync(callback(task), MinecraftClient.getInstance());
     }
 
     private static Executor delayed(long time, TimeUnit unit) {
