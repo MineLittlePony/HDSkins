@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -28,8 +29,6 @@ import org.lwjgl.opengl.GL11;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.hdskins.profile.SkinType;
 import java.util.Set;
-
-import static com.mojang.blaze3d.systems.RenderSystem.*;
 
 public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
 
@@ -125,11 +124,10 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         stack.push();
-        stack.scale(1, -1, 1);
         stack.translate(0.001, offset, 0.001);
 
         if (entity.isSleeping()) {
-            rotatef(-90, 0, 1, 0);
+            stack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(90));
 
             y += 0.7F;
             x += 1;
@@ -144,7 +142,6 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         } else {
             DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
         }
-
 
         stack.translate(x, y, z);
         super.render(entity, entityYaw, partialTick, stack, renderContext, lightValue);
@@ -161,15 +158,15 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
         public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            pushMatrix();
+            stack.push();
 
-            scalef(-1, -1, -1);
+            stack.translate(-0.5, 0, 0);
 
             OutsideWorldRenderer.configure(entity.getEntityWorld())
                 .get(this)
-                .render(this, 1, stack, renderContext, 0, 0);
+                .render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);
 
-            popMatrix();
+            stack.pop();
             GL11.glPopAttrib();
         }
     }
@@ -183,16 +180,14 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            pushMatrix();
-
-            scalef(-1, -1, -1);
+            stack.push();
 
             @SuppressWarnings("unchecked")
             EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
 
             render.render(this, 0, 0, stack, renderContext, 0);
 
-            popMatrix();
+            stack.pop();
             GL11.glPopAttrib();
         }
     }

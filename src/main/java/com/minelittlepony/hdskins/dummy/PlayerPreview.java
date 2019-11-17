@@ -182,10 +182,12 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         matrixStack.push();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         disableAlphaTest();
+        matrixStack.scale(1, 1, -1);
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(180));
+
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 1);
         GL11.glPopAttrib();
         matrixStack.pop();
-
 
         matrixStack.push();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
