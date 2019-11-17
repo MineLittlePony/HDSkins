@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.gui;
 
-import static com.mojang.blaze3d.platform.GlStateManager.enableBlend;
-
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,13 +27,16 @@ import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.math.Matrix4f;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
@@ -368,13 +370,15 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
 
+
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
 
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
             enableBlend();
-            drawCenteredString(font, I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
+
+            drawLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
@@ -385,12 +389,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             enableBlend();
 
             if (uploader.isThrottled()) {
-                drawCenteredString(font, I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
-                drawCenteredString(font, I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
+                drawLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
+                drawLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
             } else if (uploader.isOffline()) {
-                drawCenteredString(font, I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
+                drawLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
             } else {
-                drawCenteredString(font, I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
+                drawLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
             }
         }
 
@@ -418,7 +422,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             String errorMsg = I18n.translate(uploader.getStatusMessage());
 
             if (uploadInProgress) {
-                drawCenteredString(font, errorMsg, width / 2, height / 2, 0xffffff);
+                drawLabel(errorMsg, width / 2, height / 2, 0xffffff);
             } else if (showError) {
                 int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
@@ -432,6 +436,19 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         uploader.uploadSkin(uploadMsg).handle(CallableFutures.callback(this::updateButtons));
 
         updateButtons();
+    }
+
+    private void drawLabel(String text, int x, int y, int color) {
+        VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+        MatrixStack matrixStack = new MatrixStack();
+        matrixStack.translate(0, 0, 0);
+        Matrix4f matrix4f = matrixStack.peek().getModel();
+
+        String status = I18n.translate(chooser.getStatus());
+        int width = font.getStringWidth(status);
+
+        font.draw(status, x - width/2, y, color, true, matrix4f, immediate, true, 0, 0);
+        immediate.draw();
     }
 
     private void updateButtons() {
