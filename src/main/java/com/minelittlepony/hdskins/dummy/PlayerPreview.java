@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
-import com.minelittlepony.hdskins.resources.LocalTexture.IBlankSkinSupplier;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.VanillaModels;
@@ -37,18 +36,24 @@ import net.minecraft.util.Util;
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBlankSkinSupplier {
+public class PlayerPreview extends DrawableHelper implements IPreviewModel {
+
+    public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
+    public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
 
     public static final Map<SkinType, Identifier> NO_TEXTURES = Util.create(new HashMap<>(), map -> {
-        map.put(SkinType.SKIN, new Identifier("hdskins", "textures/mob/noskin.png"));
+        map.put(SkinType.SKIN, NO_SKIN_STEVE);
         map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
+    });
+    public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.create(new HashMap<>(), map -> {
+        map.put(SkinType.SKIN, NO_SKIN_ALEX);
     });
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
 
-    protected final TextureProxy localTextures = new TextureProxy(profile, this);
-    protected final TextureProxy remoteTextures = new TextureProxy(profile, this);
+    protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
+    protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
 
     private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
     private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
@@ -93,9 +98,15 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel, IBla
         getRemote().setSneaking(sneaking);
     }
 
-    @Override
-    public Identifier getBlankSkin(SkinType type) {
+    public Identifier getBlankSteveSkin(SkinType type) {
         return NO_TEXTURES.get(type);
+    }
+
+    public Identifier getBlankAlexSkin(SkinType type) {
+        if (NO_TEXTURES_ALEX.containsKey(type)) {
+            return NO_TEXTURES_ALEX.get(type);
+        }
+        return getBlankSteveSkin(type);
     }
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {

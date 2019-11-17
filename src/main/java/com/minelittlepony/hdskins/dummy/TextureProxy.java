@@ -26,16 +26,21 @@ public class TextureProxy implements IBlankSkinSupplier {
     protected boolean previewRiding = false;
     protected boolean previewSwimming = false;
 
-    private final IBlankSkinSupplier blankSupplier;
+    private final IBlankSkinSupplier steveBlankSupplier;
+    private final IBlankSkinSupplier alexBlankSupplier;
 
-    TextureProxy(GameProfile gameprofile, IBlankSkinSupplier blank) {
+    TextureProxy(GameProfile gameprofile, IBlankSkinSupplier steve, IBlankSkinSupplier alex) {
         profile = gameprofile;
-        blankSupplier = blank;
+        steveBlankSupplier = steve;
+        alexBlankSupplier = alex;
     }
 
     @Override
     public Identifier getBlankSkin(SkinType type) {
-        return blankSupplier.getBlankSkin(type);
+        if (usesThinSkin()) {
+            return alexBlankSupplier.getBlankSkin(type);
+        }
+        return steveBlankSupplier.getBlankSkin(type);
     }
 
     public void setPose(int pose) {
@@ -46,13 +51,18 @@ public class TextureProxy implements IBlankSkinSupplier {
 
     public void setPreviewThinArms(boolean thinArms) {
         previewThinArms = thinArms;
+        if (!isUsingLocal() && !this.isUsingRemote()) {
+            textures.clear();
+        }
     }
 
     public boolean usesThinSkin() {
-        LocalTexture skin = get(SkinType.SKIN);
+        if (textures.containsKey(SkinType.SKIN)) {
+            LocalTexture skin = get(SkinType.SKIN);
 
-        if (skin.uploadComplete() && skin.getRemote().hasModel()) {
-            return skin.getRemote().usesThinArms();
+            if (skin.uploadComplete() && skin.getRemote().hasModel()) {
+                return skin.getRemote().usesThinArms();
+            }
         }
 
         return previewThinArms;
