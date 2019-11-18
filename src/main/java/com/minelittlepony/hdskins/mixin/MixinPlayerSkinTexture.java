@@ -14,9 +14,9 @@ import net.minecraft.client.texture.PlayerSkinTexture;
 
 @Mixin(PlayerSkinTexture.class)
 public class MixinPlayerSkinTexture {
-    //private NativeImage method_22795(InputStream inputStream) {
     @Inject(method ="method_22795(Lnet/minecraft/client/texture/NativeImage;)Lnet/minecraft/client/texture/NativeImage;",
-            at = @At("RETURN"))
+            at = @At("RETURN"),
+            cancellable = true)
     private void onLoad(InputStream stream, CallbackInfoReturnable<NativeImage> info) {
         if (this instanceof ImageFilter) {
             info.setReturnValue(((ImageFilter)this).filterImage(info.getReturnValue()));
