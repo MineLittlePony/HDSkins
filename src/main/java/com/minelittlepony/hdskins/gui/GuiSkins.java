@@ -4,6 +4,7 @@ import static com.mojang.blaze3d.platform.GlStateManager.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFW;
@@ -31,12 +32,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.Matrix4f;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
@@ -377,7 +374,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
             enableBlend();
 
-            drawLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff);
+            drawLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
@@ -388,12 +385,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             enableBlend();
 
             if (uploader.isThrottled()) {
-                drawLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555);
-                drawLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555);
+                drawLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555, 0);
+                drawLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
             } else if (uploader.isOffline()) {
-                drawLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555);
+                drawLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555, 0);
             } else {
-                drawLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
+                drawLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff, 0);
             }
         }
 
@@ -420,7 +417,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             String errorMsg = I18n.translate(uploader.getStatusMessage());
 
             if (uploadInProgress) {
-                drawLabel(errorMsg, width / 2, height / 2, 0xffffff);
+                drawLabel(errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
                 int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
@@ -434,19 +431,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         uploader.uploadSkin(uploadMsg).handle(CallableFutures.callback(this::updateButtons));
 
         updateButtons();
-    }
-
-    private void drawLabel(String text, int x, int y, int color) {
-        VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-        MatrixStack matrixStack = new MatrixStack();
-        matrixStack.translate(0, 0, 0);
-        Matrix4f matrix4f = matrixStack.peek().getModel();
-
-        String status = I18n.translate(chooser.getStatus());
-        int width = font.getStringWidth(status);
-
-        font.draw(status, x - width/2, y, color, true, matrix4f, immediate, true, 0, 0xF000F0);
-        immediate.draw();
     }
 
     private void updateButtons() {
@@ -497,7 +481,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         private final Button element;
 
-        private List<String> disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(I18n.translate("hdskins.warning.disabled.description"));
+        private Optional<List<String>> disabledTooltip = Optional.of(Splitter.onPattern("\r?\n|\\\\n").splitToList(I18n.translate("hdskins.warning.disabled.description")));
 
         private boolean locked;
 
@@ -513,7 +497,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         }
 
         @Override
-        public List<String> getTooltip() {
+        public Optional<List<String>> getTooltip() {
             if (locked) {
                 return disabledTooltip;
             }
@@ -522,10 +506,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         @Override
         public Style setTooltip(String tooltip) {
-            disabledTooltip = Splitter.onPattern("\r?\n|\\\\n").splitToList(
+            disabledTooltip = Optional.of(Splitter.onPattern("\r?\n|\\\\n").splitToList(
                     I18n.translate("hdskins.warning.disabled.title",
                     I18n.translate(tooltip),
-                    I18n.translate("hdskins.warning.disabled.description")));
+                    I18n.translate("hdskins.warning.disabled.description"))));
             return super.setTooltip(tooltip);
         }
     }
