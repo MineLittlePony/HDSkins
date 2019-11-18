@@ -144,7 +144,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         }
 
         stack.translate(x, y, z);
-        super.render(entity, entityYaw, partialTick, stack, renderContext, lightValue);
+        super.render(entity, entityYaw, partialTick, stack, renderContext, 0xF000F0);
         stack.pop();
         GL11.glPopAttrib();
     }
@@ -185,7 +185,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             @SuppressWarnings("unchecked")
             EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
 
-            render.render(this, 0, 0, stack, renderContext, 0);
+            render.render(this, 0, 0, stack, renderContext, 0xF000F0);
 
             stack.pop();
             GL11.glPopAttrib();

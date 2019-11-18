@@ -370,7 +370,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
 
-
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
 
@@ -397,7 +396,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 drawLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff);
             }
         }
-
 
         super.render(mouseX, mouseY, partialTick);
 
@@ -447,7 +445,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         String status = I18n.translate(chooser.getStatus());
         int width = font.getStringWidth(status);
 
-        font.draw(status, x - width/2, y, color, true, matrix4f, immediate, true, 0, 0);
+        font.draw(status, x - width/2, y, color, true, matrix4f, immediate, true, 0, 0xF000F0);
         immediate.draw();
     }
 
