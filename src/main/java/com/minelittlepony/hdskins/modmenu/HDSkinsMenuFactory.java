@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.modmenu;
+/*package com.minelittlepony.hdskins.modmenu;
 
 import net.minecraft.client.gui.screen.Screen;
 
@@ -20,3 +20,4 @@ public class HDSkinsMenuFactory implements ModMenuApi {
         return HDSkins.getInstance().getSkinServerList()::createSkinsGui;
     }
 }
+*/
