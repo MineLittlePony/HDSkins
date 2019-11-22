@@ -14,7 +14,7 @@ import net.minecraft.client.texture.PlayerSkinTexture;
 
 @Mixin(PlayerSkinTexture.class)
 public class MixinPlayerSkinTexture {
-    @Inject(method ="method_22795(Lnet/minecraft/client/texture/NativeImage;)Lnet/minecraft/client/texture/NativeImage;",
+    @Inject(method ="loadTexture(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;",
             at = @At("RETURN"),
             cancellable = true)
     private void onLoad(InputStream stream, CallbackInfoReturnable<NativeImage> info) {

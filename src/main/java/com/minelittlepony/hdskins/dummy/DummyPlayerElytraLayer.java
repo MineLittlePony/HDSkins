@@ -46,7 +46,7 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
             modelElytra.method_17079(entity, f, g, j, k, l);
 
             VertexConsumer vertexConsumer = ItemRenderer.getArmorVertexConsumer(vertexConsumerProvider, modelElytra.getLayer(texture), false, itemstack.hasEnchantmentGlint());
-            modelElytra.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1, 1, 1);
+            modelElytra.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
 
             disableBlend();
             matrixStack.pop();

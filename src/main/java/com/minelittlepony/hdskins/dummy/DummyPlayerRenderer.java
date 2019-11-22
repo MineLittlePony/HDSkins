@@ -97,12 +97,12 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         model = getEntityModel(entity);
 
         Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
-        model.headwear.visible = !parts.contains(PlayerModelPart.HAT);
-        model.bodyOverlay.visible = !parts.contains(PlayerModelPart.JACKET);
-        model.leftLegOverlay.visible = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
-        model.rightLegOverlay.visible = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
-        model.leftArmOverlay.visible = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
-        model.rightArmOverlay.visible = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
+        model.helmet.visible = !parts.contains(PlayerModelPart.HAT);
+        model.jacket.visible = !parts.contains(PlayerModelPart.JACKET);
+        model.leftPantLeg.visible = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
+        model.rightPantLeg.visible = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
+        model.leftSleeve.visible = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
+        model.rightSleeve.visible = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
         model.isSneaking = entity.isSneaking();
 
         model.leftArmPose = ArmPose.EMPTY;
@@ -127,14 +127,14 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         stack.translate(0.001, offset, 0.001);
 
         if (entity.isSleeping()) {
-            stack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(90));
+            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(90));
 
             y += 0.7F;
             x += 1;
         }
         if (entity.isSwimming()) {
             DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
-            stack.multiply(Vector3f.POSITIVE_X.getRotationQuaternion(45));
+            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(45));
 
             y -= 0.5F;
             x -= 0;

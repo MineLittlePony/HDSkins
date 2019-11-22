@@ -60,7 +60,7 @@ dependencies {
     modApi "com.minelittlepony:Kirin:${project.kirin_version}"
     include "com.minelittlepony:Kirin:${project.kirin_version}"
 
-    //modImplementation "io.github.prospector.modmenu:ModMenu:1.6.2-93"
+    //modImplementation "io.github.prospector.modmenu:ModMenu:1.7.15-unstable"
 }
 
 processResources {

@@ -175,11 +175,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         matrixStack.translate(xPosition, yPosition, 300);
         matrixStack.scale(scale, scale, scale);
-        matrixStack.multiply(Vector3f.POSITIVE_X.getRotationQuaternion(-15));
+        matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-15));
 
         float rot = ((ticks + partialTick) * 2.5F) % 360;
 
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(rot));
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(rot));
 
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
@@ -193,7 +193,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         disableAlphaTest();
         matrixStack.scale(1, 1, -1);
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getRotationQuaternion(180));
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
 
         dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 1);
         GL11.glPopAttrib();
