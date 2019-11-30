@@ -14,7 +14,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 version = "$project.minecraft_version-${project.version}"
 
 if (System.env.TRAVIS_BRANCH != 'master') {
-    version = "${System.env.TRAVIS_BRANCH}-${version}"
+    version += "-${System.env.TRAVIS_BRANCH}"
 }
 
 if (project.release != 'RELEASE') {
