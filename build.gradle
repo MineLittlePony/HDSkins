@@ -127,7 +127,7 @@ publishing {
     repositories {
         maven {
             name = "MineLittlePony"
-            def mvn = 's3://repo.minelittlepony-mod.com/maven'
+            def mvn = 's3://repo.minelittlepony-mod.com/maven-test'
             url = release == 'SNAPSHOT' ? "$mvn/snapshot" : "$mvn/release"
 
             credentials(AwsCredentials) {
