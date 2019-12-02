@@ -1,11 +1,6 @@
 package com.minelittlepony.hdskins.dummy;
 
-import static com.mojang.blaze3d.systems.RenderSystem.*;
-
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
-
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -33,22 +28,16 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
         ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
 
         if (itemstack.getItem() == Items.ELYTRA) {
-            color4f(1, 1, 1, 1);
-            enableBlend();
-            blendFunc(SourceFactor.ONE, DestFactor.ZERO);
-
             Identifier texture = entity.getTextures().get(SkinType.ELYTRA).getId();
 
             stack.push();
             stack.translate(0, 0, 0.125D);
 
-            this.getModel().copyStateTo(modelElytra);
+            getModel().copyStateTo(modelElytra);
             modelElytra.method_17079(entity, limbDistance, limbAngle, age, headYaw, headPitch);
 
             VertexConsumer vertexConsumer = ItemRenderer.getArmorVertexConsumer(renderContext, modelElytra.getLayer(texture), false, itemstack.hasEnchantmentGlint());
             modelElytra.render(stack, vertexConsumer, lightValue, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
-
-            disableBlend();
             stack.pop();
         }
     }
