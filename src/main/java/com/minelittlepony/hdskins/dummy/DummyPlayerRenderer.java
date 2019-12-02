@@ -84,7 +84,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
     }
 
     @Override
-    public void render(T entity, float entityYaw, float partialTick, MatrixStack stack, VertexConsumerProvider renderContext, int lightValue) {
+    public void render(T entity, float entityYaw, float tickDelta, MatrixStack stack, VertexConsumerProvider renderContext, int lightUv) {
 
         if (entity.isSleeping()) {
             BedHead.instance.render(entity, stack, renderContext);
@@ -144,7 +144,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         }
 
         stack.translate(x, y, z);
-        super.render(entity, entityYaw, partialTick, stack, renderContext, 0xF000F0);
+        super.render(entity, entityYaw, tickDelta, stack, renderContext, 0xF000F0);
         stack.pop();
         GL11.glPopAttrib();
     }

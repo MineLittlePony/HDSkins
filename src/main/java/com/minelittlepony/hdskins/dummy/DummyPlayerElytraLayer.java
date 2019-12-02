@@ -29,7 +29,7 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
     }
 
     @Override
-    public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T entity, float f, float g, float h, float j, float k, float l) {
+    public void render(MatrixStack stack, VertexConsumerProvider renderContext, int lightValue, T entity, float limbDistance, float limbAngle, float tickDelta, float age, float headYaw, float headPitch) {
         ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
 
         if (itemstack.getItem() == Items.ELYTRA) {
@@ -39,17 +39,17 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
 
             Identifier texture = entity.getTextures().get(SkinType.ELYTRA).getId();
 
-            matrixStack.push();
-            matrixStack.translate(0, 0, 0.125D);
+            stack.push();
+            stack.translate(0, 0, 0.125D);
 
             this.getModel().copyStateTo(modelElytra);
-            modelElytra.method_17079(entity, f, g, j, k, l);
+            modelElytra.method_17079(entity, limbDistance, limbAngle, age, headYaw, headPitch);
 
-            VertexConsumer vertexConsumer = ItemRenderer.getArmorVertexConsumer(vertexConsumerProvider, modelElytra.getLayer(texture), false, itemstack.hasEnchantmentGlint());
-            modelElytra.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
+            VertexConsumer vertexConsumer = ItemRenderer.getArmorVertexConsumer(renderContext, modelElytra.getLayer(texture), false, itemstack.hasEnchantmentGlint());
+            modelElytra.render(stack, vertexConsumer, lightValue, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
 
             disableBlend();
-            matrixStack.pop();
+            stack.pop();
         }
     }
 }
