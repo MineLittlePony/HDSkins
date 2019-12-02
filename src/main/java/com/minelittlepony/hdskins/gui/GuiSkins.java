@@ -374,7 +374,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
             enableBlend();
 
-            drawLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff, 0);
+            drawCenteredLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
@@ -385,12 +385,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             enableBlend();
 
             if (uploader.isThrottled()) {
-                drawLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555, 0);
-                drawLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
+                drawCenteredLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555, 0);
+                drawCenteredLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
             } else if (uploader.isOffline()) {
-                drawLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555, 0);
+                drawCenteredLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555, 0);
             } else {
-                drawLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff, 0);
+                drawCenteredLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff, 0);
             }
         }
 
@@ -417,11 +417,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             String errorMsg = I18n.translate(uploader.getStatusMessage());
 
             if (uploadInProgress) {
-                drawLabel(errorMsg, width / 2, height / 2, 0xffffff, 0);
+                drawCenteredLabel(errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
                 int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
-                drawCenteredString(font, I18n.translate("hdskins.failed"), width / 2, blockHeight - font.fontHeight * 2, 0xffff55);
+                drawCenteredLabel(I18n.translate("hdskins.failed"), width / 2, blockHeight - font.fontHeight * 2, 0xffff55, 0);
                 font.drawTrimmed(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
