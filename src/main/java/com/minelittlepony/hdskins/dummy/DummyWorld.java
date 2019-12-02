@@ -22,8 +22,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelInfo;
@@ -33,7 +33,7 @@ public class DummyWorld extends World {
 
     public static final DummyWorld INSTANCE = new DummyWorld();
 
-    private final Chunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
+    private final WorldChunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
     private final Scoreboard scoreboard = new Scoreboard();
     private final RecipeManager recipeManager = new RecipeManager();
     private final RegistryTagManager tags = new RegistryTagManager();
@@ -70,7 +70,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public Chunk getChunk(int chunkX, int chunkZ) {
+    public WorldChunk getChunk(int chunkX, int chunkZ) {
         return chunk;
     }
 
@@ -156,7 +156,5 @@ public class DummyWorld extends World {
 
     @Override
     public void setBlockBreakingInfo(int entityId, BlockPos pos, int progress) {
-        // TODO Auto-generated method stub
-
     }
 }

@@ -55,12 +55,6 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         return EQUIPMENT;
     }
 
-    // $FF: synthetic method
-    @Override
-    protected Map<Identifier, JsonObject> prepare(ResourceManager manager, Profiler profiler) {
-        return super.method_20731(manager, profiler);
-    }
-
     @Override
     protected void apply(Map<Identifier, JsonObject> resources, ResourceManager manager, Profiler profiler) {
         emptySet = new EquipmentSet();

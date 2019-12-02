@@ -79,11 +79,6 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
     }
 
     @Override
-    protected boolean method_4055(T entity) {
-        return MinecraftClient.getInstance().player != null && super.method_4055(entity);
-    }
-
-    @Override
     public void render(T entity, float entityYaw, float tickDelta, MatrixStack stack, VertexConsumerProvider renderContext, int lightUv) {
 
         if (entity.isSleeping()) {

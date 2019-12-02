@@ -34,7 +34,7 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
             stack.translate(0, 0, 0.125D);
 
             getModel().copyStateTo(modelElytra);
-            modelElytra.method_17079(entity, limbDistance, limbAngle, age, headYaw, headPitch);
+            modelElytra.setAngles(entity, limbDistance, limbAngle, age, headYaw, headPitch);
 
             VertexConsumer vertexConsumer = ItemRenderer.getArmorVertexConsumer(renderContext, modelElytra.getLayer(texture), false, itemstack.hasEnchantmentGlint());
             modelElytra.render(stack, vertexConsumer, lightValue, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
