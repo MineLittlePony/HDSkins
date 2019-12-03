@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.gui;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFW;
-
 import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -28,6 +26,8 @@ import com.minelittlepony.hdskins.upload.FileDrop;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
+import com.mojang.blaze3d.systems.RenderSystem;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
@@ -362,6 +362,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         panorama.render(partialTick, 1);
 
+        RenderSystem.disableCull();
+
         float deltaTime = updateCounter + partialTick - lastPartialTick;
         lastPartialTick = updateCounter + partialTick;
 
@@ -372,8 +374,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
 
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            enableBlend();
-
             drawCenteredLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
 
@@ -382,7 +382,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
             fill((int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
-            enableBlend();
 
             if (uploader.isThrottled()) {
                 drawCenteredLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555, 0);
