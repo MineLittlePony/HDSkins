@@ -54,8 +54,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
     protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
 
-    private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
-    private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
+    private final DummyPlayer localPlayer = new DummyPlayer(DummyPlayer.TYPE, localTextures);
+    private final DummyPlayer remotePlayer = new DummyPlayer(DummyPlayer.TYPE, remoteTextures);
 
     private int pose;
 

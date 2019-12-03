@@ -23,7 +23,7 @@ import java.util.Map;
 public class DummyPlayer extends LivingEntity {
 
     public static EntityType<DummyPlayer> TYPE = EntityType.Builder
-            .<DummyPlayer>create((t, w) -> new DummyPlayer(null), EntityCategory.MISC)
+            .<DummyPlayer>create((t, w) -> new DummyPlayer(t, null), EntityCategory.MISC)
             .disableSaving()
             .disableSummon()
             .build("hdskins:dummy_player");
@@ -32,8 +32,8 @@ public class DummyPlayer extends LivingEntity {
 
     private final TextureProxy textures;
 
-    public DummyPlayer(TextureProxy textures) {
-        super(TYPE, DummyWorld.INSTANCE);
+    public DummyPlayer(EntityType<? extends DummyPlayer> type, TextureProxy textures) {
+        super(type, DummyWorld.INSTANCE);
 
         this.textures = textures;
     }
