@@ -57,7 +57,7 @@ dependencies {
     modApi "com.minelittlepony:Kirin:${project.kirin_version}"
     include "com.minelittlepony:Kirin:${project.kirin_version}"
 
-    //modImplementation "io.github.prospector.modmenu:ModMenu:1.7.15-unstable"
+    modImplementation "io.github.prospector:modmenu:${project.modmenu_version}"
 }
 
 processResources {
@@ -96,7 +96,7 @@ publishing {
 
             pom {
                 name = "HDSkins"
-                description = "Ponyfy your Minecraft"
+                description = "High resolution skins for Minecraft"
                 url = "http://minelittlepony-mod.com"
                 licenses {
                     license {
