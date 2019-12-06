@@ -102,7 +102,7 @@ public class OfflineProfileCache {
         }
 
         Map<SkinType, MinecraftProfileTexture> getFiles() {
-            return Util.create(new HashMap<>(), m -> {
+            return Util.make(new HashMap<>(), m -> {
                 files.forEach((type, file) -> m.put(type, file.toProfileTexture()));
             });
         }

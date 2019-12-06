@@ -15,11 +15,11 @@ import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.platform.GlStateManager.DstFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SrcFactor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.render.GuiLighting;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -40,11 +40,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
 
-    public static final Map<SkinType, Identifier> NO_TEXTURES = Util.create(new HashMap<>(), map -> {
+    public static final Map<SkinType, Identifier> NO_TEXTURES = Util.make(new HashMap<>(), map -> {
         map.put(SkinType.SKIN, NO_SKIN_STEVE);
         map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
     });
-    public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.create(new HashMap<>(), map -> {
+    public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.make(new HashMap<>(), map -> {
         map.put(SkinType.SKIN, NO_SKIN_ALEX);
     });
 
@@ -171,7 +171,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.push();
 
         enableColorMaterial();
-        GuiLighting.enable();
+        DiffuseLighting.enable();
 
         matrixStack.translate(xPosition, yPosition, 300);
         matrixStack.scale(scale, scale, scale);
@@ -203,8 +203,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL14.glBlendColor(1, 1, 1, 0.3F);
         blendFuncSeparate(
-                SourceFactor.DST_COLOR, DestFactor.ONE_MINUS_CONSTANT_ALPHA,
-                SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA);
+                SrcFactor.DST_COLOR, DstFactor.ONE_MINUS_CONSTANT_ALPHA,
+                SrcFactor.ONE, DstFactor.ONE_MINUS_SRC_ALPHA);
         enableBlend();
         matrixStack.scale(0.99F, -1, 0.99F);
 
@@ -212,7 +212,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         GL11.glPopAttrib();
         matrixStack.pop();
-        GuiLighting.disable();
+        DiffuseLighting.disable();
         disableColorMaterial();
 
         matrixStack.pop();
