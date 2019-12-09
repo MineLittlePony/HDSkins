@@ -19,7 +19,7 @@
     "client": [
       "com.minelittlepony.hdskins.HDSkins"
     ],
-    "modmenu": [
+    "__disabled__modmenu": [
       "com.minelittlepony.hdskins.modmenu.HDSkinsMenuFactory"
     ]
   },
