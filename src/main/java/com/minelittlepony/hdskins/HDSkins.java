@@ -10,6 +10,7 @@ import com.minelittlepony.hdskins.net.SkinServerList;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.item.ItemStack;
@@ -65,6 +66,8 @@ public final class HDSkins implements ClientModInitializer {
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, DummyPlayerRenderer::new);
         ScreenInitCallback.EVENT.register(this::onScreenInit);
+
+        FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
     }
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
