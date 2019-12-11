@@ -9,7 +9,6 @@ import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.client.texture.NativeImage;
 import net.minecraft.util.Identifier;
 
 public abstract class PreviewTexture extends HDPlayerSkinTexture {
