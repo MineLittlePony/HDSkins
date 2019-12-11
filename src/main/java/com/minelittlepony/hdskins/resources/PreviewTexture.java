@@ -69,9 +69,4 @@ public abstract class PreviewTexture extends HDPlayerSkinTexture {
         } catch (IOException ignored) {}
         return null;
     }
-
-    @Override
-    public NativeImage filterImage(NativeImage image) {
-        return image;
-    }
 }
