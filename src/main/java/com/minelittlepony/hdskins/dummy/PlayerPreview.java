@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
-
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
@@ -15,8 +13,6 @@ import com.minelittlepony.hdskins.VanillaModels;
 import com.minelittlepony.hdskins.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.GlStateManager.DstFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SrcFactor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.DiffuseLighting;
@@ -168,11 +164,9 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
 
+        DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
+
         matrixStack.push();
-
-        enableColorMaterial();
-        DiffuseLighting.enable();
-
         matrixStack.translate(xPosition, yPosition, 300);
         matrixStack.scale(scale, scale, scale);
         matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-15));
@@ -190,30 +184,17 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
 
         matrixStack.push();
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        disableAlphaTest();
-        matrixStack.scale(1, 1, -1);
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
+        matrixStack.scale(1, -1, -1);
 
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 1);
-        GL11.glPopAttrib();
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
         matrixStack.pop();
 
         matrixStack.push();
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL14.glBlendColor(1, 1, 1, 0.3F);
-        blendFuncSeparate(
-                SrcFactor.DST_COLOR, DstFactor.ONE_MINUS_CONSTANT_ALPHA,
-                SrcFactor.ONE, DstFactor.ONE_MINUS_SRC_ALPHA);
-        enableBlend();
-        matrixStack.scale(0.99F, -1, 0.99F);
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
+        matrixStack.scale(0.99F, 1, 0.99F);
 
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 1);
-
-        GL11.glPopAttrib();
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
         matrixStack.pop();
-        DiffuseLighting.disable();
-        disableColorMaterial();
 
         matrixStack.pop();
     }

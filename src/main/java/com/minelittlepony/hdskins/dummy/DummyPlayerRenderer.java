@@ -117,7 +117,6 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             y -= 0.125D;
         }
 
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         stack.push();
         stack.translate(0.001, offset, 0.001);
 
@@ -139,9 +138,8 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         }
 
         stack.translate(x, y, z);
-        super.render(entity, entityYaw, tickDelta, stack, renderContext, 0xF000F0);
+        super.render(entity, entityYaw, tickDelta, stack, renderContext, lightUv);
         stack.pop();
-        GL11.glPopAttrib();
     }
 
     static class BedHead extends BedBlockEntity {
@@ -155,6 +153,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             stack.push();
 
+            stack.scale(-1, 1, 1);
             stack.translate(-0.5, 0, 0);
 
             OutsideWorldRenderer.configure(entity.getEntityWorld())
