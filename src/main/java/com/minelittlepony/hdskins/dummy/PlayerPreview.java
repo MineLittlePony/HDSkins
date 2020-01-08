@@ -5,7 +5,6 @@ import static com.mojang.blaze3d.systems.RenderSystem.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.lwjgl.opengl.GL11;
 import com.minelittlepony.hdskins.SkinUploader.IPreviewModel;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
@@ -145,10 +144,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     }
 
     protected void drawBackground(int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         fill(        frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
         fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
-        GL11.glPopAttrib();
     }
 
     /*
