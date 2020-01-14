@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -9,7 +10,6 @@ import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Session;
 import org.apache.http.HttpHeaders;
@@ -28,12 +28,18 @@ import java.util.UUID;
 @ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
 
+    private static final String API_PREFIX = "/api/v1";
+
     private final String address;
 
     private transient String accessToken;
 
     public ValhallaSkinServer(String address) {
         this.address = address;
+    }
+
+    private String getApiPrefix() {
+        return address + API_PREFIX;
     }
 
     @Override
@@ -49,43 +55,46 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
         try {
-            return uploadPlayerSkin(upload);
+            uploadPlayerSkin(upload);
         } catch (IOException e) {
             if (e.getMessage().equals("Authorization failed")) {
                 accessToken = null;
-                return uploadPlayerSkin(upload);
+                uploadPlayerSkin(upload);
             }
 
             throw e;
         }
     }
 
-    private SkinUpload.Response uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
+    private void uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.getSession());
 
         switch (upload.getSchemaAction()) {
             case "none":
-                return resetSkin(upload);
+                resetSkin(upload);
+                break;
             case "file":
-                return uploadFile(upload);
+                uploadFile(upload);
+                break;
             case "http":
             case "https":
-                return uploadUrl(upload);
+                uploadUrl(upload);
+                break;
             default:
                 throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
         }
     }
 
-    private SkinUpload.Response resetSkin(SkinUpload upload) throws IOException {
-        return upload(RequestBuilder.delete()
+    private void resetSkin(SkinUpload upload) throws IOException {
+        upload(RequestBuilder.delete()
                 .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .build());
     }
 
-    private SkinUpload.Response uploadFile(SkinUpload upload) throws IOException {
+    private void uploadFile(SkinUpload upload) throws IOException {
         final File file = new File(upload.getImage());
 
         MultipartEntityBuilder b = MultipartEntityBuilder.create()
@@ -93,15 +102,15 @@ public class ValhallaSkinServer implements SkinServer {
 
         upload.getMetadata().forEach(b::addTextBody);
 
-        return upload(RequestBuilder.put()
+        upload(RequestBuilder.put()
                 .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .setEntity(b.build())
                 .build());
     }
 
-    private SkinUpload.Response uploadUrl(SkinUpload upload) throws IOException {
-        return upload(RequestBuilder.post()
+    private void uploadUrl(SkinUpload upload) throws IOException {
+        upload(RequestBuilder.post()
                 .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .addParameter("file", upload.getImage().toString())
@@ -109,9 +118,19 @@ public class ValhallaSkinServer implements SkinServer {
                 .build());
     }
 
-    private SkinUpload.Response upload(HttpUriRequest request) throws IOException {
+    private void upload(HttpUriRequest request) throws IOException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
-            return response.unwrapAsJson(SkinUpload.Response.class);
+            if (response.ok()) {
+                return;
+            }
+            if ("application/json".equalsIgnoreCase(response.getContentType())) {
+                JsonObject error = response.json(JsonObject.class);
+                throw new IOException(error.get("message").getAsString());
+            } else {
+                String text = response.text();
+                HDSkins.logger.error("Server error wasn't in json: {}", text);
+                throw new IOException(text);
+            }
         }
     }
 
@@ -159,20 +178,20 @@ public class ValhallaSkinServer implements SkinServer {
     private URI buildUserTextureUri(GameProfile profile, SkinType textureType) {
         String user = UUIDTypeAdapter.fromUUID(profile.getId());
         String skinType = textureType.name().toLowerCase(Locale.US);
-        return URI.create(String.format("%s/user/%s/%s", this.address, user, skinType));
+        return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
     }
 
     private URI getTexturesURI(GameProfile profile) {
         Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
-        return URI.create(String.format("%s/user/%s", this.address, UUIDTypeAdapter.fromUUID(profile.getId())));
+        return URI.create(String.format("%s/user/%s", this.getApiPrefix(), UUIDTypeAdapter.fromUUID(profile.getId())));
     }
 
     private URI getHandshakeURI() {
-        return URI.create(String.format("%s/auth/handshake", this.address));
+        return URI.create(String.format("%s/auth/handshake", this.getApiPrefix()));
     }
 
     private URI getResponseURI() {
-        return URI.create(String.format("%s/auth/response", this.address));
+        return URI.create(String.format("%s/auth/response", this.getApiPrefix()));
     }
 
     @Override
@@ -184,7 +203,8 @@ public class ValhallaSkinServer implements SkinServer {
             case MODEL_VARIANTS:
             case MODEL_TYPES:
                 return true;
-            default: return false;
+            default:
+                return false;
         }
     }
 

@@ -7,11 +7,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.util.UUIDTypeAdapter;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -48,7 +44,7 @@ public interface SkinServer {
      * @throws IOException  If any authentication or network error occurs.
      * @throws AuthenticationException
      */
-    SkinUpload.Response performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
+    void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
 
     /**
      * Asynchronously uploads a skin to the server.
@@ -58,8 +54,11 @@ public interface SkinServer {
      *
      * @param upload The payload to send.
      */
-    default CompletableFuture<SkinUpload.Response> uploadSkin(SkinUpload upload) {
-        return CallableFutures.asyncFailableFuture(() -> performSkinUpload(upload), HDSkins.skinUploadExecutor);
+    default CompletableFuture<Void> uploadSkin(SkinUpload upload) {
+        return CallableFutures.asyncFailableFuture(() -> {
+            performSkinUpload(upload);
+            return null;
+        }, HDSkins.skinUploadExecutor);
     }
 
     /**
@@ -70,23 +69,5 @@ public interface SkinServer {
      */
     default CompletableFuture<TexturePayload> getPreviewTextures(GameProfile profile) {
         return CallableFutures.asyncFailableFuture(() -> loadProfileData(profile), HDSkins.skinDownloadExecutor);
-    }
-
-    /**
-     * Called to validate this skin server's state.
-     * Any servers with an invalid gateway format will not be loaded and generate an exception.
-     */
-    default boolean verifyGateway() {
-        return true;
-    }
-
-    /**
-     * Joins with the Mojang API to verify the current user's session.
-
-     * @throws AuthenticationException if authentication failed or the session is invalid.
-     */
-    static void verifyServerConnection(Session session, String serverId) throws AuthenticationException {
-        MinecraftSessionService service = MinecraftClient.getInstance().getSessionService();
-        service.joinServer(session.getProfile(), session.getAccessToken(), serverId);
     }
 }

@@ -1,14 +1,12 @@
 package com.minelittlepony.hdskins.net;
 
-import com.google.common.base.MoreObjects;
 import com.minelittlepony.hdskins.profile.SkinType;
 import net.minecraft.client.util.Session;
 
-import java.net.URI;
-import java.util.Map;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.net.URI;
+import java.util.Map;
 
 @Immutable
 public class SkinUpload {
@@ -46,23 +44,4 @@ public class SkinUpload {
         return image == null ? "none" : image.getScheme();
     }
 
-    public static class Response {
-
-        private final String message;
-
-        public Response(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("message", message)
-                    .toString();
-        }
-    }
 }
