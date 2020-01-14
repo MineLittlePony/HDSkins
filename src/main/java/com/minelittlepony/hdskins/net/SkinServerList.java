@@ -69,7 +69,7 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
     }
     
     public Iterator<SkinServer> getCycler() {
-        return Iterators.cycle(Iterables.filter(getSkinServers(), SkinServer::verifyGateway));
+        return Iterators.cycle(getSkinServers());
     }
 
     public void setSkinsGui(BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc) {
