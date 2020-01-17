@@ -2,23 +2,18 @@ package com.minelittlepony.hdskins.util.net;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-import com.google.gson.JsonObject;
-import com.minelittlepony.hdskins.skins.api.SkinServer;
-
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -30,7 +25,7 @@ public interface MoreHttpResponses extends AutoCloseable {
     CloseableHttpResponse getResponse();
 
     default boolean ok() {
-        return getResponseCode() == HttpStatus.SC_OK;
+        return getResponseCode() < 400;
     }
 
     default int getResponseCode() {
@@ -67,28 +62,13 @@ public interface MoreHttpResponses extends AutoCloseable {
         }
     }
 
-    default <T> T json(Class<T> type) throws IOException {
-        try (BufferedReader reader = getReader()) {
-            return SkinServer.gson.fromJson(reader, type);
-        }
-    }
-
-    default <T> T json(Type type) throws IOException {
-        try (BufferedReader reader = getReader()) {
-            return SkinServer.gson.fromJson(reader, type);
-        }
-    }
-
-    default <T> T unwrapAsJson(Type type) throws IOException {
+    default JsonElement json() throws IOException, JsonParseException {
         if (!"application/json".equals(getContentType())) {
-            throw new IOException("Server returned a non-json response!");
+            throw new JsonParseException("Wrong content-type. Expected application/json, got " + getContentType());
         }
-
-        if (ok()) {
-            return json(type);
+        try (BufferedReader reader = getReader()) {
+            return new Gson().fromJson(reader, JsonElement.class);
         }
-
-        throw new IOException(json(JsonObject.class).get("message").getAsString());
     }
 
     @Override
@@ -99,13 +79,5 @@ public interface MoreHttpResponses extends AutoCloseable {
     static MoreHttpResponses execute(CloseableHttpClient client, HttpUriRequest request) throws IOException {
         CloseableHttpResponse response = client.execute(request);
         return () -> response;
-    }
-
-    static NameValuePair[] mapAsParameters(Map<String, String> parameters) {
-        return parameters.entrySet().stream()
-                .map(entry ->
-                    new BasicNameValuePair(entry.getKey(), entry.getValue())
-                )
-                .toArray(NameValuePair[]::new);
     }
 }

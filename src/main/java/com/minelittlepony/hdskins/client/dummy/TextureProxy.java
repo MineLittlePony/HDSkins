@@ -1,19 +1,21 @@
 package com.minelittlepony.hdskins.client.dummy;
 
+import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.SkinUploader;
+import com.minelittlepony.hdskins.client.resources.LocalTexture;
+import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSupplier;
+import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
+import com.minelittlepony.hdskins.client.resources.SkinCallback;
+import com.minelittlepony.hdskins.skins.SkinType;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
+
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import com.minelittlepony.hdskins.client.SkinUploader;
-import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.client.resources.LocalTexture;
-import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
-import com.minelittlepony.hdskins.client.resources.SkinCallback;
-import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSupplier;
-import com.mojang.authlib.GameProfile;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
 
 public class TextureProxy implements IBlankSkinSupplier {
 
@@ -69,11 +71,17 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public CompletableFuture<Void> reloadRemoteSkin(SkinUploader uploader, SkinCallback listener) {
-        return uploader.getGateway().getPreviewTextures(profile)
-                .thenApply(PreviewTextureManager::new)
+        return CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return new PreviewTextureManager(uploader.getGateway().loadProfileData(profile));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }, HDSkins.skinDownloadExecutor)
                 .thenAcceptAsync(ptm -> {
-            SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
-        }, MinecraftClient.getInstance()::execute); // run on main thread
+                    SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
+                }, MinecraftClient.getInstance()); // run on main thread
     }
 
     public void setLocal(Path skinTextureFile, SkinType type) {

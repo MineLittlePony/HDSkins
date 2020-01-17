@@ -1,23 +1,28 @@
 package com.minelittlepony.hdskins.client.profile;
 
+import com.google.common.collect.Iterables;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.minelittlepony.hdskins.client.HDSkins;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+import com.mojang.util.UUIDTypeAdapter;
+
+import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import com.google.common.collect.Iterables;
-import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.api.SkinServer;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
-
 public class ProfileUtils {
+
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .create();
 
     /**
      * Try to recreate a broken gameprofile
-     *
+     * <p>
      * This happens when the server sends a random profile with skin and displayname
      */
     public static GameProfile fixGameProfile(GameProfile profile) {
@@ -48,7 +53,7 @@ public class ProfileUtils {
         if (textures != null) {
             String json = new String(Base64.getDecoder().decode(textures.getValue()), StandardCharsets.UTF_8);
 
-            return SkinServer.gson.fromJson(json, MinecraftTexturesPayload.class);
+            return gson.fromJson(json, MinecraftTexturesPayload.class);
         }
 
         return null;

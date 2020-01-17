@@ -1,38 +1,37 @@
 package com.minelittlepony.hdskins.client;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
-
-import com.minelittlepony.hdskins.skins.GameSession;
-import net.minecraft.client.util.Session;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
-import com.minelittlepony.hdskins.skins.api.SkinServer;
+import com.minelittlepony.hdskins.skins.GameSession;
 import com.minelittlepony.hdskins.skins.SkinServerList;
-import com.minelittlepony.hdskins.skins.SkinUpload;
 import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.util.CallableFutures;
+import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.util.net.HttpException;
-import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Session;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nullable;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class SkinUploader implements Closeable {
 
@@ -110,8 +109,8 @@ public class SkinUploader implements Closeable {
         return gateway;
     }
 
-    public boolean supportsFeature(Feature feature) {
-        return gateway != null && gateway.supportsFeature(feature);
+    public Set<Feature> getFeatures() {
+        return gateway != null ? gateway.getFeatures() : Collections.emptySet();
     }
 
     protected void setError(String er) {
@@ -210,25 +209,19 @@ public class SkinUploader implements Closeable {
         status = statusMsg;
 
         GameSession session = session2session(mc.getSession());
-        return gateway.uploadSkin(new SkinUpload(session, skinType, localSkin, skinMetadata)).handleAsync((response, throwable) -> {
-            if (throwable == null) {
-                logger.info("Upload completed with: %s", response);
+        return CompletableFuture.runAsync(() -> {
+            try {
+                gateway.performSkinUpload(new SkinUpload(session, skinType, localSkin, skinMetadata));
                 setError(ERR_ALL_FINE);
-            } else {
-                setError(Throwables.getRootCause(throwable).toString());
+            } catch (IOException | AuthenticationException e) {
+                setError(e.toString());
             }
-
-            fetchRemote();
-            return null;
-        }, MinecraftClient.getInstance());
+        }).thenRunAsync(this::fetchRemote, MinecraftClient.getInstance());
     }
 
-    public CompletableFuture<MoreHttpResponses> downloadSkin() {
+    public InputStream downloadSkin() throws IOException {
         String loc = previewer.getRemote().getTextures().get(skinType).getRemote().getUrl();
-
-        return CallableFutures.asyncFailableFuture(() -> {
-            return MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.get().setUri(loc).build());
-        }, HDSkins.skinDownloadExecutor);
+        return new URL(loc).openStream();
     }
 
     protected void fetchRemote() {
@@ -250,7 +243,7 @@ public class SkinUploader implements Closeable {
                 } else if (throwable instanceof AuthenticationException) {
                     throttlingNeck = true;
                 } else if (throwable instanceof HttpException) {
-                    HttpException ex = (HttpException)throwable;
+                    HttpException ex = (HttpException) throwable;
 
                     logger.error(ex.getReasonPhrase(), ex);
 
@@ -290,7 +283,7 @@ public class SkinUploader implements Closeable {
 
         synchronized (skinLock) {
             if (pendingLocalSkin != null) {
-                logger.debug("Set %s %s", skinType, pendingLocalSkin);
+                logger.debug("Set {} {}", skinType, pendingLocalSkin);
                 previewer.getLocal().getTextures().setLocal(pendingLocalSkin, skinType);
                 localSkin = pendingLocalSkin.toUri();
                 pendingLocalSkin = null;

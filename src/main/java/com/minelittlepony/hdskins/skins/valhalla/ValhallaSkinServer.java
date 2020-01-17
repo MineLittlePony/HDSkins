@@ -1,14 +1,19 @@
 package com.minelittlepony.hdskins.skins.valhalla;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.GameSession;
-import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.skins.SkinUpload;
 import com.minelittlepony.hdskins.skins.TexturePayload;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
@@ -19,21 +24,32 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import org.apache.http.HttpHeaders;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
+    private static final CloseableHttpClient httpClient = HttpClients.createSystem();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
+            .create();
 
     private final String address;
 
@@ -49,10 +65,10 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadProfileData(GameProfile profile) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, new HttpGet(getTexturesURI(profile)))) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(httpClient, new HttpGet(getTexturesURI(profile)))) {
 
             if (response.ok()) {
-                return response.unwrapAsJson(TexturePayload.class);
+                return gson.fromJson(response.json(), TexturePayload.class);
             }
 
             throw new HttpException(response.getResponse());
@@ -119,22 +135,28 @@ public class ValhallaSkinServer implements SkinServer {
                 .setUri(buildUserTextureUri(upload.getSession(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .addParameter("file", upload.getImage().toString())
-                .addParameters(MoreHttpResponses.mapAsParameters(upload.getMetadata()))
+                .addParameters(mapAsParameters(upload.getMetadata()))
                 .build());
     }
 
+    static NameValuePair[] mapAsParameters(Map<String, String> parameters) {
+        return parameters.entrySet().stream()
+                .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
+                .toArray(NameValuePair[]::new);
+    }
+
     private void upload(HttpUriRequest request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(httpClient, request)) {
             if (response.ok()) {
                 return;
             }
-            if ("application/json".equalsIgnoreCase(response.getContentType())) {
-                JsonObject error = response.json(JsonObject.class);
+            try {
+                JsonObject error = response.json().getAsJsonObject();
                 throw new IOException(error.get("message").getAsString());
-            } else {
+            } catch (JsonParseException e) {
                 String text = response.text();
                 HDSkins.logger.error("Server error wasn't in json: {}", text);
-                throw new IOException(text);
+                throw new IOException(e);
             }
         }
     }
@@ -165,22 +187,32 @@ public class ValhallaSkinServer implements SkinServer {
         this.accessToken = response.accessToken;
     }
 
+    private String jsonErrorMsg(JsonElement e) {
+        return e.getAsJsonObject().get("message").getAsString();
+    }
+
     private AuthHandshake authHandshake(String name) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(httpClient, RequestBuilder.post()
                 .setUri(getHandshakeURI())
                 .addParameter("name", name)
                 .build())) {
-            return resp.unwrapAsJson(AuthHandshake.class);
+            if (resp.ok()) {
+                return gson.fromJson(resp.json(), AuthHandshake.class);
+            }
+            throw new IOException(jsonErrorMsg(resp.json()));
         }
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(httpClient, RequestBuilder.post()
                 .setUri(getResponseURI())
                 .addParameter("name", name)
                 .addParameter("verifyToken", String.valueOf(verifyToken))
                 .build())) {
-            return resp.unwrapAsJson(AuthResponse.class);
+            if (resp.ok()) {
+                return gson.fromJson(resp.json(), AuthResponse.class);
+            }
+            throw new IOException(jsonErrorMsg(resp.json()));
         }
     }
 
@@ -204,17 +236,15 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public boolean supportsFeature(Feature feature) {
-        switch (feature) {
-            case DOWNLOAD_USER_SKIN:
-            case UPLOAD_USER_SKIN:
-            case DELETE_USER_SKIN:
-            case MODEL_VARIANTS:
-            case MODEL_TYPES:
-                return true;
-            default:
-                return false;
-        }
+    public Set<Feature> getFeatures() {
+        return ImmutableSet.of(
+                Feature.DOWNLOAD_USER_SKIN,
+                Feature.UPLOAD_USER_SKIN,
+                Feature.DELETE_USER_SKIN,
+                Feature.MODEL_VARIANTS,
+                Feature.MODEL_TYPES,
+                Feature.MODEL_METADATA
+        );
     }
 
     @Override
