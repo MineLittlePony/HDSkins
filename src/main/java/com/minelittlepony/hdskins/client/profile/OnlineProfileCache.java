@@ -45,7 +45,7 @@ public class OnlineProfileCache {
 
             for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
                 try {
-                    if (server.supportsFeature(Feature.ONLINE_MODE)) {
+                    if (server.getFeatures().contains(Feature.ONLINE_MODE)) {
                         server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
                             if (requestedSkinTypes.remove(type)) {
                                 textureMap.putIfAbsent(type, texture);

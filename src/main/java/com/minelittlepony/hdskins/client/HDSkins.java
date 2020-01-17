@@ -1,41 +1,36 @@
 package com.minelittlepony.hdskins.client;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
-import com.minelittlepony.hdskins.skins.SkinServerList;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
+import com.minelittlepony.hdskins.skins.SkinServerList;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.resource.ResourceType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class HDSkins implements ClientModInitializer {
     public static final String MOD_ID = "hdskins";
 
     public static final Logger logger = LogManager.getLogger();
 
-    public static final ExecutorService skinUploadExecutor = Executors.newSingleThreadExecutor();
     public static final ExecutorService skinDownloadExecutor = Executors.newFixedThreadPool(8);
-    public static final CloseableHttpClient httpClient = HttpClients.createSystem();
 
     private static HDSkins instance;
 

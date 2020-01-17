@@ -4,11 +4,15 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.skins.SkinType;
+import com.mojang.util.UUIDTypeAdapter;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
@@ -23,6 +27,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
@@ -30,6 +35,10 @@ import java.util.stream.Stream;
  */
 @FunctionalInterface
 public interface MoreHttpResponses extends AutoCloseable {
+    Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
+            .create();
 
     CloseableHttpResponse response();
 
@@ -93,7 +102,7 @@ public interface MoreHttpResponses extends AutoCloseable {
         }
 
         try (BufferedReader reader = reader()) {
-            return SkinServer.gson.fromJson(reader, type);
+            return GSON.fromJson(reader, type);
         }
     }
 

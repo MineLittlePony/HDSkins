@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.upload.FileSystem;
+import com.minelittlepony.hdskins.client.gui.GuiFileSaver;
+import com.minelittlepony.hdskins.client.gui.GuiFileSelector;
 import com.minelittlepony.hdskins.client.upload.IFileDialog;
-import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 
 import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 public class SkinChooser {
@@ -54,7 +53,7 @@ public class SkinChooser {
     }
 
     public void openBrowsePNG(String title) {
-        openFileThread = FileSystem.openRead(title)
+        openFileThread = new GuiFileSelector(title)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             openFileThread = null;
@@ -66,17 +65,15 @@ public class SkinChooser {
     }
 
     public void openSavePNG(String title, String filename) {
-        openFileThread = FileSystem.openWrite(title, filename)
+        openFileThread = new GuiFileSaver(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             openFileThread = null;
 
             if (success) {
-                try (MoreHttpResponses response = uploader.downloadSkin().get()) {
-                    if (response.ok()) {
-                        Files.copy(response.inputStream(), file);
-                    }
-                } catch (IOException | InterruptedException | ExecutionException e) {
+                try (InputStream response = uploader.downloadSkin()) {
+                    Files.copy(response, file);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
