@@ -1,15 +1,21 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.skins.valhalla;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.minelittlepony.hdskins.skins.Feature;
+import com.minelittlepony.hdskins.skins.GameSession;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
+import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.skins.TexturePayload;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
@@ -27,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
@@ -141,7 +146,11 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private void authorize(Session session) throws IOException, AuthenticationException {
+    private void authorize(GameSession session) throws IOException, AuthenticationException {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+            throw new UnsupportedOperationException("Server cannot upload a skin.");
+        }
+
         if (this.accessToken != null) {
             return;
         }

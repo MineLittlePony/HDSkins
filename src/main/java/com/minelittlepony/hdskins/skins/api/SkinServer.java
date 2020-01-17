@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.skins.api;
 
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.SkinUpload;

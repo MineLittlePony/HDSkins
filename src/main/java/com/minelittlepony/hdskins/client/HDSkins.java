@@ -52,8 +52,8 @@ public final class HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         config.load();
+        skinServerList.load();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, DummyPlayerRenderer::new);
         ScreenInitCallback.EVENT.register(this::onScreenInit);

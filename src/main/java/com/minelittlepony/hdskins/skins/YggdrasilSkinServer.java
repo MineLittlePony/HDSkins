@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
@@ -30,9 +30,7 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 
-@ServerType("mojang")
 public class YggdrasilSkinServer implements SkinServer {
 
     static final SkinServer INSTANCE = new YggdrasilSkinServer();
@@ -142,7 +140,7 @@ public class YggdrasilSkinServer implements SkinServer {
         );
     }
 
-    private void authorize(Session session) throws IOException {
+    private void authorize(GameSession session) throws IOException {
         RequestBuilder request = RequestBuilder.post().setUri(verify);
         request.setEntity(new TokenRequest(session).toEntity());
 
@@ -171,7 +169,7 @@ public class YggdrasilSkinServer implements SkinServer {
         @Nonnull
         private final String accessToken;
 
-        TokenRequest(Session session) {
+        TokenRequest(GameSession session) {
             accessToken = session.getAccessToken();
         }
 

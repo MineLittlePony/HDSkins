@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.skins;
 
-import net.minecraft.client.util.Session;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.net.URI;
@@ -10,19 +8,19 @@ import java.util.Map;
 @Immutable
 public class SkinUpload {
 
-    private final Session session;
+    private final GameSession session;
     private final URI image;
     private final Map<String, String> metadata;
     private final SkinType type;
 
-    public SkinUpload(Session session, SkinType type, @Nullable URI image, Map<String, String> metadata) {
+    public SkinUpload(GameSession session, SkinType type, @Nullable URI image, Map<String, String> metadata) {
         this.session = session;
         this.image = image;
         this.metadata = metadata;
         this.type = type;
     }
 
-    public Session getSession() {
+    public GameSession getSession() {
         return session;
     }
 

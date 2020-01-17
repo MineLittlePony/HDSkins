@@ -1,0 +1,12 @@
+{
+  "servers": [
+    {
+      "address": "https://skins.minelittlepony-mod.com",
+      "type": "valhalla"
+    }
+  ],
+  "whitelist": [
+    ".minelittlepony-mod.com"
+  ],
+  "blacklist": []
+}

@@ -1,98 +1,81 @@
 package com.minelittlepony.hdskins.skins;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.minelittlepony.hdskins.client.HDSkins;
 
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.SynchronousResourceReloadListener;
-import net.minecraft.util.Identifier;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
+import com.minelittlepony.common.util.GamePaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Set;
 
-public class SkinServerList implements SynchronousResourceReloadListener, IdentifiableResourceReloadListener {
+public class SkinServerList {
 
-    private static final Identifier SKIN_SERVERS = new Identifier(HDSkins.MOD_ID, "skins/servers.json");
+    private static final String SKIN_SERVERS = "skin-servers.json";
 
     private static final Logger logger = LogManager.getLogger();
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(SkinServer.class, SkinServerSerializer.instance)
             .create();
 
-    private List<SkinServer> skinServers = new LinkedList<>();
+    @Nullable
+    private SkinServerJson skinServers;
 
-    @Override
-    public Identifier getFabricId() {
-        return SKIN_SERVERS;
-    }
-
-    @Override
-    public void apply(ResourceManager mgr) {
-        skinServers.clear();
-
+    public void load() {
         logger.info("Loading skin servers");
+
+        Path jsonPath = GamePaths.getConfigDirectory().resolve(SKIN_SERVERS);
+
+        skinServers = null;
+
         try {
-            for (Resource res : mgr.getAllResources(SKIN_SERVERS)) {
-                logger.info("Found {} in {}", res.getId(), res.getResourcePackName());
-                try (Resource r = res) {
-                    SkinServerJson json = gson.fromJson(new InputStreamReader(r.getInputStream()), SkinServerJson.class);
-                    json.apply(skinServers);
-                } catch (Exception e) {
-                    logger.warn("Unable to load resource '{}' from '{}'", SKIN_SERVERS, res.getResourcePackName(), e);
+            if (Files.notExists(jsonPath)) {
+                logger.info("Skin server config not found. Saving defaults.");
+                try (InputStream in = getClass().getResourceAsStream("/skin-servers.json")) {
+                    Files.copy(in, jsonPath);
                 }
             }
+            try (Reader r = Files.newBufferedReader(jsonPath)) {
+                skinServers = gson.fromJson(r, SkinServerJson.class);
+            }
         } catch (IOException e) {
-            logger.error("Unable to read {} from resource packs. No servers will be used.", SKIN_SERVERS, e);
+            logger.warn("Unable to load skin servers. No servers will be used.", e);
+        }
+
+        if (skinServers != null) {
+            skinServers.servers.add(YggdrasilSkinServer.INSTANCE);
         }
     }
 
     public List<SkinServer> getSkinServers() {
-        return ImmutableList.copyOf(skinServers);
+        return skinServers == null ? Collections.emptyList() : ImmutableList.copyOf(skinServers.servers);
     }
 
-    public Iterator<SkinServer> getCycler() {
-        return Iterators.cycle(getSkinServers());
+    public Set<String> getWhitelist() {
+        return skinServers == null ? Collections.emptySet() : ImmutableSet.copyOf(skinServers.whitelist);
     }
 
-    private static <T> void addAllStart(List<T> list, List<T> toAdd) {
-        list.addAll(0, toAdd);
+    public Set<String> getBlacklist() {
+        return skinServers == null ? Collections.emptySet() : skinServers.blacklist;
     }
 
     private static class SkinServerJson {
-        boolean overwrite = false;
-        InsertType insert = InsertType.END;
-        List<SkinServer> servers = Collections.emptyList();
-
-        private void apply(List<SkinServer> skinServers) {
-            if (overwrite) {
-                skinServers.clear();
-            }
-            logger.info("Found {} servers", servers.size());
-            insert.consumer.accept(skinServers, servers);
-        }
+        List<SkinServer> servers = new ArrayList<>();
+        Set<String> whitelist = new HashSet<>();
+        Set<String> blacklist = new HashSet<>();
     }
 
-    private enum InsertType {
-        START(SkinServerList::addAllStart),
-        END(List::addAll);
-
-        final BiConsumer<List<SkinServer>, List<SkinServer>> consumer;
-
-        InsertType(BiConsumer<List<SkinServer>, List<SkinServer>> consumer) {
-            this.consumer = consumer;
-        }
-
-    }
 }
