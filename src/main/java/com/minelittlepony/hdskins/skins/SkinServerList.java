@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.resource.Resource;

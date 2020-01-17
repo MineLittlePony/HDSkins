@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.util.net;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;

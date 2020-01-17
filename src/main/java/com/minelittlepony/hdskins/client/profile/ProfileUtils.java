@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Iterables;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;

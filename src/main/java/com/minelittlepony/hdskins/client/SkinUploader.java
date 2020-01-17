@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
+import com.minelittlepony.hdskins.skins.GameSession;
+import net.minecraft.client.util.Session;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +20,7 @@ import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinServerList;
 import com.minelittlepony.hdskins.skins.SkinUpload;
 import com.minelittlepony.hdskins.skins.SkinType;
@@ -199,11 +201,16 @@ public class SkinUploader implements Closeable {
         return false;
     }
 
+    private GameSession session2session(Session session) {
+        return new GameSession(session.getUsername(), session.getUuid(), session.getAccessToken());
+    }
+
     public CompletableFuture<Void> uploadSkin(String statusMsg) {
         sendingSkin = true;
         status = statusMsg;
 
-        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handleAsync((response, throwable) -> {
+        GameSession session = session2session(mc.getSession());
+        return gateway.uploadSkin(new SkinUpload(session, skinType, localSkin, skinMetadata)).handleAsync((response, throwable) -> {
             if (throwable == null) {
                 logger.info("Upload completed with: %s", response);
                 setError(ERR_ALL_FINE);

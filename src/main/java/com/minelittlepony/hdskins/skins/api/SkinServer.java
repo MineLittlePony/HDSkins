@@ -1,8 +1,12 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.skins.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.skins.Feature;
+import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.skins.TexturePayload;
 import com.minelittlepony.hdskins.util.CallableFutures;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
@@ -14,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 
 public interface SkinServer {
 
+    /** @deprecated This needs to move somewhere else */
+    @Deprecated
     Gson gson = new GsonBuilder()
             .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
@@ -52,7 +58,9 @@ public interface SkinServer {
      * Actions are dispatched to the default skinUploadExecutor
      *
      * @param upload The payload to send.
+     * @deprecated Why bother wrapping it in a future?
      */
+    @Deprecated
     default CompletableFuture<Void> uploadSkin(SkinUpload upload) {
         return CallableFutures.asyncFailableFuture(() -> {
             performSkinUpload(upload);
@@ -65,7 +73,9 @@ public interface SkinServer {
      *
      * Returns an incomplete future for chaining other actions to be performed after this method completes.
      * Actions are dispatched to the default skinDownloadExecutor
+     * @deprecated Why bother wrapping it in a future?
      */
+    @Deprecated
     default CompletableFuture<TexturePayload> getPreviewTextures(GameProfile profile) {
         return CallableFutures.asyncFailableFuture(() -> loadProfileData(profile), HDSkins.skinDownloadExecutor);
     }

@@ -1,16 +1,23 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.skins.valhalla;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.skins.Feature;
+import com.minelittlepony.hdskins.skins.GameSession;
+import com.minelittlepony.hdskins.skins.api.SkinServer;
+import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.skins.TexturePayload;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -24,7 +31,6 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.UUID;
 
-@ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
@@ -88,7 +94,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private void resetSkin(SkinUpload upload) throws IOException {
         upload(RequestBuilder.delete()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload.getSession(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .build());
     }
@@ -102,7 +108,7 @@ public class ValhallaSkinServer implements SkinServer {
         upload.getMetadata().forEach(b::addTextBody);
 
         upload(RequestBuilder.put()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload.getSession(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .setEntity(b.build())
                 .build());
@@ -110,7 +116,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private void uploadUrl(SkinUpload upload) throws IOException {
         upload(RequestBuilder.post()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload.getSession(), upload.getType()))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .addParameter("file", upload.getImage().toString())
                 .addParameters(MoreHttpResponses.mapAsParameters(upload.getMetadata()))
@@ -133,7 +139,11 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private void authorize(Session session) throws IOException, AuthenticationException {
+    private void authorize(GameSession session) throws IOException, AuthenticationException {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+            throw new UnsupportedOperationException("Server cannot upload a skin.");
+        }
+
         if (this.accessToken != null) {
             return;
         }
@@ -174,8 +184,8 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private URI buildUserTextureUri(GameProfile profile, SkinType textureType) {
-        String user = UUIDTypeAdapter.fromUUID(profile.getId());
+    private URI buildUserTextureUri(GameSession session, SkinType textureType) {
+        String user = session.getUniqueId();
         String skinType = textureType.name().toLowerCase(Locale.US);
         return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
     }
