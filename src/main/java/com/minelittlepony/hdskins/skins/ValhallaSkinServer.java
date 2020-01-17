@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.skins;
 
 import com.google.common.base.Preconditions;
-import com.minelittlepony.hdskins.client.HDSkins;
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
@@ -12,16 +11,19 @@ import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Session;
 import org.apache.http.HttpHeaders;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +31,7 @@ import java.util.UUID;
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
+
     private static final Set<Feature> FEATURES = Sets.newHashSet(
             Feature.ONLINE_MODE,
             Feature.DOWNLOAD_USER_SKIN,
@@ -51,8 +54,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, new HttpGet(getTexturesURI(profile)))) {
-
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, new HttpGet(getTexturesURI(profile)))) {
             if (response.ok()) {
                 return response.unwrapAsJson(TexturePayload.class);
             }
@@ -121,12 +123,18 @@ public class ValhallaSkinServer implements SkinServer {
                 .setUri(buildUserTextureUri(upload))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .addParameter("file", upload.getImage().toString())
-                .addParameters(MoreHttpResponses.mapAsParameters(upload.getMetadata()))
+                .addParameters(mapAsParameters(upload.getMetadata()))
                 .build());
     }
 
+    static NameValuePair[] mapAsParameters(Map<String, String> parameters) {
+        return parameters.entrySet().stream()
+                .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
+                .toArray(NameValuePair[]::new);
+    }
+
     private void upload(HttpUriRequest request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request)) {
             if (!response.ok()) {
                 throw response.exception();
             }
@@ -155,7 +163,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthHandshake authHandshake(String name) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(HTTP_CLIENT, RequestBuilder.post()
                 .setUri(getHandshakeURI())
                 .addParameter("name", name)
                 .build())) {
@@ -164,12 +172,12 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.post()
+        try (MoreHttpResponses resp = MoreHttpResponses.execute(HTTP_CLIENT, RequestBuilder.post()
                 .setUri(getResponseURI())
                 .addParameter("name", name)
                 .addParameter("verifyToken", String.valueOf(verifyToken))
                 .build())) {
-            return resp.unwrapAsJson(AuthResponse.class);
+            return resp.unwrapAsJson(AuthHandshake.class);
         }
     }
 
@@ -193,8 +201,8 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public boolean supportsFeature(Feature feature) {
-        return FEATURES.contains(feature);
+    public Set<Feature> getFeatures() {
+        return FEATURES;
     }
 
     @Override

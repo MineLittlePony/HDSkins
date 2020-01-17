@@ -5,11 +5,10 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 
-import com.minelittlepony.hdskins.util.CallableFutures;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,24 +27,28 @@ public class ImageLoader {
 
     @SuppressWarnings("resource")
     public CompletableFuture<Identifier> loadAsync(Identifier original) {
-        return CallableFutures.asyncFailableFuture(() -> {
-            NativeImage image = getImage(original);
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                NativeImage image = getImage(original);
 
-            final NativeImage updated = HDPlayerSkinTexture.filterPlayerSkins(image);
+                final NativeImage updated = HDPlayerSkinTexture.filterPlayerSkins(image);
 
-            if (updated == null || updated == image) {
-                return original; // don't load a new image
-            }
-
-            return CompletableFuture.supplyAsync(() -> {
-                Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
-
-                if (mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(updated))) {
-                    return conv;
+                if (updated == null || updated == image) {
+                    return original; // don't load a new image
                 }
 
-                return original;
-            }, mc).get();
+                return CompletableFuture.supplyAsync(() -> {
+                    Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
+
+                    if (mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(updated))) {
+                        return conv;
+                    }
+
+                    return original;
+                }, mc).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
         }, executor);
     }
 

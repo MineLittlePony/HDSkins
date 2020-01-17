@@ -1,12 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import org.lwjgl.glfw.GLFW;
 import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -19,15 +12,13 @@ import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
+import com.minelittlepony.hdskins.client.upload.FileDrop;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.SkinServerList;
 import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.client.upload.FileDrop;
-import com.minelittlepony.hdskins.util.CallableFutures;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
@@ -40,6 +31,14 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.glfw.GLFW;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 
 public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
 
@@ -427,19 +426,27 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
     }
 
     private void punchServer(String uploadMsg) {
-        uploader.uploadSkin(uploadMsg).handle(CallableFutures.callback(this::updateButtons));
+        uploader.uploadSkin(uploadMsg).whenComplete((o, t) -> {
+            if (t != null) {
+                t.printStackTrace();
+            }
+            updateButtons();
+        });
 
         updateButtons();
     }
 
     private void updateButtons() {
+
+        Set<Feature> features = uploader.getFeatures();
+
         btnClear.active = uploader.canClear();
-        btnUpload.active = uploader.canUpload() && uploader.supportsFeature(Feature.UPLOAD_USER_SKIN);
+        btnUpload.active = uploader.canUpload() && features.contains(Feature.UPLOAD_USER_SKIN);
         btnDownload.active = uploader.canClear() && !chooser.pickingInProgress();
         btnBrowse.active = !chooser.pickingInProgress();
 
-        boolean types = !uploader.supportsFeature(Feature.MODEL_TYPES);
-        boolean variants = !uploader.supportsFeature(Feature.MODEL_VARIANTS);
+        boolean types = !features.contains(Feature.MODEL_TYPES);
+        boolean variants = !features.contains(Feature.MODEL_VARIANTS);
 
         btnModeSkin.setLocked(types);
         btnModeElytra.setLocked(types);
@@ -447,9 +454,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
         btnModeSteve.setLocked(variants);
         btnModeAlex.setLocked(variants);
 
-        btnClear.setLocked(!uploader.supportsFeature(Feature.DELETE_USER_SKIN));
-        btnUpload.setLocked(!uploader.supportsFeature(Feature.UPLOAD_USER_SKIN));
-        btnDownload.setLocked(!uploader.supportsFeature(Feature.DOWNLOAD_USER_SKIN));
+        btnClear.setLocked(!features.contains(Feature.DELETE_USER_SKIN));
+        btnUpload.setLocked(!features.contains(Feature.UPLOAD_USER_SKIN));
+        btnDownload.setLocked(!features.contains(Feature.DOWNLOAD_USER_SKIN));
     }
 
     protected class FeatureButton extends Button {

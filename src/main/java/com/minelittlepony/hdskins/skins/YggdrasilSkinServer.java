@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
@@ -49,8 +50,8 @@ public class YggdrasilSkinServer implements SkinServer {
     private transient final boolean requireSecure = true;
 
     @Override
-    public boolean supportsFeature(Feature feature) {
-        return FEATURES.contains(feature);
+    public Set<Feature> getFeatures() {
+        return FEATURES;
     }
 
     @Override
@@ -149,7 +150,7 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     private void send(RequestBuilder request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request.build())) {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request.build())) {
             if (!response.ok()) {
                 throw new IOException(response.json(ErrorResponse.class, "Server error wasn't in json: {}").toString());
             }

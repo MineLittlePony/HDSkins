@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
-import org.apache.http.client.methods.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,17 +18,19 @@ import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinServerList;
-import com.minelittlepony.hdskins.skins.SkinUpload;
 import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.util.CallableFutures;
+import com.minelittlepony.hdskins.skins.SkinUpload;
 import com.minelittlepony.hdskins.util.net.HttpException;
-import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
 
 public class SkinUploader implements Closeable {
 
@@ -107,8 +108,8 @@ public class SkinUploader implements Closeable {
         return gateway;
     }
 
-    public boolean supportsFeature(Feature feature) {
-        return gateway != null && gateway.supportsFeature(feature);
+    public Set<Feature> getFeatures() {
+        return gateway != null ? gateway.getFeatures() : Collections.emptySet();
     }
 
     protected void setError(String er) {
@@ -202,26 +203,20 @@ public class SkinUploader implements Closeable {
         sendingSkin = true;
         status = statusMsg;
 
-        return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handleAsync((response, throwable) -> {
-            sendingSkin = false;
-
-            if (throwable == null) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin, skinMetadata));
+                sendingSkin = false;
                 setError(ERR_ALL_FINE);
-            } else {
-                handleException(throwable);
+            } catch (IOException | AuthenticationException e) {
+                handleException(e);
             }
-
-            fetchRemote();
-            return null;
-        }, MinecraftClient.getInstance());
+        }).thenRunAsync(this::fetchRemote, MinecraftClient.getInstance());
     }
 
-    public CompletableFuture<MoreHttpResponses> downloadSkin() {
+    public InputStream downloadSkin() throws IOException {
         String loc = previewer.getRemote().getTextures().get(skinType).getRemote().getUrl();
-
-        return CallableFutures.asyncFailableFuture(() -> {
-            return MoreHttpResponses.execute(HDSkins.httpClient, RequestBuilder.get().setUri(loc).build());
-        }, HDSkins.skinDownloadExecutor);
+        return new URL(loc).openStream();
     }
 
     protected void fetchRemote() {
@@ -245,6 +240,8 @@ public class SkinUploader implements Closeable {
     }
 
     private void handleException(Throwable throwable) {
+        throwable = throwable.getCause();
+
         if (throwable instanceof AuthenticationUnavailableException) {
             offline = true;
         } else if (throwable instanceof AuthenticationException) {
@@ -287,7 +284,7 @@ public class SkinUploader implements Closeable {
 
         synchronized (skinLock) {
             if (pendingLocalSkin != null) {
-                logger.debug("Set %s %s", skinType, pendingLocalSkin);
+                logger.debug("Set {} {}", skinType, pendingLocalSkin);
                 previewer.getLocal().getTextures().setLocal(pendingLocalSkin, skinType);
                 localSkin = pendingLocalSkin.toUri();
                 pendingLocalSkin = null;
