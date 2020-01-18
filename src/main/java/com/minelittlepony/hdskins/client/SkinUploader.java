@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
@@ -240,7 +241,7 @@ public class SkinUploader implements Closeable {
     }
 
     private void handleException(Throwable throwable) {
-        throwable = throwable.getCause();
+        throwable = Throwables.getRootCause(throwable);
 
         if (throwable instanceof AuthenticationUnavailableException) {
             offline = true;
@@ -249,13 +250,13 @@ public class SkinUploader implements Closeable {
         } else if (throwable instanceof HttpException) {
             HttpException ex = (HttpException)throwable;
 
-            logger.error(ex.getReasonPhrase(), ex);
-
             int code = ex.getStatusCode();
 
             if (code >= 500) {
+                logger.error(ex.getReasonPhrase(), ex);
                 setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
             } else if (code >= 400 && code != 403 && code != 404) {
+                logger.error(ex.getReasonPhrase(), ex);
                 setError(ex.getReasonPhrase());
             }
         } else {

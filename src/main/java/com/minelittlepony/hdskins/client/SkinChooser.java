@@ -6,6 +6,7 @@ import com.minelittlepony.hdskins.client.upload.IFileDialog;
 
 import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +75,7 @@ public class SkinChooser {
                 try (InputStream response = uploader.downloadSkin()) {
                     Files.copy(response, file);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LogManager.getLogger().error("Failed to save remote skin.", e);
                 }
             }
         }).launch();
