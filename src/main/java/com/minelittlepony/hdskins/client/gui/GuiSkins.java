@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client.gui;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -38,9 +39,21 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
+
+    private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
+
+    public static void setSkinsGui(BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc) {
+        Preconditions.checkNotNull(skinsGuiFunc, "skinsGuiFunc");
+        GuiSkins.skinsGuiFunc = skinsGuiFunc;
+    }
+
+    public static GuiSkins create(Screen parent, SkinServerList servers) {
+        return skinsGuiFunc.apply(parent, servers);
+    }
 
     private int updateCounter = 0;
     private float lastPartialTick;

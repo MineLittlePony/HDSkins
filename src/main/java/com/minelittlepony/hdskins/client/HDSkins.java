@@ -6,6 +6,7 @@ import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList;
+import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.skins.SkinServerList;
@@ -56,8 +57,8 @@ public final class HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         config.load();
+        skinServerList.load();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(skinServerList);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, DummyPlayerRenderer::new);
         ScreenInitCallback.EVENT.register(this::onScreenInit);
@@ -68,7 +69,7 @@ public final class HDSkins implements ClientModInitializer {
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
         if (screen instanceof TitleScreen) {
             Button button = buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20))
-                .onClick(sender -> MinecraftClient.getInstance().openScreen(getSkinServerList().createSkinsGui(screen)));
+                    .onClick(sender -> MinecraftClient.getInstance().openScreen(GuiSkins.create(screen, skinServerList)));
             button.getStyle()
                     .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb);
             button.y = screen.height - 50; // ModMenu;

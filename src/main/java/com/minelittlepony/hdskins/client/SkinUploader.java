@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client;
 
+import com.google.common.collect.Iterators;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
@@ -85,7 +86,7 @@ public class SkinUploader implements Closeable {
         this.listener = listener;
 
         skinMetadata.put("model", "default");
-        skinServers = servers.getCycler();
+        skinServers = Iterators.cycle(servers.getSkinServers());
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
