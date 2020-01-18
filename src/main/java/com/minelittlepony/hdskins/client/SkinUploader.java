@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
@@ -237,7 +238,7 @@ public class SkinUploader implements Closeable {
             fetchingSkin = false;
 
             if (throwable != null) {
-                throwable = throwable.getCause();
+                throwable = Throwables.getRootCause(throwable);
 
                 if (throwable instanceof AuthenticationUnavailableException) {
                     offline = true;
@@ -246,14 +247,15 @@ public class SkinUploader implements Closeable {
                 } else if (throwable instanceof HttpException) {
                     HttpException ex = (HttpException) throwable;
 
-                    logger.error(ex.getReasonPhrase(), ex);
-
                     int code = ex.getStatusCode();
 
-                    if (code >= 500) {
-                        setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
-                    } else if (code >= 400 && code != 403 && code != 404) {
+                    if (code != 403 && code != 404) {
+                        logger.error(ex.getReasonPhrase(), ex);
                         setError(ex.getReasonPhrase());
+
+                        if (code >= 500) {
+                            setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
+                        }
                     }
                 } else {
                     logger.error("Unhandled exception", throwable);
