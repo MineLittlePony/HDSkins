@@ -23,15 +23,10 @@ import net.minecraft.resource.ResourceType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public final class HDSkins implements ClientModInitializer {
     public static final String MOD_ID = "hdskins";
 
     public static final Logger logger = LogManager.getLogger();
-
-    public static final ExecutorService skinDownloadExecutor = Executors.newFixedThreadPool(8);
 
     private static HDSkins instance;
 
