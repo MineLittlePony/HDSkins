@@ -2,7 +2,6 @@ package com.minelittlepony.hdskins.net;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,7 +66,7 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
     public List<SkinServer> getSkinServers() {
         return ImmutableList.copyOf(skinServers);
     }
-    
+
     public Iterator<SkinServer> getCycler() {
         return Iterators.cycle(getSkinServers());
     }
