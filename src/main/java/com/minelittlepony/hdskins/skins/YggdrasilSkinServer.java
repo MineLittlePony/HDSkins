@@ -17,7 +17,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.skins.api.SkinServer;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -74,10 +74,8 @@ public class YggdrasilSkinServer implements SkinServer {
             HDSkins.logger.error(e);
         }
 
-
-
         return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
-                entry -> SkinType.forVanilla(entry.getKey()),
+                entry -> SkinType.of(entry.getKey().name()),
                 Map.Entry::getValue
         )));
     }

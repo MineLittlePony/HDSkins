@@ -5,7 +5,9 @@
   "name": "HD Skins",
   "description": "Faster, stronger, more res skin servers for Minecraft. Access via the main menu.",
   "authors": [
-    "Mumfrey", "Killjoy1221", "Sollace"
+    "Mumfrey",
+    "Killjoy1221",
+    "Sollace"
   ],
   "contact": {
     "homepage": "https://minelittlepony-mod.com/",
@@ -14,10 +16,13 @@
   },
   "license": "MIT",
   "icon": "hdskins_logo.png",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.minelittlepony.hdskins.HDSkins"
+    ],
     "client": [
-      "com.minelittlepony.hdskins.client.HDSkins"
+      "com.minelittlepony.hdskins.client.HDSkinsClient"
     ],
     "modmenu": [
       "com.minelittlepony.hdskins.client.modmenu.HDSkinsMenuFactory"
@@ -32,7 +37,7 @@
     "fabric-events-lifecycle-v0": ">=0.1.0",
     "fabric-resource-loader-v0": ">=0.1.0",
     "fabric-renderer-registries-v1": ">=0.1.0",
-  	"kirin": "*"
+    "kirin": "*"
   },
   "suggests": {
     "modmenu": "*"

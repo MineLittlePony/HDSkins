@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.util.net;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
 import org.apache.http.HttpEntity;

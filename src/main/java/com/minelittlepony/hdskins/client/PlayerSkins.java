@@ -1,57 +1,58 @@
 package com.minelittlepony.hdskins.client;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
-import com.minelittlepony.hdskins.client.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
-
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.util.Identifier;
 
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 public class PlayerSkins {
 
-    private final INetworkPlayerInfo playerInfo;
+    private final PlayerListEntry playerListEntry;
 
+    private final Map<SkinType, Identifier> vanillaTextures = new HashMap<>();
     private final Map<SkinType, Identifier> customTextures = new HashMap<>();
-
     private final Map<SkinType, MinecraftProfileTexture> customProfiles = new HashMap<>();
-
     private final Map<SkinType, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
 
-    public PlayerSkins(INetworkPlayerInfo playerInfo) {
-        this.playerInfo = playerInfo;
+    public PlayerSkins(PlayerListEntry playerListEntry) {
+        this.playerListEntry = playerListEntry;
     }
 
     @Nullable
     public Identifier getSkin(SkinType type) {
-        return HDSkins.getInstance().getResourceManager()
-                .getCustomPlayerTexture(playerInfo.getGameProfile(), type)
+        return HDSkinsClient.getInstance().getResourceManager()
+                .getCustomPlayerTexture(playerListEntry.getProfile(), type)
                 .orElseGet(() -> Optional.ofNullable(customTextures.get(type))
-                .orElseGet(() -> type.getEnum().map(playerInfo.getVanillaTextures()::get)
-                .orElse(null)));
+                        .orElseGet(() -> Optional.ofNullable(vanillaTextures.get(type))
+                                .orElse(null)));
     }
 
     @Nullable
     public String getModel() {
-        return HDSkins.getInstance().getResourceManager()
-                .getCustomPlayerModel(playerInfo.getGameProfile())
+        return HDSkinsClient.getInstance().getResourceManager()
+                .getCustomPlayerModel(playerListEntry.getProfile())
                 .orElseGet(() -> getModelFrom(customProfiles)
-                .orElseGet(() -> getModelFrom(vanillaProfiles)
-                .orElse(null)));
+                        .orElseGet(() -> getModelFrom(vanillaProfiles)
+                                .orElse(null)));
     }
 
     public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {
-
-        HDSkins.getInstance().getProfileRepository().fetchSkins(profile, this::onCustomTextureLoaded);
-
         provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);
+        // Load the skins on a separate thread.
+        HDSkins.getInstance().getSkinServerList().loadProfileTextures(profile)
+                .thenAccept(m -> m.forEach((type, texture) -> {
+                    // Download the skins
+                    HDSkinsClient.getInstance().getProfileRepository().loadTexture(type, texture, this::onCustomTextureLoaded);
+                }));
     }
 
     private void onCustomTextureLoaded(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
@@ -60,8 +61,8 @@ public class PlayerSkins {
     }
 
     private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
-        playerInfo.getVanillaTextures().put(type, location);
-        vanillaProfiles.put(SkinType.forVanilla(type), profileTexture);
+        vanillaTextures.put(SkinType.of(type.name()), location);
+        vanillaProfiles.put(SkinType.of(type.name()), profileTexture);
     }
 
     private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {

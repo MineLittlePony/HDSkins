@@ -20,7 +20,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager.SkinData.Skin;
@@ -48,9 +47,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
 
-    private static final Gson gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
-            .create();
+    private static final Gson gson = new Gson();
 
     private final ImageLoader loader = new ImageLoader();
 
