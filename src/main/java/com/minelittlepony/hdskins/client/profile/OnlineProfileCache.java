@@ -20,6 +20,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
+import net.minecraft.util.Util;
+
 public class OnlineProfileCache {
     private LoadingCache<GameProfile, CompletableFuture<Map<SkinType, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
@@ -64,7 +66,7 @@ public class OnlineProfileCache {
             repository.offline.storeCachedProfileData(profile, textureMap);
 
             return textureMap;
-        }, HDSkins.skinDownloadExecutor);
+        }, Util.getServerWorkerExecutor());
     }
 
     public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> loadProfile(GameProfile profile) {

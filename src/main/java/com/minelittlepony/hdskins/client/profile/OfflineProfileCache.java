@@ -61,7 +61,7 @@ public class OfflineProfileCache {
             }
 
             return null;
-        }, HDSkins.skinDownloadExecutor);
+        }, Util.getServerWorkerExecutor());
     }
 
     public Path getCachedProfileLocation(GameProfile profile) {
