@@ -139,7 +139,6 @@ public class ValhallaSkinServer implements SkinServer {
             return;
         }
         GameProfile profile = session.getProfile();
-        String token = session.getAccessToken();
         AuthHandshake handshake = authHandshake(profile.getName());
 
         if (handshake.offline) {
@@ -147,7 +146,7 @@ public class ValhallaSkinServer implements SkinServer {
         }
 
         // join the session server
-        MinecraftClient.getInstance().getSessionService().joinServer(profile, token, handshake.serverId);
+        MinecraftClient.getInstance().getSessionService().joinServer(profile, session.getAccessToken(), handshake.serverId);
 
         AuthResponse response = authResponse(profile.getName(), handshake.verifyToken);
         if (!response.userId.equals(profile.getId())) {
@@ -216,16 +215,13 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private static class AuthHandshake {
-
         private boolean offline;
         private String serverId;
         private long verifyToken;
     }
 
     private static class AuthResponse {
-
         private String accessToken;
         private UUID userId;
-
     }
 }
