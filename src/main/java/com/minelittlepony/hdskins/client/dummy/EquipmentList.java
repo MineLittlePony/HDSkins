@@ -7,7 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.minelittlepony.common.util.settings.ToStringAdapter;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.util.RegistryTypeAdapter;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.entity.EquipmentSlot;

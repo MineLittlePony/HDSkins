@@ -16,7 +16,7 @@ import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.client.HDConfig;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.HDSkinsClient;
 import com.minelittlepony.hdskins.client.upload.IFileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
@@ -62,7 +62,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
         filesList.padding.setAll(10);
 
-        currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
+        currentDirectory = HDSkinsClient.getInstance().getConfig().lastChosenFile.get();
     }
 
     @Override
@@ -183,7 +183,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
         textInput.setText(path.toString());
         currentDirectory = path;
 
-        HDConfig config = HDSkins.getInstance().getConfig();
+        HDConfig config = HDSkinsClient.getInstance().getConfig();
         config.lastChosenFile.set(path);
         config.save();
 
@@ -198,7 +198,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
     protected void onFileSelected(Path fileLocation) {
 
-        HDConfig config = HDSkins.getInstance().getConfig();
+        HDConfig config = HDSkinsClient.getInstance().getConfig();
         config.lastChosenFile.set(fileLocation);
         config.save();
 

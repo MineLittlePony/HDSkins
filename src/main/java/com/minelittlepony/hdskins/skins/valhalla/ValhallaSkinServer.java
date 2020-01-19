@@ -7,7 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.HDSkinsClient;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.GameSession;
 import com.minelittlepony.hdskins.skins.SkinType;
@@ -48,7 +48,6 @@ public class ValhallaSkinServer implements SkinServer {
     private static final CloseableHttpClient httpClient = HttpClients.createSystem();
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
-            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
     private final String address;
@@ -155,7 +154,7 @@ public class ValhallaSkinServer implements SkinServer {
                 throw new IOException(error.get("message").getAsString());
             } catch (JsonParseException e) {
                 String text = response.text();
-                HDSkins.logger.error("Server error wasn't in json: {}", text);
+                HDSkinsClient.logger.error("Server error wasn't in json: {}", text);
                 throw new IOException(e);
             }
         }

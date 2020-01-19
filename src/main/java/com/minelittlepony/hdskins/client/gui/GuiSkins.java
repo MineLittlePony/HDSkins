@@ -7,7 +7,8 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.IconicToggle;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.style.Style;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.client.HDSkinsClient;
 import com.minelittlepony.hdskins.client.SkinChooser;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
@@ -246,7 +247,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
             e.printStackTrace();
         }
 
-        HDSkins.getInstance().getProfileRepository().clear();
+        HDSkinsClient.getInstance().getProfileRepository().clear();
 
         dropper.cancel();
     }

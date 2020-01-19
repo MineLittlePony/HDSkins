@@ -88,8 +88,8 @@ public class SkinUploader implements Closeable {
 
         skinMetadata.put("model", "default");
         skinServers = Iterators.cycle(servers.getSkinServers());
-        activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
-        equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
+        activeEquipmentSet = HDSkinsClient.getInstance().getDummyPlayerEquipmentList().getDefault();
+        equipmentSets = HDSkinsClient.getInstance().getDummyPlayerEquipmentList().getCycler();
 
         cycleGateway();
     }

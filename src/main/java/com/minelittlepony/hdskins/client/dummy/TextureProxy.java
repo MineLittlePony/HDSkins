@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.client.dummy;
 
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.HDSkinsClient;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSupplier;
@@ -78,7 +78,7 @@ public class TextureProxy implements IBlankSkinSupplier {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                }, HDSkins.skinDownloadExecutor)
+                }, HDSkinsClient.skinDownloadExecutor)
                 .thenAcceptAsync(ptm -> {
                     SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
                 }, MinecraftClient.getInstance()); // run on main thread

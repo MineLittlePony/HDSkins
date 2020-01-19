@@ -48,9 +48,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
     private static final Logger logger = LogManager.getLogger();
 
-    private static final Gson gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
-            .create();
+    private static final Gson gson = new Gson();
 
     private final ImageLoader loader = new ImageLoader();
 
