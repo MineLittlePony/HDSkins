@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.client;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
@@ -16,15 +17,26 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ProfileRepository {
+
+    private static Set<String> LOCALHOST = ImmutableSet.of(
+            "localhost",
+            "localhost.localdomain",
+            "127.0.0.1",
+            "[::1]"
+    );
 
     /**
      * Cache used for getting the player skull block texture.
@@ -66,6 +78,10 @@ public class ProfileRepository {
         if (texObj != null) {
             callback.onSkinAvailable(type, resource, texture);
         } else {
+            if (!isDomainAllowed(texture.getUrl())) {
+                return;
+            }
+
             TextureLoader.loadTexture(resource, new HDPlayerSkinTexture(
                     getCachedSkinLocation(type, texture).toFile(),
                     texture.getUrl(),
@@ -73,6 +89,44 @@ public class ProfileRepository {
                     DefaultSkinHelper.getTexture(),
                     () -> callback.onSkinAvailable(type, resource, texture)));
         }
+    }
+
+    private static Set<String> getWhitelist() {
+        return HDSkins.getInstance().getSkinServerList().getWhitelist();
+    }
+
+    private static Set<String> getBlacklist() {
+        return HDSkins.getInstance().getSkinServerList().getBlacklist();
+    }
+
+    private static boolean isListed(URI uri, Set<String> list) {
+        return list.stream().anyMatch(uri.getHost()::endsWith);
+    }
+
+    private static boolean isDomainAllowed(final String url) {
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (final URISyntaxException e) {
+            LogManager.getLogger().error("Invalid URI '{}'", url, e);
+            return false;
+        }
+
+        // exclude localhost. That can always be trusted.
+        if (LOCALHOST.contains(uri.getHost())) {
+            return true;
+        }
+
+        if (isListed(uri, getBlacklist())) {
+            return false;
+        }
+        if (isListed(uri, getWhitelist())) {
+            return true;
+        }
+
+        // I don't know this domain, add it to the pending list for approval.
+        PendingTextureDomains.addPending(uri.getHost());
+        return false;
     }
 
     public void clear() {
