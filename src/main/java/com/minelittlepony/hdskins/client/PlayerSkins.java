@@ -67,7 +67,6 @@ public class PlayerSkins {
 
     private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {
         return Optional.ofNullable(texture.get(SkinType.SKIN))
-                .map(t -> t.getMetadata("model"))
-                .map(VanillaModels::of);
+                .map(t -> VanillaModels.of(t.getMetadata("model")));
     }
 }
