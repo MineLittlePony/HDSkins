@@ -74,7 +74,7 @@ public class SkinChooser {
             if (success) {
                 try (MoreHttpResponses response = uploader.downloadSkin().get()) {
                     if (response.ok()) {
-                        Files.copy(response.getInputStream(), file);
+                        Files.copy(response.inputStream(), file);
                     }
                 } catch (IOException | InterruptedException | ExecutionException e) {
                     e.printStackTrace();

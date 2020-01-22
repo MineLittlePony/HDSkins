@@ -24,6 +24,7 @@ public class SkinServerSerializer implements JsonSerializer<SkinServer>, JsonDes
     private SkinServerSerializer() {
         // register default skin server types
         addSkinServerType(ValhallaSkinServer.class);
+        addSkinServerType(YggdrasilSkinServer.class);
     }
 
     public void addSkinServerType(Class<? extends SkinServer> type) {
