@@ -6,10 +6,12 @@ import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinServer;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -20,6 +22,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -28,26 +31,32 @@ import java.util.stream.Stream;
 @FunctionalInterface
 public interface MoreHttpResponses extends AutoCloseable {
 
-    CloseableHttpResponse getResponse();
+    CloseableHttpResponse response();
 
     default boolean ok() {
-        return responseCode() == HttpStatus.SC_OK;
+        return responseCode() < HttpStatus.SC_MULTIPLE_CHOICES;
     }
 
     default boolean json() {
-        return "application/json".equals(contentType());
+        return "application/json".contentEquals(contentType().getMimeType());
     }
 
     default int responseCode() {
-        return getResponse().getStatusLine().getStatusCode();
+        return response().getStatusLine().getStatusCode();
     }
 
-    default String contentType() {
-        return getResponse().getEntity().getContentType().getValue();
+    default Optional<HttpEntity> entity() {
+        return Optional.ofNullable(response().getEntity());
+    }
+
+    default ContentType contentType() {
+        return entity()
+                .map(ContentType::get)
+                .orElse(ContentType.DEFAULT_TEXT);
     }
 
     default InputStream inputStream() throws IOException {
-        return getResponse().getEntity().getContent();
+        return response().getEntity().getContent();
     }
 
     default BufferedReader reader() throws IOException {
@@ -102,7 +111,7 @@ public interface MoreHttpResponses extends AutoCloseable {
 
     @Override
     default void close() throws IOException {
-        this.getResponse().close();
+        response().close();
     }
 
     static MoreHttpResponses execute(CloseableHttpClient client, HttpUriRequest request) throws IOException {

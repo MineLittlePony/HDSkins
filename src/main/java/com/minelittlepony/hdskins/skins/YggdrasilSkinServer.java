@@ -9,11 +9,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -26,6 +29,7 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Session;
 
 @ServerType("mojang")
 public class YggdrasilSkinServer implements SkinServer {
@@ -40,6 +44,7 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.MODEL_TYPES);
 
     private transient final String address = "https://api.mojang.com";
+    private transient final String verify = "https://authserver.mojang.com/validate";
 
     private transient final boolean requireSecure = true;
 
@@ -83,6 +88,8 @@ public class YggdrasilSkinServer implements SkinServer {
 
     @Override
     public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+        authorize(upload.getSession());
+
         switch (upload.getSchemaAction()) {
             case "none":
                 send(appendHeaders(upload, RequestBuilder.delete()));
@@ -134,6 +141,13 @@ public class YggdrasilSkinServer implements SkinServer {
         );
     }
 
+    private void authorize(Session session) throws IOException {
+        RequestBuilder request = RequestBuilder.post().setUri(verify);
+        request.setEntity(new TokenRequest(session).toEntity());
+
+        send(request);
+    }
+
     private void send(RequestBuilder request) throws IOException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request.build())) {
             if (!response.ok()) {
@@ -148,6 +162,21 @@ public class YggdrasilSkinServer implements SkinServer {
                 .append("address", address)
                 .append("secured", requireSecure)
                 .toString();
+    }
+
+    static class TokenRequest {
+        static final Gson GSON = new Gson();
+
+        @Nonnull
+        private final String accessToken;
+
+        TokenRequest(Session session) {
+            accessToken = session.getAccessToken();
+        }
+
+        public StringEntity toEntity() throws IOException {
+            return new StringEntity(GSON.toJson(this), ContentType.APPLICATION_JSON);
+        }
     }
 
     class ErrorResponse {

@@ -57,7 +57,7 @@ public class ValhallaSkinServer implements SkinServer {
                 return response.unwrapAsJson(TexturePayload.class);
             }
 
-            throw new HttpException(response.getResponse());
+            throw new HttpException(response.response());
         }
     }
 
