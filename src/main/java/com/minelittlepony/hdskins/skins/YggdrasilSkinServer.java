@@ -54,31 +54,28 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public TexturePayload loadProfileData(GameProfile profile) throws IOException {
+    public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
+
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
 
         MinecraftClient client = MinecraftClient.getInstance();
         MinecraftSessionService session = client.getSessionService();
 
+        profile.getProperties().clear();
+        GameProfile newProfile = session.fillProfileProperties(profile, requireSecure);
+
+        if (newProfile == profile) {
+            throw new AuthenticationException("Mojang API error occured. You may be throttled.");
+        }
+        profile = newProfile;
+
         try {
             textures.putAll(session.getTextures(profile, requireSecure));
-        } catch (InsecureTextureException ignored) {
+        } catch (InsecureTextureException e) {
+            HDSkins.logger.error(e);
         }
 
-        if (textures.isEmpty()) {
-            profile.getProperties().clear();
-            if (profile.getId().equals(client.getSession().getProfile().getId())) {
-                profile.getProperties().putAll(client.getSessionProperties());
-                textures.putAll(session.getTextures(profile, false));
-            } else {
-                session.fillProfileProperties(profile, requireSecure);
 
-                try {
-                    textures.putAll(session.getTextures(profile, requireSecure));
-                } catch (InsecureTextureException var6) {
-                }
-            }
-        }
 
         return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
                 entry -> SkinType.forVanilla(entry.getKey()),
@@ -97,6 +94,9 @@ public class YggdrasilSkinServer implements SkinServer {
             default:
                 send(prepareUpload(upload, RequestBuilder.put()));
         }
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.getSessionProperties().clear();
     }
 
     private RequestBuilder prepareUpload(SkinUpload upload, RequestBuilder request) throws IOException {

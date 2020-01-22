@@ -17,6 +17,7 @@ import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 public class OnlineProfileCache {
@@ -55,7 +56,7 @@ public class OnlineProfileCache {
                             break;
                         }
                     }
-                } catch (IOException e) {
+                } catch (IOException | AuthenticationException e) {
                     HDSkins.logger.trace(e);
                 }
             }

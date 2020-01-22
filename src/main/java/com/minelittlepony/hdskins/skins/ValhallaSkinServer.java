@@ -50,7 +50,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public TexturePayload loadProfileData(GameProfile profile) throws IOException {
+    public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, new HttpGet(getTexturesURI(profile)))) {
 
             if (response.ok()) {
