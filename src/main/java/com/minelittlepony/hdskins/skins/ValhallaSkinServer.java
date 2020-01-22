@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.skins;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
@@ -22,12 +22,20 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
+    private static final Set<Feature> FEATURES = Sets.newHashSet(
+            Feature.ONLINE_MODE,
+            Feature.DOWNLOAD_USER_SKIN,
+            Feature.UPLOAD_USER_SKIN,
+            Feature.DELETE_USER_SKIN,
+            Feature.MODEL_VARIANTS,
+            Feature.MODEL_TYPES);
 
     private final String address;
 
@@ -88,7 +96,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private void resetSkin(SkinUpload upload) throws IOException {
         upload(RequestBuilder.delete()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .build());
     }
@@ -102,7 +110,7 @@ public class ValhallaSkinServer implements SkinServer {
         upload.getMetadata().forEach(b::addTextBody);
 
         upload(RequestBuilder.put()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .setEntity(b.build())
                 .build());
@@ -110,7 +118,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private void uploadUrl(SkinUpload upload) throws IOException {
         upload(RequestBuilder.post()
-                .setUri(buildUserTextureUri(upload.getSession().getProfile(), upload.getType()))
+                .setUri(buildUserTextureUri(upload))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
                 .addParameter("file", upload.getImage().toString())
                 .addParameters(MoreHttpResponses.mapAsParameters(upload.getMetadata()))
@@ -119,16 +127,8 @@ public class ValhallaSkinServer implements SkinServer {
 
     private void upload(HttpUriRequest request) throws IOException {
         try (MoreHttpResponses response = MoreHttpResponses.execute(HDSkins.httpClient, request)) {
-            if (response.ok()) {
-                return;
-            }
-            if ("application/json".equalsIgnoreCase(response.getContentType())) {
-                JsonObject error = response.json(JsonObject.class);
-                throw new IOException(error.get("message").getAsString());
-            } else {
-                String text = response.text();
-                HDSkins.logger.error("Server error wasn't in json: {}", text);
-                throw new IOException(text);
+            if (!response.ok()) {
+                throw response.exception();
             }
         }
     }
@@ -173,9 +173,9 @@ public class ValhallaSkinServer implements SkinServer {
         }
     }
 
-    private URI buildUserTextureUri(GameProfile profile, SkinType textureType) {
-        String user = UUIDTypeAdapter.fromUUID(profile.getId());
-        String skinType = textureType.name().toLowerCase(Locale.US);
+    private URI buildUserTextureUri(SkinUpload upload) {
+        String user = UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId());
+        String skinType = upload.getType().name().toLowerCase(Locale.US);
         return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
     }
 
@@ -194,16 +194,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public boolean supportsFeature(Feature feature) {
-        switch (feature) {
-            case DOWNLOAD_USER_SKIN:
-            case UPLOAD_USER_SKIN:
-            case DELETE_USER_SKIN:
-            case MODEL_VARIANTS:
-            case MODEL_TYPES:
-                return true;
-            default:
-                return false;
-        }
+        return FEATURES.contains(feature);
     }
 
     @Override

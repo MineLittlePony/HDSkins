@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.util.net;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
+import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinServer;
 
 import org.apache.http.HttpStatus;
@@ -30,65 +31,73 @@ public interface MoreHttpResponses extends AutoCloseable {
     CloseableHttpResponse getResponse();
 
     default boolean ok() {
-        return getResponseCode() == HttpStatus.SC_OK;
+        return responseCode() == HttpStatus.SC_OK;
     }
 
-    default int getResponseCode() {
+    default boolean json() {
+        return "application/json".equals(contentType());
+    }
+
+    default int responseCode() {
         return getResponse().getStatusLine().getStatusCode();
     }
 
-    default String getContentType() {
+    default String contentType() {
         return getResponse().getEntity().getContentType().getValue();
     }
 
-    default InputStream getInputStream() throws IOException {
+    default InputStream inputStream() throws IOException {
         return getResponse().getEntity().getContent();
     }
 
-    default BufferedReader getReader() throws IOException {
-        return new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
+    default BufferedReader reader() throws IOException {
+        return new BufferedReader(new InputStreamReader(inputStream(), StandardCharsets.UTF_8));
     }
 
     default byte[] bytes() throws IOException {
-        try (InputStream input = getInputStream()) {
+        try (InputStream input = inputStream()) {
             return ByteStreams.toByteArray(input);
         }
     }
 
     default String text() throws IOException {
-        try (BufferedReader reader = getReader()) {
+        try (BufferedReader reader = reader()) {
             return CharStreams.toString(reader);
         }
     }
 
     default Stream<String> lines() throws IOException {
-        try (BufferedReader reader = getReader()) {
+        try (BufferedReader reader = reader()) {
             return reader.lines();
         }
     }
 
-    default <T> T json(Class<T> type) throws IOException {
-        try (BufferedReader reader = getReader()) {
-            return SkinServer.gson.fromJson(reader, type);
-        }
+    default <T> T json(Class<T> type, String errorMessage) throws IOException {
+        return json((Type)type, errorMessage);
     }
 
-    default <T> T json(Type type) throws IOException {
-        try (BufferedReader reader = getReader()) {
+    default <T> T json(Type type, String errorMessage) throws IOException {
+        if (!json()) {
+            String text = text();
+            HDSkins.logger.error(errorMessage, text);
+            throw new IOException(text);
+        }
+
+        try (BufferedReader reader = reader()) {
             return SkinServer.gson.fromJson(reader, type);
         }
     }
 
     default <T> T unwrapAsJson(Type type) throws IOException {
-        if (!"application/json".equals(getContentType())) {
-            throw new IOException("Server returned a non-json response!");
-        }
-
         if (ok()) {
-            return json(type);
+            return json(type, "Server returned a non-json response!");
         }
 
-        throw new IOException(json(JsonObject.class).get("message").getAsString());
+        throw exception();
+    }
+
+    default IOException exception() throws IOException {
+        return new IOException(json(JsonObject.class, "Server error wasn't in json: {}").get("message").getAsString());
     }
 
     @Override

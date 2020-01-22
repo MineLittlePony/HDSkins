@@ -15,6 +15,7 @@ import com.google.common.cache.LoadingCache;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.skins.Feature;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
@@ -43,14 +44,16 @@ public class OnlineProfileCache {
 
             for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
                 try {
-                    server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
-                        if (requestedSkinTypes.remove(type)) {
-                            textureMap.putIfAbsent(type, texture);
-                        }
-                    });
+                    if (server.supportsFeature(Feature.ONLINE_MODE)) {
+                        server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
+                            if (requestedSkinTypes.remove(type)) {
+                                textureMap.putIfAbsent(type, texture);
+                            }
+                        });
 
-                    if (requestedSkinTypes.isEmpty()) {
-                        break;
+                        if (requestedSkinTypes.isEmpty()) {
+                            break;
+                        }
                     }
                 } catch (IOException e) {
                     HDSkins.logger.trace(e);

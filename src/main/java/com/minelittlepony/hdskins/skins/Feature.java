@@ -5,6 +5,10 @@ package com.minelittlepony.hdskins.skins;
  */
 public enum Feature {
     /**
+     * Whether this skin server is usable in-game.
+     */
+    ONLINE_MODE,
+    /**
      * Whether a server has write access.
      * i.e. If the server allows for users to upload a new skin.
      */

@@ -5,6 +5,7 @@
     {
       "type": "valhalla",
       "address": "https://skins.minelittlepony-mod.com"
-    }
+    },
+    { "type": "mojang" }
   ]
 }
