@@ -14,7 +14,6 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
@@ -192,7 +191,7 @@ public class SkinUploader implements Closeable {
 
     public boolean tryClearStatus() {
         if (!hasStatus() || !uploadInProgress()) {
-            status = ERR_ALL_FINE;
+            setError(ERR_ALL_FINE);
             return true;
         }
 
@@ -204,11 +203,12 @@ public class SkinUploader implements Closeable {
         status = statusMsg;
 
         return gateway.uploadSkin(new SkinUpload(mc.getSession(), skinType, localSkin == null ? null : localSkin, skinMetadata)).handleAsync((response, throwable) -> {
+            sendingSkin = false;
+
             if (throwable == null) {
-                logger.info("Upload completed with: %s", response);
                 setError(ERR_ALL_FINE);
             } else {
-                setError(Throwables.getRootCause(throwable).toString());
+                handleException(throwable);
             }
 
             fetchRemote();
@@ -236,31 +236,35 @@ public class SkinUploader implements Closeable {
             fetchingSkin = false;
 
             if (throwable != null) {
-                throwable = throwable.getCause();
-
-                if (throwable instanceof AuthenticationUnavailableException) {
-                    offline = true;
-                } else if (throwable instanceof AuthenticationException) {
-                    throttlingNeck = true;
-                } else if (throwable instanceof HttpException) {
-                    HttpException ex = (HttpException)throwable;
-
-                    logger.error(ex.getReasonPhrase(), ex);
-
-                    int code = ex.getStatusCode();
-
-                    if (code >= 500) {
-                        setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
-                    } else if (code >= 400 && code != 403 && code != 404) {
-                        setError(ex.getReasonPhrase());
-                    }
-                } else {
-                    logger.error("Unhandled exception", throwable);
-                    setError(throwable.toString());
-                }
+                handleException(throwable.getCause());
+            } else {
+                retries = 1;
             }
             return a;
         }, MinecraftClient.getInstance());
+    }
+
+    private void handleException(Throwable throwable) {
+        if (throwable instanceof AuthenticationUnavailableException) {
+            offline = true;
+        } else if (throwable instanceof AuthenticationException) {
+            throttlingNeck = true;
+        } else if (throwable instanceof HttpException) {
+            HttpException ex = (HttpException)throwable;
+
+            logger.error(ex.getReasonPhrase(), ex);
+
+            int code = ex.getStatusCode();
+
+            if (code >= 500) {
+                setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
+            } else if (code >= 400 && code != 403 && code != 404) {
+                setError(ex.getReasonPhrase());
+            }
+        } else {
+            logger.error("Unhandled exception", throwable);
+            setError(throwable.toString());
+        }
     }
 
     @Override

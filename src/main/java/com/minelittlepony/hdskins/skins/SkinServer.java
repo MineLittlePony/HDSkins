@@ -31,7 +31,7 @@ public interface SkinServer {
      *
      * @throws IOException  If any authentication or network error occurs.
      */
-    TexturePayload loadProfileData(GameProfile profile) throws IOException;
+    TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException;
 
     /**
      * Synchronously uploads a skin to this server.
