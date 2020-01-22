@@ -421,7 +421,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.ID
                 int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
                 drawCenteredLabel(I18n.translate("hdskins.failed"), width / 2, blockHeight - font.fontHeight * 2, 0xffff55, 0);
-                font.drawTrimmed(errorMsg, 5, blockHeight, width - 10, 0xff5555);
+                drawTextBlock(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
     }
