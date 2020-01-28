@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.gui.GuiFileSaver;
-import com.minelittlepony.hdskins.client.gui.GuiFileSelector;
-import com.minelittlepony.hdskins.client.upload.IFileDialog;
+import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
+import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
+import com.minelittlepony.hdskins.client.upload.FileDialog;
 
 import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;
@@ -35,7 +35,7 @@ public class SkinChooser {
     }
 
     @Nullable
-    private IFileDialog openFileThread;
+    private FileDialog openFileThread;
 
     private final SkinUploader uploader;
 
@@ -54,7 +54,7 @@ public class SkinChooser {
     }
 
     public void openBrowsePNG(String title) {
-        openFileThread = new GuiFileSelector(title)
+        openFileThread = new FileSelectorScreen(title)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             openFileThread = null;
@@ -66,7 +66,7 @@ public class SkinChooser {
     }
 
     public void openSavePNG(String title, String filename) {
-        openFileThread = new GuiFileSaver(title, filename)
+        openFileThread = new FileSaverScreen(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             openFileThread = null;

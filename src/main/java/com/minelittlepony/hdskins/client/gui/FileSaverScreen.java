@@ -5,16 +5,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.hdskins.client.upload.IFileDialog;
+import com.minelittlepony.hdskins.client.upload.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
-public class GuiFileSaver extends GuiFileSelector {
+public class FileSaverScreen extends FileSelectorScreen {
 
     private Button saveBtn;
 
     private String savingFileName;
 
-    public GuiFileSaver(String title, String filename) {
+    public FileSaverScreen(String title, String filename) {
         super(title);
 
         savingFileName = filename;
@@ -35,7 +35,7 @@ public class GuiFileSaver extends GuiFileSelector {
                 currentDirectory = Paths.get(textInput.getText());
 
                 if (Files.exists(currentDirectory)) {
-                    minecraft.openScreen(new GuiConfirmation(this, "Ovewrite file?", () -> {
+                    minecraft.openScreen(new ConfirmationScreen(this, "Ovewrite file?", () -> {
                         navigateTo(currentDirectory);
                     }));
                 } else {
@@ -50,7 +50,7 @@ public class GuiFileSaver extends GuiFileSelector {
     }
 
     @Override
-    public IFileDialog filter(String extension, String description) {
+    public FileDialog filter(String extension, String description) {
         currentDirectory = FileTypes.changeExtension(currentDirectory, extension);
         return super.filter(extension, description);
     }

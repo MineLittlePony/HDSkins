@@ -21,7 +21,7 @@ import net.minecraft.client.util.Window;
  * Wrapper around GLFW to handle file drop events.
  */
 public class FileDrop {
-    public static FileDrop newDropEvent(IDropCallback callback) {
+    public static FileDrop newDropEvent(Callback callback) {
         return new FileDrop(callback);
     }
 
@@ -30,10 +30,10 @@ public class FileDrop {
     @Nullable
     private GLFWDropCallback hook;
 
-    private final IDropCallback callback;
+    private final Callback callback;
     private final GLFWDropCallbackI nativ = this::invoke;
 
-    FileDrop(IDropCallback callback) {
+    FileDrop(Callback callback) {
         this.callback = callback;
     }
 
@@ -78,7 +78,7 @@ public class FileDrop {
     }
 
     @FunctionalInterface
-    public interface IDropCallback {
+    public interface Callback {
         void onDrop(List<Path> paths);
     }
 }

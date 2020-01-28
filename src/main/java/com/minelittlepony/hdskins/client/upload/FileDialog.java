@@ -7,22 +7,22 @@ import java.nio.file.Path;
  * 
  * Implementations may vary.
  */
-public interface IFileDialog {
+public interface FileDialog {
 
     /**
      * Called to filter the types of files this dialogue is allowed to work with.
      */
-    IFileDialog filter(String extension, String description);
+    FileDialog filter(String extension, String description);
 
     /**
      * Sets a callback to be executed when this dialogue closes
      */
-    IFileDialog andThen(Callback callback);
+    FileDialog andThen(Callback callback);
 
     /**
      * Launches the dialogue.
      */
-    IFileDialog launch();
+    FileDialog launch();
 
     @FunctionalInterface
     public interface Callback {

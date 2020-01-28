@@ -17,7 +17,7 @@ import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.upload.IFileDialog;
+import com.minelittlepony.hdskins.client.upload.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.client.MinecraftClient;
@@ -27,7 +27,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-public class GuiFileSelector extends GameGui implements IFileDialog {
+public class FileSelectorScreen extends GameGui implements FileDialog {
 
     private static final Identifier ICONS = new Identifier("hdskins", "textures/gui/files.png");
 
@@ -39,7 +39,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
 
     protected Path currentDirectory = Paths.get("/");
 
-    private IFileDialog.Callback callback = (f, b) -> {};
+    private FileDialog.Callback callback = (f, b) -> {};
 
     private final GridPacker packer = new GridPacker()
             .setItemWidth(150)
@@ -54,7 +54,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     protected String extensionFilter = "";
     private String filterMessage = "";
 
-    public GuiFileSelector(String title) {
+    public FileSelectorScreen(String title) {
         super(new LiteralText(title));
 
         filesList.margin.top = 60;
@@ -290,7 +290,7 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     }
 
     @Override
-    public IFileDialog filter(String extension, String description) {
+    public FileDialog filter(String extension, String description) {
         extensionFilter = Strings.nullToEmpty(extension);
         filterMessage = Strings.nullToEmpty(description);
 
@@ -303,13 +303,13 @@ public class GuiFileSelector extends GameGui implements IFileDialog {
     }
 
     @Override
-    public IFileDialog andThen(Callback callback) {
+    public FileDialog andThen(Callback callback) {
         this.callback = callback;
         return this;
     }
 
     @Override
-    public IFileDialog launch() {
+    public FileDialog launch() {
         MinecraftClient.getInstance().openScreen(this);
         return this;
     }

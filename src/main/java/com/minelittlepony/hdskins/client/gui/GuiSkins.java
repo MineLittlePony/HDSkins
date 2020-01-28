@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.IDropCallback {
+public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Callback {
 
     private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 

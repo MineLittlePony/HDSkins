@@ -10,11 +10,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 
-public class GuiConfirmation extends GameGui {
+public class ConfirmationScreen extends GameGui {
 
     private final Runnable action;
 
-    public GuiConfirmation(@Nonnull Screen parent, String title, Runnable action) {
+    public ConfirmationScreen(@Nonnull Screen parent, String title, Runnable action) {
         super(new LiteralText(title), parent);
 
         this.action = action;
