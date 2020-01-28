@@ -6,8 +6,11 @@ package com.minelittlepony.hdskins.skins;
 public enum Feature {
     /**
      * Whether this skin server is usable in-game.
+     *
+     * Synthetic skin servers will not be queried for skins when in-game,
+     * but can be still previewed, or accept textures to upload/download.
      */
-    ONLINE_MODE,
+    SYNTHETIC,
     /**
      * Whether a server has write access.
      * i.e. If the server allows for users to upload a new skin.

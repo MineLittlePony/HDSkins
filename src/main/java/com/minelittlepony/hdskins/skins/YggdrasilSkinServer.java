@@ -38,6 +38,7 @@ public class YggdrasilSkinServer implements SkinServer {
     static final SkinServer INSTANCE = new YggdrasilSkinServer();
 
     private static final Set<Feature> FEATURES = Sets.newHashSet(
+            Feature.SYNTHETIC,
             Feature.UPLOAD_USER_SKIN,
             Feature.DOWNLOAD_USER_SKIN,
             Feature.DELETE_USER_SKIN,

@@ -33,7 +33,6 @@ public class ValhallaSkinServer implements SkinServer {
     private static final String API_PREFIX = "/api/v1";
 
     private static final Set<Feature> FEATURES = Sets.newHashSet(
-            Feature.ONLINE_MODE,
             Feature.DOWNLOAD_USER_SKIN,
             Feature.UPLOAD_USER_SKIN,
             Feature.DELETE_USER_SKIN,
