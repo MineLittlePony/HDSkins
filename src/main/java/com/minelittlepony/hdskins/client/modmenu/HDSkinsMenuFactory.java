@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client.modmenu;
 
+import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import net.minecraft.client.gui.screen.Screen;
 
 import java.util.function.Function;
@@ -17,6 +18,6 @@ public class HDSkinsMenuFactory implements ModMenuApi {
 
     @Override
     public Function<Screen, ? extends Screen> getConfigScreenFactory() {
-        return HDSkins.getInstance().getSkinServerList()::createSkinsGui;
+        return s -> GuiSkins.create(s, HDSkins.getInstance().getSkinServerList());
     }
 }

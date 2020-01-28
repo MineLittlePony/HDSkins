@@ -1,14 +1,12 @@
 package com.minelittlepony.hdskins.skins;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.gui.GuiSkins;
+
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.SynchronousResourceReloadListener;
@@ -23,7 +21,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public class SkinServerList implements SynchronousResourceReloadListener, IdentifiableResourceReloadListener {
 
@@ -35,8 +32,6 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
             .create();
 
     private List<SkinServer> skinServers = new LinkedList<>();
-
-    private BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
     @Override
     public Identifier getFabricId() {
@@ -69,15 +64,6 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
 
     public Iterator<SkinServer> getCycler() {
         return Iterators.cycle(getSkinServers());
-    }
-
-    public void setSkinsGui(BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc) {
-        Preconditions.checkNotNull(skinsGuiFunc, "skinsGuiFunc");
-        this.skinsGuiFunc = skinsGuiFunc;
-    }
-
-    public GuiSkins createSkinsGui(Screen parent) {
-        return skinsGuiFunc.apply(parent, this);
     }
 
     private static <T> void addAllStart(List<T> list, List<T> toAdd) {
