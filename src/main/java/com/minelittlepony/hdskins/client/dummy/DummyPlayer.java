@@ -78,7 +78,7 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public boolean isInWater() {
+    public boolean isSubmergedInWater() {
         return isSwimming();
     }
 
@@ -88,7 +88,7 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public boolean isInsideWater() {
+    public boolean isTouchingWater() {
         return isSwimming();
     }
 

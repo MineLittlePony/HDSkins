@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,9 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.Maps;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
@@ -52,11 +55,13 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
-    private final ImageLoader loader = new ImageLoader();
+    private final TextureLoader loader = new TextureLoader();
 
     private final Map<SkinType, SkinStore> store = new HashMap<>();
 
-    private final Map<Identifier, Identifier> textures = Maps.newHashMap();
+    private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = CacheBuilder.newBuilder()
+            .expireAfterAccess(15, TimeUnit.MINUTES)
+            .build(CacheLoader.from(loader::loadAsync));
 
     @Override
     public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender,
@@ -71,7 +76,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             store.clear();
             loader.stop();
 
-            textures.clear();
+            textures.invalidateAll();
 
             sender.getAllNamespaces().stream().map(domain -> new Identifier(domain, "textures/skins/skins.json")).forEach(identifier -> {
                 try {
@@ -112,7 +117,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
      * Gets a custom texture for the given profile as defined in the current resourcepack(s).
      */
     public Optional<Identifier> getCustomPlayerTexture(GameProfile profile, SkinType type) {
-        return store.computeIfAbsent(type, SkinStore::new).getSkin(profile)
+        return store.computeIfAbsent(type, SkinStore::new)
+                .getSkin(profile)
                 .map(Skin::getTexture)
                 .map(id -> convertTexture(type, id));
     }
@@ -121,8 +127,9 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
      * Gets a custom model type for the given profile as defined in the current resourcepacks(s).
      */
     public Optional<String> getCustomPlayerModel(GameProfile profile) {
-        return store.computeIfAbsent(SkinType.SKIN, SkinStore::new).getSkin(profile)
-            .map(Skin::getModel);
+        return store.computeIfAbsent(SkinType.SKIN, SkinStore::new)
+                .getSkin(profile)
+                .map(Skin::getModel);
     }
 
     /**
@@ -135,17 +142,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             return identifier;
         }
 
-        return textures.computeIfAbsent(identifier, id -> {
-            loader.loadAsync(id).whenComplete((loc, throwable) -> {
-                if (throwable != null) {
-                    LogManager.getLogger().warn("Errored while processing {}. Using original.", identifier, throwable);
-                }
-
-                textures.put(identifier, loc);
-            });
-
-            return id;
-        });
+        return textures.getUnchecked(identifier).getNow(identifier);
     }
 
     static class SkinStore {
