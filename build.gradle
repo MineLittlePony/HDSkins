@@ -45,11 +45,11 @@ minecraft {
 repositories {
     maven {
         name = 'minelp'
-        url = 'http://repo.minelittlepony-mod.com/maven/snapshot'
+        url = 'https://repo.minelittlepony-mod.com/maven/snapshot'
     }
     maven {
         name = 'minelp-release'
-        url = 'http://repo.minelittlepony-mod.com/maven/release'
+        url = 'https://repo.minelittlepony-mod.com/maven/release'
     }
 }
 
@@ -110,7 +110,7 @@ publishing {
             pom {
                 name = "HDSkins"
                 description = "High resolution skins for Minecraft"
-                url = "http://minelittlepony-mod.com"
+                url = "https://minelittlepony-mod.com"
                 licenses {
                     license {
                         name = "MIT Public License"
