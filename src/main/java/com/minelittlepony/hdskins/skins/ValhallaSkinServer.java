@@ -176,7 +176,7 @@ public class ValhallaSkinServer implements SkinServer {
                 .addParameter("name", name)
                 .addParameter("verifyToken", String.valueOf(verifyToken))
                 .build())) {
-            return resp.unwrapAsJson(AuthHandshake.class);
+            return resp.unwrapAsJson(AuthResponse.class);
         }
     }
 
