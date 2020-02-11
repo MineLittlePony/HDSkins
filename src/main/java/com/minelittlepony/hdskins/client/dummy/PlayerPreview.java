@@ -5,6 +5,7 @@ import static com.mojang.blaze3d.systems.RenderSystem.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinUploader.IPreviewModel;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
@@ -159,6 +160,12 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
      */
     protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, MatrixStack matrixStack, VertexConsumerProvider renderContext) {
 
+        EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
+
+        if (dispatcher.getRenderer(thePlayer) == null) {
+            HDSkins.logger.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
+        }
+
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
 
         DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
@@ -177,8 +184,6 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         thePlayer.headYaw = lookX * lookFactor;
         thePlayer.pitch = thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20;
-
-        EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
 
         matrixStack.push();
         matrixStack.scale(1, -1, -1);
