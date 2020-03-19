@@ -9,7 +9,8 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.attribute.AttributeContainer;
+import net.minecraft.entity.attribute.DefaultAttributeRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 
@@ -31,6 +32,16 @@ public class DummyPlayer extends LivingEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
     private final TextureProxy textures;
+
+    private AttributeContainer attributes;
+
+    @Override
+    public AttributeContainer getAttributes() {
+        if (attributes == null) {
+            attributes = new AttributeContainer(DefaultAttributeRegistry.get(EntityType.PLAYER));
+        }
+        return this.attributes;
+    }
 
     public DummyPlayer(EntityType<? extends DummyPlayer> type, TextureProxy textures) {
         super(type, DummyWorld.INSTANCE);
@@ -93,7 +104,7 @@ public class DummyPlayer extends LivingEntity {
     }
 
     @Override
-    public boolean canSeePlayer(PlayerEntity player) {
+    public boolean canSee(Entity entity) {
         return false; // we're not in game. The player might be null and we don't really care about name plates anyway.
     }
 
@@ -110,11 +121,11 @@ public class DummyPlayer extends LivingEntity {
     public void updateModel() {
         lastHandSwingProgress = handSwingProgress;
 
-        if (isHandSwinging) {
+        if (handSwinging) {
             ++handSwingTicks;
             if (handSwingTicks >= 8) {
                 handSwingTicks = 0;
-                isHandSwinging = false;
+                handSwinging = false;
             }
         } else {
             handSwingTicks = 0;

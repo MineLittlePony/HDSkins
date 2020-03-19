@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.common.client.gui.element.IconicToggle;
+import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -86,14 +86,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
     private final Edge jumpKey = new Edge(this::jumpToggled, () -> {
-        return InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_SPACE);
+        return InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_SPACE);
     });
     private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(new TranslatableText("hdskins.gui.title"), parent);
 
-        minecraft = MinecraftClient.getInstance();
+        client = MinecraftClient.getInstance();
         previewer = createPreviewer();
         uploader = new SkinUploader(servers, previewer, this);
         chooser = new SkinChooser(uploader);
@@ -110,8 +110,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public void tick() {
 
-        if (!( InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT)
-            || InputUtil.isKeyPressed(minecraft.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT))) {
+        if (!( InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT)
+            || InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT))) {
             updateCounter++;
         }
 
@@ -130,7 +130,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
                 .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
-                .setEnabled(!minecraft.getWindow().isFullscreen())
+                .setEnabled(!client.getWindow().isFullscreen())
                 .getStyle().setText("hdskins.options.browse");
 
         addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
@@ -148,7 +148,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        chooser.openSavePNG(I18n.translate("hdskins.save.title"), minecraft.getSession().getUsername());
+                        chooser.openSavePNG(I18n.translate("hdskins.save.title"), client.getSession().getUsername());
                     }
                 })
                 .getStyle()
@@ -202,14 +202,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase())
                 .setTooltipOffset(0, 10);
 
-        addButton(new IconicToggle(width - 25, 118, 20, 20))
+        addButton(new Cycler(width - 25, 118, 20, 20))
                 .setValue(previewer.getPose())
                 .setStyles(
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
                         new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
                         new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10),
                         new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10))
-                .onClick((Consumer<IconicToggle>)sender -> {
+                .onClick((Consumer<Cycler>)sender -> {
                     playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
                     previewer.setPose(sender.getValue());
                 });
@@ -430,9 +430,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             if (uploadInProgress) {
                 drawCenteredLabel(errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
-                int blockHeight = (height - font.getStringBoundedHeight(errorMsg, width - 10)) / 2;
+                int blockHeight = (height - getFont().getStringBoundedHeight(errorMsg, width - 10)) / 2;
 
-                drawCenteredLabel(I18n.translate("hdskins.failed"), width / 2, blockHeight - font.fontHeight * 2, 0xffff55, 0);
+                drawCenteredLabel(I18n.translate("hdskins.failed"), width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
                 drawTextBlock(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }

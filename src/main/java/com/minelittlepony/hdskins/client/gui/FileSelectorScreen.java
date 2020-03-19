@@ -71,7 +71,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         renderDirectory();
 
-        addButton(textInput = new TextFieldWidget(font, 10, 30, width - 50, 18, ""));
+        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, ""));
         textInput.setEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
         textInput.setText(currentDirectory.toAbsolutePath().toString());
@@ -202,7 +202,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         config.lastChosenFile.set(fileLocation);
         config.save();
 
-        minecraft.openScreen(parent);
+        client.openScreen(parent);
         callback.onDialogClosed(fileLocation, true);
     }
 
@@ -263,8 +263,8 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
             int maxWidth = width - 35;
 
-            if (font.getStringWidth(name) > maxWidth) {
-                name = font.trimToWidth(name, maxWidth - font.getStringWidth("...")) + "...";
+            if (getFont().getStringWidth(name) > maxWidth) {
+                name = getFont().trimToWidth(name, maxWidth - getFont().getStringWidth("...")) + "...";
             }
 
             return name.replace("%", "%%");

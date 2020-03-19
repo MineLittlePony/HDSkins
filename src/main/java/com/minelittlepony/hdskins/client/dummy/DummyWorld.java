@@ -23,6 +23,7 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.RegistryTagManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -45,10 +46,10 @@ public class DummyWorld extends World {
     private BlockState worldBlockState = Blocks.ACACIA_STAIRS.getDefaultState();
 
     private DummyWorld() {
-        super(new LevelProperties(new LevelInfo(0, GameMode.NOT_SET, false, false, LevelGeneratorType.DEFAULT), "MpServer"),
+        super(new LevelProperties(new LevelInfo(0, GameMode.NOT_SET, false, false, LevelGeneratorType.DEFAULT.getDefaultOptions()), "MpServer"),
                 DimensionType.OVERWORLD,
                 (w, dim) -> null,
-                MinecraftClient.getInstance().getProfiler(),
+                MinecraftClient.getInstance()::getProfiler,
                 true);
 
         if (BlockTags.getContainer() == null) {
@@ -167,5 +168,10 @@ public class DummyWorld extends World {
 
     @Override
     public void setBlockBreakingInfo(int entityId, BlockPos pos, int progress) {
+    }
+
+    @Override
+    public float getBrightness(Direction direction, boolean shaded) {
+        return 0;
     }
 }

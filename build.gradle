@@ -56,9 +56,9 @@ dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     modApi "net.fabricmc.fabric-api:fabric-api-base:0.1.2+"
-    modApi "net.fabricmc.fabric-api:fabric-events-lifecycle-v0:0.1.2+"
-    modApi "net.fabricmc.fabric-api:fabric-resource-loader-v0:0.1.8+"
-    modApi "net.fabricmc.fabric-api:fabric-renderer-registries-v1:1.0.4+"
+    modApi "net.fabricmc.fabric-api:fabric-events-lifecycle-v0:0.1.2+b7f9825dd1"
+    modApi "net.fabricmc.fabric-api:fabric-resource-loader-v0:0.1.11+"
+    modApi "net.fabricmc.fabric-api:fabric-renderer-registries-v1:2.0.1+"
 
     implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
     include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
@@ -68,7 +68,9 @@ dependencies {
 
     include files("letsencryptcraft-fabric-1.3.1.jar")
 
-    modImplementation "io.github.prospector:modmenu:${project.modmenu_version}"
+    modCompileOnly("io.github.prospector:modmenu:${project.modmenu_version}") {
+        transitive = false
+    }
 }
 
 processResources {

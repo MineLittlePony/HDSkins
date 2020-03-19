@@ -35,7 +35,7 @@ public class FileSaverScreen extends FileSelectorScreen {
                 currentDirectory = Paths.get(textInput.getText());
 
                 if (Files.exists(currentDirectory)) {
-                    minecraft.openScreen(new ConfirmationScreen(this, "Ovewrite file?", () -> {
+                    client.openScreen(new ConfirmationScreen(this, "Ovewrite file?", () -> {
                         navigateTo(currentDirectory);
                     }));
                 } else {
