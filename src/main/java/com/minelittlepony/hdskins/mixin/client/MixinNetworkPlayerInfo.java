@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.minelittlepony.hdskins.client.ducks.INetworkPlayerInfo;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 

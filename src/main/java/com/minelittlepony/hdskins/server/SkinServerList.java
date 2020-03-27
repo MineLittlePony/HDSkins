@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;

@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.hdskins.client.upload.FileDialog;
+import com.minelittlepony.hdskins.client.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
 public class FileSaverScreen extends FileSelectorScreen {

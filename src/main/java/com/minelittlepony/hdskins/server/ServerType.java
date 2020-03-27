@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

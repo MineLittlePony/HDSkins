@@ -11,7 +11,7 @@ import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;

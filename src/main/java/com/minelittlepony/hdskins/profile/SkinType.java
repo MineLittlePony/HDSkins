@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.profile;
 
 import java.io.IOException;
 import java.util.Collection;

@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.mixin.client;
 
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.SkullBlock;
 import net.minecraft.block.entity.SkullBlockEntity;

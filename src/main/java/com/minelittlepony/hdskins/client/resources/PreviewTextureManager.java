@@ -1,8 +1,9 @@
 package com.minelittlepony.hdskins.client.resources;
 
-import com.minelittlepony.hdskins.skins.TexturePayload;
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinCallback;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.TexturePayload;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Identifier;
 

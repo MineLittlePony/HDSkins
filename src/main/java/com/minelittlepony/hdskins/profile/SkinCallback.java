@@ -1,6 +1,5 @@
-package com.minelittlepony.hdskins.client.resources;
+package com.minelittlepony.hdskins.profile;
 
-import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Identifier;
 

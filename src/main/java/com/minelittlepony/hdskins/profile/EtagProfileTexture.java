@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.profile;
+package com.minelittlepony.hdskins.profile;
 
 import java.util.Map;
 

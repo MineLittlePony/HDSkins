@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
 /**
  * Represents the possible features that a skin net can implement.

@@ -2,10 +2,10 @@ package com.minelittlepony.hdskins.client.dummy;
 
 import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSupplier;
+import com.minelittlepony.hdskins.profile.SkinCallback;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.SkinServer;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
-import com.minelittlepony.hdskins.client.resources.SkinCallback;
-import com.minelittlepony.hdskins.skins.SkinServer;
-import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 

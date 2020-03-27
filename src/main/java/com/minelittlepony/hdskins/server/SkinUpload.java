@@ -1,9 +1,12 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
 import net.minecraft.client.util.Session;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+
+import com.minelittlepony.hdskins.profile.SkinType;
+
 import java.net.URI;
 import java.util.Map;
 

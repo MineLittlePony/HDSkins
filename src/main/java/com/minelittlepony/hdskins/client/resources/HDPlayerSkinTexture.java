@@ -7,7 +7,7 @@ import java.io.File;
 
 import javax.annotation.Nullable;
 
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.PlayerSkinTexture;

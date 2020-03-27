@@ -9,7 +9,8 @@ import com.minelittlepony.hdskins.client.dummy.EquipmentList;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
-import com.minelittlepony.hdskins.skins.SkinServerList;
+import com.minelittlepony.hdskins.server.SkinServerList;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;

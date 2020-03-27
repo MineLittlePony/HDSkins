@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.upload;
+package com.minelittlepony.hdskins.client;
 
 import java.nio.file.Path;
 

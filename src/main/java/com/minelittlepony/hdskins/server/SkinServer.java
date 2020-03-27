@@ -1,8 +1,8 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
-import com.minelittlepony.hdskins.skins.Feature;
-import com.minelittlepony.hdskins.skins.SkinUpload;
-import com.minelittlepony.hdskins.skins.TexturePayload;
+import com.minelittlepony.hdskins.server.Feature;
+import com.minelittlepony.hdskins.server.SkinUpload;
+import com.minelittlepony.hdskins.server.TexturePayload;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 

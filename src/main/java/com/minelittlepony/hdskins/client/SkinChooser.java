@@ -2,7 +2,6 @@ package com.minelittlepony.hdskins.client;
 
 import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
 import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
-import com.minelittlepony.hdskins.client.upload.FileDialog;
 
 import net.minecraft.client.texture.NativeImage;
 import org.apache.commons.io.FilenameUtils;

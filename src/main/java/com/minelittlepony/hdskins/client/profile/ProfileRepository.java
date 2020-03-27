@@ -15,11 +15,12 @@ import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinCacheClearCallback;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
-import com.minelittlepony.hdskins.client.resources.SkinCallback;
 import com.minelittlepony.hdskins.client.resources.TextureLoader;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinCallback;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.DefaultSkinHelper;

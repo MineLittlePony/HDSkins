@@ -18,11 +18,11 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
-import com.minelittlepony.hdskins.skins.Feature;
-import com.minelittlepony.hdskins.skins.SkinServer;
-import com.minelittlepony.hdskins.skins.SkinServerList;
-import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.Feature;
+import com.minelittlepony.hdskins.server.SkinServer;
+import com.minelittlepony.hdskins.server.SkinServerList;
+import com.minelittlepony.hdskins.server.SkinUpload;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
@@ -87,7 +87,7 @@ public class SkinUploader implements Closeable {
         this.previewer = previewer;
         this.listener = listener;
 
-        skinMetadata.put("model", "default");
+        skinMetadata.put("model", VanillaModels.DEFAULT);
         skinServers = servers.getCycler();
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();

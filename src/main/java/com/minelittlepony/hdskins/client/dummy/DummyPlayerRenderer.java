@@ -27,7 +27,8 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11;
 
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.minelittlepony.hdskins.profile.SkinType;
+
 import java.util.Set;
 
 public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {

@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.skins;
+package com.minelittlepony.hdskins.server;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.SkinServer;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
