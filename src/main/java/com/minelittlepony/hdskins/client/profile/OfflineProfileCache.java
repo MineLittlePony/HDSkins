@@ -64,7 +64,7 @@ public class OfflineProfileCache {
         }, Util.getServerWorkerExecutor());
     }
 
-    public Path getCachedProfileLocation(GameProfile profile) {
+    private Path getCachedProfileLocation(GameProfile profile) {
         String id = profile.getId().toString();
         return repository.getHDSkinsCache().resolve("profiles").resolve(id + ".json");
     }
