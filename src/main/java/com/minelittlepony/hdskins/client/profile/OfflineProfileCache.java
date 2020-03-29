@@ -24,7 +24,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Util;
 
-public class OfflineProfileCache {
+class OfflineProfileCache {
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
