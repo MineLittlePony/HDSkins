@@ -21,10 +21,12 @@ public class LocalTexture {
     private final TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
 
     private Optional<NativeImageBackedTexture> local = Optional.empty();
+
+    private final Identifier remoteResource;
     private Optional<PreviewTextureManager.Texture> server = Optional.empty();
 
+    private boolean isDynamic;
     private Identifier localResource;
-    private Identifier remoteResource;
 
     private final IBlankSkinSupplier blank;
 
@@ -34,12 +36,8 @@ public class LocalTexture {
         this.blank = blank;
         this.type = type;
 
-        String file = String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase();
-
         localResource = blank.getBlankSkin(type);
-
-        remoteResource = new Identifier(file);
-        textureManager.destroyTexture(remoteResource);
+        remoteResource = new Identifier(String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase());
     }
 
     public Identifier getId() {
@@ -84,20 +82,26 @@ public class LocalTexture {
 
             local = Optional.of(new NativeImageBackedTexture(image));
             localResource = textureManager.registerDynamicTexture("local_skin_preview", local.get());
+            isDynamic = true;
         }
     }
 
     public void clearRemote() {
-        server.ifPresent(server -> textureManager.destroyTexture(remoteResource));
-        server = Optional.empty();
+        server = server.map(server -> {
+            textureManager.destroyTexture(remoteResource);
+            return null;
+        });
     }
 
     public void clearLocal() {
-        local.ifPresent(local -> {
-            textureManager.destroyTexture(localResource);
+        local = local.map(local -> {
+            if (isDynamic) {
+                textureManager.destroyTexture(localResource);
+            }
+            isDynamic = false;
             localResource = blank.getBlankSkin(type);
+            return null;
         });
-        local = Optional.empty();
     }
 
     @FunctionalInterface
