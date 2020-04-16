@@ -16,6 +16,10 @@ import net.minecraft.recipe.RecipeManager;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.EntityTypeTags;
+import net.minecraft.tag.FluidTags;
+import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.RegistryTagManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -46,6 +50,13 @@ public class DummyWorld extends World {
                 (w, dim) -> null,
                 MinecraftClient.getInstance().getProfiler(),
                 true);
+
+        if (BlockTags.getContainer() == null) {
+            BlockTags.setContainer(tags.blocks());
+            ItemTags.setContainer(tags.items());
+            FluidTags.setContainer(tags.fluids());
+            EntityTypeTags.setContainer(tags.entityTypes());
+        }
     }
 
     public DummyWorld fillWith(BlockState state) {
