@@ -111,6 +111,6 @@ public class SkinChooser {
     }
 
     protected boolean acceptsSkinDimensions(int w, int h) {
-        return isPowerOfTwo(w) && w == h * 2 || w == h && w <= MAX_SKIN_DIMENSION && h <= MAX_SKIN_DIMENSION;
+        return isPowerOfTwo(w) && (w == h * 2 || w == h) && w <= MAX_SKIN_DIMENSION && h <= MAX_SKIN_DIMENSION;
     }
 }
