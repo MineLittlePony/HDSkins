@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -19,11 +20,9 @@ public class LocalTexture {
 
     private final TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
 
-    @Nullable
-    private NativeImageBackedTexture local;
+    private Optional<NativeImageBackedTexture> local = Optional.empty();
 
-    @Nullable
-    private PreviewTexture remote;
+    private Optional<PreviewTexture> remote = Optional.empty();
 
     private Identifier remoteResource;
     private Identifier localResource;
@@ -43,12 +42,11 @@ public class LocalTexture {
         remoteResource = new Identifier(file);
         textureManager.destroyTexture(remoteResource);
 
-
         reset();
     }
 
     public Identifier getId() {
-        if (hasRemote()) {
+        if (remote.isPresent()) {
             return remoteResource;
         }
 
@@ -59,28 +57,19 @@ public class LocalTexture {
         localResource = blank.getBlankSkin(type);
     }
 
-    public boolean hasRemote() {
-        return remote != null;
-    }
-
-    public boolean hasLocal() {
-        return local != null;
-    }
-
     public boolean hasRemoteTexture() {
         return uploadComplete() && remoteLoaded;
     }
 
     public boolean usingLocal() {
-        return !hasRemote() && hasLocal();
+        return !remote.isPresent() && local.isPresent();
     }
 
     public boolean uploadComplete() {
-        return hasRemote() && remote.isTextureUploaded();
+        return remote.map(PreviewTexture::isTextureUploaded).orElse(false);
     }
 
-    @Nullable
-    public PreviewTexture getRemote() {
+    public Optional<PreviewTexture> getRemote() {
         return remote;
     }
 
@@ -90,7 +79,7 @@ public class LocalTexture {
         Identifier blank = this.blank.getBlankSkin(type);
 
         if (blank != null) {
-            remote = ptm.getPreviewTexture(remoteResource, type, blank, callback.andThen(() -> remoteLoaded = true));
+            remote = Optional.ofNullable(ptm.getPreviewTexture(remoteResource, type, blank, callback.andThen(() -> remoteLoaded = true)));
         }
     }
 
@@ -105,8 +94,8 @@ public class LocalTexture {
         try (InputStream input = Files.newInputStream(file)) {
             NativeImage image = HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input));
 
-            local = new NativeImageBackedTexture(image);
-            localResource = textureManager.registerDynamicTexture("local_skin_preview", local);
+            local = Optional.of(new NativeImageBackedTexture(image));
+            localResource = textureManager.registerDynamicTexture("local_skin_preview", local.get());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,22 +103,23 @@ public class LocalTexture {
 
     private void clearRemote() {
         remoteLoaded = false;
-        if (hasRemote()) {
-            remote = null;
+        if (remote.isPresent()) {
+            remote = Optional.empty();
             textureManager.destroyTexture(remoteResource);
         }
     }
 
     public void clearLocal() {
-        if (hasLocal()) {
-            local = null;
+        if (local.isPresent()) {
+            local = Optional.empty();
             textureManager.destroyTexture(localResource);
             localResource = blank.getBlankSkin(type);
         }
     }
 
+    @FunctionalInterface
     public interface IBlankSkinSupplier {
-
+        @Nullable
         Identifier getBlankSkin(SkinType type);
     }
 }

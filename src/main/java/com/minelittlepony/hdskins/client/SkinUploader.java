@@ -216,7 +216,7 @@ public class SkinUploader implements Closeable {
     }
 
     public InputStream downloadSkin() throws IOException {
-        String loc = previewer.getRemote().getTextures().get(skinType).getRemote().getUrl();
+        String loc = previewer.getRemote().getTextures().get(skinType).getRemote().get().getUrl();
         return new URL(loc).openStream();
     }
 

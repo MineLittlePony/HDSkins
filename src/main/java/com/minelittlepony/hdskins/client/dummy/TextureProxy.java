@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.client.dummy;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSupplier;
+import com.minelittlepony.hdskins.client.resources.PreviewTexture;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.client.resources.SkinCallback;
 import com.minelittlepony.hdskins.skins.SkinType;
@@ -55,7 +56,7 @@ public class TextureProxy implements IBlankSkinSupplier {
 
     public void setPreviewThinArms(boolean thinArms) {
         previewThinArms = thinArms;
-        if (!isUsingLocal() && !this.isUsingRemote()) {
+        if (!isUsingLocal() && !isUsingRemote()) {
             textures.clear();
         }
     }
@@ -64,8 +65,11 @@ public class TextureProxy implements IBlankSkinSupplier {
         if (textures.containsKey(SkinType.SKIN)) {
             LocalTexture skin = get(SkinType.SKIN);
 
-            if (skin.uploadComplete() && skin.getRemote().hasModel()) {
-                return skin.getRemote().usesThinArms();
+            if (skin.uploadComplete()) {
+                return skin.getRemote()
+                        .filter(PreviewTexture::hasModel)
+                        .map(PreviewTexture::usesThinArms)
+                        .orElse(previewThinArms);
             }
         }
 
