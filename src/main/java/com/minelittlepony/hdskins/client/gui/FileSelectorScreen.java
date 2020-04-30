@@ -22,8 +22,11 @@ import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
@@ -71,7 +74,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         renderDirectory();
 
-        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, ""));
+        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, LiteralText.EMPTY));
         textInput.setEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
         textInput.setText(currentDirectory.toAbsolutePath().toString());
@@ -109,11 +112,11 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        renderBackground(0);
-        super.render(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
+        renderBackground(matrices, 0);
+        super.render(matrices, mouseX, mouseY, partialTicks);
 
-        filesList.render(mouseX, mouseY, partialTicks);
+        filesList.render(matrices, mouseX, mouseY, partialTicks);
     }
 
     protected void renderDirectory() {
@@ -240,7 +243,9 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
             this.path = path;
 
-            String name = path.getFileName().toString();
+            Text name = new LiteralText(path.getFileName().toString());
+            MutableText format = describeFile(path);
+            format.setStyle(format.getStyle().withColor(Formatting.GRAY).withItalic(true));
 
             TextureSprite sprite = getIcon(path)
                     .setPosition(6, 6)
@@ -251,20 +256,17 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
             onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
             getStyle()
-                .setText(trimLabel(name))
+                .setText(trimLabel(name.getString()))
                 .setIcon(sprite)
-                .setTooltip(Lists.newArrayList(
-                        name,
-                        Formatting.GRAY + "" + Formatting.ITALIC + describeFile(path))
-                );
+                .setTooltip(Lists.newArrayList(name, format));
         }
 
         private String trimLabel(String name) {
 
             int maxWidth = width - 35;
 
-            if (getFont().getStringWidth(name) > maxWidth) {
-                name = getFont().trimToWidth(name, maxWidth - getFont().getStringWidth("...")) + "...";
+            if (getFont().getWidth(name) > maxWidth) {
+                name = getFont().trimToWidth(name, maxWidth - getFont().getWidth("...")) + "...";
             }
 
             return name.replace("%", "%%");
@@ -274,18 +276,18 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
             setFocused(false);
         }
 
-        protected String describeFile(Path path) {
+        protected MutableText describeFile(Path path) {
             if (Files.isDirectory(path)) {
-                return I18n.translate("hdskins.filetype.directory");
+                return new TranslatableText("hdskins.filetype.directory");
             }
 
             String extension = FileTypes.getExtension(path);
 
             if (extension.isEmpty()) {
-                return I18n.translate("hdskins.filetype.unknown");
+                return new TranslatableText("hdskins.filetype.unknown");
             }
 
-            return I18n.translate("hdskins.filetype.file", extension.toUpperCase());
+            return new TranslatableText("hdskins.filetype.file", extension.toUpperCase());
         }
     }
 

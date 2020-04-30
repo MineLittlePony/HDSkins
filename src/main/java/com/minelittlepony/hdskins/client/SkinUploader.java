@@ -29,6 +29,9 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import java.io.InputStream;
 import java.net.URL;
@@ -39,18 +42,18 @@ public class SkinUploader implements Closeable {
 
     private static final Logger logger = LogManager.getLogger();
 
-    public static final String ERR_ALL_FINE = "";
-    public static final String ERR_NO_SERVER = "hdskins.error.noserver";
-    public static final String ERR_OFFLINE = "hdskins.error.offline";
+    public static final Text ERR_ALL_FINE = LiteralText.EMPTY;
+    public static final Text ERR_NO_SERVER = new TranslatableText("hdskins.error.noserver");
+    public static final Text ERR_OFFLINE = new TranslatableText("hdskins.error.offline");
 
-    public static final String ERR_MOJANG = "hdskins.error.mojang";
-    public static final String ERR_WAIT = "hdskins.error.mojang.wait";
+    public static final Text ERR_MOJANG = new TranslatableText("hdskins.error.mojang");
+    public static final Text ERR_WAIT = new TranslatableText("hdskins.error.mojang.wait");
 
-    public static final String STATUS_FETCH = "hdskins.fetch";
+    public static final Text STATUS_FETCH = new TranslatableText("hdskins.fetch");
 
     private Optional<SkinServer> gateway;
 
-    private String status = ERR_ALL_FINE;
+    private Text status = ERR_ALL_FINE;
 
     private SkinType skinType = SkinType.SKIN;
 
@@ -112,7 +115,7 @@ public class SkinUploader implements Closeable {
         return gateway.map(SkinServer::getFeatures).orElseGet(Collections::emptySet);
     }
 
-    protected void setError(String er) {
+    protected void setError(Text er) {
         status = er;
         sendingSkin = false;
     }
@@ -170,10 +173,10 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean hasStatus() {
-        return !status.isEmpty();
+        return status != ERR_ALL_FINE;
     }
 
-    public String getStatusMessage() {
+    public Text getStatusMessage() {
         return status;
     }
 
@@ -199,7 +202,7 @@ public class SkinUploader implements Closeable {
         return false;
     }
 
-    public CompletableFuture<Void> uploadSkin(String statusMsg) {
+    public CompletableFuture<Void> uploadSkin(Text statusMsg) {
         setError(statusMsg);
         sendingSkin = true;
         return CompletableFuture.runAsync(() -> {
@@ -255,14 +258,14 @@ public class SkinUploader implements Closeable {
 
             if (code >= 500) {
                 logger.error(ex.getReasonPhrase(), ex);
-                setError(String.format("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
+                setError(new TranslatableText("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
             } else if (code >= 400 && code != 403 && code != 404) {
                 logger.error(ex.getReasonPhrase(), ex);
-                setError(ex.getReasonPhrase());
+                setError(new LiteralText(ex.getReasonPhrase()));
             }
         } else {
             logger.error("Unhandled exception", throwable);
-            setError(throwable.toString());
+            setError(new LiteralText(throwable.toString()));
         }
     }
 

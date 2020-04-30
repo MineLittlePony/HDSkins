@@ -136,7 +136,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-            drawBackground(frameLeft, frameRight, frameBottom, frameTop, horizon);
+            drawBackground(matrixStack, frameLeft, frameRight, frameBottom, frameTop, horizon);
 
             renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
 
@@ -144,9 +144,9 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         });
     }
 
-    protected void drawBackground(int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
-        fill(        frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
-        fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
+    protected void drawBackground(MatrixStack matrices, int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
+        fill(matrices,         frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
+        fillGradient(matrices, frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
     }
 
     /*

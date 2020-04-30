@@ -46,7 +46,7 @@ public class DummyWorld extends World {
     private BlockState worldBlockState = Blocks.ACACIA_STAIRS.getDefaultState();
 
     private DummyWorld() {
-        super(new LevelProperties(new LevelInfo(0, GameMode.NOT_SET, false, false, LevelGeneratorType.DEFAULT.getDefaultOptions()), "MpServer"),
+        super(new LevelProperties(new LevelInfo("MpServer", 0, GameMode.NOT_SET, false, false, Difficulty.PEACEFUL, LevelGeneratorType.DEFAULT.getDefaultOptions())),
                 DimensionType.OVERWORLD,
                 (w, dim) -> null,
                 MinecraftClient.getInstance()::getProfiler,
@@ -99,11 +99,6 @@ public class DummyWorld extends World {
     @Override
     public float getBrightness(BlockPos pos) {
         return 16;
-    }
-
-    @Override
-    public BlockPos getSpawnPos() {
-        return BlockPos.ORIGIN;
     }
 
     @Override

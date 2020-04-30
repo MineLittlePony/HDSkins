@@ -4,6 +4,9 @@ import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
 import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
 
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 
@@ -19,15 +22,15 @@ public class SkinChooser {
 
     public static final String[] EXTENSIONS = new String[]{"png", "PNG"};
 
-    public static final String ERR_UNREADABLE = "hdskins.error.unreadable";
-    public static final String ERR_EXT = "hdskins.error.ext";
-    public static final String ERR_OPEN = "hdskins.error.open";
-    public static final String ERR_INVALID_TOO_LARGE = "hdskins.error.invalid.too_large";
-    public static final String ERR_INVALID_SHAPE = "hdskins.error.invalid.shape";
-    public static final String ERR_INVALID_POWER_OF_TWO = "hdskins.error.invalid.power_of_two";
-    public static final String ERR_INVALID = "hdskins.error.invalid";
+    public static final Text ERR_UNREADABLE = new TranslatableText("hdskins.error.unreadable");
+    public static final Text ERR_EXT = new TranslatableText("hdskins.error.ext");
+    public static final Text ERR_OPEN = new TranslatableText("hdskins.error.open");
+    public static final Text ERR_INVALID_TOO_LARGE = new TranslatableText("hdskins.error.invalid.too_large");
+    public static final Text ERR_INVALID_SHAPE = new TranslatableText("hdskins.error.invalid.shape");
+    public static final Text ERR_INVALID_POWER_OF_TWO = new TranslatableText("hdskins.error.invalid.power_of_two");
+    public static final Text ERR_INVALID = new TranslatableText("hdskins.error.invalid");
 
-    public static final String MSG_CHOOSE = "hdskins.choose";
+    public static final Text MSG_CHOOSE = new TranslatableText("hdskins.choose");
 
     private static boolean isPowerOfTwo(int number) {
         return number != 0 && (number & number - 1) == 0;
@@ -38,7 +41,7 @@ public class SkinChooser {
 
     private final SkinUploader uploader;
 
-    private volatile String status = MSG_CHOOSE;
+    private volatile Text status = MSG_CHOOSE;
 
     public SkinChooser(SkinUploader uploader) {
         this.uploader = uploader;
@@ -48,7 +51,7 @@ public class SkinChooser {
         return openFileThread != null;
     }
 
-    public String getStatus() {
+    public Text getStatus() {
         return status;
     }
 
@@ -84,7 +87,7 @@ public class SkinChooser {
         status = evaluateAndSelect(skinFile);
     }
 
-    private String evaluateAndSelect(Path skinFile) {
+    private Text evaluateAndSelect(Path skinFile) {
         if (!Files.exists(skinFile)) {
             return ERR_UNREADABLE;
         }
@@ -96,7 +99,7 @@ public class SkinChooser {
         try (InputStream in = Files.newInputStream(skinFile)) {
             NativeImage chosenImage = NativeImage.read(in);
 
-            String err = acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight());
+            Text err = acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight());
             if (err != null) {
                 return err;
             }
@@ -112,7 +115,7 @@ public class SkinChooser {
     }
 
     @Nullable
-    protected String acceptsSkinDimensions(int w, int h) {
+    protected Text acceptsSkinDimensions(int w, int h) {
         if (!isPowerOfTwo(w)) {
             return ERR_INVALID_POWER_OF_TWO;
         }

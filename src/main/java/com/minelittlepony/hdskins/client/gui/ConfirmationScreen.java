@@ -8,6 +8,7 @@ import com.minelittlepony.common.client.gui.element.Label;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 
 public class ConfirmationScreen extends GameGui {
@@ -29,7 +30,7 @@ public class ConfirmationScreen extends GameGui {
     @Override
     protected void init() {
         addButton(new Label(this.width/2, height/2 - 10).setCentered())
-            .getStyle().setText(getTitle().getString());
+            .getStyle().setText(getTitle());
 
         addButton(new Button(width/2 - 110, height/2 + 20, 100, 20))
             .onClick(p -> {
@@ -46,11 +47,11 @@ public class ConfirmationScreen extends GameGui {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        parent.render(-1, -1, partialTicks);
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
+        parent.render(matrices, -1, -1, partialTicks);
 
-        fill(0, 0, width, height, 0x88000000);
+        fill(matrices, 0, 0, width, height, 0x88000000);
 
-        super.render(mouseX, mouseY, partialTicks);
+        super.render(matrices, mouseX, mouseY, partialTicks);
     }
 }

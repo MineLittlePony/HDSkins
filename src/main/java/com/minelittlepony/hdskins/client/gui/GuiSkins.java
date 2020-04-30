@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.minelittlepony.common.client.gui.GameGui;
+import com.minelittlepony.common.client.gui.Tooltip;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
@@ -26,9 +26,11 @@ import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -137,7 +139,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setEnabled(uploader.canUpload())
                 .onClick(sender -> {
                     if (uploader.canUpload()) {
-                        punchServer("hdskins.upload");
+                        punchServer(new TranslatableText("hdskins.upload"));
                     }
                 })
                 .getStyle()
@@ -159,7 +161,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        punchServer("hdskins.request");
+                        punchServer(new TranslatableText("hdskins.request"));
                     }
                 })
                 .getStyle()
@@ -175,32 +177,28 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setEnabled(VanillaModels.isSlim(uploader.getMetadataField("model")))
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
-                .setTooltip("hdskins.mode.steve")
-                .setTooltipOffset(0, 10);
+                .setTooltip("hdskins.mode.steve", 0, 10);
 
         addButton(btnModeAlex = new FeatureSwitch(width - 25, 51))
                 .onClick(sender -> switchSkinMode(VanillaModels.SLIM))
                 .setEnabled(VanillaModels.isFat(uploader.getMetadataField("model")))
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
-                .setTooltip("hdskins.mode.alex")
-                .setTooltipOffset(0, 10);
+                .setTooltip("hdskins.mode.alex", 0, 10);
 
         addButton(btnModeSkin = new FeatureSwitch(width - 25, 75))
                 .onClick(sender -> uploader.setSkinType(SkinType.SKIN))
                 .setEnabled(uploader.getSkinType() == SkinType.ELYTRA)
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
-                .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase())
-                .setTooltipOffset(0, 10);
+                .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase(), 0, 10);
 
         addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
                 .onClick(sender -> uploader.setSkinType(SkinType.ELYTRA))
                 .setEnabled(uploader.getSkinType() == SkinType.SKIN)
                 .getStyle()
                 .setIcon(new ItemStack(Items.ELYTRA))
-                .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase())
-                .setTooltipOffset(0, 10);
+                .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase(), 0, 10);
 
         addButton(new Cycler(width - 25, 118, 20, 20))
                 .setValue(previewer.getPose())
@@ -218,12 +216,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .onClick(sender -> {
                     sender.getStyle()
                         .setIcon(uploader.cycleEquipment())
-                        .setTooltip(I18n.translate("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
+                        .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
                 })
                 .getStyle()
                 .setIcon(uploader.getEquipment().getStack())
-                .setTooltip(I18n.translate("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())))
-                .setTooltipOffset(0, 10);
+                .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())), 0, 10);
 
         addButton(new Button(width - 25, height - 65, 20, 20))
                 .onClick(sender -> {
@@ -367,7 +364,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTick) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
         ctrlKey.update();
         jumpKey.update();
         sneakKey.update();
@@ -385,27 +382,27 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         float xPos2 = width * 0.75F;
 
         if (chooser.getStatus() != null && !uploader.canUpload()) {
-            fill(40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            drawCenteredLabel(I18n.translate(chooser.getStatus()), (int)xPos1, height / 2 - 4, 0xffffff, 0);
+            fill(matrices, 40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
+            drawCenteredLabel(matrices, chooser.getStatus(), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
-            fill((int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
+            fill(matrices, (int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
 
             if (uploader.isThrottled()) {
-                drawCenteredLabel(I18n.translate(SkinUploader.ERR_MOJANG), (int)xPos2, height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(I18n.translate(SkinUploader.ERR_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
+                drawCenteredLabel(matrices, SkinUploader.ERR_MOJANG, (int)xPos2, height / 2 - 10, 0xff5555, 0);
+                drawCenteredLabel(matrices, new TranslatableText(SkinUploader.ERR_WAIT.getString(), uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
             } else if (uploader.isOffline()) {
-                drawCenteredLabel(I18n.translate(SkinUploader.ERR_OFFLINE), (int)xPos2, height / 2 - 4, 0xff5555, 0);
+                drawCenteredLabel(matrices, SkinUploader.ERR_OFFLINE, (int)xPos2, height / 2 - 4, 0xff5555, 0);
             } else {
-                drawCenteredLabel(I18n.translate(SkinUploader.STATUS_FETCH), (int)xPos2, height / 2 - 4, 0xffffff, 0);
+                drawCenteredLabel(matrices, SkinUploader.STATUS_FETCH, (int)xPos2, height / 2 - 4, 0xffffff, 0);
             }
         }
 
-        super.render(mouseX, mouseY, partialTick);
+        super.render(matrices, mouseX, mouseY, partialTick);
 
         boolean uploadInProgress = uploader.uploadInProgress();
         boolean showError = uploader.hasStatus();
@@ -423,22 +420,22 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         if (msgFadeOpacity > 0) {
             int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
 
-            fill(0, 0, width, height, opacity);
+            fill(matrices, 0, 0, width, height, opacity);
 
-            String errorMsg = I18n.translate(uploader.getStatusMessage());
+            Text errorMsg = uploader.getStatusMessage();
 
             if (uploadInProgress) {
-                drawCenteredLabel(errorMsg, width / 2, height / 2, 0xffffff, 0);
+                drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
-                int blockHeight = (height - getFont().getStringBoundedHeight(errorMsg, width - 10)) / 2;
+                int blockHeight = (height - getFont().getStringBoundedHeight(errorMsg.getString(), width - 10)) / 2;
 
-                drawCenteredLabel(I18n.translate("hdskins.failed"), width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
-                drawTextBlock(errorMsg, 5, blockHeight, width - 10, 0xff5555);
+                drawCenteredLabel(matrices, new TranslatableText("hdskins.failed"), width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
+                drawTextBlock(matrices, errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
     }
 
-    private void punchServer(String uploadMsg) {
+    private void punchServer(Text uploadMsg) {
         uploader.uploadSkin(uploadMsg).whenComplete((o, t) -> {
             if (t != null) {
                 t.printStackTrace();
@@ -500,7 +497,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
         private final Button element;
 
-        private Optional<List<String>> disabledTooltip = Optional.of(Splitter.onPattern("\r?\n|\\\\n").splitToList(I18n.translate("hdskins.warning.disabled.description")));
+        private Optional<Tooltip> disabledTooltip = Optional.of(Tooltip.of(new TranslatableText("hdskins.warning.disabled.description")));
 
         private boolean locked;
 
@@ -516,7 +513,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         }
 
         @Override
-        public Optional<List<String>> getTooltip() {
+        public Optional<Tooltip> getTooltip() {
             if (locked) {
                 return disabledTooltip;
             }
@@ -524,11 +521,13 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         }
 
         @Override
-        public Style setTooltip(String tooltip) {
-            disabledTooltip = Optional.of(Splitter.onPattern("\r?\n|\\\\n").splitToList(
-                    I18n.translate("hdskins.warning.disabled.title",
-                    I18n.translate(tooltip),
-                    I18n.translate("hdskins.warning.disabled.description"))));
+        public Style setTooltip(Tooltip tooltip) {
+            disabledTooltip = Optional.of(Tooltip.of(
+                    new TranslatableText("hdskins.warning.disabled.title",
+                            tooltip.getString(),
+                            new TranslatableText("hdskins.warning.disabled.description")
+                    )
+            ));
             return super.setTooltip(tooltip);
         }
     }
