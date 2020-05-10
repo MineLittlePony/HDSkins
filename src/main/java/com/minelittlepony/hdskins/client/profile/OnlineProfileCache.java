@@ -22,7 +22,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.util.Util;
 
-public class OnlineProfileCache {
+class OnlineProfileCache {
     private LoadingCache<GameProfile, CompletableFuture<Map<SkinType, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::fetchOnlineData));

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -19,69 +20,48 @@ public class LocalTexture {
 
     private final TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
 
-    @Nullable
-    private NativeImageBackedTexture local;
+    private Optional<NativeImageBackedTexture> local = Optional.empty();
 
-    @Nullable
-    private PreviewTexture remote;
+    private final Identifier remoteResource;
+    private Optional<PreviewTextureManager.Texture> server = Optional.empty();
 
-    private Identifier remoteResource;
+    private boolean isDynamic;
     private Identifier localResource;
 
     private final IBlankSkinSupplier blank;
 
     private final SkinType type;
 
-    private boolean remoteLoaded = false;
-
     public LocalTexture(GameProfile profile, SkinType type, IBlankSkinSupplier blank) {
         this.blank = blank;
         this.type = type;
 
-        String file = String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase();
-
-        remoteResource = new Identifier(file);
-        textureManager.destroyTexture(remoteResource);
-
-
-        reset();
+        localResource = blank.getBlankSkin(type);
+        remoteResource = new Identifier(String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase());
     }
 
     public Identifier getId() {
-        if (hasRemote()) {
+        if (server.isPresent()) {
             return remoteResource;
         }
 
         return localResource;
     }
 
-    public void reset() {
-        localResource = blank.getBlankSkin(type);
+    public boolean hasServerTexture() {
+        return uploadComplete();
     }
 
-    public boolean hasRemote() {
-        return remote != null;
-    }
-
-    public boolean hasLocal() {
-        return local != null;
-    }
-
-    public boolean hasRemoteTexture() {
-        return uploadComplete() && remoteLoaded;
-    }
-
-    public boolean usingLocal() {
-        return !hasRemote() && hasLocal();
+    public boolean hasLocalTexture() {
+        return !server.isPresent() && local.isPresent();
     }
 
     public boolean uploadComplete() {
-        return hasRemote() && remote.isTextureUploaded();
+        return server.map(PreviewTextureManager.Texture::isLoaded).orElse(false);
     }
 
-    @Nullable
-    public PreviewTexture getRemote() {
-        return remote;
+    public Optional<PreviewTextureManager.Texture> getServerTexture() {
+        return server;
     }
 
     public void setRemote(PreviewTextureManager ptm, SkinCallback callback) {
@@ -90,46 +70,43 @@ public class LocalTexture {
         Identifier blank = this.blank.getBlankSkin(type);
 
         if (blank != null) {
-            remote = ptm.getPreviewTexture(remoteResource, type, blank, callback.andThen(() -> remoteLoaded = true));
+            server = ptm.loadServerTexture(remoteResource, type, blank, callback);
         }
     }
 
-    public void setLocal(Path file) {
-
+    public void setLocal(Path file) throws IOException {
         clearLocal();
-
-        if (!Files.exists(file)) {
-            return;
-        }
 
         try (InputStream input = Files.newInputStream(file)) {
             NativeImage image = HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input));
 
-            local = new NativeImageBackedTexture(image);
-            localResource = textureManager.registerDynamicTexture("local_skin_preview", local);
-        } catch (IOException e) {
-            e.printStackTrace();
+            local = Optional.of(new NativeImageBackedTexture(image));
+            localResource = textureManager.registerDynamicTexture("local_skin_preview", local.get());
+            isDynamic = true;
         }
     }
 
-    private void clearRemote() {
-        remoteLoaded = false;
-        if (hasRemote()) {
-            remote = null;
+    public void clearRemote() {
+        server = server.map(server -> {
             textureManager.destroyTexture(remoteResource);
-        }
+            return null;
+        });
     }
 
     public void clearLocal() {
-        if (hasLocal()) {
-            local = null;
-            textureManager.destroyTexture(localResource);
+        local = local.map(local -> {
+            if (isDynamic) {
+                textureManager.destroyTexture(localResource);
+            }
+            isDynamic = false;
             localResource = blank.getBlankSkin(type);
-        }
+            return null;
+        });
     }
 
+    @FunctionalInterface
     public interface IBlankSkinSupplier {
-
+        @Nullable
         Identifier getBlankSkin(SkinType type);
     }
 }

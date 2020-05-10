@@ -18,7 +18,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.skins.SkinType;
 import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;

@@ -3,10 +3,12 @@ package com.minelittlepony.hdskins.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
@@ -46,8 +48,7 @@ public class SkinUploader implements Closeable {
 
     public static final String STATUS_FETCH = "hdskins.fetch";
 
-    @Nullable
-    private SkinServer gateway;
+    private Optional<SkinServer> gateway;
 
     private String status = ERR_ALL_FINE;
 
@@ -68,7 +69,9 @@ public class SkinUploader implements Closeable {
 
     private final Object skinLock = new Object();
 
+    @Nullable
     private Path pendingLocalSkin;
+    @Nullable
     private URI localSkin;
 
     private final Iterator<SkinServer> skinServers;
@@ -94,7 +97,7 @@ public class SkinUploader implements Closeable {
 
     public void cycleGateway() {
         if (skinServers.hasNext()) {
-            gateway = skinServers.next();
+            gateway = Optional.ofNullable(skinServers.next());
             fetchRemote();
         } else {
             setError(ERR_NO_SERVER);
@@ -102,15 +105,11 @@ public class SkinUploader implements Closeable {
     }
 
     public String getGatewayText() {
-        return gateway == null ? "" : gateway.toString();
-    }
-
-    public SkinServer getGateway() {
-        return gateway;
+        return gateway.map(SkinServer::toString).orElse("");
     }
 
     public Set<Feature> getFeatures() {
-        return gateway != null ? gateway.getFeatures() : Collections.emptySet();
+        return gateway.map(SkinServer::getFeatures).orElseGet(Collections::emptySet);
     }
 
     protected void setError(String er) {
@@ -201,43 +200,45 @@ public class SkinUploader implements Closeable {
     }
 
     public CompletableFuture<Void> uploadSkin(String statusMsg) {
+        setError(statusMsg);
         sendingSkin = true;
-        status = statusMsg;
-
         return CompletableFuture.runAsync(() -> {
-            try {
-                gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin, skinMetadata));
-                sendingSkin = false;
-                setError(ERR_ALL_FINE);
-            } catch (IOException | AuthenticationException e) {
-                handleException(e);
-            }
+            gateway.ifPresent(gateway -> {
+                try {
+                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin, skinMetadata));
+                    setError(ERR_ALL_FINE);
+                } catch (IOException | AuthenticationException e) {
+                    handleException(e);
+                }
+            });
         }).thenRunAsync(this::fetchRemote, MinecraftClient.getInstance());
     }
 
     public InputStream downloadSkin() throws IOException {
-        String loc = previewer.getRemote().getTextures().get(skinType).getRemote().getUrl();
+        String loc = previewer.getRemote().getTextures().get(skinType).getServerTexture().get().getUrl();
         return new URL(loc).openStream();
     }
 
     protected void fetchRemote() {
-        fetchingSkin = true;
         throttlingNeck = false;
-        offline = false;
+        offline = true;
+        gateway.ifPresent(gateway -> {
+            offline = false;
+            fetchingSkin = true;
+            previewer.getRemote().getTextures().reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
+                fetchingSkin = false;
+                listener.onSetRemoteSkin(type, location, profileTexture);
+            }).handleAsync((a, throwable) -> {
+                fetchingSkin = false;
 
-        previewer.getRemote().getTextures().reloadRemoteSkin(this, (type, location, profileTexture) -> {
-            fetchingSkin = false;
-            listener.onSetRemoteSkin(type, location, profileTexture);
-        }).handleAsync((a, throwable) -> {
-            fetchingSkin = false;
-
-            if (throwable != null) {
-                handleException(throwable.getCause());
-            } else {
-                retries = 1;
-            }
-            return a;
-        }, MinecraftClient.getInstance());
+                if (throwable != null) {
+                    handleException(throwable.getCause());
+                } else {
+                    retries = 1;
+                }
+                return a;
+            }, MinecraftClient.getInstance());
+        });
     }
 
     private void handleException(Throwable throwable) {
@@ -285,11 +286,18 @@ public class SkinUploader implements Closeable {
 
         synchronized (skinLock) {
             if (pendingLocalSkin != null) {
-                logger.debug("Set {} {}", skinType, pendingLocalSkin);
-                previewer.getLocal().getTextures().setLocal(pendingLocalSkin, skinType);
-                localSkin = pendingLocalSkin.toUri();
-                pendingLocalSkin = null;
-                listener.onSetLocalSkin(skinType);
+                try {
+                    if (Files.exists(pendingLocalSkin)) {
+                        logger.debug("Set {} {}", skinType, pendingLocalSkin);
+                        previewer.getLocal().getTextures().get(skinType).setLocal(pendingLocalSkin);
+                        localSkin = pendingLocalSkin.toUri();
+                        listener.onSetLocalSkin(skinType);
+                    }
+                } catch (IOException e) {
+                    HDSkins.logger.error("Could not load local path `" + pendingLocalSkin + "`", e);
+                } finally {
+                    pendingLocalSkin = null;
+                }
             }
         }
 

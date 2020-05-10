@@ -24,7 +24,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Util;
 
-public class OfflineProfileCache {
+class OfflineProfileCache {
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
@@ -64,7 +64,7 @@ public class OfflineProfileCache {
         }, Util.getServerWorkerExecutor());
     }
 
-    public Path getCachedProfileLocation(GameProfile profile) {
+    private Path getCachedProfileLocation(GameProfile profile) {
         String id = profile.getId().toString();
         return repository.getHDSkinsCache().resolve("profiles").resolve(id + ".json");
     }
