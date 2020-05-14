@@ -2,6 +2,10 @@ package com.minelittlepony.hdskins.client.dummy;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.class_5285;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -27,10 +31,13 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkManager;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelInfo;
 import net.minecraft.world.level.LevelProperties;
 
@@ -38,19 +45,39 @@ public class DummyWorld extends World {
 
     public static final DummyWorld INSTANCE = new DummyWorld();
 
+    private BlockState worldBlockState = Blocks.ACACIA_STAIRS.getDefaultState();
+
     private final WorldChunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
     private final Scoreboard scoreboard = new Scoreboard();
     private final RecipeManager recipeManager = new RecipeManager();
     private final RegistryTagManager tags = new RegistryTagManager();
+    private final ChunkManager chunkManager = new ChunkManager() {
+        private final LightingProvider lighting = new LightingProvider(this, false, false) {
+            @Override
+            public int getLight(BlockPos pos, int ambientDarkness) { return 15; }
+        };
 
-    private BlockState worldBlockState = Blocks.ACACIA_STAIRS.getDefaultState();
+        @Override
+        public BlockView getWorld() { return DummyWorld.this; }
+
+        @Override
+        public Chunk getChunk(int x, int z, ChunkStatus leastStatus, boolean create) { return chunk; }
+
+        @Override
+        public String getDebugString() { return "nop"; }
+
+        @Override
+        public LightingProvider getLightingProvider() { return lighting; }
+
+    };
 
     private DummyWorld() {
-        super(new LevelProperties(new LevelInfo("MpServer", 0, GameMode.NOT_SET, false, false, Difficulty.PEACEFUL, LevelGeneratorType.DEFAULT.getDefaultOptions())),
+        super(new LevelProperties(new LevelInfo("MpServer", GameMode.NOT_SET, false, Difficulty.PEACEFUL, false, new GameRules(), class_5285.field_24520)),
                 DimensionType.OVERWORLD,
-                (w, dim) -> null,
                 MinecraftClient.getInstance()::getProfiler,
-                true);
+                true,
+                true,
+                0);
 
         if (BlockTags.getContainer() == null) {
             BlockTags.setContainer(tags.blocks());
@@ -67,9 +94,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public boolean isChunkLoaded(int x, int z) {
-        return true;
-    }
+    public boolean isChunkLoaded(int x, int z) { return true; }
 
     @Override
     public TickScheduler<Block> getBlockTickScheduler() {
@@ -82,7 +107,7 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public WorldChunk getChunk(int chunkX, int chunkZ) {
+    public WorldChunk getChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
         return chunk;
     }
 
@@ -117,7 +142,12 @@ public class DummyWorld extends World {
     }
 
     @Override
-    public void playLevelEvent(PlayerEntity arg0, int arg1, BlockPos arg2, int arg3) {
+    public ChunkManager getChunkManager() {
+        return chunkManager;
+    }
+
+    @Override
+    public void syncWorldEvent(PlayerEntity arg0, int arg1, BlockPos arg2, int arg3) {
     }
 
     @Override
@@ -125,11 +155,13 @@ public class DummyWorld extends World {
         return new ArrayList<>();
     }
 
+    @Nullable
     @Override
     public Entity getEntityById(int arg0) {
         return null;
     }
 
+    @Nullable
     @Override
     public MapState getMapState(String arg0) {
         return null;

@@ -4,7 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCategory;
+import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class DummyPlayer extends LivingEntity {
 
     public static EntityType<DummyPlayer> TYPE = EntityType.Builder
-            .<DummyPlayer>create((t, w) -> new DummyPlayer(t, null), EntityCategory.MISC)
+            .<DummyPlayer>create((t, w) -> new DummyPlayer(t, null), SpawnGroup.MISC)
             .disableSaving()
             .disableSummon()
             .build("hdskins:dummy_player");
