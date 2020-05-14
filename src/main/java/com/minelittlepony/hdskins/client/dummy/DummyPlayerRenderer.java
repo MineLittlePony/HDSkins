@@ -93,12 +93,12 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         model = getEntityModel(entity);
 
         Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
-        model.helmet.visible = !parts.contains(PlayerModelPart.HAT);
-        model.jacket.visible = !parts.contains(PlayerModelPart.JACKET);
-        model.leftPantLeg.visible = !parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
-        model.rightPantLeg.visible = !parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
-        model.leftSleeve.visible = !parts.contains(PlayerModelPart.LEFT_SLEEVE);
-        model.rightSleeve.visible = !parts.contains(PlayerModelPart.RIGHT_SLEEVE);
+        model.helmet.visible = parts.contains(PlayerModelPart.HAT);
+        model.jacket.visible = parts.contains(PlayerModelPart.JACKET);
+        model.leftPantLeg.visible = parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
+        model.rightPantLeg.visible = parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
+        model.leftSleeve.visible = parts.contains(PlayerModelPart.LEFT_SLEEVE);
+        model.rightSleeve.visible = parts.contains(PlayerModelPart.RIGHT_SLEEVE);
         model.isSneaking = entity.isSneaking();
 
         model.leftArmPose = ArmPose.EMPTY;
