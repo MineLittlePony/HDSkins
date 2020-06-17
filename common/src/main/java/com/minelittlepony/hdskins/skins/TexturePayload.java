@@ -1,34 +1,24 @@
 package com.minelittlepony.hdskins.skins;
 
-import java.util.HashMap;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.authlib.yggdrasil.response.MinecraftTexturesPayload;
+
 import java.util.Map;
 import java.util.UUID;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+public class TexturePayload extends MinecraftTexturesPayload {
+    private final long timestamp;
+    private final UUID profileId;
+    private final String profileName;
+    private final boolean isPublic;
+    private final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures;
 
-public class TexturePayload {
-
-    private long timestamp;
-
-    private UUID profileId;
-
-    private String profileName;
-
-    private boolean isPublic;
-
-    private Map<SkinType, MinecraftProfileTexture> textures;
-
-    TexturePayload() { }
-
-    public TexturePayload(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textures) {
-        profileId = profile.getId();
-        profileName = profile.getName();
-        timestamp = System.currentTimeMillis();
-
-        isPublic = true;
-
-        this.textures = new HashMap<>(textures);
+    public TexturePayload(long timestamp, UUID profileId, String profileName, boolean isPublic, Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures) {
+        this.timestamp = timestamp;
+        this.profileId = profileId;
+        this.profileName = profileName;
+        this.isPublic = isPublic;
+        this.textures = textures;
     }
 
     public long getTimestamp() {
@@ -47,7 +37,7 @@ public class TexturePayload {
         return isPublic;
     }
 
-    public Map<SkinType, MinecraftProfileTexture> getTextures() {
+    public Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getTextures() {
         return textures;
     }
 }

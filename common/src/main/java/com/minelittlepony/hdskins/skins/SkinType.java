@@ -12,6 +12,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
+@Deprecated
 public class SkinType implements Comparable<SkinType> {
 
     private static final TypeAdapter<SkinType> ADAPTER = new Adapter();

@@ -28,10 +28,10 @@ public class SkinServerList implements SynchronousResourceReloadListener, Resour
 
     private static final Logger logger = LogManager.getLogger();
     private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(SkinServer.class, SkinServerSerializer.instance)
+            .registerTypeAdapter(SkinServer.class, new SkinServerSerializer())
             .create();
 
-    private List<SkinServer> skinServers = new LinkedList<>();
+    private final List<SkinServer> skinServers = new LinkedList<>();
 
     @Override
     public void apply(ResourceManager mgr) {
