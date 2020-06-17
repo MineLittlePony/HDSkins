@@ -22,7 +22,6 @@ public class HDSkinsFabric extends HDSkins implements ClientModInitializer {
         init();
         ResourceManagerHelper mgr = ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES);
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "resources"), resources));
-        mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "skin_servers"), skinServerList));
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "equipment_list"), equipmentList));
         EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, factory(DummyPlayerRenderer::new));
 

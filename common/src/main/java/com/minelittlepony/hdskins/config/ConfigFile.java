@@ -2,6 +2,8 @@ package com.minelittlepony.hdskins.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,7 +18,6 @@ import java.nio.file.Paths;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public class ConfigFile<T> {
@@ -24,16 +25,19 @@ public class ConfigFile<T> {
     private static final Logger logger = LogManager.getLogger();
 
     private final Path file;
-    private final Gson gson;
     private final Type type;
+    private final int version;
+    private final Gson gson;
+
     private final Supplier<T> defaultValue;
 
     private T config;
 
     private ConfigFile(Builder<T> builder) {
         this.file = Paths.get("config").resolve(builder.path);
-        this.gson = builder.gson.create();
         this.type = builder.type;
+        this.version = builder.version;
+        this.gson = builder.gson.create();
         this.defaultValue = builder.defaultValue;
     }
 
@@ -49,7 +53,13 @@ public class ConfigFile<T> {
 
     public void load() {
         try (BufferedReader r = Files.newBufferedReader(file)) {
-            config = gson.fromJson(r, type);
+            JsonObject json = gson.fromJson(r, JsonObject.class);
+
+            // check the config version and back up the old one if it changed
+            if (json.has("version")) {
+                convertConfig(json.remove("version").getAsInt());
+            }
+            config = gson.fromJson(json, type);
         } catch (NoSuchFileException e) {
             config = defaultValue.get();
             save();
@@ -59,9 +69,27 @@ public class ConfigFile<T> {
         }
     }
 
+    private void convertConfig(int version) throws IOException {
+        if (version != this.version) {
+            String filename = file.getFileName().toString();
+            String name = FilenameUtils.getBaseName(filename);
+            String ext = FilenameUtils.getExtension(filename);
+            String oldConfigName = String.format("%s-bak-v%d.%s", name, version, ext);
+            logger.warn("{}: config version changed. Resetting and backing up as {}.", filename, oldConfigName);
+
+            Path oldConfig = file.resolveSibling(oldConfigName);
+            Files.copy(file, oldConfig);
+
+            throw new NoSuchFileException(oldConfig.toString());
+        }
+    }
+
     public void save() {
         try {
             Files.createDirectories(file.getParent());
+            JsonObject json = gson.toJsonTree(config, type).getAsJsonObject();
+            json.addProperty("version", version);
+
             try (BufferedWriter w = Files.newBufferedWriter(file)) {
                 gson.toJson(config, type, w);
             }
@@ -74,6 +102,7 @@ public class ConfigFile<T> {
 
         private Path path;
         private Type type;
+        private int version = -1;
         private final GsonBuilder gson = new GsonBuilder().setPrettyPrinting();
         public Supplier<T> defaultValue;
 
@@ -84,6 +113,11 @@ public class ConfigFile<T> {
 
         public Builder<T> withType(Type type) {
             this.type = type;
+            return this;
+        }
+
+        public Builder<T> withVersion(int version) {
+            this.version = version;
             return this;
         }
 
@@ -98,8 +132,10 @@ public class ConfigFile<T> {
         }
 
         public ConfigFile<T> build() {
-            checkNotNull(path);
-            checkNotNull(type);
+            checkState(path != null);
+            checkState(type != null);
+            checkState(version >= 0);
+            checkState(defaultValue != null);
             return new ConfigFile<>(this);
         }
     }

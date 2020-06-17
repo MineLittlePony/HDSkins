@@ -38,7 +38,7 @@ public class SkinCache {
         return CompletableFuture.supplyAsync(() -> {
 
             Map<Type, MinecraftProfileTexture> textures = new EnumMap<>(Type.class);
-            for (SkinServer server : this.serverList.getSkinServers()) {
+            for (SkinServer server : this.serverList) {
                 if (server.getFeatures().contains(Feature.SYNTHETIC)) continue;
                 if (!server.getFeatures().contains(Feature.DOWNLOAD_USER_SKIN)) continue;
                 try {

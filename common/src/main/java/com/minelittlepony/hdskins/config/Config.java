@@ -11,6 +11,7 @@ public class Config {
     public static ConfigFile<Config> FILE = new ConfigFile.Builder<Config>()
             .withPath(Paths.get(HDSkins.MOD_ID, "config.json"))
             .withType(Config.class)
+            .withVersion(1)
             .withGson(builder -> builder.registerTypeAdapter(Path.class, new ToStringAdapter<>(Paths::get)))
             .withDefault(() -> new Config("."))
             .build();

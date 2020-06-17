@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 
 public class YggdrasilSkinServer implements SkinServer {
 
-    static final SkinServer INSTANCE = new YggdrasilSkinServer();
-
     private static final Set<Feature> FEATURES = Sets.newHashSet(
             Feature.SYNTHETIC,
             Feature.UPLOAD_USER_SKIN,
@@ -39,7 +37,6 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.MODEL_TYPES);
 
     private transient final String address = "https://api.mojang.com";
-    private transient final String verify = "https://authserver.mojang.com/validate";
 
     private transient final boolean requireSecure = true;
 
