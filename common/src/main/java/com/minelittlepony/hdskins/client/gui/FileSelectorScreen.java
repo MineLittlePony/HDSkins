@@ -15,9 +15,8 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
-import com.minelittlepony.hdskins.client.HDConfig;
-import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.upload.FileDialog;
+import com.minelittlepony.hdskins.config.Config;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.client.MinecraftClient;
@@ -62,7 +61,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         filesList.padding.setAll(10);
 
-        currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
+        currentDirectory = Config.FILE.get().lastChosenFile;
     }
 
     @Override
@@ -183,9 +182,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         textInput.setText(path.toString());
         currentDirectory = path;
 
-        HDConfig config = HDSkins.getInstance().getConfig();
-        config.lastChosenFile.set(path);
-        config.save();
+        Config.FILE.with(config -> config.lastChosenFile = path);
 
         parentBtn.setEnabled(canNavigateUp());
         renderDirectory();
@@ -198,9 +195,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
     protected void onFileSelected(Path fileLocation) {
 
-        HDConfig config = HDSkins.getInstance().getConfig();
-        config.lastChosenFile.set(fileLocation);
-        config.save();
+        Config.FILE.with(config -> config.lastChosenFile = fileLocation);
 
         minecraft.openScreen(parent);
         callback.onDialogClosed(fileLocation, true);

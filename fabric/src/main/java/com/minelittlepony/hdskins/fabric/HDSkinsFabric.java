@@ -19,7 +19,7 @@ import java.util.function.Function;
 public class HDSkinsFabric extends HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        config.load();
+        init();
         ResourceManagerHelper mgr = ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES);
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "resources"), resources));
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "skin_servers"), skinServerList));

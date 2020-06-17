@@ -1,9 +1,9 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
+import com.minelittlepony.hdskins.config.Config;
 import com.minelittlepony.hdskins.skins.SkinServerList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,8 +19,6 @@ public abstract class HDSkins {
         return instance;
     }
 
-    protected final HDConfig config = new HDConfig(GamePaths.getConfigDirectory().resolve("hdskins.json"));
-
     protected final SkinServerList skinServerList = new SkinServerList();
     protected final EquipmentList equipmentList = new EquipmentList();
     protected final SkinResourceManager resources = new SkinResourceManager();
@@ -30,8 +28,8 @@ public abstract class HDSkins {
         instance = this;
     }
 
-    public HDConfig getConfig() {
-        return config;
+    protected void init() {
+        Config.FILE.load();
     }
 
     public SkinResourceManager getResourceManager() {
