@@ -1,109 +1,67 @@
 plugins {
-    id 'java-library'
-    id 'fabric-loom' version '0.2.6-SNAPSHOT'
+    id 'fabric-loom' version '0.4-SNAPSHOT' apply false
+    id 'intermediary2srg' version '0.1-SNAPSHOT' apply false
     id 'maven-publish'
 }
 
-targetCompatibility = JavaVersion.VERSION_1_8
-sourceCompatibility = JavaVersion.VERSION_1_8
+allprojects {
+    apply plugin: 'java-library'
 
-def createVersion() {
-    def parts = []
+    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+
+    repositories {
+        jcenter()
+        ["snapshot", "release"].each { type ->
+            maven {
+                name = "minelp-$type"
+                url = "https://repo.minelittlepony-mod.com/maven/$type"
+            }
+        }
+        maven {
+            name = "Forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
+        mavenLocal()
+    }
+
+    dependencies {
+        compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    }
+}
+
+version = {
+    def parts = [project.version]
+
+    def branch = System.env.TRAVIS_BRANCH ?: 'master'
+
+    if (branch != 'master') {
+        parts << branch
+    }
+
+    if (branch != project.minecraft_version) {
+        parts << project.minecraft_version
+    }
 
     if (project.release != 'RELEASE') {
-        parts.push project.release
+        parts << project.release
     }
 
-    if (System.env.TRAVIS_BRANCH != null && System.env.TRAVIS_BRANCH != 'master') {
-        parts.push System.env.TRAVIS_BRANCH
-    }
+    return parts.join('-')
+}()
 
-    if (System.env.TRAVIS_BRANCH != project.minecraft_version) {
-       parts.push project.minecraft_version
-    }
-
-    def ver = project.version
-    if (parts.size > 0) {
-      return ver + '-' + parts.join('-')
-    }
-    return ver
-}
-
-version = createVersion()
-group = project.group
 description = project.displayname
-archivesBaseName = project.name
-
-minecraft {
-    refmapName = "hdskins.mixin.refmap.json"
-}
-
-repositories {
-    maven {
-        name = 'minelp'
-        url = 'https://repo.minelittlepony-mod.com/maven/snapshot'
-    }
-    maven {
-        name = 'minelp-release'
-        url = 'https://repo.minelittlepony-mod.com/maven/release'
-    }
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}"
-    modApi "net.fabricmc:fabric-loader:${project.loader_version}"
-    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
-
-    modApi "net.fabricmc.fabric-api:fabric-api-base:0.1.2+"
-    modApi "net.fabricmc.fabric-api:fabric-events-lifecycle-v0:0.1.2+"
-    modApi "net.fabricmc.fabric-api:fabric-resource-loader-v0:0.1.8+"
-    modApi "net.fabricmc.fabric-api:fabric-renderer-registries-v1:1.0.4+"
-
-    implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-    include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-
-    modApi "com.minelittlepony:Kirin:${project.kirin_version}"
-    include "com.minelittlepony:Kirin:${project.kirin_version}"
-
-    include files("letsencryptcraft-fabric-1.3.1.jar")
-
-    modImplementation "io.github.prospector:modmenu:${project.modmenu_version}"
-}
-
-processResources {
-    inputs.property 'version', project.version
-
-    from(sourceSets.main.resources.srcDirs) {
-        include 'fabric.mod.json'
-        expand 'version': project.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'fabric.mod.json'
-    }
-
-    from 'LICENSE'
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
 
 publishing {
     publications {
         maven(MavenPublication) {
-            afterEvaluate {
-                artifact(remapJar)
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+            from components.java
+//            afterEvaluate {
+//                artifact(remapJar)
+//            }
+//            artifact(sourcesJar) {
+//                builtBy remapSourcesJar
+//            }
 
             pom {
                 name = "HDSkins"
@@ -136,15 +94,16 @@ publishing {
     }
 
     repositories {
-        maven {
-            name = "MineLittlePony"
-            def mvn = 's3://repo.minelittlepony-mod.com/maven'
-            url = release == 'SNAPSHOT' ? "$mvn/snapshot" : "$mvn/release"
-
-            credentials(AwsCredentials) {
-                accessKey = System.env.ACCESS_KEY
-                secretKey = System.env.SECRET_KEY
-            }
-        }
+        mavenLocal()
+//        maven {
+//            name = "MineLittlePony"
+//            def mvn = 's3://repo.minelittlepony-mod.com/maven'
+//            url = release == 'SNAPSHOT' ? "$mvn/snapshot" : "$mvn/release"
+//
+//            credentials(AwsCredentials) {
+//                accessKey = System.env.ACCESS_KEY
+//                secretKey = System.env.SECRET_KEY
+//            }
+//        }
     }
 }

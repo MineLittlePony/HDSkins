@@ -5,9 +5,15 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = "MineLittlePony"
+            url = "https://repo.minelittlepony-mod.com/maven/snapshot"
+        }
         gradlePluginPortal()
     }
 }
 rootProject.name = 'HDSkins'
 // Checkout to parent dir to dev both
 //includeBuild '../Kirin'
+include 'common'
+include 'fabric'

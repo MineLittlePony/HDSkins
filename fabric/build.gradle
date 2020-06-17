@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+    id 'fabric-loom'
+}
+
+apply from: project(':common').file('minecraft.gradle')
+
+minecraft {
+    refmapName = "hdskins.mixin.refmap.json"
+}
+
+dependencies {
+    api "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modApi "net.fabricmc.fabric-api:fabric-api-base:0.1.2+"
+    modApi "net.fabricmc.fabric-api:fabric-events-lifecycle-v0:0.1.2+"
+    modApi "net.fabricmc.fabric-api:fabric-resource-loader-v0:0.1.8+"
+    modApi "net.fabricmc.fabric-api:fabric-renderer-registries-v1:1.0.4+"
+
+    modImplementation "io.github.prospector:modmenu:${project.modmenu_version}"
+
+    compile project(':common')
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'fabric.mod.json'
+        expand 'version': project.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'fabric.mod.json'
+    }
+}
