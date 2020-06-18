@@ -29,12 +29,6 @@ public class ProfileRepository {
     final OfflineProfileCache offline = new OfflineProfileCache(this);
     final OnlineProfileCache online = new OnlineProfileCache(this);
 
-    final HDSkins hd;
-
-    public ProfileRepository(HDSkins hd) {
-        this.hd = hd;
-    }
-
     public Path getHDSkinsCache() {
         return GamePaths.getAssetsDirectory().resolve("hd");
     }

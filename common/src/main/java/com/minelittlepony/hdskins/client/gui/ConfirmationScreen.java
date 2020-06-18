@@ -1,22 +1,21 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import javax.annotation.Nonnull;
-
-import com.minelittlepony.common.client.gui.GameGui;
-import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.common.client.gui.element.Label;
-
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.LiteralText;
 
-public class ConfirmationScreen extends GameGui {
+public class ConfirmationScreen extends ConfirmScreen {
 
     private final Runnable action;
+    private final Screen parent;
 
-    public ConfirmationScreen(@Nonnull Screen parent, String title, Runnable action) {
-        super(new LiteralText(title), parent);
-
+    public ConfirmationScreen(Screen parent, String title, Runnable action) {
+        super(new LiteralText(title));
+        this.parent = parent;
         this.action = action;
     }
 
@@ -31,13 +30,10 @@ public class ConfirmationScreen extends GameGui {
         addButton(new Label(this.width/2, height/2 - 10).setCentered())
             .getStyle().setText(getTitle().getString());
 
-        addButton(new Button(width/2 - 110, height/2 + 20, 100, 20))
-            .onClick(p -> {
-                finish();
-                action.run();
-            })
-            .getStyle()
-                .setText("gui.yes");
+        addButton(new ButtonWidget(width/2 - 110, height/2 + 20, I18n.translate("gui.yes"), p -> {
+            onClose();
+            action.run();
+        }));
 
         addButton(new Button(width/2 + 10, height/2 + 20, 100, 20))
             .onClick(p -> minecraft.openScreen(parent))

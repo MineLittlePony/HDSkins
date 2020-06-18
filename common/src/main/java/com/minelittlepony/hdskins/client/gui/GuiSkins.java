@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Callback {
+public class GuiSkins extends Screen implements ISkinUploadHandler, FileDrop.Callback {
 
     private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
@@ -260,11 +260,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     @Override
-    public void onSkinTypeChanged(SkinType newType) {
+    public void onSkinTypeChanged(Type newType) {
         playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
 
-        btnModeSkin.active = newType == SkinType.ELYTRA;
-        btnModeElytra.active = newType == SkinType.SKIN;
+        btnModeSkin.active = newType == Type.ELYTRA;
+        btnModeElytra.active = newType == Type.SKIN;
     }
 
     protected void switchSkinMode(String model) {

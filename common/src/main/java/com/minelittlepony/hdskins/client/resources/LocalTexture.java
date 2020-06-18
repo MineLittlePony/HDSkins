@@ -1,8 +1,9 @@
 package com.minelittlepony.hdskins.client.resources;
 
-import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.TextureManager;
@@ -23,16 +24,16 @@ public class LocalTexture {
     private Optional<NativeImageBackedTexture> local = Optional.empty();
 
     private final Identifier remoteResource;
-    private Optional<PreviewTextureManager.Texture> server = Optional.empty();
+    private AbstractTexture server;
 
     private boolean isDynamic;
     private Identifier localResource;
 
     private final IBlankSkinSupplier blank;
 
-    private final SkinType type;
+    private final Type type;
 
-    public LocalTexture(GameProfile profile, SkinType type, IBlankSkinSupplier blank) {
+    public LocalTexture(GameProfile profile, Type type, IBlankSkinSupplier blank) {
         this.blank = blank;
         this.type = type;
 
@@ -41,7 +42,7 @@ public class LocalTexture {
     }
 
     public Identifier getId() {
-        if (server.isPresent()) {
+        if (server != null) {
             return remoteResource;
         }
 
@@ -53,15 +54,16 @@ public class LocalTexture {
     }
 
     public boolean hasLocalTexture() {
-        return !server.isPresent() && local.isPresent();
+        return server != null && local.isPresent();
     }
 
     public boolean uploadComplete() {
-        return server.map(PreviewTextureManager.Texture::isLoaded).orElse(false);
+        return false;
+//        return getServerTexture().map(PreviewTextureManager.Texture::isLoaded).orElse(false);
     }
 
-    public Optional<PreviewTextureManager.Texture> getServerTexture() {
-        return server;
+    public Optional<AbstractTexture> getServerTexture() {
+        return Optional.ofNullable(server);
     }
 
     public void setRemote(PreviewTextureManager ptm, SkinCallback callback) {
@@ -87,10 +89,10 @@ public class LocalTexture {
     }
 
     public void clearRemote() {
-        server = server.map(server -> {
+        if (server != null) {
             textureManager.destroyTexture(remoteResource);
-            return null;
-        });
+            server = null;
+        }
     }
 
     public void clearLocal() {
@@ -107,6 +109,6 @@ public class LocalTexture {
     @FunctionalInterface
     public interface IBlankSkinSupplier {
         @Nullable
-        Identifier getBlankSkin(SkinType type);
+        Identifier getBlankSkin(Type type);
     }
 }

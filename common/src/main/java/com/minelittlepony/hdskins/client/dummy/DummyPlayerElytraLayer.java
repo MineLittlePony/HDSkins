@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.client.dummy;
 
-import com.minelittlepony.hdskins.skins.SkinType;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -28,7 +28,7 @@ public class DummyPlayerElytraLayer<T extends DummyPlayer, M extends PlayerEntit
         ItemStack itemstack = entity.getEquippedStack(EquipmentSlot.CHEST);
 
         if (itemstack.getItem() == Items.ELYTRA) {
-            Identifier texture = entity.getTextures().get(SkinType.ELYTRA).getId();
+            Identifier texture = entity.getTextures().get(Type.ELYTRA).getId();
 
             stack.push();
             stack.translate(0, 0, 0.125D);

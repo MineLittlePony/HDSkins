@@ -5,10 +5,8 @@
   "refmap": "hdskins.mixin.refmap.json",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinClientPlayer",
-    "MixinNetworkPlayerInfo",
-    "MixinPlayerSkinTexture",
-    "MixinSkullRenderer"
+    "MixinClientPlayNetworkHandler",
+    "MixinScreen"
   ],
   "injectors": {
     "defaultRequire": 1

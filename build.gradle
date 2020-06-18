@@ -33,7 +33,7 @@ allprojects {
 version = {
     def parts = [project.version]
 
-    def branch = System.env.TRAVIS_BRANCH ?: 'master'
+    def branch = System.env.TRAVIS_BRANCH?.replace('/', '_') ?: 'master'
 
     if (branch != 'master') {
         parts << branch
@@ -71,7 +71,6 @@ publishing {
                     license {
                         name = "MIT Public License"
                         url = "https://tlo.mit.edu/learn-about-intellectual-property/software-and-open-source-licensing"
-
                     }
                 }
                 developers {

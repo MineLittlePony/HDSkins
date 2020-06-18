@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,8 +22,7 @@ import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.skins.Feature;
 import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinServerList;
-import com.minelittlepony.hdskins.skins.SkinType;
-import com.minelittlepony.hdskins.skins.SkinUpload;
+import com.minelittlepony.hdskins.skins.SkinRequest;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
@@ -52,7 +52,7 @@ public class SkinUploader implements Closeable {
 
     private String status = ERR_ALL_FINE;
 
-    private SkinType skinType = SkinType.SKIN;
+    private Type skinType = Type.SKIN;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
@@ -117,7 +117,7 @@ public class SkinUploader implements Closeable {
         sendingSkin = false;
     }
 
-    public void setSkinType(SkinType type) {
+    public void setSkinType(Type type) {
         skinType = type;
 
         previewer.setSkinType(type);
@@ -186,7 +186,7 @@ public class SkinUploader implements Closeable {
         return skinMetadata.getOrDefault(field, "");
     }
 
-    public SkinType getSkinType() {
+    public Type getSkinType() {
         return skinType;
     }
 
@@ -205,7 +205,7 @@ public class SkinUploader implements Closeable {
         return CompletableFuture.runAsync(() -> {
             gateway.ifPresent(gateway -> {
                 try {
-                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin, skinMetadata));
+                    gateway.performSkinUpload(mc.getSessionService(), new SkinRequest.Upload(mc.getSession(), skinType, localSkin, skinMetadata));
                     setError(ERR_ALL_FINE);
                 } catch (IOException | AuthenticationException e) {
                     handleException(e);
@@ -311,7 +311,7 @@ public class SkinUploader implements Closeable {
     }
 
     public interface IPreviewModel {
-        void setSkinType(SkinType type);
+        void setSkinType(Type type);
 
         ItemStack setEquipment(EquipmentSet set);
 
@@ -321,13 +321,13 @@ public class SkinUploader implements Closeable {
     }
 
     public interface ISkinUploadHandler {
-        default void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
+        default void onSetRemoteSkin(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         }
 
-        default void onSetLocalSkin(SkinType type) {
+        default void onSetLocalSkin(Type type) {
         }
 
-        default void onSkinTypeChanged(SkinType newType) {
+        default void onSkinTypeChanged(Type newType) {
 
         }
     }

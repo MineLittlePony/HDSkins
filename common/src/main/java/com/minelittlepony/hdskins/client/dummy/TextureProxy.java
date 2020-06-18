@@ -5,10 +5,9 @@ import com.minelittlepony.hdskins.client.resources.LocalTexture.IBlankSkinSuppli
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.client.resources.SkinCallback;
 import com.minelittlepony.hdskins.skins.SkinServer;
-import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.exceptions.AuthenticationException;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
@@ -20,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class TextureProxy implements IBlankSkinSupplier {
 
-    private final Map<SkinType, LocalTexture> textures = new HashMap<>();
+    private final Map<Type, LocalTexture> textures = new HashMap<>();
 
     private final GameProfile profile;
 
@@ -38,8 +37,12 @@ public class TextureProxy implements IBlankSkinSupplier {
         alexBlankSupplier = alex;
     }
 
+    public GameProfile getProfile() {
+        return profile;
+    }
+
     @Override
-    public Identifier getBlankSkin(SkinType type) {
+    public Identifier getBlankSkin(Type type) {
         if (usesThinSkin()) {
             return alexBlankSupplier.getBlankSkin(type);
         }
@@ -60,16 +63,16 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public boolean usesThinSkin() {
-        if (textures.containsKey(SkinType.SKIN)) {
-            LocalTexture skin = get(SkinType.SKIN);
-
-            if (skin.uploadComplete()) {
-                return skin.getServerTexture()
-                        .filter(PreviewTextureManager.Texture::hasModel)
-                        .map(PreviewTextureManager.Texture::usesThinArms)
-                        .orElse(previewThinArms);
-            }
-        }
+//        if (textures.containsKey(Type.SKIN)) {
+//            LocalTexture skin = get(Type.SKIN);
+//
+//            if (skin.uploadComplete()) {
+//                return skin.getServerTexture()
+//                        .filter(PreviewTextureManager.Texture::hasModel)
+//                        .map(PreviewTextureManager.Texture::usesThinArms)
+//                        .orElse(previewThinArms);
+//            }
+//        }
 
         return previewThinArms;
     }
@@ -78,13 +81,15 @@ public class TextureProxy implements IBlankSkinSupplier {
         return CompletableFuture
                 .supplyAsync(() -> {
                     try {
-                        return new PreviewTextureManager(gateway.loadProfileData(profile));
-                    } catch (IOException | AuthenticationException e) {
+                        return new PreviewTextureManager(gateway.loadProfileData(MinecraftClient.getInstance().getSessionService(), profile));
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }, Util.getServerWorkerExecutor())
                 .thenAcceptAsync(ptm -> {
-                    SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
+                    for (Type type : Type.values()) {
+                        get(type).setRemote(ptm, listener);
+                    }
                 }, MinecraftClient.getInstance()); // run on main thread
     }
 
@@ -104,11 +109,11 @@ public class TextureProxy implements IBlankSkinSupplier {
         textures.values().forEach(LocalTexture::clearLocal);
     }
 
-    public LocalTexture get(SkinType type) {
+    public LocalTexture get(Type type) {
         return textures.computeIfAbsent(type, this::supplyNewTexture);
     }
 
-    private LocalTexture supplyNewTexture(SkinType type) {
+    private LocalTexture supplyNewTexture(Type type) {
         return new LocalTexture(profile, type, this);
     }
 }

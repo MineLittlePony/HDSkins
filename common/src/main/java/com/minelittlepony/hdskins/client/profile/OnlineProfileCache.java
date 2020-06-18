@@ -45,10 +45,10 @@ class OnlineProfileCache {
 
             Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
 
-            for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
+            for (SkinServer server : HDSkins.getInstance().getSkinServerList().getServers()) {
                 try {
                     if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
-                        server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
+                        server.loadProfileData(, profile).getTextures().forEach((type, texture) -> {
                             if (requestedSkinTypes.remove(type)) {
                                 textureMap.putIfAbsent(type, texture);
                             }

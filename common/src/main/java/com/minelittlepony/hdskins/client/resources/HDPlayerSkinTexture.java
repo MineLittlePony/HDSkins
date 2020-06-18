@@ -1,34 +1,39 @@
 package com.minelittlepony.hdskins.client.resources;
 
-import static com.minelittlepony.common.event.SkinFilterCallback.copy;
-
-import java.io.File;
-
-import javax.annotation.Nullable;
-
-import com.minelittlepony.hdskins.skins.SkinType;
-
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.PlayerSkinTexture;
-import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilter {
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
 
-    private final SkinType skinType;
+import static com.minelittlepony.common.event.SkinFilterCallback.copy;
 
-    public HDPlayerSkinTexture(File cacheFile, String url, SkinType skinType, Identifier fallbackSkin, Runnable runnable) {
-        super(cacheFile, url, fallbackSkin, false, runnable);
-        this.skinType = skinType;
+public class HDPlayerSkinTexture extends PlayerSkinTexture {
+
+    private static final Logger logger = LogManager.getLogger();
+
+    public HDPlayerSkinTexture(PlayerSkinTexture texture) {
+        super(texture.cacheFile, texture.url, texture.location, texture.convertLegacy, texture.loadedCallback);
     }
 
     @Nullable
     @Override
-    public NativeImage filterImage(@Nullable NativeImage image) {
-        // TODO: Do we want to convert other skin types?
-        if (skinType != SkinType.SKIN) {
-            return image;
+    protected NativeImage loadTexture(InputStream stream) {
+        NativeImage nativeImage = null;
+
+        try {
+            nativeImage = NativeImage.read(stream);
+            if (this.convertLegacy) {
+                nativeImage = filterPlayerSkins(nativeImage);
+            }
+        } catch (IOException var4) {
+            logger.warn("Error while loading the skin texture", var4);
         }
-        return filterPlayerSkins(image);
+
+        return nativeImage;
     }
 
     @Nullable

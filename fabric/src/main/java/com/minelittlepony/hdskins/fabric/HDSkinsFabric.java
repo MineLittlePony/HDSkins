@@ -1,12 +1,12 @@
 package com.minelittlepony.hdskins.fabric;
 
-import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.HDSkinsEvents;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer;
+import com.minelittlepony.hdskins.fabric.callback.ScreenInitCallback;
+import com.minelittlepony.hdskins.fabric.core.YarnFields;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.event.client.ClientTickCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -20,14 +20,15 @@ public class HDSkinsFabric extends HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         init();
+
         ResourceManagerHelper mgr = ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES);
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "resources"), resources));
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "equipment_list"), equipmentList));
-        EntityRendererRegistry.INSTANCE.register(DummyPlayer.TYPE, factory(DummyPlayerRenderer::new));
 
-        HDSkinsEvents events = new HDSkinsEvents();
+        HDSkinsEvents events = new HDSkinsEvents(new YarnFields());
 
-        ScreenInitCallback.EVENT.register((screen, buttonList) -> events.onScreenInit(screen, buttonList::add));
+        ClientTickCallback.EVENT.register(events::onTick);
+        ScreenInitCallback.EVENT.register(events::onScreenInit);
 
         FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
     }

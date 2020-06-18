@@ -1,18 +1,13 @@
 package com.minelittlepony.hdskins.client.dummy;
 
-import static com.mojang.blaze3d.systems.RenderSystem.*;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinUploader.IPreviewModel;
-import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.gui.ClippingSpace;
 import com.minelittlepony.hdskins.skins.SkinType;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.DiffuseLighting;
@@ -28,6 +23,12 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.mojang.blaze3d.systems.RenderSystem.disableDepthTest;
+import static com.mojang.blaze3d.systems.RenderSystem.enableRescaleNormal;
+
 /**
  * Player previewer that renders the models to the screen.
  */
@@ -36,12 +37,12 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
 
-    public static final Map<SkinType, Identifier> NO_TEXTURES = Util.make(new HashMap<>(), map -> {
-        map.put(SkinType.SKIN, NO_SKIN_STEVE);
-        map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
+    public static final Map<Type, Identifier> NO_TEXTURES = Util.make(new HashMap<>(), map -> {
+        map.put(Type.SKIN, NO_SKIN_STEVE);
+        map.put(Type.ELYTRA, new Identifier("textures/entity/elytra.png"));
     });
-    public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.make(new HashMap<>(), map -> {
-        map.put(SkinType.SKIN, NO_SKIN_ALEX);
+    public static final Map<Type, Identifier> NO_TEXTURES_ALEX = Util.make(new HashMap<>(), map -> {
+        map.put(Type.SKIN, NO_SKIN_ALEX);
     });
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
@@ -50,8 +51,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
     protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
 
-    private final DummyPlayer localPlayer = new DummyPlayer(DummyPlayer.TYPE, localTextures);
-    private final DummyPlayer remotePlayer = new DummyPlayer(DummyPlayer.TYPE, remoteTextures);
+    private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
+    private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
 
     private int pose;
 
@@ -93,11 +94,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         getRemote().setSneaking(sneaking);
     }
 
-    public Identifier getBlankSteveSkin(SkinType type) {
+    public Identifier getBlankSteveSkin(Type type) {
         return NO_TEXTURES.get(type);
     }
 
-    public Identifier getBlankAlexSkin(SkinType type) {
+    public Identifier getBlankAlexSkin(Type type) {
         if (NO_TEXTURES_ALEX.containsKey(type)) {
             return NO_TEXTURES_ALEX.get(type);
         }
@@ -132,7 +133,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             MatrixStack matrixStack) {
 
-        OutsideWorldRenderer.configure(thePlayer.world);
+//        OutsideWorldRenderer.configure(thePlayer.world);
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
@@ -166,7 +167,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
             HDSkins.logger.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
         }
 
-        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
+        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(Type.SKIN).getId());
 
         DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
 
@@ -202,8 +203,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     }
 
     @Override
-    public void setSkinType(SkinType type) {
-        ItemStack stack = type == SkinType.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
+    public void setSkinType(Type type) {
+        ItemStack stack = type == Type.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
         // put on or take off the elytra
         getLocal().equipStack(EquipmentSlot.CHEST, stack);
         getRemote().equipStack(EquipmentSlot.CHEST, stack);
@@ -213,7 +214,6 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     public DummyPlayer getRemote() {
         return remotePlayer;
     }
-
 
     @Override
     public DummyPlayer getLocal() {

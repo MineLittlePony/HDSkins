@@ -1,48 +1,28 @@
 package com.minelittlepony.hdskins.client.dummy;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * A dummy player that appears on the skins gui when previewing a skin.
  */
 @SuppressWarnings("EntityConstructor")
-public class DummyPlayer extends LivingEntity {
-
-    public static EntityType<DummyPlayer> TYPE = EntityType.Builder
-            .<DummyPlayer>create((t, w) -> new DummyPlayer(t, null), EntityCategory.MISC)
-            .disableSaving()
-            .disableSummon()
-            .build("hdskins:dummy_player");
-
-    private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
+public class DummyPlayer extends OtherClientPlayerEntity {
 
     private final TextureProxy textures;
 
-    public DummyPlayer(EntityType<? extends DummyPlayer> type, TextureProxy textures) {
-        super(type, DummyWorld.INSTANCE);
+    public DummyPlayer(TextureProxy textures) {
+        super(new DummyWorld(), textures.getProfile());
 
         this.textures = textures;
     }
 
     public TextureProxy getTextures() {
         return textures;
-    }
-
-    @Override
-    public double getHeightOffset() {
-        return -0.35D;
     }
 
     @Override
@@ -154,18 +134,4 @@ public class DummyPlayer extends LivingEntity {
         return MinecraftClient.getInstance().options.mainArm;
     }
 
-    @Override
-    public Iterable<ItemStack> getArmorItems() {
-        return armour.values();
-    }
-
-    @Override
-    public ItemStack getEquippedStack(EquipmentSlot slot) {
-        return armour.getOrDefault(slot, ItemStack.EMPTY);
-    }
-
-    @Override
-    public void equipStack(EquipmentSlot slot, ItemStack stack) {
-        armour.put(slot, stack == null ? ItemStack.EMPTY : stack);
-    }
 }

@@ -1,9 +1,9 @@
 package com.minelittlepony.hdskins.client.dummy;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -14,19 +14,16 @@ import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
-
 import org.lwjgl.opengl.GL11;
 
-import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.minelittlepony.hdskins.skins.SkinType;
 import java.util.Set;
 
 public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
@@ -41,7 +38,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
     @SuppressWarnings("unchecked")
     public DummyPlayerRenderer(EntityRenderDispatcher renderer) {
-        super(renderer, (M)FAT, 0);
+        super(renderer, (M) FAT, 0);
         addFeature(getElytraLayer());
         addFeature(getArmourLayer());
         addFeature(getHeldItemLayer());
@@ -64,7 +61,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
     @Override
     public Identifier getTexture(T entity) {
-        return entity.getTextures().get(SkinType.SKIN).getId();
+        return entity.getTextures().get(Type.SKIN).getId();
     }
 
     @Override
@@ -74,7 +71,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
 
     @SuppressWarnings("unchecked")
     public M getEntityModel(T entity) {
-        return (M)(entity.getTextures().usesThinSkin() ? THIN : FAT);
+        return (M) (entity.getTextures().usesThinSkin() ? THIN : FAT);
     }
 
     @Override
@@ -125,15 +122,16 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             y += 0.7F;
             x += 1;
         }
+        DummyWorld world = (DummyWorld) entity.world;
         if (entity.isSwimming()) {
-            DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
+            world.fillWith(Blocks.WATER.getDefaultState());
             stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(45));
 
             y -= 0.5F;
             x -= 0;
             z -= 1;
         } else {
-            DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
+            world.fillWith(Blocks.AIR.getDefaultState());
         }
 
         stack.translate(x, y, z);
@@ -155,9 +153,9 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             stack.scale(-1, 1, 1);
             stack.translate(-0.5, 0, 0);
 
-            OutsideWorldRenderer.configure(entity.getEntityWorld())
-                .get(this)
-                .render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);
+//            OutsideWorldRenderer.configure(entity.getEntityWorld())
+//                .get(this)
+//                .render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);
 
             stack.pop();
             GL11.glPopAttrib();
@@ -168,7 +166,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
         public static MrBoaty instance = new MrBoaty();
 
         public MrBoaty() {
-            super(EntityType.BOAT, DummyWorld.INSTANCE);
+            super(EntityType.BOAT, new DummyWorld());
         }
 
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
@@ -176,7 +174,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
             stack.push();
 
             @SuppressWarnings("unchecked")
-            EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
+            EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>) MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
 
             render.render(this, 0, 0, stack, renderContext, 0xF000F0);
 
