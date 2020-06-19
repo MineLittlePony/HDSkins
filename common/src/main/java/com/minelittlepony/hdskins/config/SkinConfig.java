@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.config;
 
 import com.google.common.collect.ImmutableList;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.skins.SkinServer;
 import com.minelittlepony.hdskins.skins.SkinServerSerializer;
 import com.minelittlepony.hdskins.skins.types.ValhallaSkinServer;

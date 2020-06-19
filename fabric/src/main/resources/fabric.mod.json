@@ -17,7 +17,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "com.minelittlepony.hdskins.fabric.HDSkins"
+      "com.minelittlepony.hdskins.fabric.HDSkinsFabric"
     ],
     "modmenu": [
       "com.minelittlepony.hdskins.fabric.modmenu.HDSkinsMenuFactory"
@@ -31,9 +31,9 @@
     "fabric-api-base": ">=0.1.0",
     "fabric-events-lifecycle-v0": ">=0.1.0",
     "fabric-resource-loader-v0": ">=0.1.0",
-    "fabric-renderer-registries-v1": ">=0.1.0",
-  	"kirin": "*"
+    "fabric-renderer-registries-v1": ">=0.1.0"
   },
+  "accessWidener": "hdskins.aw",
   "suggests": {
     "modmenu": "*"
   },

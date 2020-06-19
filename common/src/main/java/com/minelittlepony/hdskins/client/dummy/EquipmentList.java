@@ -6,7 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.util.RegistryTypeAdapter;
 import com.minelittlepony.hdskins.util.ToStringAdapter;
 import net.minecraft.entity.EquipmentSlot;

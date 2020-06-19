@@ -1,3 +1,4 @@
+/*
 package com.minelittlepony.hdskins.client.gui;
 
 import net.minecraft.client.MinecraftClient;
@@ -50,3 +51,4 @@ public class ConfirmationScreen extends ConfirmScreen {
         super.render(mouseX, mouseY, partialTicks);
     }
 }
+*/

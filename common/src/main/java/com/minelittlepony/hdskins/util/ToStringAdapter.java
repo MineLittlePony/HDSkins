@@ -6,20 +6,21 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ToStringAdapter<T> extends TypeAdapter<T> {
 
-    private final Function<String, T> fromString;
     private final Function<T, String> toString;
+    private final Function<String, T> fromString;
 
     public ToStringAdapter(Function<T, String> toString, Function<String, T> fromString) {
-        this.fromString = fromString;
         this.toString = toString;
+        this.fromString = fromString;
     }
 
     public ToStringAdapter(Function<String, T> function) {
-        this(Object::toString, function);
+        this(Objects::toString, function);
     }
 
     @Override

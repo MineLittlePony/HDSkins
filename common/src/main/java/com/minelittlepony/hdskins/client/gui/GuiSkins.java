@@ -1,3 +1,4 @@
+/*
 package com.minelittlepony.hdskins.client.gui;
 
 import com.google.common.base.Preconditions;
@@ -7,7 +8,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.IconicToggle;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.style.Style;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.client.SkinChooser;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
@@ -245,8 +246,6 @@ public class GuiSkins extends Screen implements ISkinUploadHandler, FileDrop.Cal
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        HDSkins.getInstance().getProfileRepository().clear();
 
         dropper.cancel();
     }
@@ -533,3 +532,5 @@ public class GuiSkins extends Screen implements ISkinUploadHandler, FileDrop.Cal
         }
     }
 }
+
+*/

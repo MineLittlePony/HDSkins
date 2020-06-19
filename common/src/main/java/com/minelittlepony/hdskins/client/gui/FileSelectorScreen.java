@@ -1,3 +1,4 @@
+/*
 package com.minelittlepony.hdskins.client.gui;
 
 import java.io.File;
@@ -310,3 +311,5 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
 }
+
+*/

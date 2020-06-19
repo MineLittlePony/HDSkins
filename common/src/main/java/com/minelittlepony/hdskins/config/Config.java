@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.config;
 
-import com.minelittlepony.common.util.settings.ToStringAdapter;
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
+import com.minelittlepony.hdskins.util.ToStringAdapter;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,7 +12,7 @@ public class Config {
             .withPath(Paths.get(HDSkins.MOD_ID, "config.json"))
             .withType(Config.class)
             .withVersion(1)
-            .withGson(builder -> builder.registerTypeAdapter(Path.class, new ToStringAdapter<>(Paths::get)))
+            .withGson(builder -> builder.registerTypeHierarchyAdapter(Path.class, new ToStringAdapter<>(Paths::get)))
             .withDefault(() -> new Config("."))
             .build();
 

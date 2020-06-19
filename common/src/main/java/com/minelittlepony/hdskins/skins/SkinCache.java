@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class SkinCache {
 
@@ -57,5 +58,9 @@ public class SkinCache {
 
     public CompletableFuture<MinecraftTexturesPayload> getPayload(GameProfile profile) {
         return CACHE.getUnchecked(profile);
+    }
+
+    public SkinServerList getServerList() {
+        return serverList;
     }
 }

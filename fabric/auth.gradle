@@ -1,0 +1,41 @@
+import groovy.json.JsonSlurper
+
+static def getMinecraftDirectory() {
+    def os = System.getProperty("os.name").toLowerCase().substring(0, 3)
+    if (os == 'win') {
+        return new File("${System.getenv("APPDATA")}\\.minecraft")
+    }
+    def home = System.getProperty("user.home")
+    if (os == 'mac') {
+        return new File("$home/Library/Application Support/minecraft")
+    }
+    return new File("$home/.minecraft")
+}
+
+runClient {
+    doFirst("configure args") {
+        // load the system minecraft install's profile data
+
+        def mcfolder = getMinecraftDirectory()
+        def launcher_profiles_path = new File(mcfolder, "launcher_profiles.json")
+
+        if (launcher_profiles_path.exists()) {
+            println("Loading auth data from $launcher_profiles_path")
+
+            def slurp = new JsonSlurper()
+            def json = slurp.parseText(launcher_profiles_path.text)
+
+            def account = json.selectedUser.account
+            def profile = json.selectedUser.profile
+
+            def accessToken = json.authenticationDatabase[account].accessToken
+            def userName = json.authenticationDatabase[account].profiles[profile].displayName
+            def properties = json.authenticationDatabase[account].properties.toString()
+
+            println "Username: $userName"
+            println "UniqueID: $profile"
+
+            args = ["--username", userName, "--uuid", profile, "--accessToken", accessToken, "--properties", properties]
+        }
+    }
+}

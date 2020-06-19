@@ -14,7 +14,6 @@ class YarnObfHelper<Owner, Descriptor> extends ObfHelper<Owner, Descriptor> {
 
     @Override
     protected String mapFieldName() {
-        Class<?> desc = this.desc;
         String intermediateOwner = unmapClass(owner);
         String intermediateType = unmapClass(desc);
         String intermediateDesc = Type.getObjectType(intermediateType).getDescriptor().replace('.', '/');

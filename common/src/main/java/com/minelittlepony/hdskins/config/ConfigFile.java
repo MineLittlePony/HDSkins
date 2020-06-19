@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -56,32 +58,49 @@ public class ConfigFile<T> {
             JsonObject json = gson.fromJson(r, JsonObject.class);
 
             // check the config version and back up the old one if it changed
-            if (json.has("version")) {
-                convertConfig(json.remove("version").getAsInt());
+            if (checkVersion(json)) {
+                config = gson.fromJson(json, type);
             }
-            config = gson.fromJson(json, type);
         } catch (NoSuchFileException e) {
             config = defaultValue.get();
             save();
+        } catch (JsonSyntaxException e) {
+            resetConfig("Syntax error", "bad-syntax");
         } catch (IOException e) {
             logger.warn("Failed to load config. Using defaults.", e);
             config = defaultValue.get();
         }
     }
 
-    private void convertConfig(int version) throws IOException {
-        if (version != this.version) {
-            String filename = file.getFileName().toString();
-            String name = FilenameUtils.getBaseName(filename);
-            String ext = FilenameUtils.getExtension(filename);
-            String oldConfigName = String.format("%s-bak-v%d.%s", name, version, ext);
-            logger.warn("{}: config version changed. Resetting and backing up as {}.", filename, oldConfigName);
-
-            Path oldConfig = file.resolveSibling(oldConfigName);
-            Files.copy(file, oldConfig);
-
-            throw new NoSuchFileException(oldConfig.toString());
+    private boolean checkVersion(JsonObject json) {
+        int version = 0;
+        if (json.has("version")) {
+            version = json.remove("version").getAsInt();
         }
+        if (version != this.version) {
+            resetConfig("config version changed", String.format("v%d", version));
+            return false;
+        }
+        return true;
+    }
+
+    private void resetConfig(String error, String suffix) {
+        String filename = file.getFileName().toString();
+        String name = FilenameUtils.getBaseName(filename);
+        String ext = FilenameUtils.getExtension(filename);
+        String oldConfigName = String.format("%s-bak-%s.%s", name, suffix, ext);
+
+        logger.warn("{}: {}. Resetting and backing up as {}.", filename, error, oldConfigName);
+
+        try {
+            Path oldConfig = file.resolveSibling(oldConfigName);
+            Files.copy(file, oldConfig, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to back up config to " + file, e);
+        }
+
+        config = defaultValue.get();
+        save();
     }
 
     public void save() {
@@ -91,7 +110,7 @@ public class ConfigFile<T> {
             json.addProperty("version", version);
 
             try (BufferedWriter w = Files.newBufferedWriter(file)) {
-                gson.toJson(config, type, w);
+                gson.toJson(json, w);
             }
         } catch (IOException e) {
             logger.warn("Failed to save config.", e);

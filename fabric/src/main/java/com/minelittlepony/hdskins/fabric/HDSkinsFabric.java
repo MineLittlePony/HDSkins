@@ -1,7 +1,8 @@
 package com.minelittlepony.hdskins.fabric;
 
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.client.HDSkinsEvents;
+import com.minelittlepony.hdskins.fabric.callback.ClientLogInCallback;
 import com.minelittlepony.hdskins.fabric.callback.ScreenInitCallback;
 import com.minelittlepony.hdskins.fabric.core.YarnFields;
 import net.fabricmc.api.ClientModInitializer;
@@ -25,10 +26,11 @@ public class HDSkinsFabric extends HDSkins implements ClientModInitializer {
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "resources"), resources));
         mgr.registerReloadListener(new FabricResourceListener(new Identifier(MOD_ID, "equipment_list"), equipmentList));
 
-        HDSkinsEvents events = new HDSkinsEvents(new YarnFields());
+        HDSkinsEvents events = new HDSkinsEvents(this, new YarnFields());
 
         ClientTickCallback.EVENT.register(events::onTick);
         ScreenInitCallback.EVENT.register(events::onScreenInit);
+        ClientLogInCallback.EVENT.register(events::onClientLogin);
 
         FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
     }

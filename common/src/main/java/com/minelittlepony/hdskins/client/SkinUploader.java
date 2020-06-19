@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
+import com.minelittlepony.hdskins.HDSkins;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,7 +90,7 @@ public class SkinUploader implements Closeable {
         this.listener = listener;
 
         skinMetadata.put("model", "default");
-        skinServers = servers.getCycler();
+        skinServers = servers.cycle();
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
@@ -215,8 +217,9 @@ public class SkinUploader implements Closeable {
     }
 
     public InputStream downloadSkin() throws IOException {
-        String loc = previewer.getRemote().getTextures().get(skinType).getServerTexture().get().getUrl();
-        return new URL(loc).openStream();
+        return new ByteArrayInputStream(new byte[0]);
+//        String loc = previewer.getRemote().getTextures().get(skinType).getServerTexture().get().getUrl();
+//        return new URL(loc).openStream();
     }
 
     protected void fetchRemote() {

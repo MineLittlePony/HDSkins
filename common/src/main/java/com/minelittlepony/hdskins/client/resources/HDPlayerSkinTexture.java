@@ -9,8 +9,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static com.minelittlepony.common.event.SkinFilterCallback.copy;
-
 public class HDPlayerSkinTexture extends PlayerSkinTexture {
 
     private static final Logger logger = LogManager.getLogger();
@@ -34,6 +32,19 @@ public class HDPlayerSkinTexture extends PlayerSkinTexture {
         }
 
         return nativeImage;
+    }
+
+    private static void copy(NativeImage image,
+                             int xFrom, int yFrom,
+                             int xOffset, int yOffset,
+                             int width, int height,
+                             boolean mirrorX, boolean mirrorY) {
+        int scale = image.getWidth() / 64;
+        image.copyRect(
+                xFrom * scale, yFrom * scale,
+                xOffset * scale, yOffset * scale,
+                width * scale, height * scale,
+                mirrorX, mirrorY);
     }
 
     @Nullable

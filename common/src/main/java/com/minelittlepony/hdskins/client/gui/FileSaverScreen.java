@@ -1,3 +1,4 @@
+/*
 package com.minelittlepony.hdskins.client.gui;
 
 import java.nio.file.Files;
@@ -109,3 +110,4 @@ public class FileSaverScreen extends FileSelectorScreen {
     }
 
 }
+*/

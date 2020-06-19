@@ -17,7 +17,7 @@ public class SkinServerList implements Iterable<SkinServer> {
         return servers.iterator();
     }
 
-    public Iterator<SkinServer> getCycler() {
+    public Iterator<SkinServer> cycle() {
         return Iterators.cycle(servers);
     }
 }

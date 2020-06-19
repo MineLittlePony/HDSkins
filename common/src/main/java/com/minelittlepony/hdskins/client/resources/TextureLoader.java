@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
-import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.HDSkins;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;

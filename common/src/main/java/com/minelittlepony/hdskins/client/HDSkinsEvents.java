@@ -1,9 +1,9 @@
 package com.minelittlepony.hdskins.client;
 
 import com.google.common.cache.LoadingCache;
+import com.minelittlepony.hdskins.HDSkins;
 import com.minelittlepony.hdskins.client.forward.ForwardingTextureManager;
 import com.minelittlepony.hdskins.client.gui.ButtonIconWidget;
-import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
 import com.minelittlepony.hdskins.core.EventHookedPlayerMap;
 import com.minelittlepony.hdskins.core.EventHookedSkinCache;
@@ -39,24 +39,21 @@ import java.util.function.UnaryOperator;
 public class HDSkinsEvents {
     private static final Logger logger = LogManager.getLogger();
 
-
-    private final List<PendingSkin> pendingSkins = new LinkedList<>();
+    private final HDSkins skins;
     private final PrivateFields fields;
 
-    private SkinCache cache;
+    private final List<PendingSkin> pendingSkins = new LinkedList<>();
+
     private boolean skinCacheLoaderReplaced;
 
-    public HDSkinsEvents(PrivateFields fields) {
+    public HDSkinsEvents(HDSkins skins, PrivateFields fields) {
+        this.skins = skins;
         this.fields = fields;
-    }
-
-    private SkinCache getSkinCache() {
-        return this.cache;
     }
 
     public void onClientLogin(ClientPlayNetworkHandler handler) {
         pendingSkins.clear();
-        cache = newSkinCache();
+        skins.resetCache(MinecraftClient.getInstance().getSessionService());
 
         replaceNetworkPlayerMap(handler);
     }
@@ -65,17 +62,13 @@ public class HDSkinsEvents {
         pendingSkins.removeIf(this::setPlayerSkin);
 
         if (!skinCacheLoaderReplaced) {
-            cache = newSkinCache();
+            skins.resetCache(MinecraftClient.getInstance().getSessionService());
 
             PlayerSkinProvider skins = minecraft.getSkinProvider();
             replaceSkinCacheLoader(skins);
             replaceSkinTextureManager(skins, this::mapPlayerSkinTextureToHD);
             skinCacheLoaderReplaced = true;
         }
-    }
-
-    private SkinCache newSkinCache() {
-        return new SkinCache(HDSkins.getInstance().getSkinServerList(), MinecraftClient.getInstance().getSessionService());
     }
 
     private void addPendingSkin(PendingSkin pending) {
@@ -90,7 +83,7 @@ public class HDSkinsEvents {
     }
 
     private void onPlayerAdd(PlayerListEntry player) {
-        getSkinCache().getPayload(player.getProfile())
+        skins.getSkinCache().getPayload(player.getProfile())
                 .thenAcceptAsync(payload -> loadSkins(player, payload.getTextures()), MinecraftClient.getInstance())
                 .exceptionally(t -> {
                     logger.catching(t);
@@ -104,8 +97,7 @@ public class HDSkinsEvents {
             PlayerSkinProvider.SkinTextureAvailableCallback callback = (type, location, texture) -> addPendingSkin(new PendingSkin(player, type, location, texture));
             for (Type textureType : Type.values()) {
                 if (textures.containsKey(textureType)) {
-                    MinecraftProfileTexture texture = textures.get(textureType);
-                    loadSkin(texture, textureType, callback);
+                    loadSkin(textures.get(textureType), textureType, callback);
                 }
             }
         });
@@ -135,17 +127,18 @@ public class HDSkinsEvents {
     }
 
     public void onScreenInit(Screen screen, Consumer<AbstractButtonWidget> buttons) {
+        /*
         if (screen instanceof TitleScreen) {
             MinecraftClient mc = MinecraftClient.getInstance();
-            HDSkins hd = HDSkins.getInstance();
             ButtonWidget button = new ButtonIconWidget(screen.width - 50, screen.height - 50,
                     String.format("minecraft:leather_leggings{display: {color: %d}}", 0x3c5dcb),
-                    sender -> mc.openScreen(GuiSkins.create(screen, hd.getSkinServerList()))
+                    sender -> mc.openScreen(GuiSkins.create(screen, skins.getSkinCache().getServerList()))
             );
 
             button.y = screen.height - 50; // ModMenu;
             buttons.accept(button);
         }
+        */
     }
 
 
@@ -160,7 +153,7 @@ public class HDSkinsEvents {
     private void replaceSkinCacheLoader(PlayerSkinProvider skins) {
         // replace the skin cache to make it return my skins instead
         LoadingCache<GameProfile, Map<Type, MinecraftProfileTexture>> vanillaCache = fields.skinCache.get(skins);
-        vanillaCache = new EventHookedSkinCache(vanillaCache, this::getSkinCache);
+        vanillaCache = new EventHookedSkinCache(vanillaCache, this.skins::getSkinCache);
         fields.skinCache.set(skins, vanillaCache);
         logger.info("Replaced {} to handle non-player skins.", fields.skinCache);
     }

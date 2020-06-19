@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
-import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
 import com.minelittlepony.hdskins.client.upload.FileDialog;
 
 import net.minecraft.client.texture.NativeImage;
@@ -53,6 +51,7 @@ public class SkinChooser {
         return status;
     }
 
+    /*
     public void openBrowsePNG(String title) {
         openFileThread = new FileSelectorScreen(title)
                 .filter(".png", "PNG Files (*.png)")
@@ -80,6 +79,7 @@ public class SkinChooser {
             }
         }).launch();
     }
+    */
 
     public void selectFile(Path skinFile) {
         status = evaluateAndSelect(skinFile);
