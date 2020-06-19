@@ -25,9 +25,14 @@ import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.RegistryTagManager;
+import net.minecraft.tag.SetTag;
+import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagContainer;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -79,11 +84,21 @@ public class DummyWorld extends World {
                 true,
                 0);
 
-        if (BlockTags.getContainer() == null) {
-            BlockTags.setContainer(tags.blocks());
-            ItemTags.setContainer(tags.items());
-            FluidTags.setContainer(tags.fluids());
-            EntityTypeTags.setContainer(tags.entityTypes());
+        BlockTags.setContainer(new EmptyTagContainer<>(Registry.BLOCK));
+        ItemTags.setContainer(new EmptyTagContainer<>(Registry.ITEM));
+        FluidTags.setContainer(new EmptyTagContainer<>(Registry.FLUID));
+        EntityTypeTags.setContainer(new EmptyTagContainer<>(Registry.ENTITY_TYPE));
+    }
+
+    static final class EmptyTagContainer<T> extends TagContainer<T> {
+        private final Tag<T> empty = SetTag.empty();
+        public EmptyTagContainer(Registry<T> registry) {
+            super(registry::getOrEmpty, "", "");
+         }
+
+        @Override
+        public Tag<T> get(Identifier id) {
+            return empty;
         }
     }
 
