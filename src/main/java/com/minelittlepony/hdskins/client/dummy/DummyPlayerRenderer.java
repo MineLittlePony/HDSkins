@@ -10,7 +10,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
-import net.minecraft.client.render.entity.feature.ArmorBipedFeatureRenderer;
+import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
@@ -50,7 +50,7 @@ public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityMo
     }
 
     protected FeatureRenderer<T, M> getArmourLayer() {
-        return new ArmorBipedFeatureRenderer<>(this,
+        return new ArmorFeatureRenderer<>(this,
                 new BipedEntityModel<>(0.5F),
                 new BipedEntityModel<>(1F)
         );

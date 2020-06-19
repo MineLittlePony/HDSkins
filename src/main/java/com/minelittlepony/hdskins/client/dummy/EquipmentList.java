@@ -4,7 +4,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.minelittlepony.common.util.settings.ToStringAdapter;
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -56,11 +56,11 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     }
 
     @Override
-    protected void apply(Map<Identifier, JsonObject> resources, ResourceManager manager, Profiler profiler) {
+    protected void apply(Map<Identifier, JsonElement> resources, ResourceManager manager, Profiler profiler) {
         emptySet = new EquipmentSet();
         equipmentSets.clear();
 
-        for (Entry<Identifier, JsonObject> entry : resources.entrySet()) {
+        for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
            try {
                EquipmentSet set = gson.fromJson(entry.getValue(), EquipmentSet.class);
 

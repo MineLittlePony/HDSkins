@@ -5,11 +5,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.class_5285;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.world.DummyClientTickScheduler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -38,8 +38,6 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.level.LevelInfo;
-import net.minecraft.world.level.LevelProperties;
 
 public class DummyWorld extends World {
 
@@ -72,8 +70,10 @@ public class DummyWorld extends World {
     };
 
     private DummyWorld() {
-        super(new LevelProperties(new LevelInfo("MpServer", GameMode.NOT_SET, false, Difficulty.PEACEFUL, false, new GameRules(), class_5285.field_24520)),
-                DimensionType.OVERWORLD,
+        super(new ClientWorld.Properties(Difficulty.NORMAL, false, true),
+                World.OVERWORLD,
+                DimensionType.OVERWORLD_REGISTRY_KEY,
+                DimensionType.getOverworldDimensionType(),
                 MinecraftClient.getInstance()::getProfiler,
                 true,
                 true,
