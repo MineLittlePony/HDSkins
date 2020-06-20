@@ -100,9 +100,9 @@ public class LocalTexture {
                 textureManager.destroyTexture(localResource);
             }
             isDynamic = false;
-            localResource = blank.getBlankSkin(type);
             return null;
         });
+        localResource = blank.getBlankSkin(type);
     }
 
     @FunctionalInterface

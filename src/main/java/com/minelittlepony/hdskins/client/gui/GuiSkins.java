@@ -314,12 +314,19 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return keyCode != GLFW.GLFW_KEY_SPACE && super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
     public boolean charTyped(char keyChar, int keyCode) {
         if (canTakeEvents()) {
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
                 updateCounter -= 5;
             } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
                 updateCounter += 5;
+            } else if (keyCode == 0) {
+                return false;
             }
 
             if (!chooser.pickingInProgress() && !uploader.uploadInProgress()) {

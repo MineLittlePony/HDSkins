@@ -7,12 +7,15 @@ import java.util.Map;
 
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinUploader.IPreviewModel;
-import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
+import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
+
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.DiffuseLighting;
@@ -21,6 +24,7 @@ import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -50,8 +54,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
     protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
 
-    private final DummyPlayer localPlayer = new DummyPlayer(DummyPlayer.TYPE, localTextures);
-    private final DummyPlayer remotePlayer = new DummyPlayer(DummyPlayer.TYPE, remoteTextures);
+    private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
+    private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
 
     private int pose;
 
@@ -105,34 +109,33 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     }
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
-        enableRescaleNormal();
+        DummyPlayerRenderer.wrap(() -> {
+            enableRescaleNormal();
 
-        int mid = width / 2;
-        int horizon = height / 2 + height / 5;
-        int frameBottom = height - 40;
+            int mid = width / 2;
+            int horizon = height / 2 + height / 5;
+            int frameBottom = height - 40;
 
-        float yPos = height * 0.75F;
-        float scale = height / 4F;
+            float yPos = height * 0.75F;
+            float scale = height / 4F;
 
-        MatrixStack matrixStack = new MatrixStack();
+            MatrixStack matrixStack = new MatrixStack();
 
-        renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
-                width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack);
+            renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
+                    width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+                    matrixStack);
 
-        renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
-                width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack);
-
-        disableDepthTest();
+            renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
+                    width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+                    matrixStack);
+            disableDepthTest();
+        });
     }
 
     public void renderWorldAndPlayer(DummyPlayer thePlayer,
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             MatrixStack matrixStack) {
-
-        OutsideWorldRenderer.configure(thePlayer.world);
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
@@ -188,15 +191,78 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.push();
         matrixStack.scale(1, -1, -1);
 
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
+        renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
         matrixStack.pop();
 
         matrixStack.push();
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
         matrixStack.scale(0.99F, 1, 0.99F);
 
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
+        renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
         matrixStack.pop();
+
+        matrixStack.pop();
+    }
+
+    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
+        if (thePlayer.isSleeping()) {
+            BedHead.instance.render(thePlayer, matrixStack, renderContext);
+        }
+
+        if (thePlayer.hasVehicle()) {
+            MrBoaty.instance.render(matrixStack, renderContext);
+        }
+
+        double offset = thePlayer.getY();
+
+        if (thePlayer.hasVehicle()) {
+            offset = thePlayer.getMountedHeightOffset() - thePlayer.getHeight();
+        }
+
+        float x = 0;
+        float y = 0;
+        float z = 0;
+
+        if (thePlayer.isSneaking()) {
+            y -= 0.125D;
+        }
+
+        matrixStack.push();
+        matrixStack.translate(0.001, offset, 0.001);
+
+        if (thePlayer.isSleeping()) {
+            matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(90));
+
+            y += 0.7F;
+            x += 1;
+        }
+        if (thePlayer.isSwimming()) {
+            DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
+            matrixStack.multiply(Vector3f.NEGATIVE_X.getDegreesQuaternion(45));
+
+            if (thePlayer.getVelocity().x < 100) {
+                thePlayer.addVelocity(100, 0, 0);
+            }
+
+            y += 0.5F;
+            x += 0;
+            z += 1;
+        } else {
+            DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
+
+            if (thePlayer.getVelocity().x >= 100) {
+                thePlayer.addVelocity(-100, 0, 0);
+            }
+        }
+
+        matrixStack.translate(x, y, z);
+
+        Entity camera = minecraft.getCameraEntity();
+        minecraft.setCameraEntity(thePlayer);
+
+        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
+
+        minecraft.setCameraEntity(camera);
 
         matrixStack.pop();
     }

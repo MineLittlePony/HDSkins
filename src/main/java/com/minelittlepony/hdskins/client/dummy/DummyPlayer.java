@@ -3,32 +3,32 @@ package com.minelittlepony.hdskins.client.dummy;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.DefaultAttributeRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
-
+import net.minecraft.util.Identifier;
 import java.util.EnumMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.authlib.GameProfile;
 
 /**
  * A dummy player that appears on the skins gui when previewing a skin.
  */
 @SuppressWarnings("EntityConstructor")
-public class DummyPlayer extends LivingEntity {
-
-    public static EntityType<DummyPlayer> TYPE = EntityType.Builder
-            .<DummyPlayer>create((t, w) -> new DummyPlayer(t, null), SpawnGroup.MISC)
-            .disableSaving()
-            .disableSummon()
-            .build("hdskins:dummy_player");
-
+public class DummyPlayer extends AbstractClientPlayerEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
     private final TextureProxy textures;
@@ -43,10 +43,54 @@ public class DummyPlayer extends LivingEntity {
         return this.attributes;
     }
 
-    public DummyPlayer(EntityType<? extends DummyPlayer> type, TextureProxy textures) {
-        super(type, DummyWorld.INSTANCE);
+    public DummyPlayer(TextureProxy textures) {
+        super(DummyWorld.INSTANCE, new GameProfile(null, "dumdum"));
+        refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
+    }
+
+    @Override
+    public String getModel() {
+        return getTextures().usesThinSkin() ? VanillaModels.SLIM : VanillaModels.DEFAULT;
+    }
+
+    @Override
+    public boolean hasSkinTexture() {
+        return true;
+    }
+
+    @Override
+    public boolean isSpectator() {
+        return false;
+    }
+
+    @Override
+    public boolean isCreative() {
+        return true;
+    }
+
+    @Override
+    public Identifier getSkinTexture() {
+        Identifier texture = getTextures().get(SkinType.SKIN).getId();
+        return texture == null ? DefaultSkinHelper.getTexture(getUuid()) : texture;
+    }
+
+    @Nullable
+    @Override
+    public Identifier getCapeTexture() {
+        return getTextures().get(SkinType.CAPE).getId();
+    }
+
+    @Nullable
+    @Override
+    public Identifier getElytraTexture() {
+        return getTextures().get(SkinType.ELYTRA).getId();
+    }
+
+    @Override
+    public boolean canRenderElytraTexture() {
+        return true;
     }
 
     public TextureProxy getTextures() {
@@ -165,7 +209,12 @@ public class DummyPlayer extends LivingEntity {
 
     @Override
     public Arm getMainArm() {
-        return MinecraftClient.getInstance().options.mainArm;
+        return MinecraftClient.getInstance().options.mainArm.getOpposite();
+    }
+
+    @Override
+    public boolean isPartVisible(PlayerModelPart part) {
+        return MinecraftClient.getInstance().options.getEnabledPlayerModelParts().contains(part);
     }
 
     @Override

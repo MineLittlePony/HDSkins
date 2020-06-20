@@ -1,146 +1,52 @@
 package com.minelittlepony.hdskins.client.dummy;
 
-import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.PlayerModelPart;
-import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.BipedEntityModel.ArmPose;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.recipe.RecipeManager;
+import net.minecraft.stat.StatHandler;
 import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.Lazy;
 
 import org.lwjgl.opengl.GL11;
 
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.minelittlepony.hdskins.profile.SkinType;
 
-import java.util.Set;
+class DummyPlayerRenderer {
 
-public class DummyPlayerRenderer<T extends DummyPlayer, M extends PlayerEntityModel<T>> extends LivingEntityRenderer<T, M> {
+    private static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
+            MinecraftClient.getInstance(),
+            DummyWorld.INSTANCE,
+            DummyWorld.INSTANCE.getNetHandler(),
+            new StatHandler(),
+            new ClientRecipeBook(
+                    new RecipeManager()
+            ), false, false
+    ));
 
-    /**
-     * The basic Elytra texture.
-     */
-    protected final Identifier TEXTURE_ELYTRA = new Identifier("textures/entity/elytra.png");
+    static void wrap(Runnable action) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        boolean inGame = client.player != null;
 
-    private static final PlayerEntityModel<DummyPlayer> FAT = new PlayerEntityModel<>(0, false);
-    private static final PlayerEntityModel<DummyPlayer> THIN = new PlayerEntityModel<>(0, true);
-
-    @SuppressWarnings("unchecked")
-    public DummyPlayerRenderer(EntityRenderDispatcher renderer, EntityRendererRegistry.Context context) {
-        super(renderer, (M)FAT, 0);
-        addFeature(getElytraLayer());
-        addFeature(getArmourLayer());
-        addFeature(getHeldItemLayer());
-    }
-
-    protected FeatureRenderer<T, M> getArmourLayer() {
-        return new ArmorFeatureRenderer<>(this,
-                new BipedEntityModel<>(0.5F),
-                new BipedEntityModel<>(1F)
-        );
-    }
-
-    protected FeatureRenderer<T, M> getHeldItemLayer() {
-        return new HeldItemFeatureRenderer<>(this);
-    }
-
-    protected FeatureRenderer<T, M> getElytraLayer() {
-        return new DummyPlayerElytraLayer<>(this);
-    }
-
-    @Override
-    public Identifier getTexture(T entity) {
-        return entity.getTextures().get(SkinType.SKIN).getId();
-    }
-
-    @Override
-    protected boolean hasLabel(T entity) {
-        return MinecraftClient.getInstance().player != null && super.hasLabel(entity);
-    }
-
-    @SuppressWarnings("unchecked")
-    public M getEntityModel(T entity) {
-        return (M)(entity.getTextures().usesThinSkin() ? THIN : FAT);
-    }
-
-    @Override
-    public void render(T entity, float entityYaw, float tickDelta, MatrixStack stack, VertexConsumerProvider renderContext, int lightUv) {
-
-        if (entity.isSleeping()) {
-            BedHead.instance.render(entity, stack, renderContext);
+        OutsideWorldRenderer.configure(DummyWorld.INSTANCE);
+        try {
+            if (!inGame) {
+                client.player = NULL_PLAYER.get();
+            }
+            action.run();
+        } finally {
+            if (!inGame) {
+                client.player = null;
+            }
         }
-
-        if (entity.hasVehicle()) {
-            MrBoaty.instance.render(stack, renderContext);
-        }
-
-        model = getEntityModel(entity);
-
-        Set<PlayerModelPart> parts = MinecraftClient.getInstance().options.getEnabledPlayerModelParts();
-        model.helmet.visible = parts.contains(PlayerModelPart.HAT);
-        model.jacket.visible = parts.contains(PlayerModelPart.JACKET);
-        model.leftPantLeg.visible = parts.contains(PlayerModelPart.LEFT_PANTS_LEG);
-        model.rightPantLeg.visible = parts.contains(PlayerModelPart.RIGHT_PANTS_LEG);
-        model.leftSleeve.visible = parts.contains(PlayerModelPart.LEFT_SLEEVE);
-        model.rightSleeve.visible = parts.contains(PlayerModelPart.RIGHT_SLEEVE);
-        model.isSneaking = entity.isSneaking();
-
-        model.leftArmPose = ArmPose.EMPTY;
-        model.rightArmPose = ArmPose.EMPTY;
-
-        double offset = entity.getY();
-
-        if (entity.hasVehicle()) {
-            offset = entity.getMountedHeightOffset() - entity.getHeight();
-        }
-
-        float x = 0;
-        float y = 0;
-        float z = 0;
-
-        if (model.isSneaking) {
-            y -= 0.125D;
-        }
-
-        stack.push();
-        stack.translate(0.001, offset, 0.001);
-
-        if (entity.isSleeping()) {
-            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(90));
-
-            y += 0.7F;
-            x += 1;
-        }
-        if (entity.isSwimming()) {
-            DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
-            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(45));
-
-            y -= 0.5F;
-            x -= 0;
-            z -= 1;
-        } else {
-            DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
-        }
-
-        stack.translate(x, y, z);
-        super.render(entity, entityYaw, tickDelta, stack, renderContext, lightUv);
-        stack.pop();
     }
 
     static class BedHead extends BedBlockEntity {
