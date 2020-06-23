@@ -1,7 +1,7 @@
 HD Skins
 ========
 
-[![Build Status](https://travis-ci.org/MineLittlePony/HDSkins.svg?branch=master)](https://travis-ci.org/MineLittlePony/HDSkins)
+[![Build Status](https://travis-ci.org/MineLittlePony/HDSkins.svg?branch=1.16)](https://travis-ci.org/MineLittlePony/HDSkins)
 [![Jitpack](https://jitpack.io/v/MineLittlePony/HDSkins.svg)](https://jitpack.io/#MineLittlePony/HDSkins)
 
 
@@ -23,4 +23,4 @@ gradlew build
 
 Maven: `https://repo.minelittlepony-mod.com/maven/snapshot`
 
-Dependency: `com.minelittlepony:HDSkins:6.1-1.15.2`
+Dependency: `com.minelittlepony:HDSkins:6.2-1.16-rc1
