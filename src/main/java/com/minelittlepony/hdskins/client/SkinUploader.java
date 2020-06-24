@@ -23,6 +23,7 @@ import com.minelittlepony.hdskins.server.SkinUpload;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
+import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
@@ -42,6 +43,7 @@ public class SkinUploader implements Closeable {
     public static final Text ERR_ALL_FINE = LiteralText.EMPTY;
     public static final Text ERR_NO_SERVER = new TranslatableText("hdskins.error.noserver");
     public static final Text ERR_OFFLINE = new TranslatableText("hdskins.error.offline");
+    public static final Text ERR_SESSION = new TranslatableText("hdskins.error.session");
 
     public static final Text ERR_MOJANG = new TranslatableText("hdskins.error.mojang");
     public static final Text ERR_WAIT = new TranslatableText("hdskins.error.mojang.wait");
@@ -186,7 +188,11 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean tryClearStatus() {
-        if (!hasStatus() || !uploadInProgress()) {
+        hasStatus();
+        uploadInProgress();
+        isThrottled();
+
+        if (!hasStatus() || (!uploadInProgress() || isThrottled())) {
             setError(ERR_ALL_FINE);
             return true;
         }
@@ -241,6 +247,8 @@ public class SkinUploader implements Closeable {
 
         if (throwable instanceof AuthenticationUnavailableException) {
             offline = true;
+        } else if (throwable instanceof InvalidCredentialsException) {
+            setError(ERR_SESSION);
         } else if (throwable instanceof AuthenticationException) {
             throttlingNeck = true;
         } else if (throwable instanceof HttpException) {

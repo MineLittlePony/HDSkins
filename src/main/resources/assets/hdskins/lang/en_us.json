@@ -13,6 +13,7 @@
   "hdskins.error.mojang.wait": "Please wait %d minutes",
   "hdskins.error.noserver": "There was no valid skin server available",
   "hdskins.error.offline": "- Server Offline -",
+  "hdskins.error.session": "Invalid session: Please try restarting Minecraft",
   "hdskins.open.title": "Choose skin",
   "hdskins.directory.up": "Parent Directory",
   "hdskins.directory.go": "->",
