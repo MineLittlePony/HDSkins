@@ -2,15 +2,12 @@ package com.minelittlepony.hdskins.client;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,12 +67,7 @@ public class SkinUploader implements Closeable {
 
     private final IPreviewModel previewer;
 
-    private final Object skinLock = new Object();
-
-    @Nullable
-    private Path pendingLocalSkin;
-    @Nullable
-    private URI localSkin;
+    private final WatchedFile localSkin = new WatchedFile(this::fileChanged, this::fileRemoved);
 
     private final Iterator<SkinServer> skinServers;
     private final Iterator<EquipmentSet> equipmentSets;
@@ -160,8 +152,8 @@ public class SkinUploader implements Closeable {
         return !isOffline()
                 && !hasStatus()
                 && !uploadInProgress()
-                && pendingLocalSkin == null
-                && localSkin != null
+                && !localSkin.isPending()
+                && localSkin.isSet()
                 && previewer.getLocal().getTextures().isUsingLocal();
     }
 
@@ -208,7 +200,7 @@ public class SkinUploader implements Closeable {
         return CompletableFuture.runAsync(() -> {
             gateway.ifPresent(gateway -> {
                 try {
-                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin, skinMetadata));
+                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin.toUri(), skinMetadata));
                     setError(ERR_ALL_FINE);
                 } catch (IOException | AuthenticationException e) {
                     handleException(e);
@@ -276,33 +268,16 @@ public class SkinUploader implements Closeable {
     }
 
     public void setLocalSkin(Path skinFile) {
-        mc.execute(previewer.getLocal().getTextures()::release);
 
-        synchronized (skinLock) {
-            pendingLocalSkin = skinFile;
-        }
+        localSkin.set(skinFile);
     }
 
     public void update() {
+
         previewer.getLocal().updateModel();
         previewer.getRemote().updateModel();
 
-        synchronized (skinLock) {
-            if (pendingLocalSkin != null) {
-                try {
-                    if (Files.exists(pendingLocalSkin)) {
-                        logger.debug("Set {} {}", skinType, pendingLocalSkin);
-                        previewer.getLocal().getTextures().get(skinType).setLocal(pendingLocalSkin);
-                        localSkin = pendingLocalSkin.toUri();
-                        listener.onSetLocalSkin(skinType);
-                    }
-                } catch (IOException e) {
-                    HDSkins.logger.error("Could not load local path `" + pendingLocalSkin + "`", e);
-                } finally {
-                    pendingLocalSkin = null;
-                }
-            }
-        }
+        localSkin.update();
 
         if (isThrottled()) {
             reloadCounter = (reloadCounter + 1) % (200 * retries);
@@ -310,6 +285,20 @@ public class SkinUploader implements Closeable {
                 retries++;
                 fetchRemote();
             }
+        }
+    }
+
+    private void fileRemoved() {
+        mc.execute(previewer.getLocal().getTextures()::release);
+    }
+
+    private void fileChanged(Path path) {
+        try {
+            logger.debug("Set {} {}", skinType, path);
+            previewer.getLocal().getTextures().get(skinType).setLocal(path);
+            listener.onSetLocalSkin(skinType);
+        } catch (IOException e) {
+            HDSkins.logger.error("Could not load local path `" + path + "`", e);
         }
     }
 
