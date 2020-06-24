@@ -4,6 +4,7 @@
     "head": "minecraft:diamond_helmet",
     "chest": "minecraft:diamond_chestplate",
     "legs": "minecraft:diamond_leggings",
-    "feet": "minecraft:diamond_boots"
+    "feet": "minecraft:diamond_boots",
+    "mainhand": "minecraft:diamond_sword"
   }
 }

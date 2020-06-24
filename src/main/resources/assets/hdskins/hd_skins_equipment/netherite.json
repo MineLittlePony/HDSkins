@@ -4,6 +4,7 @@
     "head": "minecraft:netherite_helmet",
     "chest": "minecraft:netherite_chestplate",
     "legs": "minecraft:netherite_leggings",
-    "feet": "minecraft:netherite_boots"
+    "feet": "minecraft:netherite_boots",
+    "mainhand": "minecraft:netherite_sword"
   }
 }

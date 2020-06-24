@@ -4,6 +4,7 @@
     "head": "minecraft:golden_helmet",
     "chest": "minecraft:golden_chestplate",
     "legs": "minecraft:golden_leggings",
-    "feet": "minecraft:golden_boots"
+    "feet": "minecraft:golden_boots",
+    "mainhand": "minecraft:golden_sword"
   }
 }

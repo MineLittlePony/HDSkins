@@ -4,6 +4,7 @@
     "head": "minecraft:leather_helmet",
     "chest": "minecraft:leather_chestplate",
     "legs": "minecraft:leather_leggings",
-    "feet": "minecraft:leather_boots"
+    "feet": "minecraft:leather_boots",
+    "mainhand": "minecraft:stone_sword"
   }
 }

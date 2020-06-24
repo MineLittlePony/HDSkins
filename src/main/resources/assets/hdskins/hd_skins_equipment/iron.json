@@ -4,6 +4,7 @@
     "head": "minecraft:iron_helmet",
     "chest": "minecraft:iron_chestplate",
     "legs": "minecraft:iron_leggings",
-    "feet": "minecraft:iron_boots"
+    "feet": "minecraft:iron_boots",
+    "mainhand": "minecraft:iron_sword"
   }
 }
