@@ -55,7 +55,7 @@ public class SkinChooser {
         return status;
     }
 
-    public void openBrowsePNG(String title) {
+    public void openBrowsePNG(Text title) {
         openFileThread = new FileSelectorScreen(title)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
@@ -67,7 +67,7 @@ public class SkinChooser {
         }).launch();
     }
 
-    public void openSavePNG(String title, String filename) {
+    public void openSavePNG(Text title, String filename) {
         openFileThread = new FileSaverScreen(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {

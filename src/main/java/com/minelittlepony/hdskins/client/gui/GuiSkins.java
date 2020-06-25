@@ -1,12 +1,7 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import com.google.common.base.Preconditions;
-import com.minelittlepony.common.client.gui.GameGui;
-import com.minelittlepony.common.client.gui.Tooltip;
-import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.common.client.gui.element.Cycler;
-import com.minelittlepony.common.client.gui.element.Label;
-import com.minelittlepony.common.client.gui.style.Style;
+import com.google.common.collect.Iterators;
 import com.minelittlepony.hdskins.client.FileDrop;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinChooser;
@@ -18,18 +13,23 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
 import com.minelittlepony.hdskins.server.SkinServerList;
 import com.minelittlepony.hdskins.util.Edge;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.command.arguments.ItemStackArgumentType;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
@@ -38,16 +38,26 @@ import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Callback {
+public class GuiSkins extends ParentScreen implements ISkinUploadHandler, FileDrop.Callback {
 
     private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
+    /**
+     * TODO make this more configurable
+     *
+     * @deprecated The screen should be configurable enough that it is not
+     * required to extend anything
+     */
+    @Deprecated
     public static void setSkinsGui(BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc) {
         Preconditions.checkNotNull(skinsGuiFunc, "skinsGuiFunc");
         GuiSkins.skinsGuiFunc = skinsGuiFunc;
@@ -60,16 +70,16 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     private int updateCounter = 0;
     private float lastPartialTick;
 
-    private Button btnBrowse;
-    private FeatureButton btnUpload;
-    private FeatureButton btnDownload;
-    private FeatureButton btnClear;
+    private ButtonWidget btnBrowse;
+    private ButtonWidget btnUpload;
+    private ButtonWidget btnDownload;
+    private ButtonWidget btnClear;
 
-    private FeatureSwitch btnModeSteve;
-    private FeatureSwitch btnModeAlex;
+    private ButtonWidget btnModeSteve;
+    private ButtonWidget btnModeAlex;
 
-    private FeatureSwitch btnModeSkin;
-    private FeatureSwitch btnModeElytra;
+    private ButtonWidget btnModeSkin;
+    private ButtonWidget btnModeElytra;
 
     private float msgFadeOpacity = 0;
 
@@ -126,117 +136,113 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     public void init() {
         dropper.subscribe();
 
-        addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
-        addButton(new Label(34, 29)).getStyle().setText("hdskins.local").setColor(0xffffff);
-        addButton(new Label(width / 2 + 34, 29)).getStyle().setText("hdskins.server").setColor(0xffffff);
+        addButton(new LabelWidget(width / 2, 5, new TranslatableText("hdskins.manager"), 0xffffff, true));
+        addButton(new LabelWidget(34, 29, new TranslatableText("hdskins.local"), 0xffffff, false));
+        addButton(new LabelWidget(width / 2 + 34, 29, new TranslatableText("hdskins.server"), 0xffffff, false));
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
-                .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
-                .setEnabled(!client.getWindow().isFullscreen())
-                .getStyle().setText("hdskins.options.browse");
+        btnBrowse = addButton(new ButtonWidget(width / 2 - 150, height - 27, 90, 20,
+                new TranslatableText("hdskins.options.browse"),
+                button -> chooser.openBrowsePNG(new TranslatableText("hdskins.open.title"))));
+        btnBrowse.active = !client.getWindow().isFullscreen();
 
-        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
-                .setEnabled(uploader.canUpload())
-                .onClick(sender -> {
+        btnUpload = addButton(new ButtonWidget(width / 2 - 24, height / 2 - 40, 48, 20,
+                new TranslatableText("hdskins.options.chevy"),
+                button -> {
                     if (uploader.canUpload()) {
                         punchServer(new TranslatableText("hdskins.upload"));
                     }
-                })
-                .getStyle()
-                .setText("hdskins.options.chevy")
-                .setTooltip("hdskins.options.chevy.title");
+                }, supplyTooltip(new TranslatableText("hdskins.options.chevy.title"))
+        ));
+        btnUpload.active = uploader.canUpload();
 
-        addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20))
-                .setEnabled(uploader.canClear())
-                .onClick(sender -> {
+        btnDownload = addButton(new ButtonWidget(width / 2 - 24, height / 2 + 20, 48, 20,
+                new TranslatableText("hdskins.options.download"),
+                sender -> {
                     if (uploader.canClear()) {
-                        chooser.openSavePNG(I18n.translate("hdskins.save.title"), client.getSession().getUsername());
+                        chooser.openSavePNG(new TranslatableText("hdskins.save.title"), client.getSession().getUsername());
                     }
-                })
-                .getStyle()
-                .setText("hdskins.options.download")
-                .setTooltip("hdskins.options.download.title");
+                }, supplyTooltip(new TranslatableText("hdskins.options.download.title"))));
+        btnDownload.active = uploader.canClear();
 
-        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20))
-                .setEnabled(uploader.canClear())
-                .onClick(sender -> {
+        btnClear = addButton(new ButtonWidget(width / 2 + 60, height - 27, 90, 20,
+                new TranslatableText("hdskins.options.clear"),
+                sender -> {
                     if (uploader.canClear()) {
                         punchServer(new TranslatableText("hdskins.request"));
                     }
-                })
-                .getStyle()
-                .setText("hdskins.options.clear");
+                }));
+        btnClear.active = uploader.canClear();
 
-        addButton(new Button(width / 2 - 50, height - 25, 100, 20))
-                .onClick(sender -> finish())
-                .getStyle()
-                .setText("hdskins.options.close");
+        addButton(new ButtonWidget(width / 2 - 50, height - 25, 100, 20,
+                new TranslatableText("hdskins.options.close"),
+                sender -> onClose()));
 
-        addButton(btnModeSteve = new FeatureSwitch(width - 25, 32))
-                .onClick(sender -> switchSkinMode(VanillaModels.DEFAULT))
-                .setEnabled(VanillaModels.isSlim(uploader.getMetadataField("model")))
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
-                .setTooltip("hdskins.mode.steve", 0, 10);
+        btnModeSteve = addButton(new IconButton(width - 25, 32,
+                itemFromString(String.format("minecraft:leather_leggings{display:{color:%d}}", 0x3c5dcb)),
+                sender -> switchSkinMode(VanillaModels.DEFAULT),
+                supplyTooltip(new TranslatableText("hdskins.mode.steve"))
+        ));
 
-        addButton(btnModeAlex = new FeatureSwitch(width - 25, 51))
-                .onClick(sender -> switchSkinMode(VanillaModels.SLIM))
-                .setEnabled(VanillaModels.isFat(uploader.getMetadataField("model")))
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
-                .setTooltip("hdskins.mode.alex", 0, 10);
+        btnModeAlex = addButton(new IconButton(width - 25, 51,
+                itemFromString(String.format("minecraft:leather_leggings{display:{color:%d}}", 0xfff500)),
+                sender -> switchSkinMode(VanillaModels.SLIM),
+                supplyTooltip(new TranslatableText("hdskins.mode.alex"))));
+        btnModeAlex.active = VanillaModels.isFat(uploader.getMetadataField("model"));
 
-        addButton(btnModeSkin = new FeatureSwitch(width - 25, 75))
-                .onClick(sender -> uploader.setSkinType(SkinType.SKIN))
-                .setEnabled(uploader.getSkinType() == SkinType.ELYTRA)
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
-                .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase(), 0, 10);
+        btnModeSkin = addButton(new IconButton(width - 25, 75,
+                new ItemStack(Items.LEATHER_CHESTPLATE),
+                sender -> uploader.setSkinType(SkinType.SKIN),
+                supplyTooltip(new TranslatableText("hdskins.mode.skin"))));
+        btnModeSkin.active = uploader.getSkinType() != SkinType.SKIN;
 
-        addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
-                .onClick(sender -> uploader.setSkinType(SkinType.ELYTRA))
-                .setEnabled(uploader.getSkinType() == SkinType.SKIN)
-                .getStyle()
-                .setIcon(new ItemStack(Items.ELYTRA))
-                .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase(), 0, 10);
+        btnModeElytra = addButton(new IconButton(width - 25, 94,
+                new ItemStack(Items.ELYTRA),
+                sender -> uploader.setSkinType(SkinType.ELYTRA),
+                supplyTooltip(new TranslatableText("hdskins.mode.elytra"))));
+        btnModeElytra.active = uploader.getSkinType() != SkinType.ELYTRA;
 
-        addButton(new Cycler(width - 25, 118, 20, 20))
-                .setValue(previewer.getPose())
-                .setStyles(
-                        new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
-                        new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
-                        new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10),
-                        new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10))
-                .onClick((Consumer<Cycler>)sender -> {
-                    playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-                    previewer.setPose(sender.getValue());
-                });
+        final Tooltips tooltips = new Tooltips(4)
+                .add("stand", Items.IRON_BOOTS)
+                .add("sleep", Items.CLOCK)
+                .add("ride", Items.OAK_BOAT)
+                .add("swim", Items.CAULDRON);
 
-        addButton(new Button(width - 25, height - 40, 20, 20))
-                .onClick(sender -> {
-                    sender.getStyle()
-                        .setIcon(uploader.cycleEquipment())
-                        .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
-                })
-                .getStyle()
-                .setIcon(uploader.getEquipment().getStack())
-                .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())), 0, 10);
+        tooltips.setIndex(previewer.getPose());
+        addButton(new IconCyclerButton(width - 25, 118, tooltips.items(), sender -> {
+            playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+            previewer.setPose(tooltips.index);
+        }, supplyTooltip(tooltips::getTooltip)));
 
-        addButton(new Button(width - 25, height - 65, 20, 20))
-                .onClick(sender -> {
-                    uploader.cycleGateway();
-                    playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                    sender.getStyle().setTooltip(uploader.getGatewayText());
-                })
-                .getStyle()
-                .setText("?")
-                .setTooltip(uploader.getGatewayText(), 0, 10);
+        addButton(new IconCyclerButton(width - 25, height - 40, uploader.cycleEquipment(),
+                button -> {
+                },
+                supplyTooltip(() -> Collections.singletonList(new TranslatableText("hdskins.equipment", new TranslatableText("hdskins.equipment." + uploader.getEquipment().getId().getPath()))))
+        ));
+        addButton(new ButtonWidget(width - 25, height - 65, 20, 20, new LiteralText("?"), sender -> {
+            uploader.cycleGateway();
+            client.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_VILLAGER_YES, 1.0F));
+        }, supplyTooltip(() -> uploader.getGatewayText().stream().map(LiteralText::new).collect(Collectors.toList()))));
+    }
+
+
+    private static ItemStack itemFromString(String item) {
+        try {
+            return ItemStackArgumentType.itemStack().parse(new StringReader(item)).createStack(1, false);
+        } catch (CommandSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ButtonWidget.TooltipSupplier supplyTooltip(Text tooltipText) {
+        return supplyTooltip(() -> Collections.singletonList(tooltipText));
+    }
+
+    private ButtonWidget.TooltipSupplier supplyTooltip(Supplier<List<Text>> tooltipText) {
+        return ((button, matrices, mouseX, mouseY) -> renderTooltip(matrices, tooltipText.get(), mouseX, mouseY + 10));
     }
 
     @Override
-    public void onClose() {
-        super.onClose();
-
+    public void removed() {
         try {
             uploader.close();
         } catch (IOException e) {
@@ -390,22 +396,22 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
         if (chooser.getStatus() != null && !uploader.canUpload()) {
             fill(matrices, 40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            drawCenteredLabel(matrices, chooser.getStatus(), (int)xPos1, height / 2 - 4, 0xffffff, 0);
+            drawCenteredText(matrices, textRenderer, chooser.getStatus(), (int) xPos1, height / 2 - 4, 0xffffff);
         }
 
         if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
-            fill(matrices, (int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
+            fill(matrices, (int) (xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
 
             if (uploader.isThrottled()) {
-                drawCenteredLabel(matrices, SkinUploader.ERR_MOJANG, (int)xPos2, height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(matrices, new TranslatableText(SkinUploader.ERR_WAIT.getString(), uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
+                drawCenteredText(matrices, textRenderer, SkinUploader.ERR_MOJANG, (int) xPos2, height / 2 - 10, 0xff5555);
+                drawCenteredText(matrices, textRenderer, SkinUploader.getWaitError(uploader.getRetries()), (int) xPos2, height / 2 + 2, 0xff5555);
             } else if (uploader.isOffline()) {
-                drawCenteredLabel(matrices, SkinUploader.ERR_OFFLINE, (int)xPos2, height / 2 - 4, 0xff5555, 0);
+                drawCenteredText(matrices, textRenderer, SkinUploader.ERR_OFFLINE, (int) xPos2, height / 2 - 4, 0xff5555);
             } else {
-                drawCenteredLabel(matrices, SkinUploader.STATUS_FETCH, (int)xPos2, height / 2 - 4, 0xffffff, 0);
+                drawCenteredText(matrices, textRenderer, SkinUploader.STATUS_FETCH, (int) xPos2, height / 2 - 4, 0xffffff);
             }
         }
 
@@ -425,19 +431,19 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         }
 
         if (msgFadeOpacity > 0) {
-            int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
+            int opacity = (Math.min(180, (int) (msgFadeOpacity * 180)) & 255) << 24;
 
             fill(matrices, 0, 0, width, height, opacity);
 
             Text errorMsg = uploader.getStatusMessage();
 
             if (uploadInProgress) {
-                drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);
+                drawCenteredText(matrices, textRenderer, errorMsg, width / 2, height / 2, 0xffffff);
             } else if (showError) {
-                int blockHeight = (height - getFont().getStringBoundedHeight(errorMsg.getString(), width - 10)) / 2;
+                int blockHeight = (height - textRenderer.getStringBoundedHeight(errorMsg.getString(), width - 10)) / 2;
 
-                drawCenteredLabel(matrices, new TranslatableText("hdskins.failed"), width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
-                drawTextBlock(matrices, errorMsg, 5, blockHeight, width - 10, 0xff5555);
+                drawCenteredText(matrices, textRenderer, new TranslatableText("hdskins.failed"), width / 2, blockHeight - textRenderer.fontHeight * 2, 0xffff55);
+                textRenderer.drawTrimmed(errorMsg, 5, blockHeight, width - 10, 0xff5555);
             }
         }
     }
@@ -462,80 +468,93 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         btnDownload.active = uploader.canClear() && !chooser.pickingInProgress();
         btnBrowse.active = !chooser.pickingInProgress();
 
-        boolean types = !features.contains(Feature.MODEL_TYPES);
-        boolean variants = !features.contains(Feature.MODEL_VARIANTS);
+        // TODO implement feature locking
+//        boolean types = !features.contains(Feature.MODEL_TYPES);
+//        boolean variants = !features.contains(Feature.MODEL_VARIANTS);
 
-        btnModeSkin.setLocked(types);
-        btnModeElytra.setLocked(types);
-
-        btnModeSteve.setLocked(variants);
-        btnModeAlex.setLocked(variants);
-
-        btnClear.setLocked(!features.contains(Feature.DELETE_USER_SKIN));
-        btnUpload.setLocked(!features.contains(Feature.UPLOAD_USER_SKIN));
-        btnDownload.setLocked(!features.contains(Feature.DOWNLOAD_USER_SKIN));
+//        btnModeSkin.setLocked(types);
+//        btnModeElytra.setLocked(types);
+//
+//        btnModeSteve.setLocked(variants);
+//        btnModeAlex.setLocked(variants);
+//
+//        btnClear.setLocked(!features.contains(Feature.DELETE_USER_SKIN));
+//        btnUpload.setLocked(!features.contains(Feature.UPLOAD_USER_SKIN));
+//        btnDownload.setLocked(!features.contains(Feature.DOWNLOAD_USER_SKIN));
     }
 
-    protected class FeatureButton extends Button {
-        public FeatureButton(int x, int y, int width, int height) {
-            super(x, y, width, height);
-            setStyle(new FeatureStyle(this));
+    private static class Tooltips {
+        private final List<ItemStack> items;
+        private final List<Text> tooltips;
+
+        private int index;
+
+        Tooltips(int size) {
+            items = new ArrayList<>(size);
+            tooltips = new ArrayList<>(size);
         }
 
-        public void setLocked(boolean lock) {
-            ((FeatureStyle)getStyle()).setLocked(lock);
-        }
-    }
-
-    protected class FeatureSwitch extends Button {
-
-        public FeatureSwitch(int x, int y) {
-            super(x, y, 20, 20);
-
-            setStyle(new FeatureStyle(this));
-        }
-
-        public void setLocked(boolean lock) {
-            ((FeatureStyle)getStyle()).setLocked(lock);
-        }
-    }
-
-    protected class FeatureStyle extends Style {
-
-        private final Button element;
-
-        private Optional<Tooltip> disabledTooltip = Optional.of(Tooltip.of(new TranslatableText("hdskins.warning.disabled.description")));
-
-        private boolean locked;
-
-        public FeatureStyle(Button element) {
-            this.element = element;
-        }
-
-        public FeatureStyle setLocked(boolean locked) {
-            this.locked = locked;
-            element.active &= !locked;
-
+        Tooltips add(String name, Item item) {
+            items.add(new ItemStack(item));
+            tooltips.add(new TranslatableText("hdskins.mode." + name));
             return this;
         }
 
-        @Override
-        public Optional<Tooltip> getTooltip() {
-            if (locked) {
-                return disabledTooltip;
-            }
-            return super.getTooltip();
+        void next() {
+            setIndex(index + 1);
+        }
+
+        void setIndex(int indx) {
+            this.index = indx % items.size();
+        }
+
+        Iterator<ItemStack> items() {
+            Iterator<ItemStack> itemIterator = Iterators.cycle(items);
+            return new Iterator<ItemStack>() {
+                @Override
+                public boolean hasNext() {
+                    return itemIterator.hasNext();
+                }
+
+                @Override
+                public ItemStack next() {
+                    Tooltips.this.next();
+                    return itemIterator.next();
+                }
+            };
+        }
+
+        List<Text> getTooltip() {
+            return Collections.singletonList(tooltips.get(index));
+        }
+    }
+
+    protected static class IconButton extends ButtonWidget {
+        protected ItemStack itemStack;
+
+        public IconButton(int x, int y, ItemStack itemStack, ButtonWidget.PressAction action, TooltipSupplier tooltipSupplier) {
+            super(x, y, 20, 20, LiteralText.EMPTY, action, tooltipSupplier);
+            this.itemStack = itemStack;
         }
 
         @Override
-        public Style setTooltip(Tooltip tooltip) {
-            disabledTooltip = Optional.of(Tooltip.of(
-                    new TranslatableText("hdskins.warning.disabled.title",
-                            tooltip.getString(),
-                            new TranslatableText("hdskins.warning.disabled.description")
-                    )
-            ));
-            return super.setTooltip(tooltip);
+        protected void renderBg(MatrixStack matrices, MinecraftClient client, int mouseX, int mouseY) {
+            client.getItemRenderer().renderGuiItemIcon(itemStack, x + 2, y + 2);
+        }
+    }
+
+    protected static class IconCyclerButton extends IconButton {
+        private final Iterator<ItemStack> items;
+
+        public IconCyclerButton(int x, int y, Iterator<ItemStack> items, PressAction action, TooltipSupplier tooltipSupplier) {
+            super(x, y, items.next(), action, tooltipSupplier);
+            this.items = items;
+        }
+
+        @Override
+        public void onPress() {
+            itemStack = items.next();
+            super.onPress();
         }
     }
 }

@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.ScrollContainer;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
@@ -30,7 +29,7 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-public class FileSelectorScreen extends GameGui implements FileDialog {
+public class FileSelectorScreen extends ParentScreen implements FileDialog {
 
     private static final Identifier ICONS = new Identifier("hdskins", "textures/gui/files.png");
 
@@ -57,8 +56,8 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     protected String extensionFilter = "";
     private String filterMessage = "";
 
-    public FileSelectorScreen(String title) {
-        super(new LiteralText(title));
+    public FileSelectorScreen(Text title) {
+        super(title);
 
         filesList.margin.top = 60;
         filesList.margin.bottom = 30;
@@ -74,7 +73,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         renderDirectory();
 
-        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, LiteralText.EMPTY));
+        addButton(textInput = new TextFieldWidget(textRenderer, 10, 30, width - 50, 18, LiteralText.EMPTY));
         textInput.setEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
         textInput.setText(currentDirectory.toAbsolutePath().toString());
@@ -95,7 +94,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         addButton(new Button(width/2 + 60, height - 25, 100, 20))
             .onClick(p -> {
-                finish();
+                onClose();
                 callback.onDialogClosed(currentDirectory, false);
             })
             .getStyle()

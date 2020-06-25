@@ -3,8 +3,10 @@ package com.minelittlepony.hdskins.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -46,9 +48,14 @@ public class SkinUploader implements Closeable {
     public static final Text ERR_SESSION = new TranslatableText("hdskins.error.session");
 
     public static final Text ERR_MOJANG = new TranslatableText("hdskins.error.mojang");
+    @Deprecated
     public static final Text ERR_WAIT = new TranslatableText("hdskins.error.mojang.wait");
 
     public static final Text STATUS_FETCH = new TranslatableText("hdskins.fetch");
+
+    public static Text getWaitError(int retries) {
+        return new TranslatableText("hdskins.error.mojang.wait", retries);
+    }
 
     private Optional<SkinServer> gateway;
 
@@ -101,8 +108,12 @@ public class SkinUploader implements Closeable {
         }
     }
 
-    public String getGatewayText() {
-        return gateway.map(SkinServer::toString).orElse("");
+    public List<String> getGatewayText() {
+        return gateway
+                .map(SkinServer::toString)
+                .map(s -> s.split("\r?\n"))
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
     }
 
     public Set<Feature> getFeatures() {
@@ -121,9 +132,19 @@ public class SkinUploader implements Closeable {
         listener.onSkinTypeChanged(type);
     }
 
-    public ItemStack cycleEquipment() {
-        activeEquipmentSet = equipmentSets.next();
-        return previewer.setEquipment(activeEquipmentSet);
+    public Iterator<ItemStack> cycleEquipment() {
+        return new Iterator<ItemStack>() {
+            @Override
+            public boolean hasNext() {
+                return equipmentSets.hasNext();
+            }
+
+            @Override
+            public ItemStack next() {
+                activeEquipmentSet = equipmentSets.next();
+                return previewer.setEquipment(activeEquipmentSet);
+            }
+        };
     }
 
     public EquipmentSet getEquipment() {

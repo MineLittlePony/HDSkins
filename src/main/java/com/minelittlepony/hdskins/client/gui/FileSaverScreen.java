@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
+import net.minecraft.text.Text;
 
 public class FileSaverScreen extends FileSelectorScreen {
 
@@ -14,7 +15,7 @@ public class FileSaverScreen extends FileSelectorScreen {
 
     private String savingFileName;
 
-    public FileSaverScreen(String title, String filename) {
+    public FileSaverScreen(Text title, String filename) {
         super(title);
 
         savingFileName = filename;
