@@ -11,7 +11,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.recipe.RecipeManager;
 import net.minecraft.stat.StatHandler;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Lazy;
@@ -27,9 +26,7 @@ class DummyPlayerRenderer {
             DummyWorld.INSTANCE,
             DummyWorld.INSTANCE.getNetHandler(),
             new StatHandler(),
-            new ClientRecipeBook(
-                    new RecipeManager()
-            ), false, false
+            new ClientRecipeBook(), false, false
     ));
 
     static void wrap(Runnable action) {
@@ -84,7 +81,7 @@ class DummyPlayerRenderer {
             stack.push();
 
             @SuppressWarnings("unchecked")
-            EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderManager().getRenderer(this);
+            EntityRenderer<BoatEntity> render = (EntityRenderer<BoatEntity>)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this);
 
             render.render(this, 0, 0, stack, renderContext, 0xF000F0);
 

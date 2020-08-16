@@ -60,8 +60,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     private int pose;
 
     public PlayerPreview() {
-        EntityRenderDispatcher rm = minecraft.getEntityRenderManager();
-        rm.targetedEntity = localPlayer;
+        minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer;
     }
 
     public void setPose(int pose) {
@@ -163,7 +162,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
      */
     protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, MatrixStack matrixStack, VertexConsumerProvider renderContext) {
 
-        EntityRenderDispatcher dispatcher = minecraft.getEntityRenderManager();
+        EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
         if (dispatcher.getRenderer(thePlayer) == null) {
             HDSkins.logger.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");

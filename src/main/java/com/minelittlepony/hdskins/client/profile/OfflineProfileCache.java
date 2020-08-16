@@ -63,7 +63,7 @@ class OfflineProfileCache {
             }
 
             return null;
-        }, Util.getServerWorkerExecutor());
+        }, Util.getMainWorkerExecutor());
     }
 
     private Path getCachedProfileLocation(GameProfile profile) {

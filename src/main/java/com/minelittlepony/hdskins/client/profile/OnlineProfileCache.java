@@ -67,7 +67,7 @@ class OnlineProfileCache {
             repository.offline.storeCachedProfileData(profile, textureMap);
 
             return textureMap;
-        }, Util.getServerWorkerExecutor());
+        }, Util.getMainWorkerExecutor());
     }
 
     public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> loadProfile(GameProfile profile) {

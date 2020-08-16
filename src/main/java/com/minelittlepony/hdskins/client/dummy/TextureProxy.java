@@ -82,7 +82,7 @@ public class TextureProxy implements IBlankSkinSupplier {
                     } catch (IOException | AuthenticationException e) {
                         throw new RuntimeException(e);
                     }
-                }, Util.getServerWorkerExecutor())
+                }, Util.getMainWorkerExecutor())
                 .thenAcceptAsync(ptm -> {
                     SkinType.values().forEach(type -> get(type).setRemote(ptm, listener));
                 }, MinecraftClient.getInstance()); // run on main thread
