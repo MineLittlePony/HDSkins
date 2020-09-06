@@ -21,9 +21,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,21 +30,20 @@ import java.util.Map.Entry;
 public class EquipmentList extends JsonDataLoader implements IdentifiableResourceReloadListener {
 
     private static final Identifier EQUIPMENT = new Identifier(HDSkins.MOD_ID, "skins/equipment");
+    private static final Identifier EMPTY = new Identifier(HDSkins.MOD_ID, "empty");
 
-    private static final Logger logger = LogManager.getLogger();
-
-    private static final Gson gson = new GsonBuilder()
+    private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
             .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registry.ITEM))
             .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
-    private EquipmentSet emptySet = new EquipmentSet();
+    private EquipmentSet emptySet = new EquipmentSet(EMPTY);
 
     private final List<EquipmentSet> equipmentSets = Lists.newArrayList(emptySet);
 
     public EquipmentList() {
-        super(gson, "hd_skins_equipment");
+        super(GSON, "hd_skins_equipment");
     }
 
     @Override
@@ -57,12 +53,14 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
     @Override
     protected void apply(Map<Identifier, JsonElement> resources, ResourceManager manager, Profiler profiler) {
-        emptySet = new EquipmentSet();
+        emptySet = new EquipmentSet(EMPTY);
         equipmentSets.clear();
+
+        HDSkins.logger.info("Found {} potential player equipment sets", resources.size());
 
         for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
            try {
-               EquipmentSet set = gson.fromJson(entry.getValue(), EquipmentSet.class);
+               EquipmentSet set = GSON.fromJson(entry.getValue(), EquipmentSet.class);
 
                if (set != null) {
                    set.id = entry.getKey();
@@ -73,10 +71,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
                    }
                }
            } catch (IllegalArgumentException | JsonParseException e) {
-               logger.error("Unable to read {} from resource packs", EQUIPMENT, e);
+               HDSkins.logger.error("Unable to read {} from resource packs", EQUIPMENT, e);
            }
         }
-        logger.info("Loaded {} player equipment sets", equipmentSets.size());
+        HDSkins.logger.info("Loaded {} player equipment sets", equipmentSets.size());
 
         if (equipmentSets.isEmpty()) {
             equipmentSets.add(emptySet);
@@ -97,6 +95,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         private Item item;
 
         private transient Identifier id;
+
+        EquipmentSet(Identifier id) {
+            this.id = id;
+        }
 
         public void apply(LivingEntity entity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
