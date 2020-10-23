@@ -106,7 +106,7 @@ public class SkinType implements Comparable<SkinType> {
         private final Optional<MinecraftProfileTexture.Type> vanilla;
 
         VanillaType(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
-            super(new Identifier(vanilla.name()), iconStack);
+            super(new Identifier(vanilla.name().toLowerCase()), iconStack);
             this.vanilla = Optional.of(vanilla);
             Registry.register(REGISTRY, getId(), this);
         }

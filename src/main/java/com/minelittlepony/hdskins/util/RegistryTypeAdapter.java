@@ -30,6 +30,7 @@ public class RegistryTypeAdapter<T> extends TypeAdapter<T> {
 
     @Override
     public T read(JsonReader in) throws IOException {
-        return registry.get(new Identifier(in.nextString()));
+        String s = in.nextString();
+        return s == null ? null : registry.get(new Identifier(s.toLowerCase()));
     }
 }
