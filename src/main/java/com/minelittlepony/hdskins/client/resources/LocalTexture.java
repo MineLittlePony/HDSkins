@@ -49,6 +49,10 @@ public class LocalTexture {
         return localResource;
     }
 
+    public Identifier getDefault() {
+        return blank.getBlankSkin(type);
+    }
+
     public boolean hasServerTexture() {
         return uploadComplete();
     }
@@ -102,7 +106,7 @@ public class LocalTexture {
             isDynamic = false;
             return null;
         });
-        localResource = blank.getBlankSkin(type);
+        localResource = getDefault();
     }
 
     @FunctionalInterface

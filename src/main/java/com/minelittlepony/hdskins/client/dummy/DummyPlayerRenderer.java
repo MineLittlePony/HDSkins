@@ -21,6 +21,8 @@ import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 
 class DummyPlayerRenderer {
 
+    public static boolean flipReality;
+
     private static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
             MinecraftClient.getInstance(),
             DummyWorld.INSTANCE,
@@ -57,7 +59,7 @@ class DummyPlayerRenderer {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             stack.push();
 
-            stack.scale(-1, 1, 1);
+            stack.scale(-1, 1, flipReality ? -1 : 1);
             stack.translate(-0.5, 0, 0);
 
             OutsideWorldRenderer.configure(entity.getEntityWorld())

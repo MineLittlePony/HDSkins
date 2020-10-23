@@ -195,9 +195,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         matrixStack.push();
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
-        matrixStack.scale(0.99F, 1, 0.99F);
+        matrixStack.scale(-0.99F, 1, 0.99F);
 
+        DummyPlayerRenderer.flipReality = true;
         renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
+        DummyPlayerRenderer.flipReality = false;
         matrixStack.pop();
 
         matrixStack.pop();
