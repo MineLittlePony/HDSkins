@@ -5,7 +5,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerModelPart;
-import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
@@ -22,6 +21,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
@@ -83,14 +83,15 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Identifier getSkinTexture() {
-        Identifier texture = getTextures().get(SkinType.SKIN).getId();
-        return texture == null ? DefaultSkinHelper.getTexture(getUuid()) : texture;
+        LocalTexture localTex = getTextures().get(SkinType.SKIN);
+        Identifier texture = localTex.getId();
+        return texture == null ? localTex.getDefault() : texture;
     }
 
     @Nullable
     @Override
     public Identifier getCapeTexture() {
-        return getTextures().get(SkinType.CAPE).getId();
+        return getTextures().getSkinType() == SkinType.CAPE ? getTextures().get(SkinType.CAPE).getId() : null;
     }
 
     @Nullable
