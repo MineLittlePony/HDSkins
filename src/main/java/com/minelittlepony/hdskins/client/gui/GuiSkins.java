@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Callback {
 
@@ -191,24 +190,26 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
         row += 24;
         addButton(btnSkinType = new Cycler(width - 25, row, 20, 20))
-                .setValue(uploader.getSkinType().ordinal())
                 .onChange(i -> {
-                    uploader.setSkinType(SkinType.REGISTRY.get(i));
+                    List<SkinType> types = uploader.getSupportedSkinTypes();
+                    i %= types.size();
+                    uploader.setSkinType(types.get(i));
                     return i;
-                })
-                .setStyles(SkinType.REGISTRY.stream().map(SkinType::getStyle).toArray(Style[]::new));
+                });
+        setupSkinToggler();
 
         row += 24;
         addButton(new Cycler(width - 25, row, 20, 20))
-                .setValue(previewer.getPose())
                 .setStyles(
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
                         new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
                         new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10),
                         new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10))
-                .onClick((Consumer<Cycler>)sender -> {
+                .setValue(previewer.getPose())
+                .onChange(i -> {
                     playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-                    previewer.setPose(sender.getValue());
+                    previewer.setPose(i);
+                    return i;
                 });
 
         addButton(new Button(width - 25, height - 40, 20, 20))
@@ -225,11 +226,20 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .onClick(sender -> {
                     uploader.cycleGateway();
                     playSound(SoundEvents.ENTITY_VILLAGER_YES);
+                    setupSkinToggler();
                     sender.getStyle().setTooltip(uploader.getGatewayText());
                 })
                 .getStyle()
                 .setText("?")
                 .setTooltip(uploader.getGatewayText(), 0, 10);
+    }
+
+    private void setupSkinToggler() {
+        List<SkinType> types = uploader.getSupportedSkinTypes();
+        btnSkinType
+            .setStyles(types.stream().map(SkinType::getStyle).toArray(Style[]::new))
+            .setValue(types.indexOf(uploader.getSkinType()));
+
     }
 
     @Override
@@ -458,7 +468,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         btnDownload.active = uploader.canClear() && !chooser.pickingInProgress();
         btnBrowse.active = !chooser.pickingInProgress();
 
-        boolean types = !features.contains(Feature.MODEL_TYPES);
+        boolean types = features.contains(Feature.MODEL_TYPES);
         boolean variants = !features.contains(Feature.MODEL_VARIANTS);
 
         btnSkinType.setEnabled(types);

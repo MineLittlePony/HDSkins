@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -95,6 +97,7 @@ public class SkinUploader implements Closeable {
     public void cycleGateway() {
         if (skinServers.hasNext()) {
             gateway = Optional.ofNullable(skinServers.next());
+            setSkinType(gateway.flatMap(g -> g.supportsSkinType(skinType) ? Optional.of(skinType) : getSupportedSkinTypes().stream().findFirst()).orElse(SkinType.UNKNOWN));
             fetchRemote();
         } else {
             setError(ERR_NO_SERVER);
@@ -107,6 +110,12 @@ public class SkinUploader implements Closeable {
 
     public Set<Feature> getFeatures() {
         return gateway.map(SkinServer::getFeatures).orElseGet(Collections::emptySet);
+    }
+
+    public List<SkinType> getSupportedSkinTypes() {
+        return gateway.map(g -> {
+            return SkinType.REGISTRY.stream().filter(g::supportsSkinType).collect(Collectors.toList());
+        }).orElse(Collections.emptyList());
     }
 
     protected void setError(Text er) {

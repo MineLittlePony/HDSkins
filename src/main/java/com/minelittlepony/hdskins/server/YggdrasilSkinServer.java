@@ -55,6 +55,11 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public boolean supportsSkinType(SkinType skinType) {
+        return skinType.isVanilla() && skinType != SkinType.CAPE;
+    }
+
+    @Override
     public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
 
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();

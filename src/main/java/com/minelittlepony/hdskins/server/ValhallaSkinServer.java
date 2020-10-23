@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.server;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
@@ -203,6 +204,11 @@ public class ValhallaSkinServer implements SkinServer {
     @Override
     public Set<Feature> getFeatures() {
         return FEATURES;
+    }
+
+    @Override
+    public boolean supportsSkinType(SkinType skinType) {
+        return skinType.isKnown() && skinType != SkinType.CAPE;
     }
 
     @Override

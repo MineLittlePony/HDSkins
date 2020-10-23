@@ -1,8 +1,6 @@
 package com.minelittlepony.hdskins.server;
 
-import com.minelittlepony.hdskins.server.Feature;
-import com.minelittlepony.hdskins.server.SkinUpload;
-import com.minelittlepony.hdskins.server.TexturePayload;
+import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
@@ -17,9 +15,16 @@ public interface SkinServer {
     CloseableHttpClient HTTP_CLIENT = HttpClients.createSystem();
 
     /**
-     * Returns true for any features that this skin server supports.
+     * Returns the set of features that this skin server supports.
      */
     Set<Feature> getFeatures();
+
+    /**
+     * Returns whether this skin server supports a particular skin type.
+     * It's recommended to implement this on an exclusion bases:
+     *  return false for the things you <i>don't</i> support.
+     */
+    boolean supportsSkinType(SkinType skinType);
 
     /**
      * Synchronously loads texture information for the provided profile.

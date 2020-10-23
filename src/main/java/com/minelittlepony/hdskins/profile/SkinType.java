@@ -58,6 +58,10 @@ public class SkinType implements Comparable<SkinType> {
         return this != UNKNOWN;
     }
 
+    public boolean isVanilla() {
+        return getEnum().isPresent();
+    }
+
     public Optional<MinecraftProfileTexture.Type> getEnum() {
         return Optional.empty();
     }
