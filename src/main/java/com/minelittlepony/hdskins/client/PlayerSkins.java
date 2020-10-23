@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import com.minelittlepony.hdskins.client.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier;
 
 public class PlayerSkins {
 
-    private final INetworkPlayerInfo playerInfo;
+    private final ClientPlayerInfo playerInfo;
 
     private final Map<SkinType, Identifier> customTextures = new HashMap<>();
 
@@ -25,7 +25,7 @@ public class PlayerSkins {
 
     private final Map<SkinType, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
 
-    public PlayerSkins(INetworkPlayerInfo playerInfo) {
+    public PlayerSkins(ClientPlayerInfo playerInfo) {
         this.playerInfo = playerInfo;
     }
 
@@ -48,7 +48,6 @@ public class PlayerSkins {
     }
 
     public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {
-
         HDSkins.getInstance().getProfileRepository().fetchSkins(profile, this::onCustomTextureLoaded);
 
         provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);

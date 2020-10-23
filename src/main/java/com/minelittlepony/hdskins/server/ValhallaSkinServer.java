@@ -37,7 +37,8 @@ public class ValhallaSkinServer implements SkinServer {
             Feature.UPLOAD_USER_SKIN,
             Feature.DELETE_USER_SKIN,
             Feature.MODEL_VARIANTS,
-            Feature.MODEL_TYPES);
+            Feature.MODEL_TYPES
+    );
 
     private final String address;
 

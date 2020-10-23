@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import com.minelittlepony.hdskins.client.PlayerSkins;
-import com.minelittlepony.hdskins.client.ducks.INetworkPlayerInfo;
+import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
@@ -20,7 +20,7 @@ import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.util.Identifier;
 
 @Mixin(PlayerListEntry.class)
-public abstract class MixinNetworkPlayerInfo implements INetworkPlayerInfo {
+public abstract class MixinNetworkPlayerInfo implements ClientPlayerInfo {
 
     private PlayerSkins hdskinsPlayerSkins = new PlayerSkins(this);
 

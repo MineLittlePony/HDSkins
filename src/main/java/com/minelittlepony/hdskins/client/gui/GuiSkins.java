@@ -18,7 +18,6 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
 import com.minelittlepony.hdskins.server.SkinServerList;
 import com.minelittlepony.hdskins.util.Edge;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
@@ -68,8 +67,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     private FeatureSwitch btnModeSteve;
     private FeatureSwitch btnModeAlex;
 
-    private FeatureSwitch btnModeSkin;
-    private FeatureSwitch btnModeElytra;
+    private Cycler btnSkinType;
 
     private float msgFadeOpacity = 0;
 
@@ -172,35 +170,36 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .getStyle()
                 .setText("hdskins.options.close");
 
-        addButton(btnModeSteve = new FeatureSwitch(width - 25, 32))
+
+        int row = 32;
+
+        addButton(btnModeSteve = new FeatureSwitch(width - 25, row))
                 .onClick(sender -> switchSkinMode(VanillaModels.DEFAULT))
                 .setEnabled(VanillaModels.isSlim(uploader.getMetadataField("model")))
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
                 .setTooltip("hdskins.mode.steve", 0, 10);
 
-        addButton(btnModeAlex = new FeatureSwitch(width - 25, 51))
+
+        row += 19;
+        addButton(btnModeAlex = new FeatureSwitch(width - 25, row))
                 .onClick(sender -> switchSkinMode(VanillaModels.SLIM))
                 .setEnabled(VanillaModels.isFat(uploader.getMetadataField("model")))
                 .getStyle()
                 .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
                 .setTooltip("hdskins.mode.alex", 0, 10);
 
-        addButton(btnModeSkin = new FeatureSwitch(width - 25, 75))
-                .onClick(sender -> uploader.setSkinType(SkinType.SKIN))
-                .setEnabled(uploader.getSkinType() == SkinType.ELYTRA)
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_CHESTPLATE))
-                .setTooltip("hdskins.mode." + Type.SKIN.name().toLowerCase(), 0, 10);
+        row += 24;
+        addButton(btnSkinType = new Cycler(width - 25, row, 20, 20))
+                .setValue(uploader.getSkinType().ordinal())
+                .onChange(i -> {
+                    uploader.setSkinType(SkinType.REGISTRY.get(i));
+                    return i;
+                })
+                .setStyles(SkinType.REGISTRY.stream().map(SkinType::getStyle).toArray(Style[]::new));
 
-        addButton(btnModeElytra = new FeatureSwitch(width - 25, 94))
-                .onClick(sender -> uploader.setSkinType(SkinType.ELYTRA))
-                .setEnabled(uploader.getSkinType() == SkinType.SKIN)
-                .getStyle()
-                .setIcon(new ItemStack(Items.ELYTRA))
-                .setTooltip("hdskins.mode." + Type.ELYTRA.name().toLowerCase(), 0, 10);
-
-        addButton(new Cycler(width - 25, 118, 20, 20))
+        row += 24;
+        addButton(new Cycler(width - 25, row, 20, 20))
                 .setValue(previewer.getPose())
                 .setStyles(
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
@@ -259,9 +258,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public void onSkinTypeChanged(SkinType newType) {
         playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-
-        btnModeSkin.active = newType == SkinType.ELYTRA;
-        btnModeElytra.active = newType == SkinType.SKIN;
     }
 
     protected void switchSkinMode(String model) {
@@ -465,8 +461,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         boolean types = !features.contains(Feature.MODEL_TYPES);
         boolean variants = !features.contains(Feature.MODEL_VARIANTS);
 
-        btnModeSkin.setLocked(types);
-        btnModeElytra.setLocked(types);
+        btnSkinType.setEnabled(types);
 
         btnModeSteve.setLocked(variants);
         btnModeAlex.setLocked(variants);
@@ -488,7 +483,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     protected class FeatureSwitch extends Button {
-
         public FeatureSwitch(int x, int y) {
             super(x, y, 20, 20);
 

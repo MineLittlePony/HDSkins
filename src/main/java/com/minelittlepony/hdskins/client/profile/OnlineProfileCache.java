@@ -40,7 +40,7 @@ class OnlineProfileCache {
                 return Collections.emptyMap();
             }
 
-            List<SkinType> requestedSkinTypes = SkinType.values().stream()
+            List<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream()
                     .filter(SkinType::isKnown)
                     .collect(Collectors.toList());
 

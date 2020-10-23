@@ -21,6 +21,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
@@ -56,7 +57,9 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         emptySet = new EquipmentSet(EMPTY);
         equipmentSets.clear();
 
-        HDSkins.logger.info("Found {} potential player equipment sets", resources.size());
+        Collection<Identifier> list = manager.findResources("hd_skins_equipment", x -> x.endsWith(".json"));
+
+        HDSkins.logger.info("Found {} potential player equipment sets", list.size());
 
         for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
            try {

@@ -1,36 +1,57 @@
 package com.minelittlepony.hdskins.profile;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
+import com.minelittlepony.common.client.gui.style.Style;
+import com.minelittlepony.hdskins.util.Registries;
+import com.minelittlepony.hdskins.util.RegistryTypeAdapter;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 public class SkinType implements Comparable<SkinType> {
 
-    private static final TypeAdapter<SkinType> ADAPTER = new Adapter();
-    private static final Map<String, SkinType> VALUES = new HashMap<>();
+    public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(new Identifier("hdskins", "skin_type"), "hdskins:unknown");
+
+    private static final TypeAdapter<SkinType> ADAPTER = new RegistryTypeAdapter<>(REGISTRY);
     private static final Map<MinecraftProfileTexture.Type, SkinType> VANILLA = new EnumMap<>(MinecraftProfileTexture.Type.class);
 
-    public static final SkinType UNKNOWN = register("UNKNOWN");
-    public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN);
-    public static final SkinType CAPE = forVanilla(MinecraftProfileTexture.Type.CAPE);
-    public static final SkinType ELYTRA = forVanilla(MinecraftProfileTexture.Type.ELYTRA);
+    public static final SkinType UNKNOWN = register(new Identifier("hdskins", "unknown"), ItemStack.EMPTY);
+    public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN, new ItemStack(Items.LEATHER_CHESTPLATE));
+    public static final SkinType CAPE = forVanilla(MinecraftProfileTexture.Type.CAPE, new ItemStack(Items.BARRIER));
+    public static final SkinType ELYTRA = forVanilla(MinecraftProfileTexture.Type.ELYTRA, new ItemStack(Items.ELYTRA));
 
-    private final String name;
+    private final Identifier id;
+    private final ItemStack iconStack;
 
-    protected SkinType(String name) {
-        this.name = name.toUpperCase();
+    protected SkinType(Identifier id, ItemStack iconStack) {
+        this.id = id;
+        this.iconStack = iconStack;
     }
 
-    public final String name() {
-        return name;
+    public String name() {
+        return getId().toString();
+    }
+
+    public Style getStyle() {
+        return new Style()
+                .setIcon(iconStack)
+                .setTooltip("hdskins.mode." + name().replace(':', '_').replace('/', '_').toLowerCase(), 0, 10);
+    }
+
+    public final Identifier getId() {
+        return id;
+    }
+
+    public final int ordinal() {
+        return REGISTRY.getRawId(this);
     }
 
     public boolean isKnown() {
@@ -48,66 +69,56 @@ public class SkinType implements Comparable<SkinType> {
 
     @Override
     public final int compareTo(SkinType o) {
-        return name().compareTo(o.name());
+        return getId().compareTo(o.getId());
     }
 
     @Override
     public String toString() {
-        return name();
+        return getId().toString();
     }
 
     @Override
     public final int hashCode() {
-        return name().hashCode();
+        return getId().hashCode();
     }
 
     public static TypeAdapter<SkinType> adapter() {
         return ADAPTER;
     }
 
-    public static Collection<SkinType> values() {
-        return VALUES.values();
+    public static Stream<SkinType> values() {
+        return REGISTRY.stream();
     }
 
-    public static SkinType register(String name) {
-        return VALUES.computeIfAbsent(name, SkinType::new);
+    public static SkinType register(Identifier id, ItemStack iconStack) {
+        return Registry.register(REGISTRY, id, new SkinType(id, iconStack));
     }
 
     public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla) {
-        return VANILLA.computeIfAbsent(vanilla, VanillaType::new);
+        return VANILLA.getOrDefault(vanilla, UNKNOWN);
+    }
+
+    public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
+        return VANILLA.computeIfAbsent(vanilla, v -> new VanillaType(vanilla, iconStack));
     }
 
     private static final class VanillaType extends SkinType {
         private final Optional<MinecraftProfileTexture.Type> vanilla;
 
-        VanillaType(MinecraftProfileTexture.Type vanilla) {
-            super(vanilla.name());
+        VanillaType(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
+            super(new Identifier(vanilla.name()), iconStack);
             this.vanilla = Optional.of(vanilla);
-            VALUES.put(name(), this);
+            Registry.register(REGISTRY, getId(), this);
+        }
+
+        @Override
+        public String name() {
+            return vanilla.get().name();
         }
 
         @Override
         public Optional<MinecraftProfileTexture.Type> getEnum() {
             return vanilla;
-        }
-    }
-
-    private static final class Adapter extends TypeAdapter<SkinType> {
-
-        @Override
-        public void write(JsonWriter out, SkinType value) throws IOException {
-            out.value(value == null ? null : value.name());
-        }
-
-        @Override
-        public SkinType read(JsonReader in) throws IOException {
-            String s = in.nextString();
-
-            if (s == null) {
-                return null;
-            }
-
-            return VALUES.getOrDefault(s, SkinType.UNKNOWN);
         }
     }
 }
