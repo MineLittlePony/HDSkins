@@ -16,14 +16,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
-import net.minecraft.resource.NamespaceResourceManager;
 import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
