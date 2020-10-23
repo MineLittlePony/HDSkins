@@ -16,7 +16,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
+import net.minecraft.resource.NamespaceResourceManager;
 import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
@@ -57,9 +59,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         emptySet = new EquipmentSet(EMPTY);
         equipmentSets.clear();
 
-        Collection<Identifier> list = manager.findResources("hd_skins_equipment", x -> x.endsWith(".json"));
-
-        HDSkins.logger.info("Found {} potential player equipment sets", list.size());
+        HDSkins.logger.info("Found {} potential player equipment sets", resources.size());
 
         for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
            try {
