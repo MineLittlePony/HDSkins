@@ -13,6 +13,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.DefaultAttributeRegistry;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import java.util.EnumMap;
@@ -56,6 +57,16 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
+    public boolean canRenderElytraTexture() {
+        return getTextures().getSkinType() == SkinType.ELYTRA;
+    }
+
+    @Override
+    public boolean canRenderCapeTexture() {
+        return getTextures().getSkinType() == SkinType.CAPE;
+    }
+
+    @Override
     public boolean hasSkinTexture() {
         return true;
     }
@@ -85,12 +96,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     @Nullable
     @Override
     public Identifier getElytraTexture() {
-        return getTextures().get(SkinType.ELYTRA).getId();
-    }
-
-    @Override
-    public boolean canRenderElytraTexture() {
-        return true;
+        return getTextures().getSkinType() == SkinType.ELYTRA ? getTextures().get(SkinType.ELYTRA).getId() : null;
     }
 
     public TextureProxy getTextures() {
@@ -104,12 +110,12 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public boolean hasVehicle() {
-        return textures.previewRiding;
+        return getTextures().previewRiding;
     }
 
     @Override
     public boolean isSleeping() {
-        return textures.previewSleeping;
+        return getTextures().previewSleeping;
     }
 
     @Override
@@ -163,6 +169,13 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     public void updateModel() {
+
+        SkinType type = getTextures().getSkinType();
+
+        if ((type == SkinType.ELYTRA) != (getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA)) {
+            equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA : Items.AIR).getStackForRender());
+        }
+
         lastHandSwingProgress = handSwingProgress;
 
         if (handSwinging) {

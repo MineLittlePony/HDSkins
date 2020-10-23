@@ -29,6 +29,8 @@ public class TextureProxy implements IBlankSkinSupplier {
     protected boolean previewRiding = false;
     protected boolean previewSwimming = false;
 
+    private SkinType skinType;
+
     private final IBlankSkinSupplier steveBlankSupplier;
     private final IBlankSkinSupplier alexBlankSupplier;
 
@@ -50,6 +52,14 @@ public class TextureProxy implements IBlankSkinSupplier {
         previewSleeping = pose == 1;
         previewRiding = pose == 2;
         previewSwimming = pose == 3;
+    }
+
+    public void setSkinType(SkinType type) {
+        skinType = type;
+    }
+
+    public SkinType getSkinType() {
+        return skinType;
     }
 
     public void setPreviewThinArms(boolean thinArms) {

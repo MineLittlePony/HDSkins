@@ -25,9 +25,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
@@ -39,9 +37,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
+    public static final Identifier NO_SKIN_CAPE = new Identifier("hdskins", "textures/mob/noskin_cape.png");
 
     public static final Map<SkinType, Identifier> NO_TEXTURES = Util.make(new HashMap<>(), map -> {
         map.put(SkinType.SKIN, NO_SKIN_STEVE);
+        map.put(SkinType.CAPE, NO_SKIN_CAPE);
         map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
     });
     public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.make(new HashMap<>(), map -> {
@@ -268,10 +268,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
     @Override
     public void setSkinType(SkinType type) {
-        ItemStack stack = type == SkinType.ELYTRA ? new ItemStack(Items.ELYTRA) : ItemStack.EMPTY;
-        // put on or take off the elytra
-        getLocal().equipStack(EquipmentSlot.CHEST, stack);
-        getRemote().equipStack(EquipmentSlot.CHEST, stack);
+        localTextures.setSkinType(type);
+        remoteTextures.setSkinType(type);
     }
 
     @Override
