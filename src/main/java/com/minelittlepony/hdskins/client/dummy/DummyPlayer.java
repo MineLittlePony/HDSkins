@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.mojang.authlib.GameProfile;
 
 /**
  * A dummy player that appears on the skins gui when previewing a skin.
@@ -45,7 +44,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     public DummyPlayer(TextureProxy textures) {
-        super(DummyWorld.INSTANCE, new GameProfile(null, "dumdum"));
+        super(DummyWorld.INSTANCE, MinecraftClient.getInstance().getSession().getProfile());
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
