@@ -1,5 +1,6 @@
 {
   "item": "minecraft:golden_helmet",
+  "sound": "item.armor.equip_gold",
   "equipment": {
     "head": "minecraft:golden_helmet",
     "chest": "minecraft:golden_chestplate",

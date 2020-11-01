@@ -1,5 +1,6 @@
 {
   "item": "minecraft:turtle_helmet",
+  "sound": "item.armor.equip_turtle",
   "equipment": {
     "head": "minecraft:turtle_helmet",
     "chest": "minecraft:air",

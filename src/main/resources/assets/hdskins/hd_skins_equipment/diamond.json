@@ -1,5 +1,6 @@
 {
   "item": "minecraft:diamond_helmet",
+  "sound": "item.armor.equip_diamond",
   "equipment": {
     "head": "minecraft:diamond_helmet",
     "chest": "minecraft:diamond_chestplate",

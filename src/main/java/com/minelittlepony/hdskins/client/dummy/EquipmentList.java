@@ -17,6 +17,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
@@ -27,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nullable;
+
 public class EquipmentList extends JsonDataLoader implements IdentifiableResourceReloadListener {
 
     private static final Identifier EQUIPMENT = new Identifier(HDSkins.MOD_ID, "skins/equipment");
@@ -35,6 +39,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
             .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registry.ITEM))
+            .registerTypeAdapter(SoundEvent.class, new RegistryTypeAdapter<>(Registry.SOUND_EVENT))
             .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
@@ -94,6 +99,9 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
         private Item item;
 
+        @Nullable
+        private SoundEvent sound;
+
         private transient Identifier id;
 
         EquipmentSet(Identifier id) {
@@ -104,6 +112,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 entity.equipStack(slot, new ItemStack(equipment.getOrDefault(slot, Items.AIR)));
             }
+        }
+
+        public SoundEvent getSound() {
+            return sound == null ? SoundEvents.ITEM_ARMOR_EQUIP_GENERIC : sound;
         }
 
         public ItemStack getStack() {

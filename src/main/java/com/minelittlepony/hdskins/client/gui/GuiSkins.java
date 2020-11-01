@@ -217,6 +217,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                     sender.getStyle()
                         .setIcon(uploader.cycleEquipment())
                         .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
+                    playSound(uploader.getEquipment().getSound());
                 })
                 .getStyle()
                 .setIcon(uploader.getEquipment().getStack())

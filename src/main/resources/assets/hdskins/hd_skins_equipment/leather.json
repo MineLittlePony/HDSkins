@@ -1,5 +1,6 @@
 {
   "item": "minecraft:leather_helmet",
+  "sound": "item.armor.equip_leather",
   "equipment": {
     "head": "minecraft:leather_helmet",
     "chest": "minecraft:leather_chestplate",
