@@ -124,6 +124,10 @@ public class SkinUploader implements Closeable {
     }
 
     public void setSkinType(SkinType type) {
+        if (type == skinType) {
+            return;
+        }
+
         skinType = type;
 
         previewer.setSkinType(type);
