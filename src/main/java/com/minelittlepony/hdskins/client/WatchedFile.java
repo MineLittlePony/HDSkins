@@ -44,8 +44,9 @@ public class WatchedFile {
         return path != null;
     }
 
+    @Nullable
     public URI toUri() {
-        return path.toUri();
+        return path == null ? null : path.toUri();
     }
 
     public void set(Path newFile) {
