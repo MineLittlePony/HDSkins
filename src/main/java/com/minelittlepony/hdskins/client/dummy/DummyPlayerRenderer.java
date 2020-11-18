@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client.dummy;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -12,8 +13,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.stat.StatHandler;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.Lazy;
+import net.minecraft.util.math.BlockPos;
 
 import org.lwjgl.opengl.GL11;
 
@@ -52,7 +53,7 @@ class DummyPlayerRenderer {
         public static BedHead instance = new BedHead();
 
         public BedHead() {
-            this.setColor(DyeColor.RED);
+            super(BlockPos.ORIGIN, Blocks.RED_BED.getDefaultState());
         }
 
         public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {

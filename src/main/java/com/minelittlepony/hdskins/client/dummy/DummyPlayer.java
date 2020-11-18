@@ -234,7 +234,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public boolean isPartVisible(PlayerModelPart part) {
-        return MinecraftClient.getInstance().options.getEnabledPlayerModelParts().contains(part);
+        return MinecraftClient.getInstance().options.isPlayerModelPartEnabled(part);
     }
 
     @Override

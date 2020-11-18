@@ -18,10 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(SkullBlockEntityRenderer.class)
-public abstract class MixinSkullRenderer extends BlockEntityRenderer<SkullBlockEntity> {
-
-    public MixinSkullRenderer() { super(null); }
-
+abstract class MixinSkullRenderer implements BlockEntityRenderer<SkullBlockEntity> {
     @Inject(method = "method_3578(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/client/render/RenderLayer;",
             cancellable = true,
             at = @At(value = "HEAD"))

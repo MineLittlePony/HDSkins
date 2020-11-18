@@ -20,7 +20,7 @@ import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.util.Identifier;
 
 @Mixin(PlayerListEntry.class)
-public abstract class MixinNetworkPlayerInfo implements ClientPlayerInfo {
+abstract class MixinNetworkPlayerInfo implements ClientPlayerInfo {
 
     private PlayerSkins hdskinsPlayerSkins = new PlayerSkins(this);
 
