@@ -13,7 +13,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.PlayerSkinTexture;
 
 @Mixin(PlayerSkinTexture.class)
-public class MixinPlayerSkinTexture {
+abstract class MixinPlayerSkinTexture {
     @Inject(method ="loadTexture(Ljava/io/InputStream;)Lnet/minecraft/client/texture/NativeImage;",
             at = @At("RETURN"),
             cancellable = true)
