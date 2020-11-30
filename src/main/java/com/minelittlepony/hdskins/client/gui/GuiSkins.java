@@ -441,7 +441,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             if (uploadInProgress) {
                 drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
-                int blockHeight = (height - getFont().getStringBoundedHeight(errorMsg.getString(), width - 10)) / 2;
+                int blockHeight = (height - getFont().getWrappedLinesHeight(errorMsg.getString(), width - 10)) / 2;
 
                 drawCenteredLabel(matrices, new TranslatableText("hdskins.failed"), width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
                 drawTextBlock(matrices, errorMsg, 5, blockHeight, width - 10, 0xff5555);
