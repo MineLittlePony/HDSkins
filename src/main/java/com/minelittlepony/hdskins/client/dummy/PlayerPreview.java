@@ -23,7 +23,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
@@ -175,11 +175,11 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.push();
         matrixStack.translate(xPosition, yPosition, 300);
         matrixStack.scale(scale, scale, scale);
-        matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-15));
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
 
         float rot = ((ticks + partialTick) * 2.5F) % 360;
 
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(rot));
+        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
 
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
@@ -194,7 +194,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.pop();
 
         matrixStack.push();
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
+        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
         matrixStack.scale(-0.99F, 1, 0.99F);
 
         DummyPlayerRenderer.flipReality = true;
@@ -232,14 +232,14 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.translate(0.001, offset, 0.001);
 
         if (thePlayer.isSleeping()) {
-            matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(90));
+            matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(90));
 
             y += 0.7F;
             x += 1;
         }
         if (thePlayer.isSwimming()) {
             DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
-            matrixStack.multiply(Vector3f.NEGATIVE_X.getDegreesQuaternion(45));
+            matrixStack.multiply(Vec3f.NEGATIVE_X.getDegreesQuaternion(45));
 
             if (thePlayer.getVelocity().x < 100) {
                 thePlayer.addVelocity(100, 0, 0);
