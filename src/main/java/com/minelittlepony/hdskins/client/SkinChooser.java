@@ -1,20 +1,17 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
-import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
-
+import com.minelittlepony.hdskins.client.file.FileDialogs;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javax.annotation.Nullable;
 
 public class SkinChooser {
 
@@ -36,8 +33,7 @@ public class SkinChooser {
         return number != 0 && (number & number - 1) == 0;
     }
 
-    @Nullable
-    private FileDialog openFileThread;
+    private boolean pickingInProgress;
 
     private final SkinUploader uploader;
 
@@ -48,7 +44,7 @@ public class SkinChooser {
     }
 
     public boolean pickingInProgress() {
-        return openFileThread != null;
+        return pickingInProgress;
     }
 
     public Text getStatus() {
@@ -56,31 +52,36 @@ public class SkinChooser {
     }
 
     public void openBrowsePNG(String title) {
-        openFileThread = new FileSelectorScreen(title)
-                .filter(".png", "PNG Files (*.png)")
-                .andThen((file, success) -> {
-            openFileThread = null;
+        pickingInProgress = true;
+        FileDialogs.open(title)
+                .addExtensionFilter(".png")
+                .setDescription("PNG Files (*.png)")
+                .launch()
+                .thenAccept(file -> {
+                    pickingInProgress = false;
 
-            if (success) {
-                selectFile(file);
-            }
-        }).launch();
+                    if (file != null) {
+                        selectFile(file);
+                    }
+                });
     }
 
     public void openSavePNG(String title, String filename) {
-        openFileThread = new FileSaverScreen(title, filename)
-                .filter(".png", "PNG Files (*.png)")
-                .andThen((file, success) -> {
-            openFileThread = null;
-
-            if (success) {
-                try (InputStream response = uploader.downloadSkin()) {
-                    Files.copy(response, file);
-                } catch (IOException e) {
-                    LogManager.getLogger().error("Failed to save remote skin.", e);
-                }
-            }
-        }).launch();
+        pickingInProgress = true;
+        FileDialogs.save(title, filename)
+                .addExtensionFilter(".png")
+                .setDescription("PNG Files (*.png")
+                .launch()
+                .thenAccept(file -> {
+                    pickingInProgress = false;
+                    if (file != null) {
+                        try (InputStream response = uploader.downloadSkin()) {
+                            Files.copy(response, file);
+                        } catch (IOException e) {
+                            LogManager.getLogger().error("Failed to save remote skin.", e);
+                        }
+                    }
+                });
     }
 
     public void selectFile(Path skinFile) {
