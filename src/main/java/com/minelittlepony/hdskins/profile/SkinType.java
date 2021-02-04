@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.profile;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -110,7 +111,7 @@ public class SkinType implements Comparable<SkinType> {
         private final Optional<MinecraftProfileTexture.Type> vanilla;
 
         VanillaType(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
-            super(new Identifier(vanilla.name().toLowerCase()), iconStack);
+            super(new Identifier(vanilla.name().toLowerCase(Locale.US)), iconStack);
             this.vanilla = Optional.of(vanilla);
             Registry.register(REGISTRY, getId(), this);
         }
