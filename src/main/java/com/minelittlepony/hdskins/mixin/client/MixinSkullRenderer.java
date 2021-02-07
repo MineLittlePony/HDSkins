@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 
 @Mixin(SkullBlockEntityRenderer.class)
 abstract class MixinSkullRenderer implements BlockEntityRenderer<SkullBlockEntity> {
-    @Inject(method = "method_3578(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/client/render/RenderLayer;",
+    @Inject(method = "getRenderLayer(Lnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/client/render/RenderLayer;",
             cancellable = true,
             at = @At(value = "HEAD"))
     private static void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<RenderLayer> info) {
