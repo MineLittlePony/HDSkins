@@ -23,6 +23,7 @@ import org.apache.http.message.BasicNameValuePair;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,15 @@ public class ValhallaSkinServer implements SkinServer {
 
     public ValhallaSkinServer(String address) {
         this.address = address;
+    }
+
+    @Override
+    public boolean ownsUrl(String url) {
+        try {
+            url = new URI(url).getHost();
+        } catch (final URISyntaxException ignored) { }
+
+        return address.contentEquals(url);
     }
 
     private String getApiPrefix() {

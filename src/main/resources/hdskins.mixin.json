@@ -4,6 +4,9 @@
   "package": "com.minelittlepony.hdskins.mixin",
   "refmap": "hdskins.mixin.refmap.json",
   "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  	"MixinSkullBlockEntity"
+  ],
   "client": [
     "client.MixinClientPlayer",
     "client.MixinNetworkPlayerInfo",
