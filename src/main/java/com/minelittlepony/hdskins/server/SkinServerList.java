@@ -5,6 +5,10 @@ import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.profile.ProfileUtils;
+import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
@@ -20,7 +24,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 public class SkinServerList implements SynchronousResourceReloadListener, IdentifiableResourceReloadListener {
 
@@ -60,6 +66,21 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
 
     public List<SkinServer> getSkinServers() {
         return ImmutableList.copyOf(skinServers);
+    }
+
+    public Stream<Map<SkinType, MinecraftProfileTexture>> getEmbeddedTextures(GameProfile profile) {
+        return Stream.concat(
+                ProfileUtils.readVanillaTexturesBlob(profile),
+                ProfileUtils.readCustomBlob(profile, "hd_textures", ProfileUtils.TextureData.class)
+                .map(ProfileUtils.TextureData::getTextures)
+                .filter(this::isUrlPermitted)
+        );
+    }
+
+    private boolean isUrlPermitted(Map<SkinType, MinecraftProfileTexture> blob) {
+        return blob.values().stream().map(MinecraftProfileTexture::getUrl).allMatch(url -> {
+            return skinServers.stream().anyMatch(s -> s.ownsUrl(url));
+        });
     }
 
     public Iterator<SkinServer> getCycler() {

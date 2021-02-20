@@ -50,6 +50,11 @@ public class YggdrasilSkinServer implements SkinServer {
     private transient final boolean requireSecure = true;
 
     @Override
+    public boolean ownsUrl(String url) {
+        return false;
+    }
+
+    @Override
     public Set<Feature> getFeatures() {
         return FEATURES;
     }

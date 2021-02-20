@@ -20,6 +20,11 @@ public interface SkinServer {
     Set<Feature> getFeatures();
 
     /**
+     * Determines whether this provider is the source of the provided url.
+     */
+    boolean ownsUrl(String url);
+
+    /**
      * Returns whether this skin server supports a particular skin type.
      * It's recommended to implement this on an exclusion bases:
      *  return false for the things you <i>don't</i> support.

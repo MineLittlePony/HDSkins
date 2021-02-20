@@ -36,38 +36,44 @@ class OnlineProfileCache {
 
     private CompletableFuture<Map<SkinType, MinecraftProfileTexture>> fetchOnlineData(GameProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
-            if (profile.getId() == null) {
-                return Collections.emptyMap();
-            }
-
-            List<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream()
-                    .filter(SkinType::isKnown)
-                    .collect(Collectors.toList());
-
-            Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
-
-            for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
-                try {
-                    if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
-                        server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
-                            if (requestedSkinTypes.remove(type)) {
-                                textureMap.putIfAbsent(type, texture);
-                            }
-                        });
-
-                        if (requestedSkinTypes.isEmpty()) {
-                            break;
-                        }
-                    }
-                } catch (IOException | AuthenticationException e) {
-                    HDSkins.logger.trace(e);
-                }
-            }
-
-            repository.offline.storeCachedProfileData(profile, textureMap);
-
-            return textureMap;
+            return repository.hd.getSkinServerList().getEmbeddedTextures(profile)
+                    .findFirst()
+                    .orElseGet(() -> loadRemoteTextureBlob(profile));
         }, Util.getMainWorkerExecutor());
+    }
+
+    private Map<SkinType, MinecraftProfileTexture> loadRemoteTextureBlob(GameProfile profile) {
+        if (profile.getId() == null) {
+            return Collections.emptyMap();
+        }
+
+        List<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream()
+                .filter(SkinType::isKnown)
+                .collect(Collectors.toList());
+
+        Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
+
+        for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
+            try {
+                if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
+                    server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
+                        if (requestedSkinTypes.remove(type)) {
+                            textureMap.putIfAbsent(type, texture);
+                        }
+                    });
+
+                    if (requestedSkinTypes.isEmpty()) {
+                        break;
+                    }
+                }
+            } catch (IOException | AuthenticationException e) {
+                HDSkins.logger.trace(e);
+            }
+        }
+
+        repository.offline.storeCachedProfileData(profile, textureMap);
+
+        return textureMap;
     }
 
     public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> loadProfile(GameProfile profile) {
