@@ -102,7 +102,6 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
         return ID;
     }
 
-    @Nullable
     private Optional<SkinData> loadSkinData(Resource res) throws JsonParseException {
         try (Resource resource = res) {
             return Optional.ofNullable(gson.fromJson(new InputStreamReader(resource.getInputStream()), SkinData.class));
