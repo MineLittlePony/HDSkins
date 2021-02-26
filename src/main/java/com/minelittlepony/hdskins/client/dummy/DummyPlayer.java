@@ -31,23 +31,34 @@ import com.minelittlepony.hdskins.profile.SkinType;
 public class DummyPlayer extends AbstractClientPlayerEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
-    private final TextureProxy textures;
+    private TextureProxy textures;
 
     private AttributeContainer attributes;
-
-    @Override
-    public AttributeContainer getAttributes() {
-        if (attributes == null) {
-            attributes = new AttributeContainer(DefaultAttributeRegistry.get(EntityType.PLAYER));
-        }
-        return this.attributes;
-    }
 
     public DummyPlayer(TextureProxy textures) {
         super(DummyWorld.INSTANCE, MinecraftClient.getInstance().getSession().getProfile());
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
+    }
+
+    @Override
+    public AttributeContainer getAttributes() {
+        // initialization order is annoying
+        if (attributes == null) {
+            attributes = new AttributeContainer(DefaultAttributeRegistry.get(EntityType.PLAYER));
+        }
+        return this.attributes;
+    }
+
+    public TextureProxy getTextures() {
+        // initialization order is annoying
+        if (textures == null) {
+            textures = new TextureProxy(MinecraftClient.getInstance().getSession().getProfile(),
+                    type -> PlayerPreview.NO_SKIN_STEVE,
+                    type -> PlayerPreview.NO_SKIN_ALEX);
+        }
+        return textures;
     }
 
     @Override
@@ -99,10 +110,6 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         return getTextures().getSkinType() == SkinType.ELYTRA ? getTextures().get(SkinType.ELYTRA).getId() : null;
     }
 
-    public TextureProxy getTextures() {
-        return textures;
-    }
-
     @Override
     public double getHeightOffset() {
         return -0.35D;
@@ -116,6 +123,11 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     @Override
     public boolean isSleeping() {
         return getTextures().previewSleeping;
+    }
+
+    @Override
+    public boolean isSwimming() {
+        return getTextures().previewSwimming;
     }
 
     @Override
@@ -144,11 +156,6 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
-    public boolean isSwimming() {
-        return textures.previewSwimming;
-    }
-
-    @Override
     public boolean isTouchingWater() {
         return isSwimming();
     }
@@ -160,12 +167,12 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Entity getPrimaryPassenger() {
-        return textures.previewRiding ? DummyPlayerRenderer.MrBoaty.instance : null;
+        return hasVehicle() ? DummyPlayerRenderer.MrBoaty.instance : null;
     }
 
     @Override
     public boolean isSneaking() {
-        return !textures.previewSwimming && !textures.previewRiding && !textures.previewSleeping && super.isSneaking();
+        return !isSwimming() && !hasVehicle() && !isSleeping() && super.isSneaking();
     }
 
     public void updateModel() {
@@ -199,7 +206,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
         double y = getY();
 
-        if (y == 0 && jumping && !textures.previewSleeping && !textures.previewRiding && !textures.previewSwimming) {
+        if (y == 0 && jumping && !isSleeping() && !hasVehicle() && !isSwimming()) {
             jump();
 
             upwardSpeed = (float)getVelocity().y;
