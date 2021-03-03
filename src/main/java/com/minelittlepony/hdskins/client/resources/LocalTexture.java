@@ -42,7 +42,7 @@ public class LocalTexture {
     }
 
     public Identifier getId() {
-        if (server.isPresent()) {
+        if (uploadComplete()) {
             return remoteResource;
         }
 
@@ -62,7 +62,7 @@ public class LocalTexture {
     }
 
     public boolean uploadComplete() {
-        return server.map(PreviewTextureManager.Texture::isLoaded).orElse(false);
+        return server.filter(PreviewTextureManager.Texture::isLoaded).isPresent();
     }
 
     public Optional<PreviewTextureManager.Texture> getServerTexture() {
