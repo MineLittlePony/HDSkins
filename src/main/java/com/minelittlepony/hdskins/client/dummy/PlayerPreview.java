@@ -109,8 +109,6 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
         DummyPlayerRenderer.wrap(() -> {
-            enableRescaleNormal();
-
             int mid = width / 2;
             int horizon = height / 2 + height / 5;
             int frameBottom = height - 40;

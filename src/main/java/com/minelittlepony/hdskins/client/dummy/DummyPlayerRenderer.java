@@ -16,8 +16,6 @@ import net.minecraft.stat.StatHandler;
 import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
 
-import org.lwjgl.opengl.GL11;
-
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 
 class DummyPlayerRenderer {
@@ -57,7 +55,6 @@ class DummyPlayerRenderer {
         }
 
         public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             stack.push();
 
             stack.scale(-1, 1, flipReality ? -1 : 1);
@@ -68,7 +65,6 @@ class DummyPlayerRenderer {
                 .render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);
 
             stack.pop();
-            GL11.glPopAttrib();
         }
     }
 
@@ -80,7 +76,6 @@ class DummyPlayerRenderer {
         }
 
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             stack.push();
 
             @SuppressWarnings("unchecked")
@@ -89,7 +84,6 @@ class DummyPlayerRenderer {
             render.render(this, 0, 0, stack, renderContext, 0xF000F0);
 
             stack.pop();
-            GL11.glPopAttrib();
         }
     }
 }

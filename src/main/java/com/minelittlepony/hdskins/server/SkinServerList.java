@@ -13,7 +13,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.SynchronousResourceReloadListener;
+import net.minecraft.resource.SynchronousResourceReloader;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-public class SkinServerList implements SynchronousResourceReloadListener, IdentifiableResourceReloadListener {
+public class SkinServerList implements SynchronousResourceReloader, IdentifiableResourceReloadListener {
 
     private static final Identifier SKIN_SERVERS = new Identifier(HDSkins.MOD_ID, "skins/servers.json");
 
@@ -45,7 +45,7 @@ public class SkinServerList implements SynchronousResourceReloadListener, Identi
     }
 
     @Override
-    public void apply(ResourceManager mgr) {
+    public void reload(ResourceManager mgr) {
         skinServers.clear();
 
         logger.info("Loading skin servers");
