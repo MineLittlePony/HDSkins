@@ -66,8 +66,6 @@ dependencies {
     modApi "com.minelittlepony:Kirin:${project.kirin_version}"
     include "com.minelittlepony:Kirin:${project.kirin_version}"
 
-    include files("letsencryptcraft-fabric-1.4.0.jar")
-
     modCompileOnly("io.github.prospector:modmenu:${project.modmenu_version}") {
         transitive = false
     }
