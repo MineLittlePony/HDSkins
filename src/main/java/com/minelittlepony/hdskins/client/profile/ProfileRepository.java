@@ -65,7 +65,7 @@ public class ProfileRepository {
 
     private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinCallback callback) {
         Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
-        AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().method_34590(resource, null);
+        AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().getOrDefault(resource, null);
 
         //noinspection ConstantConditions
         if (texObj != null) {

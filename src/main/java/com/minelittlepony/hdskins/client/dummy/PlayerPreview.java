@@ -182,8 +182,8 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
 
-        thePlayer.headYaw = lookX * lookFactor;
-        thePlayer.pitch = thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20;
+        thePlayer.setHeadYaw(lookX * lookFactor);
+        thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20);
 
         matrixStack.push();
         matrixStack.scale(1, -1, -1);
