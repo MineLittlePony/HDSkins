@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;
 import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -35,11 +36,14 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     private AttributeContainer attributes;
 
+    public final MrBoaty boat;
+
     public DummyPlayer(TextureProxy textures) {
-        super(DummyWorld.INSTANCE, MinecraftClient.getInstance().getSession().getProfile());
+        super(DummyWorld.getOrDummy(), MinecraftClient.getInstance().getSession().getProfile());
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
+        this.boat = new MrBoaty(world);
     }
 
     @Override
@@ -167,7 +171,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Entity getPrimaryPassenger() {
-        return hasVehicle() ? DummyPlayerRenderer.MrBoaty.instance : null;
+        return hasVehicle() ? boat : null;
     }
 
     @Override

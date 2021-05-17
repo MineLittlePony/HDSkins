@@ -15,17 +15,18 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.stat.StatHandler;
 import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 
-class DummyPlayerRenderer {
+public class DummyPlayerRenderer {
 
     public static boolean flipReality;
 
-    private static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
+    public static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
             MinecraftClient.getInstance(),
-            DummyWorld.INSTANCE,
-            DummyWorld.INSTANCE.getNetHandler(),
+            DummyWorld.INSTANCE.get(),
+            DummyNetworkHandler.INSTANCE.get(),
             new StatHandler(),
             new ClientRecipeBook(), false, false
     ));
@@ -34,7 +35,9 @@ class DummyPlayerRenderer {
         MinecraftClient client = MinecraftClient.getInstance();
         boolean inGame = client.player != null;
 
-        OutsideWorldRenderer.configure(DummyWorld.INSTANCE);
+        if (client.world == null) {
+            OutsideWorldRenderer.configure(DummyWorld.INSTANCE.get());
+        }
         try {
             if (!inGame) {
                 client.player = NULL_PLAYER.get();
@@ -69,10 +72,8 @@ class DummyPlayerRenderer {
     }
 
     public static class MrBoaty extends BoatEntity {
-        public static MrBoaty instance = new MrBoaty();
-
-        public MrBoaty() {
-            super(EntityType.BOAT, DummyWorld.INSTANCE);
+        public MrBoaty(World world) {
+            super(EntityType.BOAT, world);
         }
 
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {

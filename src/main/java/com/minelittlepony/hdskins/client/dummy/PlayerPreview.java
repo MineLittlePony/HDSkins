@@ -10,7 +10,6 @@ import com.minelittlepony.hdskins.client.SkinUploader.IPreviewModel;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -175,7 +174,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.scale(scale, scale, scale);
         matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
 
-        float rot = ((ticks + partialTick) * 2.5F) % 360;
+        float rot = ((ticks + partialTick) * 2.5F) % 360 + 180;
 
         matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
 
@@ -209,7 +208,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         }
 
         if (thePlayer.hasVehicle()) {
-            MrBoaty.instance.render(matrixStack, renderContext);
+            thePlayer.boat.render(matrixStack, renderContext);
         }
 
         double offset = thePlayer.getY();
@@ -236,7 +235,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
             x += 1;
         }
         if (thePlayer.isSwimming()) {
-            DummyWorld.INSTANCE.fillWith(Blocks.WATER.getDefaultState());
+            DummyWorld.fillWith(Blocks.WATER.getDefaultState());
             matrixStack.multiply(Vec3f.NEGATIVE_X.getDegreesQuaternion(45));
 
             if (thePlayer.getVelocity().x < 100) {
@@ -247,7 +246,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
             x += 0;
             z += 1;
         } else {
-            DummyWorld.INSTANCE.fillWith(Blocks.AIR.getDefaultState());
+            DummyWorld.fillWith(Blocks.AIR.getDefaultState());
 
             if (thePlayer.getVelocity().x >= 100) {
                 thePlayer.addVelocity(-100, 0, 0);

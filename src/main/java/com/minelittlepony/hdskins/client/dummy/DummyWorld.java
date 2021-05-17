@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.client.dummy;
 
-import com.mojang.authlib.GameProfile;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +7,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
@@ -20,9 +19,20 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 
 public class DummyWorld extends ClientWorld {
-    public static final DummyWorld INSTANCE = new DummyWorld(new DummyNetworkHandler(new GameProfile(null, "dumdum")));
+    public static final Lazy<DummyWorld> INSTANCE = new Lazy<>(() -> {
+        return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
+    });
 
-    private BlockState worldBlockState = Blocks.AIR.getDefaultState();
+    public static ClientWorld getOrDummy() {
+        ClientWorld w = MinecraftClient.getInstance().world;
+        return w == null ? INSTANCE.get() : w;
+    }
+
+    public static void fillWith(BlockState state) {
+        worldBlockState = state;
+    }
+
+    private static BlockState worldBlockState = Blocks.AIR.getDefaultState();
 
     private final WorldChunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
     private final ClientChunkManager chunkManager = new ClientChunkManager(this, 0) {
@@ -38,8 +48,6 @@ public class DummyWorld extends ClientWorld {
         public LightingProvider getLightingProvider() { return lighting; }
     };
 
-    private final ClientPlayNetworkHandler net;
-
     private DummyWorld(ClientPlayNetworkHandler net) {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
@@ -50,17 +58,6 @@ public class DummyWorld extends ClientWorld {
                 MinecraftClient.getInstance().worldRenderer,
                 true,
                 0);
-        this.net = net;
-    }
-
-    public ClientPlayNetworkHandler getNetHandler() {
-        return net;
-    }
-
-    public DummyWorld fillWith(BlockState state) {
-        worldBlockState = state;
-
-        return this;
     }
 
     @Override
