@@ -71,7 +71,8 @@ public final class HDSkins implements ClientModInitializer {
             Button button = buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20))
                 .onClick(sender -> MinecraftClient.getInstance().openScreen(GuiSkins.create(screen, skinServerList)));
             button.getStyle()
-                    .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb);
+                    .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
+                    .setTooltip("hdskins.manager", 0, 10);
             button.y = screen.height - 50; // ModMenu;
         }
     }
