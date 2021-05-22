@@ -42,9 +42,7 @@ public class ProfileRepository {
     }
 
     private Path getCachedSkinLocation(SkinType type, MinecraftProfileTexture texture) {
-        String skinDir = type.name().toLowerCase() + "s/";
-
-        return getHDSkinsCache().resolve(skinDir + texture.getHash().substring(0, 2)).resolve(texture.getHash());
+        return getHDSkinsCache().resolve(type.getPathName()).resolve(texture.getHash().substring(0, 2)).resolve(texture.getHash());
     }
 
     private void supplyProfileTextures(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
@@ -64,7 +62,7 @@ public class ProfileRepository {
     }
 
     private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinCallback callback) {
-        Identifier resource = new Identifier("hdskins", type.name().toLowerCase() + "s/" + texture.getHash());
+        Identifier resource = new Identifier("hdskins", type.getPathName() + "/" + texture.getHash());
         AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().getOrDefault(resource, null);
 
         //noinspection ConstantConditions

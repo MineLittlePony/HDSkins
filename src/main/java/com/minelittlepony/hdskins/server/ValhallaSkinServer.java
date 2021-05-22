@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -194,7 +193,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private URI buildUserTextureUri(SkinUpload upload) {
         String user = UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId());
-        String skinType = upload.getType().name().toLowerCase(Locale.US);
+        String skinType = upload.getType().getParameterizedName();
         return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
     }
 

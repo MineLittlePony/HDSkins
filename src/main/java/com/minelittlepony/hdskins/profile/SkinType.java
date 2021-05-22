@@ -41,10 +41,18 @@ public class SkinType implements Comparable<SkinType> {
         return getId().toString();
     }
 
+    public String getParameterizedName() {
+        return name().replace(':', '_').replace('/', '_').toLowerCase(Locale.US);
+    }
+
+    public String getPathName() {
+        return getId().getNamespace() + "/" + getId().getPath();
+    }
+
     public Style getStyle() {
         return new Style()
                 .setIcon(iconStack)
-                .setTooltip("hdskins.mode." + name().replace(':', '_').replace('/', '_').toLowerCase(), 0, 10);
+                .setTooltip("hdskins.mode." + getParameterizedName(), 0, 10);
     }
 
     public final Identifier getId() {

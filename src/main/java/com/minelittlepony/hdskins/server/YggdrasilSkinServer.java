@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -136,7 +135,7 @@ public class YggdrasilSkinServer implements SkinServer {
         return request
                 .setUri(URI.create(String.format("%s/user/profile/%s/%s", address,
                         UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId()),
-                        upload.getType().name().toLowerCase(Locale.US))))
+                        upload.getType().getParameterizedName())))
                 .addHeader("authorization", "Bearer " + upload.getSession().getAccessToken());
     }
 

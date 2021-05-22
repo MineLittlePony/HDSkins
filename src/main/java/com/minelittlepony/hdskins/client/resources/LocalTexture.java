@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -38,7 +39,7 @@ public class LocalTexture {
         this.type = type;
 
         localResource = blank.getBlankSkin(type);
-        remoteResource = new Identifier(String.format("%s/preview_%s", type.name(), profile.getName()).toLowerCase());
+        remoteResource = new Identifier(type.getId().getNamespace(), String.format("%s/preview_%s", type.getId().getPath(), profile.getName()).toLowerCase(Locale.US));
     }
 
     public Identifier getId() {
