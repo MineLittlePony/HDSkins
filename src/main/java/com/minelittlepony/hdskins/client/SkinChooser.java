@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+
 import javax.annotation.Nullable;
 
 public class SkinChooser {
@@ -41,10 +46,17 @@ public class SkinChooser {
 
     private final SkinUploader uploader;
 
+    private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
+
     private volatile Text status = MSG_CHOOSE;
 
     public SkinChooser(SkinUploader uploader) {
         this.uploader = uploader;
+        addImageValidation(this::acceptsSkinDimensions);
+    }
+
+    public void addImageValidation(Function<NativeImage, Text> validator) {
+        validators.add(validator);
     }
 
     public boolean pickingInProgress() {
@@ -99,23 +111,27 @@ public class SkinChooser {
         try (InputStream in = Files.newInputStream(skinFile)) {
             NativeImage chosenImage = NativeImage.read(in);
 
-            Text err = acceptsSkinDimensions(chosenImage.getWidth(), chosenImage.getHeight());
-            if (err != null) {
-                return err;
-            }
+            return validators.stream()
+                .map(f -> f.apply(chosenImage))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseGet(() -> {
+                    uploader.setLocalSkin(skinFile);
 
-            uploader.setLocalSkin(skinFile);
-
-            return MSG_CHOOSE;
+                    return MSG_CHOOSE;
+                });
         } catch (IOException e) {
-            e.printStackTrace();
+            HDSkins.logger.error("Exception occured whilst loading image file {}.", skinFile, e);
         }
 
         return ERR_OPEN;
     }
 
     @Nullable
-    protected Text acceptsSkinDimensions(int w, int h) {
+    protected Text acceptsSkinDimensions(NativeImage img) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+
         if (!isPowerOfTwo(w)) {
             return ERR_INVALID_POWER_OF_TWO;
         }
