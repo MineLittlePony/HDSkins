@@ -71,7 +71,7 @@ public class ProfileUtils {
             try {
                 return gson.fromJson(json, type);
             } catch (JsonParseException e) {
-                HDSkins.logger.error("Error reading textures blob for input: " + json, e);
+                HDSkins.LOGGER.error("Error reading textures blob for input: {}", json, e);
             }
             return null;
         }).filter(Objects::nonNull);

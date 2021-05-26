@@ -58,7 +58,7 @@ public class TextureLoader {
                     return conv;
                 }, mc).get();
             } catch (InterruptedException | ExecutionException e) {
-                HDSkins.logger.warn("Errored while processing {}. Using original.", original, e);
+                HDSkins.LOGGER.warn("Errored while processing {}. Using original.", original, e);
 
                 return original;
             }

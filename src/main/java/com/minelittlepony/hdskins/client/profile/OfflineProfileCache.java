@@ -54,7 +54,7 @@ class OfflineProfileCache {
                 try (JsonReader reader = new JsonReader(Files.newBufferedReader(cachedLocation))) {
                     return gson.fromJson(reader, CachedProfile.class);
                 } catch (IOException e) {
-                    HDSkins.logger.error("Exception loading cached profile data", e);
+                    HDSkins.LOGGER.error("Exception loading cached profile data", e);
                     try {
                         Files.delete(cachedLocation);
                     } catch (IOException ignored) {
