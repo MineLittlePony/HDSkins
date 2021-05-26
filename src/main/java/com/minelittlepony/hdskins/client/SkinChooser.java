@@ -121,7 +121,7 @@ public class SkinChooser {
                     return MSG_CHOOSE;
                 });
         } catch (IOException e) {
-            HDSkins.logger.error("Exception occured whilst loading image file {}.", skinFile, e);
+            HDSkins.LOGGER.error("Exception occured whilst loading image file {}.", skinFile, e);
         }
 
         return ERR_OPEN;

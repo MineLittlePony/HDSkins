@@ -97,7 +97,7 @@ public interface MoreHttpResponses extends AutoCloseable {
     default <T> T json(Type type, String errorMessage) throws IOException {
         if (!json()) {
             String text = text();
-            HDSkins.logger.error(errorMessage, text);
+            HDSkins.LOGGER.error(errorMessage, text);
             throw new IOException(text);
         }
 

@@ -67,7 +67,7 @@ class OnlineProfileCache {
                     }
                 }
             } catch (IOException | AuthenticationException e) {
-                HDSkins.logger.trace(e);
+                HDSkins.LOGGER.trace(e);
             }
         }
 

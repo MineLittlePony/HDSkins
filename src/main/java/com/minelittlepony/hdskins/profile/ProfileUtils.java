@@ -45,7 +45,7 @@ public class ProfileUtils {
                     .map(blob -> new GameProfile(blob.getProfileId(), blob.getProfileName()))
                     .orElse(profile);
         } catch (Exception e) { // Something broke server-side probably
-            HDSkins.logger.warn("{} had a null UUID and was unable to recreate it from texture profile.", profile.getName(), e);
+            HDSkins.LOGGER.warn("{} had a null UUID and was unable to recreate it from texture profile.", profile.getName(), e);
         }
 
         return profile;

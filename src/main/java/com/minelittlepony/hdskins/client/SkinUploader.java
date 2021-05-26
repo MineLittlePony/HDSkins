@@ -319,7 +319,7 @@ public class SkinUploader implements Closeable {
             previewer.getLocal().getTextures().get(skinType).setLocal(path);
             listener.onSetLocalSkin(skinType);
         } catch (IOException e) {
-            HDSkins.logger.error("Could not load local path `" + path + "`", e);
+            HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
         }
     }
 

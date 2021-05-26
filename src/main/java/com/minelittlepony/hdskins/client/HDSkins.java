@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 public final class HDSkins implements ClientModInitializer {
     public static final String MOD_ID = "hdskins";
 
-    public static final Logger logger = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     private static HDSkins instance;
 

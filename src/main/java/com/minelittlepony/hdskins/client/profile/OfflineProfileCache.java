@@ -80,7 +80,7 @@ class OfflineProfileCache {
                 gson.toJson(new CachedProfile(textureMap), CachedProfile.class, writer);
             }
         } catch (IOException e) {
-            HDSkins.logger.trace(e);
+            HDSkins.LOGGER.trace(e);
         }
     }
 

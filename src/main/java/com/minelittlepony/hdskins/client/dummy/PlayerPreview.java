@@ -162,7 +162,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
         if (dispatcher.getRenderer(thePlayer) == null) {
-            HDSkins.logger.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
+            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
         }
 
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());

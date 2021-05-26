@@ -82,7 +82,7 @@ public class YggdrasilSkinServer implements SkinServer {
         try {
             textures.putAll(session.getTextures(profile, requireSecure));
         } catch (InsecureTextureException e) {
-            HDSkins.logger.error(e);
+            HDSkins.LOGGER.error(e);
         }
 
 

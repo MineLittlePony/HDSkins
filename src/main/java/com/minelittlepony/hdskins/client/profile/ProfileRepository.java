@@ -81,7 +81,7 @@ public class ProfileRepository {
     }
 
     public void clear() {
-        HDSkins.logger.info("Clearing local player skin cache");
+        HDSkins.LOGGER.info("Clearing local player skin cache");
         offline.clear();
         online.clear();
 
@@ -103,7 +103,7 @@ public class ProfileRepository {
                 });
             }
         } catch (IOException e) {
-            HDSkins.logger.warn("Could not remove cache folder", e);
+            HDSkins.LOGGER.warn("Could not remove cache folder", e);
         }
 
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();

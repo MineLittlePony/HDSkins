@@ -61,7 +61,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         emptySet = new EquipmentSet(EMPTY);
         equipmentSets.clear();
 
-        HDSkins.logger.info("Found {} potential player equipment sets", resources.size());
+        HDSkins.LOGGER.info("Found {} potential player equipment sets", resources.size());
 
         for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
            try {
@@ -76,10 +76,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
                    }
                }
            } catch (IllegalArgumentException | JsonParseException e) {
-               HDSkins.logger.error("Unable to read {} from resource packs", EQUIPMENT, e);
+               HDSkins.LOGGER.error("Unable to read {} from resource packs", EQUIPMENT, e);
            }
         }
-        HDSkins.logger.info("Loaded {} player equipment sets", equipmentSets.size());
+        HDSkins.LOGGER.info("Loaded {} player equipment sets", equipmentSets.size());
 
         if (equipmentSets.isEmpty()) {
             equipmentSets.add(emptySet);
