@@ -1,5 +1,3 @@
-/*
-TODO: Fix your maven, prospector
 package com.minelittlepony.hdskins.client.modmenu;
 
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
@@ -14,4 +12,3 @@ public class HDSkinsMenuFactory implements ModMenuApi {
         return s -> GuiSkins.create(s, HDSkins.getInstance().getSkinServerList());
     }
 }
-*/
