@@ -63,14 +63,14 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         filesList.margin.top = 60;
         filesList.margin.bottom = 30;
 
-        filesList.padding.setAll(10);
+        filesList.getContentPadding().setAll(10);
 
         currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
     }
 
     @Override
     protected void init() {
-        children.add(filesList);
+        getChildElements().add(filesList);
 
         renderDirectory();
 

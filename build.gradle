@@ -1,5 +1,4 @@
 plugins {
-    id 'java-library'
     id 'fabric-loom' version '0.8-SNAPSHOT'
     id 'maven-publish'
 }
@@ -14,13 +13,13 @@ def createVersion() {
         parts.push project.release
     }
 
-    if (System.env.TRAVIS_BRANCH != null && System.env.TRAVIS_BRANCH != 'master') {
-        parts.push System.env.TRAVIS_BRANCH
+    def branch = System.env.TRAVIS_BRANCH
+
+    if (branch != null && branch != 'master' && !project.minecraft_version.startsWith(branch)) {
+        parts.push branch
     }
 
-    if (System.env.TRAVIS_BRANCH != project.minecraft_version) {
-       parts.push project.minecraft_version
-    }
+    parts.push project.minecraft_version
 
     def ver = project.version
     if (parts.size > 0) {
@@ -66,9 +65,10 @@ dependencies {
     modApi "com.minelittlepony:Kirin:${project.kirin_version}"
     include "com.minelittlepony:Kirin:${project.kirin_version}"
 
-    modCompileOnly("io.github.prospector:modmenu:${project.modmenu_version}") {
+    // TODO: Fix your maven, @Prospector
+    /*modCompileOnly("io.github.prospector:modmenu:${project.modmenu_version}") {
         transitive = false
-    }
+    }*/
 }
 
 processResources {

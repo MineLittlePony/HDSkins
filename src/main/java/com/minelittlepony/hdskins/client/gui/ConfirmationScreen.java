@@ -6,7 +6,6 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -22,13 +21,9 @@ public class ConfirmationScreen extends GameGui {
     }
 
     @Override
-    public void init(MinecraftClient mc, int width, int height) {
-        parent.init(mc, width, height);
-        super.init(mc, width, height);
-    }
+    public void init() {
+        parent.init(client, width, height);
 
-    @Override
-    protected void init() {
         addButton(new Label(this.width/2, height/2 - 10).setCentered())
             .getStyle().setText(getTitle());
 

@@ -68,7 +68,7 @@ public final class HDSkins implements ClientModInitializer {
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
         if (screen instanceof TitleScreen) {
-            Button button = buttons.add(new Button(screen.width - 50, screen.height - 50, 20, 20))
+            Button button = buttons.addButton(new Button(screen.width - 50, screen.height - 50, 20, 20))
                 .onClick(sender -> MinecraftClient.getInstance().openScreen(GuiSkins.create(screen, skinServerList)));
             button.getStyle()
                     .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
