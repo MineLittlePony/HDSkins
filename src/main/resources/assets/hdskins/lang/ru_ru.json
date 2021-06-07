@@ -12,7 +12,6 @@
   "hdskins.error.offline": "- Сервер не в сети -",
   "hdskins.open.title": "Выберите ваш скин",
   "hdskins.save.title": "Выберите имя файла для сохранения...",
-  "hdskins.directory.go": "->",
   "hdskins.directory.save": "Сохранить",
   "hdskins.directory.up": "Родительский каталог",
   "hdskins.filetype.directory": "Каталог",
@@ -40,9 +39,7 @@
   "hdskins.equipment.iron": "Железная броня",
   "hdskins.equipment.leather": "Кожаная броня",
   "hdskins.equipment.turtle": "Черепаший панцирь",
-  "hdskins.options.chevy": ">>",
   "hdskins.options.chevy.title": "Загрузить скин",
-  "hdskins.options.download": "<<",
   "hdskins.options.download.title": "Скачать скин",
   "hdskins.options.close": "Закрыть",
   "hdskins.options.clear": "Удалить скин",
@@ -50,6 +47,5 @@
   "hdskins.options.skindrops": "Экспериментальное перетаскивание скина",
   "hdskins.options.cache": "Очистить кеш скинов",
   "hdskins.warning.experimental": "§6ВНИМАНИЕ: Эта функция §4экспериментальная§6, что означает, что вещи могут начать ломаться, извиваться или даже захлёбываться. При её включении авторы сего текста не несут ответственности за возможные последствия.",
-  "hdskins.warning.disabled.title": "§c%s %s",
   "hdskins.warning.disabled.description": "§4(ОТКЛЮЧЕНО)\n§7Данная опция не поддерживается текущим скин-сервером.\n§7Пожалуйста, выберите другой скин-сервер."
 }

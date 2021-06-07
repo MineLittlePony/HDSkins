@@ -53,6 +53,5 @@
   "hdskins.options.skindrops": "实验性皮肤",
   "hdskins.options.cache": "清除皮肤缓存",
   "hdskins.warning.experimental": "§6警告！: 这个选项是 §4实验性§6的, 这意味着他可能会造成损坏或崩溃. 开启它意味着你能承担它所带来的任何后果.",
-  "hdskins.warning.disabled.title": "§c%s %s",
   "hdskins.warning.disabled.description": "§4(！禁用！)\n§7当前皮肤不是由你目前的皮肤服务器提供.\n§7选择一个不同的皮肤来开始."
 }

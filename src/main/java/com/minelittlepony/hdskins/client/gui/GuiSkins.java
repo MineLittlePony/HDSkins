@@ -204,7 +204,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                         new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
                         new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
                         new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10),
-                        new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10))
+                        new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10),
+                        new Style().setIcon(Items.HEART_OF_THE_SEA).setTooltip("hdskins.mode.riptide", 0, 10))
                 .setValue(previewer.getPose())
                 .onChange(i -> {
                     playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);

@@ -135,6 +135,11 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
+    public boolean isUsingRiptide() {
+        return getTextures().previewRiptide;
+    }
+
+    @Override
     public EntityPose getPose() {
         if (isSleeping()) {
             return EntityPose.SLEEPING;
@@ -210,7 +215,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
         double y = getY();
 
-        if (y == 0 && jumping && !isSleeping() && !hasVehicle() && !isSwimming()) {
+        if (y == 0 && jumping && !isSleeping() && !hasVehicle() && !isSwimming() && !isUsingRiptide()) {
             jump();
 
             upwardSpeed = (float)getVelocity().y;
