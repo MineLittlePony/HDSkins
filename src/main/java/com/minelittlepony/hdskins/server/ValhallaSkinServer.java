@@ -88,7 +88,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private void uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
-        authorize(upload.getSession());
+        authorize(upload.session());
 
         switch (upload.getSchemaAction()) {
             case "none":
@@ -114,12 +114,12 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private void uploadFile(SkinUpload upload) throws IOException {
-        final File file = new File(upload.getImage());
+        final File file = new File(upload.image());
 
         MultipartEntityBuilder b = MultipartEntityBuilder.create()
                 .addBinaryBody("file", file, ContentType.create("image/png"), file.getName());
 
-        upload.getMetadata().forEach(b::addTextBody);
+        upload.metadata().forEach(b::addTextBody);
 
         upload(RequestBuilder.put()
                 .setUri(buildUserTextureUri(upload))
@@ -132,8 +132,8 @@ public class ValhallaSkinServer implements SkinServer {
         upload(RequestBuilder.post()
                 .setUri(buildUserTextureUri(upload))
                 .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
-                .addParameter("file", upload.getImage().toString())
-                .addParameters(mapAsParameters(upload.getMetadata()))
+                .addParameter("file", upload.image().toString())
+                .addParameters(mapAsParameters(upload.metadata()))
                 .build());
     }
 
@@ -192,8 +192,8 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private URI buildUserTextureUri(SkinUpload upload) {
-        String user = UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId());
-        String skinType = upload.getType().getParameterizedName();
+        String user = UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId());
+        String skinType = upload.type().getParameterizedName();
         return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
     }
 

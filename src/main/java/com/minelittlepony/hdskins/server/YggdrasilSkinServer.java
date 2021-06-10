@@ -14,6 +14,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -95,7 +96,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
     @Override
     public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
-        authorize(upload.getSession());
+        authorize(upload.session());
 
         switch (upload.getSchemaAction()) {
             case "none":
@@ -113,19 +114,19 @@ public class YggdrasilSkinServer implements SkinServer {
         request = appendHeaders(upload, request);
         switch (upload.getSchemaAction()) {
             case "file":
-                final File file = new File(upload.getImage());
+                final File file = new File(upload.image());
 
                 MultipartEntityBuilder b = MultipartEntityBuilder.create()
                         .addBinaryBody("file", file, ContentType.create("image/png"), file.getName());
 
-                mapMetadata(upload.getMetadata()).forEach(b::addTextBody);
+                mapMetadata(upload.metadata()).forEach(b::addTextBody);
 
                 return request.setEntity(b.build());
             case "http":
             case "https":
                 return request
-                        .addParameter("file", upload.getImage().toString())
-                        .addParameters(MoreHttpResponses.mapAsParameters(mapMetadata(upload.getMetadata())));
+                        .addParameter("file", upload.image().toString())
+                        .addParameters(MoreHttpResponses.mapAsParameters(mapMetadata(upload.metadata())));
             default:
                 throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
         }
@@ -134,9 +135,9 @@ public class YggdrasilSkinServer implements SkinServer {
     private RequestBuilder appendHeaders(SkinUpload upload, RequestBuilder request) {
         return request
                 .setUri(URI.create(String.format("%s/user/profile/%s/%s", address,
-                        UUIDTypeAdapter.fromUUID(upload.getSession().getProfile().getId()),
-                        upload.getType().getParameterizedName())))
-                .addHeader("authorization", "Bearer " + upload.getSession().getAccessToken());
+                        UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
+                        upload.type().getParameterizedName())))
+                .addHeader("authorization", "Bearer " + upload.session().getAccessToken());
     }
 
     private Map<String, String> mapMetadata(Map<String, String> metadata) {
