@@ -5,7 +5,7 @@ import static com.minelittlepony.common.event.SkinFilterCallback.copy;
 
 import java.io.File;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.profile.SkinType;
 

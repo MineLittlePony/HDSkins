@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class LocalTexture {
 

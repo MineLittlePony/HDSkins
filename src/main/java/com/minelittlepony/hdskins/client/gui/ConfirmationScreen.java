@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -14,7 +14,7 @@ public class ConfirmationScreen extends GameGui {
 
     private final Runnable action;
 
-    public ConfirmationScreen(@Nonnull Screen parent, String title, Runnable action) {
+    public ConfirmationScreen(@NotNull Screen parent, String title, Runnable action) {
         super(new LiteralText(title), parent);
 
         this.action = action;

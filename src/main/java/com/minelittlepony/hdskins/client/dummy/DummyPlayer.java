@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
 import java.util.EnumMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;

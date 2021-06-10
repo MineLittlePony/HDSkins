@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
@@ -177,7 +177,7 @@ public class YggdrasilSkinServer implements SkinServer {
     static class TokenRequest {
         static final Gson GSON = new Gson();
 
-        @Nonnull
+        @NotNull
         private final String accessToken;
 
         TokenRequest(Session session) {

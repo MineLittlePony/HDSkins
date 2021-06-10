@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.profile;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
