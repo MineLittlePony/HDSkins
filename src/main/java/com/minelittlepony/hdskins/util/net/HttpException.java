@@ -1,8 +1,5 @@
 package com.minelittlepony.hdskins.util.net;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-
 import java.io.IOException;
 
 public class HttpException extends IOException {
@@ -12,19 +9,11 @@ public class HttpException extends IOException {
 
     private final int statusCode;
 
-    public HttpException(HttpResponse response) {
-        this(response.getStatusLine());
-    }
+    public HttpException(String message, MoreHttpResponses response) {
+        super(message);
 
-    public HttpException(StatusLine status) {
-        this(status.getReasonPhrase(), status.getStatusCode(), null);
-    }
-
-    public HttpException(String reason, int statusCode, Throwable cause) {
-        super("(" + statusCode + ") " + reason, cause);
-
-        this.reason = reason;
-        this.statusCode = statusCode;
+        this.reason = response.statusReason();
+        this.statusCode = response.statusCode();
     }
 
     public String getReasonPhrase() {

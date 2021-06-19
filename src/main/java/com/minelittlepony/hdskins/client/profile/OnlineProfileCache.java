@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.client.profile;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +17,6 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
 import com.minelittlepony.hdskins.server.SkinServer;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.util.Util;
@@ -66,7 +64,7 @@ class OnlineProfileCache {
                         break;
                     }
                 }
-            } catch (IOException | AuthenticationException e) {
+            } catch (Exception e) {
                 HDSkins.LOGGER.trace(e);
             }
         }

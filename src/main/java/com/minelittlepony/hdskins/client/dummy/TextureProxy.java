@@ -7,7 +7,6 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.exceptions.AuthenticationException;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
@@ -91,7 +90,7 @@ public class TextureProxy implements IBlankSkinSupplier {
                 .supplyAsync(() -> {
                     try {
                         return new PreviewTextureManager(gateway.loadProfileData(profile));
-                    } catch (IOException | AuthenticationException e) {
+                    } catch (IOException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }, Util.getMainWorkerExecutor())

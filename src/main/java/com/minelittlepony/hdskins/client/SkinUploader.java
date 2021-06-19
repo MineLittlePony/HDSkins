@@ -221,7 +221,7 @@ public class SkinUploader implements Closeable {
                 try {
                     gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin.toUri(), skinMetadata));
                     setError(ERR_ALL_FINE);
-                } catch (IOException | AuthenticationException e) {
+                } catch (Exception e) {
                     handleException(e);
                 }
             });

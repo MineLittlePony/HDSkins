@@ -5,14 +5,12 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.Set;
-
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 public interface SkinServer {
 
-    CloseableHttpClient HTTP_CLIENT = HttpClients.createSystem();
+    HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     /**
      * Returns the set of features that this skin server supports.
@@ -37,7 +35,7 @@ public interface SkinServer {
      * @return The parsed server response as a textures payload.
      * @throws IOException If any authentication or network error occurs.
      */
-    TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException;
+    TexturePayload loadProfileData(GameProfile profile) throws IOException, InterruptedException;
 
     /**
      * Synchronously uploads a skin to this server.
@@ -45,7 +43,6 @@ public interface SkinServer {
      * @param upload The payload to send.
      * @return A server response object.
      * @throws IOException             If any authentication or network error occurs.
-     * @throws AuthenticationException
      */
-    void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
+    void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException, InterruptedException;
 }

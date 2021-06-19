@@ -65,11 +65,8 @@ dependencies {
     modApi fabricApi.module("fabric-resource-loader-v0", project.fabric_version)
     modApi fabricApi.module("fabric-renderer-registries-v1", project.fabric_version)
 
-    implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-    include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-
-    modApi "com.minelittlepony:Kirin:${project.kirin_version}"
-    include "com.minelittlepony:Kirin:${project.kirin_version}"
+    include implementation("com.github.mizosoft.methanol:methanol:${project.methanol_version}")
+    include modApi("com.minelittlepony:Kirin:${project.kirin_version}")
 
     modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 }
@@ -111,7 +108,6 @@ publishing {
                     license {
                         name = "MIT Public License"
                         url = "https://tlo.mit.edu/learn-about-intellectual-property/software-and-open-source-licensing"
-
                     }
                 }
                 developers {

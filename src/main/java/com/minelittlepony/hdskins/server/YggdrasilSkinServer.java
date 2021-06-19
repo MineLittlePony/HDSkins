@@ -1,8 +1,9 @@
 package com.minelittlepony.hdskins.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpRequest;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -10,19 +11,16 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-
+import com.github.mizosoft.methanol.FormBodyPublisher;
+import com.github.mizosoft.methanol.MediaType;
+import com.github.mizosoft.methanol.MoreBodyPublishers;
+import com.github.mizosoft.methanol.MultipartBodyPublisher;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecureTextureException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
@@ -34,8 +32,6 @@ import net.minecraft.client.util.Session;
 @ServerType("mojang")
 public class YggdrasilSkinServer implements SkinServer {
 
-    static final SkinServer INSTANCE = new YggdrasilSkinServer();
-
     private static final Set<Feature> FEATURES = Sets.newHashSet(
             Feature.SYNTHETIC,
             Feature.UPLOAD_USER_SKIN,
@@ -44,8 +40,8 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.MODEL_VARIANTS,
             Feature.MODEL_TYPES);
 
-    private transient final String address = "https://api.mojang.com";
-    private transient final String verify = "https://authserver.mojang.com/validate";
+    private transient final URI address = URI.create("https://api.mojang.com");
+    private transient final URI verify = URI.create("https://authserver.mojang.com/validate");
 
     private transient final boolean requireSecure = true;
 
@@ -65,8 +61,7 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
-
+    public TexturePayload loadProfileData(GameProfile profile) throws IOException {
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -76,7 +71,7 @@ public class YggdrasilSkinServer implements SkinServer {
         GameProfile newProfile = session.fillProfileProperties(profile, requireSecure);
 
         if (newProfile == profile) {
-            throw new AuthenticationException("Mojang API error occured. You may be throttled.");
+            throw new IOException("Mojang API error occurred. You may be throttled.");
         }
         profile = newProfile;
 
@@ -86,8 +81,6 @@ public class YggdrasilSkinServer implements SkinServer {
             HDSkins.LOGGER.error(e);
         }
 
-
-
         return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
                 entry -> SkinType.forVanilla(entry.getKey()),
                 Map.Entry::getValue
@@ -95,49 +88,40 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public void performSkinUpload(SkinUpload upload) throws IOException, InterruptedException {
         authorize(upload.session());
 
-        switch (upload.getSchemaAction()) {
-            case "none":
-                send(appendHeaders(upload, RequestBuilder.delete()));
-                break;
-            default:
-                send(prepareUpload(upload, RequestBuilder.put()));
-        }
+        send(createUploadRequest(upload));
 
         MinecraftClient client = MinecraftClient.getInstance();
         client.getSessionProperties().clear();
     }
 
-    private RequestBuilder prepareUpload(SkinUpload upload, RequestBuilder request) throws IOException {
-        request = appendHeaders(upload, request);
+    private HttpRequest createUploadRequest(SkinUpload upload) throws IOException {
+        var userId = UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId());
+        var texTyp = upload.type().getId().getPath();
+        var uri = (URI.create(String.format("%s/user/profile/%s/%s", address, userId, texTyp)));
+
+        var request = HttpRequest.newBuilder(uri)
+                .header("authorization", "Bearer " + upload.session().getAccessToken());
         switch (upload.getSchemaAction()) {
-            case "file":
-                final File file = new File(upload.image());
-
-                MultipartEntityBuilder b = MultipartEntityBuilder.create()
-                        .addBinaryBody("file", file, ContentType.create("image/png"), file.getName());
-
-                mapMetadata(upload.metadata()).forEach(b::addTextBody);
-
-                return request.setEntity(b.build());
-            case "http":
-            case "https":
-                return request
-                        .addParameter("file", upload.image().toString())
-                        .addParameters(MoreHttpResponses.mapAsParameters(mapMetadata(upload.metadata())));
-            default:
-                throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
+            case "none" -> request.DELETE();
+            case "file" -> {
+                var multipartBodyBuilder = MultipartBodyPublisher.newBuilder()
+                        .filePart("file", Path.of(upload.image()), MediaType.IMAGE_PNG);
+                mapMetadata(upload.metadata()).forEach(multipartBodyBuilder::textPart);
+                request.PUT(multipartBodyBuilder.build());
+            }
+            case "http", "https" -> {
+                var formBodyBuilder = FormBodyPublisher.newBuilder()
+                        .query("file", upload.image().toString());
+                mapMetadata(upload.metadata()).forEach(formBodyBuilder::query);
+                request.POST(formBodyBuilder.build());
+            }
+            default -> throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
         }
-    }
 
-    private RequestBuilder appendHeaders(SkinUpload upload, RequestBuilder request) {
-        return request
-                .setUri(URI.create(String.format("%s/user/profile/%s/%s", address,
-                        UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
-                        upload.type().getParameterizedName())))
-                .addHeader("authorization", "Bearer " + upload.session().getAccessToken());
+        return request.build();
     }
 
     private Map<String, String> mapMetadata(Map<String, String> metadata) {
@@ -152,18 +136,20 @@ public class YggdrasilSkinServer implements SkinServer {
         );
     }
 
-    private void authorize(Session session) throws IOException {
-        RequestBuilder request = RequestBuilder.post().setUri(verify);
-        request.setEntity(new TokenRequest(session).toEntity());
+    private void authorize(Session session) throws IOException, InterruptedException {
+        var token = new TokenRequest(session);
+        var request = HttpRequest.newBuilder(verify)
+                .POST(MoreBodyPublishers.ofObject(token, MediaType.APPLICATION_JSON))
+                .build();
 
         send(request);
     }
 
-    private void send(RequestBuilder request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request.build())) {
-            if (!response.ok()) {
-                throw new IOException(response.json(ErrorResponse.class, "Server error wasn't in json: {}").toString());
-            }
+    private void send(HttpRequest request) throws IOException, InterruptedException {
+        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request)) {
+            response
+                    .requireOK(r -> r.json(ErrorResponse.class).toString())
+                    .consume();
         }
     }
 
@@ -176,21 +162,16 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     static class TokenRequest {
-        static final Gson GSON = new Gson();
 
         @NotNull
-        private final String accessToken;
+        final String accessToken;
 
         TokenRequest(Session session) {
             accessToken = session.getAccessToken();
         }
-
-        public StringEntity toEntity() throws IOException {
-            return new StringEntity(GSON.toJson(this), ContentType.APPLICATION_JSON);
-        }
     }
 
-    class ErrorResponse {
+    static class ErrorResponse {
         String error;
         String errorMessage;
 
