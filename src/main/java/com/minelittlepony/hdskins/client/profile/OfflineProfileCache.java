@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -24,6 +27,8 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.common.util.ProfileTextureUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+
+import joptsimple.internal.Strings;
 import net.minecraft.util.Util;
 
 class OfflineProfileCache {
@@ -44,11 +49,12 @@ class OfflineProfileCache {
 
     private CompletableFuture<CachedProfile> fetchOfflineData(GameProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
-            if (profile.getId() == null) {
+            GameProfile p = ProfileUtils.fixGameProfile(profile);
+            if (p.getId() == null) {
                 return null;
             }
 
-            Path cachedLocation = getCachedProfileLocation(profile);
+            Path cachedLocation = getCachedProfileLocation(p);
 
             if (Files.exists(cachedLocation)) {
                 try (JsonReader reader = new JsonReader(Files.newBufferedReader(cachedLocation))) {
@@ -73,12 +79,15 @@ class OfflineProfileCache {
 
     public void storeCachedProfileData(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textureMap) {
         try {
+            profile = ProfileUtils.fixGameProfile(profile);
+
             Path cacheLocation = getCachedProfileLocation(profile);
             Files.createDirectories(cacheLocation.getParent());
 
             try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(cacheLocation))) {
                 gson.toJson(new CachedProfile(textureMap), CachedProfile.class, writer);
             }
+            profiles.invalidate(profile);
         } catch (IOException e) {
             HDSkins.LOGGER.trace(e);
         }
@@ -96,24 +105,32 @@ class OfflineProfileCache {
 
     static class CachedProfile {
         @Expose
-        final Map<SkinType, CachedProfileTexture> files = new HashMap<>();
+        private final Map<SkinType, CachedProfileTexture> files;
+
+        private transient Map<SkinType, MinecraftProfileTexture> compiled;
 
         CachedProfile(Map<SkinType, MinecraftProfileTexture> textures) {
-            textures.forEach((type, texture) -> {
-                files.put(type, new CachedProfileTexture(texture));
-            });
+            files = textures.entrySet().stream().collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> new CachedProfileTexture(e.getValue())
+            ));
         }
 
-        Map<SkinType, MinecraftProfileTexture> getFiles() {
-            return Util.make(new HashMap<>(), m -> {
-                files.forEach((type, file) -> m.put(type, file.toProfileTexture()));
-            });
+        synchronized Map<SkinType, MinecraftProfileTexture> getFiles() {
+            if (compiled == null) {
+                compiled = files.entrySet().stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().toProfileTexture()
+                ));
+            }
+            return compiled;
         }
 
         static class CachedProfileTexture {
             @Expose
             String file;
 
+            @Nullable
             @Expose
             String etag;
 
@@ -126,10 +143,13 @@ class OfflineProfileCache {
                 if (file instanceof EtagProfileTexture) {
                     this.etag = ((EtagProfileTexture)file).getEtag();
                 }
+                try {
+                    Files.createDirectories(Path.of(this.file).getParent());
+                } catch (IOException e) { }
             }
 
             public MinecraftProfileTexture toProfileTexture() {
-                return new EtagProfileTexture(file, etag, metadata);
+                return new EtagProfileTexture(file, Strings.isNullOrEmpty(etag) ? "/cached" : "/cached/" + etag, metadata);
             }
         }
     }

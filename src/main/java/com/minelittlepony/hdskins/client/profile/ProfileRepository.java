@@ -42,12 +42,21 @@ public class ProfileRepository {
     }
 
     private Path getCachedSkinLocation(SkinType type, MinecraftProfileTexture texture) {
-        return getHDSkinsCache().resolve(type.getPathName()).resolve(texture.getHash().substring(0, 2)).resolve(texture.getHash());
+        Path location = getHDSkinsCache().resolve(type.getPathName()).resolve(texture.getHash().substring(0, 2)).resolve(texture.getHash());
+        try {
+            Files.createDirectories(location.getParent());
+            return location;
+        } catch (IOException e) {
+            HDSkins.LOGGER.error("Could not create cache location for texture: {}", texture.getHash(), e);
+        }
+        return null;
     }
 
     private void supplyProfileTextures(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
-        offline.loadProfile(profile).thenAcceptAsync(callback, MinecraftClient.getInstance());
-        online.loadProfile(profile).thenAcceptAsync(callback, MinecraftClient.getInstance());
+        offline.loadProfile(profile)
+            .thenAcceptAsync(callback, MinecraftClient.getInstance())
+            .thenCompose(a -> online.loadProfile(profile))
+            .thenAcceptAsync(callback, MinecraftClient.getInstance());
     }
 
     public void fetchSkins(GameProfile profile, SkinCallback callback) {
@@ -65,6 +74,7 @@ public class ProfileRepository {
         Identifier resource = new Identifier("hdskins", type.getPathName() + "/" + texture.getHash());
         AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().getOrDefault(resource, null);
 
+        HDSkins.LOGGER.info("Loading texture for " + resource);
         //noinspection ConstantConditions
         if (texObj != null) {
             callback.onSkinAvailable(type, resource, texture);
