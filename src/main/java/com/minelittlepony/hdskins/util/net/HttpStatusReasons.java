@@ -4,29 +4,47 @@ import java.util.Map;
 
 import static java.util.Map.entry;
 
+/**
+ * This class contains a mapping of HTTP status codes to their names according
+ * to what the MDN assigns them. Use {@link #getReasonForStatus(int)} to map a
+ * status code to its name.
+ *
+ * @see <a href=https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>MDN HTTP/Status</a>
+ */
 public class HttpStatusReasons {
 
-    private static final String UNKNOWN_STATUS = "Unknown Status";
+    private static final String UNKNOWN_STATUS = "Unknown";
 
-    private static final Map<Integer, String> REASONS = Map.ofEntries(
+    private static final Map<Integer, String> REASONS = Map.<Integer, String>ofEntries(
+            // informational
             entry(100, "Continue"),
-            entry(101, "Switching Protocols"),
+            entry(101, "Switching Protocol"),
             entry(102, "Processing"),
+            entry(103, "Early Hints"),
+
+            // successful
             entry(200, "OK"),
             entry(201, "Created"),
             entry(202, "Accepted"),
-            entry(203, "Non Authoritative Information"),
+            entry(203, "Non-Authoritative Information"),
             entry(204, "No Content"),
             entry(205, "Reset Content"),
             entry(206, "Partial Content"),
             entry(207, "Multi Status"),
-            entry(300, "Multiple Choices"),
+            entry(208, "Already Reported"),
+            entry(226, "IM Used"),
+
+            // redirection
+            entry(300, "Multiple Choice"),
             entry(301, "Moved Permanently"),
-            entry(302, "Moved Temporarily"),
+            entry(302, "Found"),
             entry(303, "See Other"),
             entry(304, "Not Modified"),
-            entry(305, "Use Proxy"),
+            entry(305, "Use Proxy"), // deprecated
             entry(307, "Temporary Redirect"),
+            entry(308, "Permanent Redirect"),
+
+            // client error
             entry(400, "Bad Request"),
             entry(401, "Unauthorized"),
             entry(402, "Payment Required"),
@@ -40,25 +58,44 @@ public class HttpStatusReasons {
             entry(410, "Gone"),
             entry(411, "Length Required"),
             entry(412, "Precondition Failed"),
-            entry(413, "Request Too Long"),
-            entry(414, "Request URI Too Long"),
+            entry(413, "Payload Too Long"),
+            entry(414, "URI Too Long"),
             entry(415, "Unsupported Media Type"),
-            entry(416, "Requested Range Unsatisfiable"),
+            entry(416, "Range Not Satisfiable"),
             entry(417, "Expectation Failed"),
-            entry(419, "Insufficient Space On Resource"),
-            entry(420, "Method Failure"),
+            entry(418, "I'm a Teapot"),
+            entry(421, "Misdirected Request"),
             entry(422, "Unprocessable Entity"),
             entry(423, "Locked"),
             entry(424, "Failed Dependency"),
+            entry(425, "Too Early"),
+            entry(426, "Upgrade Required"),
+            entry(428, "Precondition Required"),
+            entry(429, "Too Many Requests"),
+            entry(431, "Request Header Fields Too Large"),
+            entry(451, "Unavailable for Legal Reasons"),
+
+            // server error
             entry(500, "Internal Server Error"),
             entry(501, "Not Implemented"),
             entry(502, "Bad Gateway"),
             entry(503, "Service Unavailable"),
             entry(504, "Gateway Timeout"),
             entry(505, "HTTP Version Not Supported"),
-            entry(507, "Insufficient Storage")
+            entry(506, "Variant Also Negotiates"),
+            entry(507, "Insufficient Storage"),
+            entry(508, "Loop Detected"),
+            entry(510, "Not Extended"),
+            entry(511, "Network Authentication Required")
     );
 
+    /**
+     * Maps a status code to it's name according to MDN. If the status code has
+     * no assigned name, {@code "Unknown"} is returned.
+     *
+     * @param status The status code
+     * @return The status code name or "Unknown"
+     */
     public static String getReasonForStatus(int status) {
         return REASONS.getOrDefault(status, UNKNOWN_STATUS);
     }
