@@ -64,7 +64,11 @@ public class ProfileRepository {
     }
 
     public Map<SkinType, Identifier> getTextures(GameProfile profile) {
-        return online.loadProfile(profile).getNow(Collections.emptyMap()).entrySet().stream().collect(Collectors.toMap(
+        return online.loadProfile(profile)
+                .getNow(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
             Map.Entry::getKey,
             e -> loadTexture(e.getKey(), e.getValue(), SkinCallback.NOOP))
         );
