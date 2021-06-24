@@ -8,6 +8,4 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'HDSkins'
-// Checkout to parent dir to dev both
-//includeBuild '../Kirin'
+rootProject.name = 'hdskins'
