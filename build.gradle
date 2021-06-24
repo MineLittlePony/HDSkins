@@ -68,8 +68,8 @@ dependencies {
     implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
     include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
 
-    modApi "com.minelittlepony:Kirin:${project.kirin_version}"
-    include "com.minelittlepony:Kirin:${project.kirin_version}"
+    modApi "com.minelittlepony:kirin:${project.kirin_version}"
+    include "com.minelittlepony:kirin:${project.kirin_version}"
 
     modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 }
