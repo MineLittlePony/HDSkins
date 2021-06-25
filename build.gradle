@@ -119,8 +119,8 @@ publishing {
     repositories {
         maven {
             name = "MineLittlePony"
-            // https://github.com/ajoberstar/reckon/blob/f4a4608f996b39b3ca6eafe4804c5b38435457c4/reckon-gradle/src/main/java/org/ajoberstar/reckon/gradle/ReckonPlugin.java#L82
-            url = "s3://repo.minelittlepony-mod.com/maven/${version.version.stage.value.name == 'beta' ? 'snapshot' : 'release'}"
+            def stage = version.version.stage.value
+            url = "s3://repo.minelittlepony-mod.com/maven/${stage != null && stage.name == 'beta' ? 'snapshot' : 'release'}"
             credentials(AwsCredentials) {
                 accessKey = System.env.ACCESS_KEY
                 secretKey = System.env.SECRET_KEY
