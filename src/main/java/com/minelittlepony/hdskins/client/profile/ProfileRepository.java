@@ -8,7 +8,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.minelittlepony.common.util.GamePaths;
@@ -27,44 +26,18 @@ import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
 public class ProfileRepository {
-
-    final OfflineProfileCache offline = new OfflineProfileCache(this);
-    final OnlineProfileCache online = new OnlineProfileCache(this);
-
-    final HDSkins hd;
+    private final ProfileCache cache;
 
     public ProfileRepository(HDSkins hd) {
-        this.hd = hd;
-    }
-
-    public Path getHDSkinsCache() {
-        return GamePaths.getAssetsDirectory().resolve("hd");
-    }
-
-    private Path getCachedSkinLocation(SkinType type, MinecraftProfileTexture texture) {
-        Path location = getHDSkinsCache().resolve(type.getPathName()).resolve(texture.getHash().substring(0, 2)).resolve(texture.getHash());
-        try {
-            Files.createDirectories(location.getParent());
-            return location;
-        } catch (IOException e) {
-            HDSkins.LOGGER.error("Could not create cache location for texture: {}", texture.getHash(), e);
-        }
-        return null;
-    }
-
-    private void supplyProfileTextures(GameProfile profile, Consumer<Map<SkinType, MinecraftProfileTexture>> callback) {
-        offline.loadProfile(profile)
-            .thenAcceptAsync(callback, MinecraftClient.getInstance())
-            .thenCompose(a -> online.loadProfile(profile))
-            .thenAcceptAsync(callback, MinecraftClient.getInstance());
+        this.cache = new ProfileCache(hd);
     }
 
     public void fetchSkins(GameProfile profile, SkinCallback callback) {
-        supplyProfileTextures(profile, m -> m.forEach((type, pp) -> loadTexture(type, pp, callback)));
+        cache.loadProfile(profile).thenAcceptAsync(m -> m.forEach((type, texture) -> loadTexture(type, texture, callback)), MinecraftClient.getInstance());
     }
 
     public Map<SkinType, Identifier> getTextures(GameProfile profile) {
-        return online.loadProfile(profile)
+        return cache.loadProfile(profile)
                 .getNow(Collections.emptyMap())
                 .entrySet()
                 .stream()
@@ -94,10 +67,20 @@ public class ProfileRepository {
         return resource;
     }
 
+    private Path getCachedSkinLocation(SkinType type, MinecraftProfileTexture texture) {
+        Path location = getHDSkinsCache().resolve(type.getPathName()).resolve(texture.getHash().substring(0, 2)).resolve(texture.getHash());
+        try {
+            Files.createDirectories(location.getParent());
+            return location;
+        } catch (IOException e) {
+            HDSkins.LOGGER.error("Could not create cache location for texture: {}", texture.getHash(), e);
+        }
+        return null;
+    }
+
     public void clear() {
         HDSkins.LOGGER.info("Clearing local player skin cache");
-        offline.clear();
-        online.clear();
+        cache.clear();
 
         try {
             Path cachePath = getHDSkinsCache();
@@ -121,5 +104,9 @@ public class ProfileRepository {
         }
 
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
+    }
+
+    private static Path getHDSkinsCache() {
+        return GamePaths.getAssetsDirectory().resolve("hd");
     }
 }

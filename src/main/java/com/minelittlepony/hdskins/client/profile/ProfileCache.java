@@ -23,20 +23,20 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.util.Util;
 
-class OnlineProfileCache {
+class ProfileCache {
     private LoadingCache<GameProfile, CompletableFuture<Map<SkinType, MinecraftProfileTexture>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::fetchOnlineData));
 
-    private final ProfileRepository repository;
+    private final HDSkins hd;
 
-    OnlineProfileCache(ProfileRepository repository) {
-        this.repository = repository;
+    ProfileCache(HDSkins hd) {
+        this.hd = hd;
     }
 
     private CompletableFuture<Map<SkinType, MinecraftProfileTexture>> fetchOnlineData(GameProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
-            return repository.hd.getSkinServerList().getEmbeddedTextures(profile)
+            return hd.getSkinServerList().getEmbeddedTextures(profile)
                     .findFirst()
                     .orElseGet(() -> loadRemoteTextureBlob(profile));
         }, Util.getMainWorkerExecutor());
@@ -53,7 +53,7 @@ class OnlineProfileCache {
 
         Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
 
-        for (SkinServer server : repository.hd.getSkinServerList().getSkinServers()) {
+        for (SkinServer server : hd.getSkinServerList().getSkinServers()) {
             try {
                 if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
                     server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
@@ -70,8 +70,6 @@ class OnlineProfileCache {
                 HDSkins.LOGGER.trace(e);
             }
         }
-
-        repository.offline.storeCachedProfileData(profile, textureMap);
 
         return textureMap;
     }
