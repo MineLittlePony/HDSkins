@@ -51,7 +51,6 @@ public class ProfileRepository {
         Identifier resource = new Identifier("hdskins", type.getPathName() + "/" + texture.getHash());
         AbstractTexture texObj = MinecraftClient.getInstance().getTextureManager().getOrDefault(resource, null);
 
-        HDSkins.LOGGER.info("Loading texture for " + resource);
         //noinspection ConstantConditions
         if (texObj != null) {
             callback.onSkinAvailable(type, resource, texture);
