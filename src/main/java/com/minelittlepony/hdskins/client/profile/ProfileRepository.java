@@ -24,6 +24,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 public class ProfileRepository {
     private final ProfileCache cache;
@@ -33,18 +34,17 @@ public class ProfileRepository {
     }
 
     public void fetchSkins(GameProfile profile, SkinCallback callback) {
-        cache.loadProfile(profile).thenAcceptAsync(m -> m.forEach((type, texture) -> loadTexture(type, texture, callback)), MinecraftClient.getInstance());
+        cache.loadProfile(profile).thenAcceptAsync(m -> m.forEach((type, texture) -> loadTexture(type, texture, callback)), Util.getMainWorkerExecutor());
     }
 
     public Map<SkinType, Identifier> getTextures(GameProfile profile) {
-        return cache.loadProfile(profile)
-                .getNow(Collections.emptyMap())
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-            Map.Entry::getKey,
-            e -> loadTexture(e.getKey(), e.getValue(), SkinCallback.NOOP))
-        );
+        return loadSkinMap(cache.loadProfile(profile).getNow(Collections.emptyMap()));
+    }
+
+    private Map<SkinType, Identifier> loadSkinMap(Map<SkinType, MinecraftProfileTexture> textureMap) {
+        return textureMap.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> loadTexture(e.getKey(), e.getValue(), SkinCallback.NOOP)));
     }
 
     private Identifier loadTexture(SkinType type, MinecraftProfileTexture texture, SkinCallback callback) {

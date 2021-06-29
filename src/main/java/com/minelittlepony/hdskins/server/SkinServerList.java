@@ -69,12 +69,9 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
     }
 
     public Stream<Map<SkinType, MinecraftProfileTexture>> getEmbeddedTextures(GameProfile profile) {
-        return Stream.concat(
-                ProfileUtils.readCustomBlob(profile, "hd_textures", ProfileUtils.TextureData.class)
+        return ProfileUtils.readCustomBlob(profile, "hd_textures", ProfileUtils.TextureData.class)
                 .map(ProfileUtils.TextureData::getTextures)
-                .filter(this::isUrlPermitted),
-                ProfileUtils.readVanillaTexturesBlob(profile)
-        );
+                .filter(this::isUrlPermitted);
     }
 
     private boolean isUrlPermitted(Map<SkinType, MinecraftProfileTexture> blob) {

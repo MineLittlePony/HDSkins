@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
@@ -27,7 +28,11 @@ public class TextureLoader {
      * @param texture
      */
     public static void loadTexture(final Identifier textureLocation, final AbstractTexture texture) {
-        mc.execute(() -> mc.getTextureManager().registerTexture(textureLocation, texture));
+        mc.execute(() -> {
+            RenderSystem.recordRenderCall(() -> {
+                mc.getTextureManager().registerTexture(textureLocation, texture);
+            });
+        });
     }
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -54,7 +59,6 @@ public class TextureLoader {
 
                 return CompletableFuture.supplyAsync(() -> {
                     mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(updated));
-
                     return conv;
                 }, mc).get();
             } catch (InterruptedException | ExecutionException e) {
