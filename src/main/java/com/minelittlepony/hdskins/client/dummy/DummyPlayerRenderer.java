@@ -7,6 +7,7 @@ import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
@@ -32,6 +33,8 @@ public class DummyPlayerRenderer {
 
     public static boolean flipReality;
 
+    private static boolean worldReady;
+
     public static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
             MinecraftClient.getInstance(),
             DummyWorld.INSTANCE.get(),
@@ -40,13 +43,44 @@ public class DummyPlayerRenderer {
             new ClientRecipeBook(), false, false
     ));
 
+    public static void initialiseWorldRenderConditions() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        boolean inGame = client.player != null;
+
+        try {
+            if (!inGame) {
+                client.player = NULL_PLAYER.get();
+
+                if (!worldReady) {
+                    worldReady = true;
+
+                    // Hack to ensure mods like Iris don't crash the game
+                    // https://github.com/IrisShaders/Iris/issues/492
+                    client.world = DummyWorld.INSTANCE.get();
+                    client.interactionManager = new ClientPlayerInteractionManager(client, NULL_PLAYER.get().networkHandler);
+                    client.worldRenderer.setWorld(client.world);
+                    client.particleManager.setWorld(client.world);
+                    OutsideWorldRenderer.configure(client.world);
+
+                    client.gameRenderer.renderWorld(0, 0, new MatrixStack());
+                } else {
+                    OutsideWorldRenderer.configure(DummyWorld.INSTANCE.get());
+                }
+            }
+        } catch (Exception ignored) {} finally {
+            if (!inGame) {
+                client.world = null;
+                client.player = null;
+                client.interactionManager = null;
+                client.cameraEntity = null;
+            }
+        }
+    }
+
     static void wrap(Runnable action) {
         MinecraftClient client = MinecraftClient.getInstance();
         boolean inGame = client.player != null;
 
-        if (client.world == null) {
-            OutsideWorldRenderer.configure(DummyWorld.INSTANCE.get());
-        }
         try {
             if (!inGame) {
                 client.player = NULL_PLAYER.get();
