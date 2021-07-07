@@ -137,9 +137,13 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
             drawBackground(matrixStack, frameLeft, frameRight, frameBottom, frameTop, horizon);
 
-            renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+            try {
+                renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
 
-            context.draw();
+                context.draw();
+            } catch (Exception e) {
+                HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
+            }
         });
     }
 
