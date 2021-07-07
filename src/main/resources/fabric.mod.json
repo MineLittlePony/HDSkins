@@ -37,8 +37,5 @@
   },
   "suggests": {
     "modmenu": "*"
-  },
-  "custom": {
-    "modmenu:clientsideOnly": true
   }
 }

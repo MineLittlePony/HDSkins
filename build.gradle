@@ -55,7 +55,8 @@ dependencies {
     modApi "com.minelittlepony:kirin:${project.kirin_version}"
     include "com.minelittlepony:kirin:${project.kirin_version}"
 
-	// modCompileOnly "eu.midnightdust.motschen:betterbeds:1.2.0"
+    // modCompileOnly "eu.midnightdust.motschen:betterbeds:1.2.0"
+    // modCompileOnly "net.coderbot.iris_mc1_17:iris-mc1.17:1.1.0"
     modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 

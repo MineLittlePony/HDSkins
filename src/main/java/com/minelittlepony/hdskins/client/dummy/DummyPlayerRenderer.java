@@ -57,7 +57,7 @@ public class DummyPlayerRenderer {
                     // Hack to ensure mods like Iris don't crash the game
                     // https://github.com/IrisShaders/Iris/issues/492
                     client.world = DummyWorld.INSTANCE.get();
-                    client.interactionManager = new ClientPlayerInteractionManager(client, NULL_PLAYER.get().networkHandler);
+                    client.interactionManager = new ClientPlayerInteractionManager(client, client.player.networkHandler);
                     client.worldRenderer.setWorld(client.world);
                     client.particleManager.setWorld(client.world);
                     OutsideWorldRenderer.configure(client.world);
