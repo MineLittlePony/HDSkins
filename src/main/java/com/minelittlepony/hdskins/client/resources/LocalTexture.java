@@ -2,60 +2,41 @@ package com.minelittlepony.hdskins.client.resources;
 
 import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
 public class LocalTexture {
-
-    private final TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
-
-    private Optional<NativeImageBackedTexture> local = Optional.empty();
-
-    private final Identifier remoteResource;
-    private Optional<PreviewTextureManager.Texture> server = Optional.empty();
-
-    private boolean isDynamic;
-    private Identifier localResource;
-
-    private final IBlankSkinSupplier blank;
-
     private final SkinType type;
+    private final IBlankSkinSupplier defaultTexture;
 
-    public LocalTexture(GameProfile profile, SkinType type, IBlankSkinSupplier blank) {
-        this.blank = blank;
+    private Optional<PreviewTextureManager.UriTexture> server = Optional.empty();
+    private Optional<PreviewTextureManager.FileTexture> local = Optional.empty();
+
+    public LocalTexture(SkinType type, IBlankSkinSupplier blank) {
         this.type = type;
-
-        localResource = blank.getBlankSkin(type);
-        remoteResource = new Identifier(type.getId().getNamespace(), String.format("%s/preview_%s", type.getId().getPath(), profile.getName()).toLowerCase(Locale.US));
+        defaultTexture = blank;
     }
 
     public Identifier getId() {
-        if (uploadComplete()) {
-            return remoteResource;
-        }
-
-        return localResource;
+        return getServerTexture()
+                .map(a -> (PreviewTextureManager.Texture)a)
+                .or(this::getLocalTexture)
+                .map(PreviewTextureManager.Texture::getId)
+                .orElseGet(this::getDefault);
     }
 
     public Identifier getDefault() {
-        return blank.getBlankSkin(type);
-    }
-
-    public boolean hasServerTexture() {
-        return uploadComplete();
+        return defaultTexture.getBlankSkin(type);
     }
 
     public boolean hasLocalTexture() {
@@ -63,51 +44,38 @@ public class LocalTexture {
     }
 
     public boolean uploadComplete() {
-        return server.filter(PreviewTextureManager.Texture::isLoaded).isPresent();
+        return getServerTexture().isPresent();
     }
 
-    public Optional<PreviewTextureManager.Texture> getServerTexture() {
-        return server;
+    public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
+        return server.filter(PreviewTextureManager.Texture::isLoaded);
+    }
+
+    public Optional<PreviewTextureManager.FileTexture> getLocalTexture() {
+        return local.filter(PreviewTextureManager.Texture::isLoaded);
     }
 
     public void setRemote(PreviewTextureManager ptm, SkinCallback callback) {
-        clearRemote();
-
-        Identifier blank = this.blank.getBlankSkin(type);
-
-        if (blank != null) {
-            server = ptm.loadServerTexture(remoteResource, type, blank, callback);
-        }
+        server.ifPresent(AbstractTexture::close);
+        server = ptm.loadServerTexture(type, getDefault(), callback);
     }
 
     public void setLocal(Path file) throws IOException {
-        clearLocal();
+        local.ifPresent(AbstractTexture::close);
 
         try (InputStream input = Files.newInputStream(file)) {
-            NativeImage image = HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input));
+            Identifier id = new Identifier("hdskins", "generated_preview/" + type.getPathName());
+            PreviewTextureManager.FileTexture image = new PreviewTextureManager.FileTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input)), id);
 
-            local = Optional.of(new NativeImageBackedTexture(image));
-            localResource = textureManager.registerDynamicTexture("local_skin_preview", local.get());
-            isDynamic = true;
+            MinecraftClient.getInstance().getTextureManager().registerTexture(id, image);
+
+            local = Optional.of(image);
         }
     }
 
-    public void clearRemote() {
-        server = server.map(server -> {
-            textureManager.destroyTexture(remoteResource);
-            return null;
-        });
-    }
-
-    public void clearLocal() {
-        local = local.map(local -> {
-            if (isDynamic) {
-                textureManager.destroyTexture(localResource);
-            }
-            isDynamic = false;
-            return null;
-        });
-        localResource = getDefault();
+    public void dispose() {
+        local.ifPresent(AbstractTexture::close);
+        local = Optional.empty();
     }
 
     @FunctionalInterface

@@ -86,11 +86,13 @@ public class SkinChooser {
             openFileThread = null;
 
             if (success) {
-                try (InputStream response = uploader.downloadSkin()) {
-                    Files.copy(response, file);
-                } catch (IOException e) {
-                    LogManager.getLogger().error("Failed to save remote skin.", e);
-                }
+                uploader.getServerTexture().ifPresent(texture -> {
+                    try (InputStream response = texture.openStream()) {
+                        Files.copy(response, file);
+                    } catch (IOException e) {
+                        LogManager.getLogger().error("Failed to save remote skin.", e);
+                    }
+                });
             }
         }).launch();
     }

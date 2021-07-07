@@ -5,10 +5,15 @@ import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.TexturePayload;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +33,7 @@ public class PreviewTextureManager {
         this.textures = payload.getTextures();
     }
 
-    public Optional<Texture> loadServerTexture(Identifier location, SkinType type, Identifier def, SkinCallback callback) {
+    public Optional<UriTexture> loadServerTexture(SkinType type, Identifier def, SkinCallback callback) {
 
         if (!textures.containsKey(type)) {
             return Optional.empty();
@@ -38,7 +43,9 @@ public class PreviewTextureManager {
 
         File cacheFile = tempFile(texture.getHash());
 
-        Texture skinTexture = createTexture(cacheFile, texture.getUrl(), type, texture.getMetadata("model"), def, () -> {
+        Identifier location = new Identifier("hdskins", String.format("dynamic/%s/%s", type.getId().getPath(), texture.getHash()));
+
+        UriTexture skinTexture = createTexture(location, cacheFile, texture.getUrl(), type, texture.getMetadata("model"), def, () -> {
             callback.onSkinAvailable(type, location, new MinecraftProfileTexture(texture.getUrl(), new HashMap<>()));
         });
 
@@ -57,9 +64,9 @@ public class PreviewTextureManager {
         return null;
     }
 
-    private Texture createTexture(File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
+    private UriTexture createTexture(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
         boolean[] uploaded = new boolean[1];
-        return new Texture(cacheFile, url, type, model, fallback, () -> {
+        return new UriTexture(id, cacheFile, url, type, model, fallback, () -> {
             uploaded[0] = true;
             callack.run();
         }) {
@@ -76,23 +83,54 @@ public class PreviewTextureManager {
         };
     }
 
-    public abstract class Texture extends HDPlayerSkinTexture {
+    public interface Texture {
+        Identifier getId();
+
+        boolean isLoaded();
+    }
+
+    public static class FileTexture extends NativeImageBackedTexture implements Texture {
+
+        private final Identifier id;
+
+        public FileTexture(NativeImage image, Identifier id) {
+            super(image);
+            this.id = id;
+        }
+
+        @Override
+        public Identifier getId() {
+            return id;
+        }
+
+        @Override
+        public boolean isLoaded() {
+            return getGlId() > -1;
+        }
+    }
+
+    public static abstract class UriTexture extends HDPlayerSkinTexture implements Texture {
 
         private final String model;
 
         private final String fileUrl;
 
-        Texture(File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
-            super(cacheFile, url, type, fallback, callack);
+        private final Identifier id;
 
+        UriTexture(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
+            super(cacheFile, url, type, fallback, callack);
+            this.id = id;
             this.model = VanillaModels.of(model);
             this.fileUrl = url;
         }
 
-        public abstract boolean isLoaded();
+        @Override
+        public Identifier getId() {
+            return id;
+        }
 
-        public String getUrl() {
-            return fileUrl;
+        public InputStream openStream() throws IOException {
+            return new URL(fileUrl).openStream();
         }
 
         public boolean hasModel() {

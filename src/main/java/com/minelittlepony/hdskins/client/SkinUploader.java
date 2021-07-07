@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Throwables;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
 import com.minelittlepony.hdskins.server.SkinServer;
@@ -33,8 +34,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Set;
 
@@ -188,7 +187,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getLocal().getTextures().release();
+        previewer.getLocal().getTextures().dispose();
         skinMetadata.put(field, value);
     }
 
@@ -228,9 +227,8 @@ public class SkinUploader implements Closeable {
         }).thenRunAsync(this::fetchRemote, MinecraftClient.getInstance());
     }
 
-    public InputStream downloadSkin() throws IOException {
-        String loc = previewer.getRemote().getTextures().get(skinType).getServerTexture().get().getUrl();
-        return new URL(loc).openStream();
+    public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
+        return previewer.getRemote().getTextures().get(skinType).getServerTexture();
     }
 
     protected void fetchRemote() {
@@ -284,8 +282,8 @@ public class SkinUploader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        previewer.getLocal().getTextures().release();
-        previewer.getRemote().getTextures().release();
+        previewer.getLocal().getTextures().dispose();
+        previewer.getRemote().getTextures().dispose();
     }
 
     public void setLocalSkin(Path skinFile) {
@@ -310,7 +308,7 @@ public class SkinUploader implements Closeable {
     }
 
     private void fileRemoved() {
-        mc.execute(previewer.getLocal().getTextures()::release);
+        mc.execute(previewer.getLocal().getTextures()::dispose);
     }
 
     private void fileChanged(Path path) {

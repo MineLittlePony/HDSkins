@@ -77,8 +77,8 @@ public class TextureProxy implements IBlankSkinSupplier {
 
             if (skin.uploadComplete()) {
                 return skin.getServerTexture()
-                        .filter(PreviewTextureManager.Texture::hasModel)
-                        .map(PreviewTextureManager.Texture::usesThinArms)
+                        .filter(PreviewTextureManager.UriTexture::hasModel)
+                        .map(PreviewTextureManager.UriTexture::usesThinArms)
                         .orElse(previewThinArms);
             }
         }
@@ -109,18 +109,14 @@ public class TextureProxy implements IBlankSkinSupplier {
     }
 
     public boolean isUsingRemote() {
-        return textures.values().stream().anyMatch(LocalTexture::hasServerTexture);
+        return textures.values().stream().anyMatch(LocalTexture::uploadComplete);
     }
 
-    public void release() {
-        textures.values().forEach(LocalTexture::clearLocal);
+    public void dispose() {
+        textures.values().forEach(LocalTexture::dispose);
     }
 
     public LocalTexture get(SkinType type) {
-        return textures.computeIfAbsent(type, this::supplyNewTexture);
-    }
-
-    private LocalTexture supplyNewTexture(SkinType type) {
-        return new LocalTexture(profile, type, this);
+        return textures.computeIfAbsent(type, t -> new LocalTexture(t, this));
     }
 }

@@ -124,6 +124,7 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
             renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
                     width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
                     matrixStack);
+
             disableDepthTest();
         });
     }
