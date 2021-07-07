@@ -24,6 +24,7 @@ reckon {
 }
 
 repositories {
+    mavenLocal()
     maven {
         name = 'modmenu'
         url = 'https://maven.terraformersmc.com/releases'
@@ -54,7 +55,8 @@ dependencies {
     modApi "com.minelittlepony:kirin:${project.kirin_version}"
     include "com.minelittlepony:kirin:${project.kirin_version}"
 
-    modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
+	// modCompileOnly "eu.midnightdust.motschen:betterbeds:1.2.0"
+    modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {
