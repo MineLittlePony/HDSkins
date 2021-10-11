@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.profile;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.util.Registries;
 import com.minelittlepony.hdskins.util.RegistryTypeAdapter;
@@ -21,7 +23,19 @@ public class SkinType implements Comparable<SkinType> {
 
     public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(new Identifier("hdskins", "skin_type"), "hdskins:unknown");
 
-    private static final TypeAdapter<SkinType> ADAPTER = new RegistryTypeAdapter<>(REGISTRY);
+    private static final TypeAdapter<SkinType> ADAPTER = new RegistryTypeAdapter<>(REGISTRY) {
+        @Override
+        public SkinType read(JsonReader in) throws IOException {
+            String s = in.nextString();
+            if (s == null) {
+                return null;
+            }
+            String ls = s.toLowerCase(Locale.US);
+            return REGISTRY.getOrEmpty(new Identifier(ls)).orElseGet(() -> {
+                return REGISTRY.stream().filter(type -> type.getParameterizedName().equals(ls)).findFirst().orElse(UNKNOWN);
+            });
+        }
+    };
     private static final Map<MinecraftProfileTexture.Type, SkinType> VANILLA = new EnumMap<>(MinecraftProfileTexture.Type.class);
 
     public static final SkinType UNKNOWN = register(new Identifier("hdskins", "unknown"), ItemStack.EMPTY);
