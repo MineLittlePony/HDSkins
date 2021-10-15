@@ -205,6 +205,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         }
 
         limbAngle = (limbAngle + 1) % 360;
+        limbDistance = isSprinting() ? (isSneaking() ? 0.1F : 1) : 0;
 
         handSwingProgress = handSwingTicks / 8F;
 

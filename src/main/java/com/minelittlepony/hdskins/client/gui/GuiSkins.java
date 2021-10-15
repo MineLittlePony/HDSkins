@@ -24,14 +24,15 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.CubeMapRenderer;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
@@ -85,10 +86,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     private final FileDrop dropper = FileDrop.newDropEvent(this);
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
-    private final Edge jumpKey = new Edge(this::jumpToggled, () -> {
-        return InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_SPACE);
-    });
-    private final Edge sneakKey = new Edge(this::sneakToggled, Screen::hasShiftDown);
+    private final Edge jumpKey = new Edge(this::jumpToggled, () -> client.options.keyJump.isPressed());
+    private final Edge sneakKey = new Edge(this::sneakToggled, () -> client.options.keySneak.isPressed());
+    private final Edge walkKey = new Edge(this::walkingToggled, () -> client.options.keyForward.isPressed() || client.options.keyBack.isPressed());
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(new TranslatableText("hdskins.gui.title"), parent);
@@ -109,10 +109,24 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
     @Override
     public void tick() {
+        KeyBinding.updatePressedStates();
 
-        if (!( InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT)
-            || InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT))) {
-            updateCounter++;
+        boolean left = client.options.keyLeft.isPressed();
+        boolean right = client.options.keyRight.isPressed();
+
+        ctrlKey.update();
+        jumpKey.update();
+        sneakKey.update();
+        walkKey.update();
+
+        if (!(left && right)) {
+            if (left) {
+                updateCounter -= 5;
+            } else if (right) {
+                updateCounter += 5;
+            } else {
+                updateCounter++;
+            }
         }
 
         uploader.update();
@@ -297,8 +311,14 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             int bottom = height - 40;
             int mid = width / 2;
 
-            if ((mouseX > 30 && mouseX < mid - 30 || mouseX > mid + 30 && mouseX < width - 30) && mouseY > 30 && mouseY < bottom) {
-                previewer.swingHand();
+            if (mouseY > 30 && mouseY < bottom) {
+                if (mouseX > 30 && mouseX < mid - 30) {
+                    previewer.getLocal().swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+                }
+
+                if (mouseX > mid + 30 && mouseX < width - 30) {
+                    previewer.getRemote().swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+                }
             }
 
             return true;
@@ -330,20 +350,17 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public boolean charTyped(char keyChar, int keyCode) {
         if (canTakeEvents()) {
-            if (keyCode == GLFW.GLFW_KEY_LEFT) {
-                updateCounter -= 5;
-            } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-                updateCounter += 5;
-            } else if (keyCode == 0) {
-                return false;
-            }
-
             if (!chooser.pickingInProgress() && !uploader.uploadInProgress()) {
                 return super.charTyped(keyChar, keyCode);
             }
         }
 
         return false;
+    }
+
+    private void walkingToggled(boolean walking) {
+        previewer.getLocal().setSprinting(walking);
+        previewer.getRemote().setSprinting(walking);
     }
 
     private void jumpToggled(boolean jumping) {
@@ -382,10 +399,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
         DummyPlayerRenderer.initialiseWorldRenderConditions();
-
-        ctrlKey.update();
-        jumpKey.update();
-        sneakKey.update();
 
         panorama.render(partialTick, 1);
 
