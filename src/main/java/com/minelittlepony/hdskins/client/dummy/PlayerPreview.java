@@ -73,11 +73,6 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         return pose;
     }
 
-    public void swingHand() {
-        getLocal().swingHand(Hand.MAIN_HAND);
-        getRemote().swingHand(Hand.MAIN_HAND);
-    }
-
     public void setModelType(String model) {
         boolean thinArmType = VanillaModels.isSlim(model);
 
@@ -172,38 +167,22 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
         minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
 
-        DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
-
-        matrixStack.push();
-        matrixStack.translate(xPosition, yPosition, 300);
-        matrixStack.scale(scale, scale, scale);
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
-
         float rot = ((ticks + partialTick) * 2.5F) % 360 + 180;
-
-        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
-
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
 
         thePlayer.setHeadYaw(lookX * lookFactor);
         thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20);
 
+        // actual player
         matrixStack.push();
+        DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
+        matrixStack.translate(xPosition, yPosition, 300);
+        matrixStack.scale(scale, scale, scale);
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
+        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
         matrixStack.scale(1, -1, -1);
-
         renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
-        matrixStack.pop();
-
-        matrixStack.push();
-        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
-        matrixStack.scale(-0.99F, 1, 0.99F);
-
-        DummyPlayerRenderer.flipReality = true;
-        renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
-        DummyPlayerRenderer.flipReality = false;
-        matrixStack.pop();
-
         matrixStack.pop();
     }
 
