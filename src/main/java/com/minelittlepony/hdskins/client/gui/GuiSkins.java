@@ -231,13 +231,13 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         addButton(new Button(width - 25, height - 40, 20, 20))
                 .onClick(sender -> {
                     sender.getStyle()
-                        .setIcon(uploader.cycleEquipment())
-                        .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())));
-                    playSound(uploader.getEquipment().getSound());
+                        .setIcon(previewer.cycleEquipment())
+                        .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())));
+                    playSound(previewer.getEquipment().getSound());
                 })
                 .getStyle()
-                .setIcon(uploader.getEquipment().getStack())
-                .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + uploader.getEquipment().getId().getPath())), 0, 10);
+                .setIcon(previewer.getEquipment().getStack())
+                .setTooltip(new TranslatableText("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())), 0, 10);
 
         addButton(new Button(width - 25, height - 65, 20, 20))
                 .onClick(sender -> {
@@ -313,11 +313,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
             if (mouseY > 30 && mouseY < bottom) {
                 if (mouseX > 30 && mouseX < mid - 30) {
-                    previewer.getLocal().swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+                    previewer.getLocal().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
                 }
 
                 if (mouseX > mid + 30 && mouseX < width - 30) {
-                    previewer.getRemote().swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+                    previewer.getRemote().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
                 }
             }
 
@@ -359,8 +359,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     private void walkingToggled(boolean walking) {
-        previewer.getLocal().setSprinting(walking);
-        previewer.getRemote().setSprinting(walking);
+        previewer.setSprinting(walking);
     }
 
     private void jumpToggled(boolean jumping) {
@@ -400,13 +399,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
         DummyPlayerRenderer.initialiseWorldRenderConditions();
 
-        panorama.render(partialTick, 1);
-
         RenderSystem.disableCull();
 
         float deltaTime = updateCounter + partialTick - lastPartialTick;
         lastPartialTick = updateCounter + partialTick;
 
+        panorama.render(partialTick, 1);
         previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
 
         float xPos1 = width / 4F;
@@ -417,26 +415,26 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             drawCenteredLabel(matrices, chooser.getStatus(), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
 
-        if (uploader.downloadInProgress() || uploader.isThrottled() || uploader.isOffline()) {
+        if (uploader.hasStatus()) {
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
             fill(matrices, (int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
 
-            if (uploader.isThrottled()) {
-                drawCenteredLabel(matrices, SkinUploader.ERR_MOJANG, (int)xPos2, height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(matrices, new TranslatableText(SkinUploader.ERR_WAIT.getString(), uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
-            } else if (uploader.isOffline()) {
-                drawCenteredLabel(matrices, SkinUploader.ERR_OFFLINE, (int)xPos2, height / 2 - 4, 0xff5555, 0);
+            Text status = uploader.getStatus();
+
+            if (status == SkinUploader.ERR_MOJANG) {
+                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 10, 0xff5555, 0);
+                drawCenteredLabel(matrices, new TranslatableText(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
             } else {
-                drawCenteredLabel(matrices, SkinUploader.STATUS_FETCH, (int)xPos2, height / 2 - 4, 0xffffff, 0);
+                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 4, status == SkinUploader.ERR_OFFLINE ? 0xff5555 : 0xffffff, 0);
             }
         }
 
         super.render(matrices, mouseX, mouseY, partialTick);
 
         boolean uploadInProgress = uploader.uploadInProgress();
-        boolean showError = uploader.hasStatus();
+        boolean showError = uploader.hasError();
 
         if (uploadInProgress || showError || msgFadeOpacity > 0) {
             if (!uploadInProgress && !showError) {
@@ -453,7 +451,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
             fill(matrices, 0, 0, width, height, opacity);
 
-            Text errorMsg = uploader.getStatusMessage();
+            Text errorMsg = uploader.getError();
 
             if (uploadInProgress) {
                 drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);

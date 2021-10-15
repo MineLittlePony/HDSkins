@@ -16,6 +16,7 @@ import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
@@ -23,51 +24,60 @@ import net.minecraft.stat.StatHandler;
 import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.world.World;
 
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 public class DummyPlayerRenderer {
 
-    public static boolean flipReality;
-
     private static boolean worldReady;
 
-    public static final Lazy<ClientPlayerEntity> NULL_PLAYER = new Lazy<>(() -> new ClientPlayerEntity(
-            MinecraftClient.getInstance(),
-            DummyWorld.INSTANCE.get(),
-            DummyNetworkHandler.INSTANCE.get(),
-            new StatHandler(),
-            new ClientRecipeBook(), false, false
-    ));
+    public static final Lazy<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = new Lazy<>(() -> {
+        return DummyWorld.FUTURE_INSTANCE.get().thenApply(w -> {
+            return new ClientPlayerEntity(
+                    MinecraftClient.getInstance(),
+                    w,
+                    DummyNetworkHandler.INSTANCE.get(),
+                    new StatHandler(),
+                    new ClientRecipeBook(), false, false
+            );
+        });
+    });
 
-    public static void initialiseWorldRenderConditions() {
+    public static boolean initialiseWorldRenderConditions() {
         MinecraftClient client = MinecraftClient.getInstance();
         boolean inGame = client.player != null;
 
         try {
             if (!inGame) {
-                client.player = NULL_PLAYER.get();
+                ClientPlayerEntity player = FUTURE_NULL_PLAYER.get().getNow(null);
+
+                if (player == null) {
+                    return false;
+                }
+
+                client.player = player;
 
                 if (!worldReady) {
                     worldReady = true;
-
                     // Hack to ensure mods like Iris don't crash the game
                     // https://github.com/IrisShaders/Iris/issues/492
-                    client.world = DummyWorld.INSTANCE.get();
+                    client.world = (ClientWorld)player.world;
                     client.interactionManager = new ClientPlayerInteractionManager(client, client.player.networkHandler);
                     client.worldRenderer.setWorld(client.world);
                     client.particleManager.setWorld(client.world);
                     OutsideWorldRenderer.configure(client.world);
-
+                    Matrix4f proj = RenderSystem.getProjectionMatrix();
                     client.gameRenderer.renderWorld(0, 0, new MatrixStack());
-                } else {
-                    OutsideWorldRenderer.configure(DummyWorld.INSTANCE.get());
+                    RenderSystem.setProjectionMatrix(proj); // restore the original projection matrix so renders after this are not messed up.
                 }
             }
-        } catch (Exception ignored) {} finally {
+        } catch (Exception ignored) { } finally {
             if (!inGame) {
                 client.world = null;
                 client.player = null;
@@ -75,6 +85,8 @@ public class DummyPlayerRenderer {
                 client.cameraEntity = null;
             }
         }
+
+        return true;
     }
 
     static void wrap(Runnable action) {
@@ -83,7 +95,12 @@ public class DummyPlayerRenderer {
 
         try {
             if (!inGame) {
-                client.player = NULL_PLAYER.get();
+                ClientPlayerEntity player = FUTURE_NULL_PLAYER.get().getNow(null);
+
+                if (player == null) {
+                    return;
+                }
+                client.player = player;
             }
             action.run();
         } finally {

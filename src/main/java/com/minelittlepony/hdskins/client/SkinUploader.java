@@ -15,8 +15,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Throwables;
+import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
+import com.minelittlepony.hdskins.client.dummy.TextureProxy;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
@@ -29,7 +31,7 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -47,13 +49,13 @@ public class SkinUploader implements Closeable {
     public static final Text ERR_SESSION = new TranslatableText("hdskins.error.session");
 
     public static final Text ERR_MOJANG = new TranslatableText("hdskins.error.mojang");
-    public static final Text ERR_WAIT = new TranslatableText("hdskins.error.mojang.wait");
+    public static final String ERR_MOJANG_WAIT = "hdskins.error.mojang.wait";
 
     public static final Text STATUS_FETCH = new TranslatableText("hdskins.fetch");
 
     private Optional<SkinServer> gateway;
 
-    private Text status = ERR_ALL_FINE;
+    private Text errorMessage = ERR_ALL_FINE;
 
     private SkinType skinType = SkinType.SKIN;
 
@@ -62,33 +64,29 @@ public class SkinUploader implements Closeable {
     private volatile boolean fetchingSkin = false;
     private volatile boolean throttlingNeck = false;
     private volatile boolean offline = false;
+    private volatile boolean pending = false;
 
     private volatile boolean sendingSkin = false;
 
     private int reloadCounter = 0;
     private int retries = 1;
 
-    private final IPreviewModel previewer;
+    private final PlayerPreview previewer;
 
     private final WatchedFile localSkin = new WatchedFile(this::fileChanged, this::fileRemoved);
 
     private final Iterator<SkinServer> skinServers;
-    private final Iterator<EquipmentSet> equipmentSets;
-
-    private EquipmentSet activeEquipmentSet;
 
     private final ISkinUploadHandler listener;
 
     private final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public SkinUploader(SkinServerList servers, IPreviewModel previewer, ISkinUploadHandler listener) {
+    public SkinUploader(SkinServerList servers, PlayerPreview previewer, ISkinUploadHandler listener) {
         this.previewer = previewer;
         this.listener = listener;
 
         skinMetadata.put("model", VanillaModels.DEFAULT);
         skinServers = servers.getCycler();
-        activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
-        equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
         cycleGateway();
     }
@@ -117,11 +115,6 @@ public class SkinUploader implements Closeable {
         }).orElse(Collections.emptyList());
     }
 
-    protected void setError(Text er) {
-        status = er;
-        sendingSkin = false;
-    }
-
     public void setSkinType(SkinType type) {
         if (type == skinType) {
             return;
@@ -133,29 +126,12 @@ public class SkinUploader implements Closeable {
         listener.onSkinTypeChanged(type);
     }
 
-    public ItemStack cycleEquipment() {
-        activeEquipmentSet = equipmentSets.next();
-        return previewer.setEquipment(activeEquipmentSet);
-    }
-
-    public EquipmentSet getEquipment() {
-        return activeEquipmentSet;
-    }
-
     public boolean uploadInProgress() {
         return sendingSkin;
     }
 
-    public boolean downloadInProgress() {
-        return fetchingSkin;
-    }
-
     public boolean isThrottled() {
         return throttlingNeck;
-    }
-
-    public boolean isOffline() {
-        return offline;
     }
 
     public int getRetries() {
@@ -163,31 +139,50 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean canUpload() {
-        return !isOffline()
-                && !hasStatus()
+        return !offline
+                && !hasError()
                 && !uploadInProgress()
                 && !localSkin.isPending()
                 && localSkin.isSet()
-                && previewer.getLocal().getTextures().isUsingLocal();
+                && previewer.getLocal().map(DummyPlayer::getTextures).filter(TextureProxy::isUsingLocal).isPresent();
     }
 
     public boolean canClear() {
-        return !isOffline()
-                && !hasStatus()
-                && !downloadInProgress()
-                && previewer.getRemote().getTextures().isUsingRemote();
+        return !offline
+                && !hasError()
+                && !fetchingSkin
+                && previewer.getRemote().map(DummyPlayer::getTextures).filter(TextureProxy::isUsingRemote).isPresent();
+    }
+
+    public boolean hasError() {
+        return errorMessage != ERR_ALL_FINE;
+    }
+
+    public Text getError() {
+        return errorMessage;
+    }
+
+    protected void setError(Text er) {
+        errorMessage = er;
+        sendingSkin = false;
     }
 
     public boolean hasStatus() {
-        return status != ERR_ALL_FINE;
+        return fetchingSkin || isThrottled() || offline || !previewer.getRemote().isPresent();
     }
 
-    public Text getStatusMessage() {
-        return status;
+    public Text getStatus() {
+        if (isThrottled()) {
+            return ERR_MOJANG;
+        }
+        if (offline || errorMessage == ERR_SESSION) {
+            return  ERR_OFFLINE;
+        }
+        return STATUS_FETCH;
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getLocal().getTextures().dispose();
+        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(TextureProxy::dispose);
         skinMetadata.put(field, value);
     }
 
@@ -200,11 +195,11 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean tryClearStatus() {
-        hasStatus();
+        hasError();
         uploadInProgress();
         isThrottled();
 
-        if (!hasStatus() || (!uploadInProgress() || isThrottled())) {
+        if (!hasError() || (!uploadInProgress() || isThrottled())) {
             setError(ERR_ALL_FINE);
             return true;
         }
@@ -228,33 +223,46 @@ public class SkinUploader implements Closeable {
     }
 
     public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
-        return previewer.getRemote().getTextures().get(skinType).getServerTexture();
+        return previewer.getRemote().map(DummyPlayer::getTextures).flatMap(t -> t.get(skinType).getServerTexture());
     }
 
     protected void fetchRemote() {
+        boolean wasPending = pending;
+        pending = false;
         throttlingNeck = false;
         offline = true;
         gateway.ifPresent(gateway -> {
-            offline = false;
-            fetchingSkin = true;
-            previewer.getRemote().getTextures().reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
-                fetchingSkin = false;
-                listener.onSetRemoteSkin(type, location, profileTexture);
-            }).handleAsync((a, throwable) -> {
-                fetchingSkin = false;
+            previewer.getRemote().map(DummyPlayer::getTextures).ifPresentOrElse(t -> {
+                offline = false;
+                fetchingSkin = true;
+                t.reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
+                    if (type == skinType) {
+                        fetchingSkin = false;
+                        if (wasPending) {
+                            GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
+                        }
+                    }
+                    listener.onSetRemoteSkin(type, location, profileTexture);
+                }).handleAsync((a, throwable) -> {
 
-                if (throwable != null) {
-                    handleException(throwable.getCause());
-                } else {
-                    retries = 1;
-                }
-                return a;
-            }, MinecraftClient.getInstance());
+                    if (throwable != null) {
+                        handleException(throwable.getCause());
+                    } else {
+                        retries = 1;
+                    }
+                    return a;
+                }, MinecraftClient.getInstance());
+            }, () -> {
+                offline = false;
+                pending = true;
+            });
         });
     }
 
     private void handleException(Throwable throwable) {
         throwable = Throwables.getRootCause(throwable);
+
+        fetchingSkin = false;
 
         if (throwable instanceof AuthenticationUnavailableException) {
             offline = true;
@@ -269,7 +277,7 @@ public class SkinUploader implements Closeable {
 
             if (code >= 500) {
                 logger.error(ex.getReasonPhrase(), ex);
-                setError(new TranslatableText("A fatal server error has ocurred (check logs for details): \n%s", ex.getReasonPhrase()));
+                setError(new LiteralText("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
             } else if (code >= 400 && code != 403 && code != 404) {
                 logger.error(ex.getReasonPhrase(), ex);
                 setError(new LiteralText(ex.getReasonPhrase()));
@@ -282,20 +290,19 @@ public class SkinUploader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        previewer.getLocal().getTextures().dispose();
-        previewer.getRemote().getTextures().dispose();
+        previewer.apply(p -> p.getTextures().dispose());
     }
 
     public void setLocalSkin(Path skinFile) {
-
         localSkin.set(skinFile);
     }
 
     public void update() {
+        if (!previewer.getRemote().isPresent()) {
+            return;
+        }
 
-        previewer.getLocal().updateModel();
-        previewer.getRemote().updateModel();
-
+        previewer.apply(DummyPlayer::updateModel);
         localSkin.update();
 
         if (isThrottled()) {
@@ -304,31 +311,25 @@ public class SkinUploader implements Closeable {
                 retries++;
                 fetchRemote();
             }
+        } else if (pending) {
+            fetchRemote();
         }
     }
 
     private void fileRemoved() {
-        mc.execute(previewer.getLocal().getTextures()::dispose);
+        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(t -> mc.execute(t::dispose));
     }
 
     private void fileChanged(Path path) {
-        try {
-            logger.debug("Set {} {}", skinType, path);
-            previewer.getLocal().getTextures().get(skinType).setLocal(path);
-            listener.onSetLocalSkin(skinType);
-        } catch (IOException e) {
-            HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
-        }
-    }
-
-    public interface IPreviewModel {
-        void setSkinType(SkinType type);
-
-        ItemStack setEquipment(EquipmentSet set);
-
-        DummyPlayer getRemote();
-
-        DummyPlayer getLocal();
+        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(t -> {
+            try {
+                logger.debug("Set {} {}", skinType, path);
+                t.get(skinType).setLocal(path);
+                listener.onSetLocalSkin(skinType);
+            } catch (IOException e) {
+                HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
+            }
+        });
     }
 
     public interface ISkinUploadHandler {

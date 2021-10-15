@@ -3,10 +3,12 @@ package com.minelittlepony.hdskins.client.dummy;
 import static com.mojang.blaze3d.systems.RenderSystem.*;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.SkinUploader.IPreviewModel;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
@@ -25,14 +27,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview extends DrawableHelper implements IPreviewModel {
+public class PlayerPreview extends DrawableHelper {
 
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
@@ -53,13 +54,35 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
     protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
 
-    private final DummyPlayer localPlayer = new DummyPlayer(localTextures);
-    private final DummyPlayer remotePlayer = new DummyPlayer(remoteTextures);
+    private Optional<DummyPlayer> localPlayer = Optional.empty();
+    private Optional<DummyPlayer> remotePlayer = Optional.empty();
 
     private int pose;
 
+    private final Iterator<EquipmentSet> equipmentSets;
+    private EquipmentSet activeEquipmentSet;
+
     public PlayerPreview() {
-        minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer;
+        activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
+        equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
+
+        DummyWorld.FUTURE_INSTANCE.get().thenAcceptAsync(w -> {
+            remotePlayer = Optional.of(new DummyPlayer(remoteTextures));
+            localPlayer = Optional.of(new DummyPlayer(localTextures));
+            minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer.get();
+        });
+    }
+
+    public ItemStack cycleEquipment() {
+        activeEquipmentSet = equipmentSets.next();
+
+        apply(activeEquipmentSet::apply);
+
+        return activeEquipmentSet.getStack();
+    }
+
+    public EquipmentSet getEquipment() {
+        return activeEquipmentSet;
     }
 
     public void setPose(int pose) {
@@ -81,13 +104,20 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     }
 
     public void setJumping(boolean jumping) {
-        getLocal().setJumping(jumping);
-        getRemote().setJumping(jumping);
+        apply(p -> p.setJumping(jumping));
     }
 
     public void setSneaking(boolean sneaking) {
-        getLocal().setSneaking(sneaking);
-        getRemote().setSneaking(sneaking);
+        apply(p -> p.setSneaking(sneaking));
+    }
+
+    public void setSprinting(boolean walking) {
+        apply(p -> p.setSprinting(walking));
+    }
+
+    public void apply(Consumer<DummyPlayer> action) {
+        getLocal().ifPresent(action);
+        getRemote().ifPresent(action);
     }
 
     public Identifier getBlankSteveSkin(SkinType type) {
@@ -102,29 +132,28 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
     }
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
-        DummyPlayerRenderer.wrap(() -> {
-            int mid = width / 2;
-            int horizon = height / 2 + height / 5;
-            int frameBottom = height - 40;
 
-            float yPos = height * 0.75F;
-            float scale = height / 4F;
+        int mid = width / 2;
+        int horizon = height / 2 + height / 5;
+        int frameBottom = height - 40;
 
-            MatrixStack matrixStack = new MatrixStack();
+        float yPos = height * 0.75F;
+        float scale = height / 4F;
 
-            renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
-                    width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                    matrixStack);
+        MatrixStack matrixStack = new MatrixStack();
 
-            renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
-                    width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                    matrixStack);
+        renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
+                width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+                matrixStack);
 
-            disableDepthTest();
-        });
+        renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
+                width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+                matrixStack);
+
+        disableDepthTest();
     }
 
-    public void renderWorldAndPlayer(DummyPlayer thePlayer,
+    public void renderWorldAndPlayer(Optional<DummyPlayer> thePlayer,
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             MatrixStack matrixStack) {
@@ -133,13 +162,17 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
 
             drawBackground(matrixStack, frameLeft, frameRight, frameBottom, frameTop, horizon);
 
-            try {
-                renderPlayerModel(thePlayer, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+            thePlayer.ifPresent(player -> {
+                try {
+                    DummyPlayerRenderer.wrap(() -> {
+                        renderPlayerModel(player, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+                    });
+                } catch (Exception e) {
+                    HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
+                }
+            });
 
-                context.draw();
-            } catch (Exception e) {
-                HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
-            }
+            context.draw();
         });
     }
 
@@ -249,28 +282,16 @@ public class PlayerPreview extends DrawableHelper implements IPreviewModel {
         matrixStack.pop();
     }
 
-    @Override
     public void setSkinType(SkinType type) {
         localTextures.setSkinType(type);
         remoteTextures.setSkinType(type);
     }
 
-    @Override
-    public DummyPlayer getRemote() {
+    public Optional<DummyPlayer> getRemote() {
         return remotePlayer;
     }
 
-
-    @Override
-    public DummyPlayer getLocal() {
+    public Optional<DummyPlayer> getLocal() {
         return localPlayer;
-    }
-
-    @Override
-    public ItemStack setEquipment(EquipmentSet set) {
-        set.apply(getLocal());
-        set.apply(getRemote());
-
-        return set.getStack();
     }
 }

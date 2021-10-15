@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.client;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
@@ -19,8 +18,6 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.resource.ResourceType;
-
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,10 +57,6 @@ public final class HDSkins implements ClientModInitializer {
         ScreenInitCallback.EVENT.register(this::onScreenInit);
 
         FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
-
-        // We front-load the dummies to prevent lag when opening the skinning gui
-        // It seems like Mojang is making everything heavier with each new updated
-        CompletableFuture.runAsync(DummyPlayerRenderer.NULL_PLAYER::get);
     }
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {

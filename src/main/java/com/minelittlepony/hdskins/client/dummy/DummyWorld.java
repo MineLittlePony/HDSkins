@@ -1,5 +1,7 @@
 package com.minelittlepony.hdskins.client.dummy;
 
+import java.util.concurrent.CompletableFuture;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -19,13 +21,27 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 
 public class DummyWorld extends ClientWorld {
-    public static final Lazy<DummyWorld> INSTANCE = new Lazy<>(() -> {
+    private static final Lazy<DummyWorld> INSTANCE = new Lazy<>(() -> {
         return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
+    });
+
+    public static final Lazy<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = new Lazy<>(() -> {
+        return CompletableFuture.supplyAsync(INSTANCE::get);
     });
 
     public static ClientWorld getOrDummy() {
         ClientWorld w = MinecraftClient.getInstance().world;
         return w == null ? INSTANCE.get() : w;
+    }
+
+    public static CompletableFuture<? extends ClientWorld> getOrDummyFuture() {
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        if (client.world != null) {
+            return CompletableFuture.completedFuture(client.world);
+        }
+
+        return FUTURE_INSTANCE.get();
     }
 
     public static void fillWith(BlockState state) {
