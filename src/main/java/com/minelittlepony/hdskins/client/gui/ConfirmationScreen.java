@@ -36,7 +36,7 @@ public class ConfirmationScreen extends GameGui {
                 .setText("gui.yes");
 
         addButton(new Button(width/2 + 10, height/2 + 20, 100, 20))
-            .onClick(p -> client.openScreen(parent))
+            .onClick(p -> client.setScreen(parent))
             .getStyle()
                 .setText("gui.no");
     }

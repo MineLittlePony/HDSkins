@@ -21,7 +21,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.stat.StatHandler;
-import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Matrix4f;
@@ -29,7 +28,9 @@ import net.minecraft.world.World;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
+import com.google.common.base.Suppliers;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -37,7 +38,7 @@ public class DummyPlayerRenderer {
 
     private static boolean worldReady;
 
-    public static final Lazy<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = new Lazy<>(() -> {
+    public static final Supplier<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = Suppliers.memoize(() -> {
         return DummyWorld.FUTURE_INSTANCE.get().thenApply(w -> {
             return new ClientPlayerEntity(
                     MinecraftClient.getInstance(),

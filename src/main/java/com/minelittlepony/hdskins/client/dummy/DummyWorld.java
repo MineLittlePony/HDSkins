@@ -1,6 +1,9 @@
 package com.minelittlepony.hdskins.client.dummy;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import com.google.common.base.Suppliers;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -9,7 +12,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.util.Lazy;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
@@ -21,11 +23,11 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 
 public class DummyWorld extends ClientWorld {
-    private static final Lazy<DummyWorld> INSTANCE = new Lazy<>(() -> {
+    private static final Supplier<DummyWorld> INSTANCE = Suppliers.memoize(() -> {
         return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
     });
 
-    public static final Lazy<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = new Lazy<>(() -> {
+    public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
         return CompletableFuture.supplyAsync(INSTANCE::get);
     });
 
@@ -69,6 +71,7 @@ public class DummyWorld extends ClientWorld {
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
                 net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).getOrThrow(DimensionType.OVERWORLD_REGISTRY_KEY),
+                0,
                 0,
                 MinecraftClient.getInstance()::getProfiler,
                 MinecraftClient.getInstance().worldRenderer,

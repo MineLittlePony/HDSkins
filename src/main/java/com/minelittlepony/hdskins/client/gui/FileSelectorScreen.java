@@ -205,7 +205,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         config.lastChosenFile.set(fileLocation);
         config.save();
 
-        client.openScreen(parent);
+        client.setScreen(parent);
         callback.onDialogClosed(fileLocation, true);
     }
 
@@ -312,7 +312,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
     @Override
     public FileDialog launch() {
-        MinecraftClient.getInstance().openScreen(this);
+        MinecraftClient.getInstance().setScreen(this);
         return this;
     }
 

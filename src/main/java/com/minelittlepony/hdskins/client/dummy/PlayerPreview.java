@@ -209,7 +209,7 @@ public class PlayerPreview extends DrawableHelper {
 
         // actual player
         matrixStack.push();
-        DiffuseLighting.enableForLevel(matrixStack.peek().getModel());
+        DiffuseLighting.enableForLevel(matrixStack.peek().getPositionMatrix());
         matrixStack.translate(xPosition, yPosition, 300);
         matrixStack.scale(scale, scale, scale);
         matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
