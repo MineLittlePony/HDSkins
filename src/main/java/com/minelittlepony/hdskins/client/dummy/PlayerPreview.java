@@ -67,10 +67,14 @@ public class PlayerPreview extends DrawableHelper {
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
         DummyWorld.FUTURE_INSTANCE.get().thenAcceptAsync(w -> {
-            remotePlayer = Optional.of(new DummyPlayer(remoteTextures));
-            localPlayer = Optional.of(new DummyPlayer(localTextures));
+            remotePlayer = Optional.of(createEntity(remoteTextures));
+            localPlayer = Optional.of(createEntity(localTextures));
             minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer.get();
         });
+    }
+
+    protected DummyPlayer createEntity(TextureProxy textures) {
+        return new DummyPlayer(textures);
     }
 
     public ItemStack cycleEquipment() {
