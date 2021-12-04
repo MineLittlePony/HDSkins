@@ -1,14 +1,23 @@
+buildscript {
+    dependencies {
+        classpath 'com.github.dexman545:Outlet:1.2.0'
+    }
+}
 plugins {
     id 'fabric-loom' version '0.10-SNAPSHOT'
     id 'maven-publish'
     id 'org.ajoberstar.reckon' version '0.13.0'
 }
+apply plugin: 'dex.plugins.outlet'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
+
+outlet.allowSnapshotsForProject = false
+outlet.mcVersionRange = project.minecraft_version_range
 
 group = project.group
 description = project.displayname
@@ -77,6 +86,25 @@ tasks.withType(JavaCompile) {
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
+}
+
+import com.modrinth.minotaur.TaskModrinthUpload
+task publishModrinth (type: TaskModrinthUpload){
+    onlyIf {
+      def stage = version.version.stage.value
+      stage != null && stage.name != 'beta'
+    }
+
+    token = System.env.MODRINTH_KEY
+    projectId = project.modrinth_project_id
+    versionNumber = version.toString()
+    versionName = archivesBaseName + '-' + version
+    changelog = "[Changelog](https://github.com/MineLittlePony/HDSkins/releases/tag/${version.toString()})"
+    uploadFile = jar.outputs.getFiles().asPath // This is the java jar task
+    addLoader(project.modrinth_loader_type)
+    outlet.mcVersions().each{ver ->
+      addGameVersion ver
+    }
 }
 
 publishing {
