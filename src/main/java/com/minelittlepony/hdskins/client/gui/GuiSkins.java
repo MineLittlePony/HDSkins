@@ -13,7 +13,6 @@ import com.minelittlepony.hdskins.client.SkinChooser;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
@@ -397,8 +396,6 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
-        DummyPlayerRenderer.initialiseWorldRenderConditions();
-
         RenderSystem.disableCull();
 
         float deltaTime = updateCounter + partialTick - lastPartialTick;

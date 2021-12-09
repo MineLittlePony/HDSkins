@@ -24,6 +24,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -66,15 +67,15 @@ public class PlayerPreview extends DrawableHelper {
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
-        DummyWorld.FUTURE_INSTANCE.get().thenAcceptAsync(w -> {
-            remotePlayer = Optional.of(createEntity(remoteTextures));
-            localPlayer = Optional.of(createEntity(localTextures));
+        DummyWorld.getOrDummyFuture().thenAcceptAsync(w -> {
+            remotePlayer = Optional.of(createEntity(w, remoteTextures));
+            localPlayer = Optional.of(createEntity(w, localTextures));
             minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer.get();
         });
     }
 
-    protected DummyPlayer createEntity(TextureProxy textures) {
-        return new DummyPlayer(textures);
+    protected DummyPlayer createEntity(ClientWorld world, TextureProxy textures) {
+        return new DummyPlayer(world, textures);
     }
 
     public ItemStack cycleEquipment() {

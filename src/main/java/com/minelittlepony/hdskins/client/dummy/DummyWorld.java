@@ -23,18 +23,9 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 
 public class DummyWorld extends ClientWorld {
-    private static final Supplier<DummyWorld> INSTANCE = Suppliers.memoize(() -> {
-        return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
-    });
-
     public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
-        return CompletableFuture.supplyAsync(INSTANCE::get);
+        return CompletableFuture.supplyAsync(() -> new DummyWorld(DummyNetworkHandler.INSTANCE.get()));
     });
-
-    public static ClientWorld getOrDummy() {
-        ClientWorld w = MinecraftClient.getInstance().world;
-        return w == null ? INSTANCE.get() : w;
-    }
 
     public static CompletableFuture<? extends ClientWorld> getOrDummyFuture() {
         MinecraftClient client = MinecraftClient.getInstance();

@@ -7,7 +7,6 @@ import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
@@ -23,7 +22,6 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.stat.StatHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Matrix4f;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -32,14 +30,11 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
-import com.mojang.blaze3d.systems.RenderSystem;
 
 public class DummyPlayerRenderer {
 
-    private static boolean worldReady;
-
-    public static final Supplier<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = Suppliers.memoize(() -> {
-        return DummyWorld.FUTURE_INSTANCE.get().thenApply(w -> {
+    private static final Supplier<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = Suppliers.memoize(() -> {
+        return DummyWorld.FUTURE_INSTANCE.get().thenApplyAsync(w -> {
             return new ClientPlayerEntity(
                     MinecraftClient.getInstance(),
                     w,
@@ -50,47 +45,7 @@ public class DummyPlayerRenderer {
         });
     });
 
-    public static boolean initialiseWorldRenderConditions() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        boolean inGame = client.player != null;
-
-        try {
-            if (!inGame) {
-                ClientPlayerEntity player = FUTURE_NULL_PLAYER.get().getNow(null);
-
-                if (player == null) {
-                    return false;
-                }
-
-                client.player = player;
-
-                if (!worldReady) {
-                    worldReady = true;
-                    // Hack to ensure mods like Iris don't crash the game
-                    // https://github.com/IrisShaders/Iris/issues/492
-                    client.world = (ClientWorld)player.world;
-                    client.interactionManager = new ClientPlayerInteractionManager(client, client.player.networkHandler);
-                    client.worldRenderer.setWorld(client.world);
-                    client.particleManager.setWorld(client.world);
-                    OutsideWorldRenderer.configure(client.world);
-                    Matrix4f proj = RenderSystem.getProjectionMatrix();
-                    client.gameRenderer.renderWorld(0, 0, new MatrixStack());
-                    RenderSystem.setProjectionMatrix(proj); // restore the original projection matrix so renders after this are not messed up.
-                }
-            }
-        } catch (Exception ignored) { } finally {
-            if (!inGame) {
-                client.world = null;
-                client.player = null;
-                client.interactionManager = null;
-                client.cameraEntity = null;
-            }
-        }
-
-        return true;
-    }
-
-    static void wrap(Runnable action) {
+    public static void wrap(Runnable action) {
         MinecraftClient client = MinecraftClient.getInstance();
         boolean inGame = client.player != null;
 
@@ -101,12 +56,21 @@ public class DummyPlayerRenderer {
                 if (player == null) {
                     return;
                 }
+
                 client.player = player;
+                client.world = (ClientWorld)player.world;
+                OutsideWorldRenderer.configure(client.world);
             }
+
             action.run();
+        } catch (Throwable ignored) {
+            ignored.printStackTrace();
         } finally {
             if (!inGame) {
+                client.world = null;
                 client.player = null;
+                client.interactionManager = null;
+                client.cameraEntity = null;
             }
         }
     }
@@ -137,7 +101,7 @@ public class DummyPlayerRenderer {
 
             World world = entity.getEntityWorld();
 
-            BlockEntityRenderer<BedHead> renderer = OutsideWorldRenderer.configure(world).get(this);
+            BlockEntityRenderer<BedHead> renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(this);
 
             if (renderer != null) {
                 renderer.render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);

@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
@@ -38,8 +39,13 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     public final MrBoaty boat;
 
+    @Deprecated
     public DummyPlayer(TextureProxy textures) {
-        super(DummyWorld.getOrDummy(), MinecraftClient.getInstance().getSession().getProfile());
+        this(DummyWorld.getOrDummyFuture().getNow(null), textures);
+    }
+
+    public DummyPlayer(ClientWorld world, TextureProxy textures) {
+        super(world, MinecraftClient.getInstance().getSession().getProfile());
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
