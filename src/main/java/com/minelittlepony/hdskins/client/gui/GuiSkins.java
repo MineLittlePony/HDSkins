@@ -85,9 +85,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     private final FileDrop dropper = FileDrop.newDropEvent(this);
 
     private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
-    private final Edge jumpKey = new Edge(this::jumpToggled, () -> client.options.keyJump.isPressed());
-    private final Edge sneakKey = new Edge(this::sneakToggled, () -> client.options.keySneak.isPressed());
-    private final Edge walkKey = new Edge(this::walkingToggled, () -> client.options.keyForward.isPressed() || client.options.keyBack.isPressed());
+    private final Edge jumpKey = new Edge(this::jumpToggled, () -> client.options.jumpKey.isPressed());
+    private final Edge sneakKey = new Edge(this::sneakToggled, () -> client.options.sneakKey.isPressed());
+    private final Edge walkKey = new Edge(this::walkingToggled, () -> client.options.forwardKey.isPressed() || client.options.backKey.isPressed());
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(new TranslatableText("hdskins.gui.title"), parent);
@@ -110,8 +110,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     public void tick() {
         KeyBinding.updatePressedStates();
 
-        boolean left = client.options.keyLeft.isPressed();
-        boolean right = client.options.keyRight.isPressed();
+        boolean left = client.options.leftKey.isPressed();
+        boolean right = client.options.rightKey.isPressed();
 
         ctrlKey.update();
         jumpKey.update();
@@ -259,8 +259,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     @Override
-    public void onClose() {
-        super.onClose();
+    public void close() {
+        super.close();
 
         try {
             uploader.close();

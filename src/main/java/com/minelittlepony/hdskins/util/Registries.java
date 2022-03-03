@@ -9,6 +9,6 @@ import net.minecraft.util.registry.RegistryKey;
 
 public interface Registries {
     static <T> Registry<T> createDefaulted(Identifier id, String def) {
-        return new DefaultedRegistry<>(def, RegistryKey.ofRegistry(id), Lifecycle.stable());
+        return new DefaultedRegistry<>(def, RegistryKey.ofRegistry(id), Lifecycle.stable(), null);
     }
 }

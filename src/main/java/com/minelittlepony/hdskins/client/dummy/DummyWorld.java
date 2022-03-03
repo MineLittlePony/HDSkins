@@ -16,6 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.*;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.WorldChunk;
@@ -43,7 +44,7 @@ public class DummyWorld extends ClientWorld {
 
     private static BlockState worldBlockState = Blocks.AIR.getDefaultState();
 
-    private final WorldChunk chunk = new EmptyChunk(this, new ChunkPos(0, 0));
+    private final WorldChunk chunk;
     private final ClientChunkManager chunkManager = new ClientChunkManager(this, 0) {
         private final LightingProvider lighting = new LightingProvider(this, false, false) {
             @Override
@@ -61,13 +62,14 @@ public class DummyWorld extends ClientWorld {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
-                net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).getOrThrow(DimensionType.OVERWORLD_REGISTRY_KEY),
+                net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).entryOf(DimensionType.OVERWORLD_REGISTRY_KEY),
                 0,
                 0,
                 MinecraftClient.getInstance()::getProfiler,
                 MinecraftClient.getInstance().worldRenderer,
                 true,
                 0);
+        chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(Registry.BIOME_KEY).entryOf(BiomeKeys.PLAINS));
     }
 
     @Override
