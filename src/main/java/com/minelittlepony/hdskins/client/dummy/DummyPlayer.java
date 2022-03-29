@@ -245,7 +245,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Arm getMainArm() {
-        return MinecraftClient.getInstance().options.mainArm.getOpposite();
+        return MinecraftClient.getInstance().options.mainArm;
     }
 
     @Override

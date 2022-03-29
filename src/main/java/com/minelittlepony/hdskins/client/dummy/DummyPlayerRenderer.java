@@ -95,8 +95,6 @@ public class DummyPlayerRenderer {
 
         public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {
             stack.push();
-            stack.scale(-1, 1, 1);
-
             stack.translate(-0.5, 0, 0);
 
             World world = entity.getEntityWorld();

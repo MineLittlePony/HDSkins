@@ -15,6 +15,7 @@ import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -147,6 +148,8 @@ public class PlayerPreview extends DrawableHelper {
 
         MatrixStack matrixStack = new MatrixStack();
 
+        enableDepthTest();
+
         renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
                 width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
                 matrixStack);
@@ -162,6 +165,7 @@ public class PlayerPreview extends DrawableHelper {
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             MatrixStack matrixStack) {
+
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
@@ -201,27 +205,42 @@ public class PlayerPreview extends DrawableHelper {
 
         if (dispatcher.getRenderer(thePlayer) == null) {
             HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
+            return;
         }
 
-        minecraft.getTextureManager().bindTexture(thePlayer.getTextures().get(SkinType.SKIN).getId());
-
-        float rot = ((ticks + partialTick) * 2.5F) % 360 + 180;
+        float rot = ((ticks + partialTick) * 2.5F) % 360;
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
-        float lookX = (float)Math.atan((xPosition - mouseX) / 20) * 30;
+        float lookX = (float)Math.atan((xPosition - mouseX) / 20) * -30;
 
         thePlayer.setHeadYaw(lookX * lookFactor);
         thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20);
 
-        // actual player
+        MatrixStack modelStack = RenderSystem.getModelViewStack();
+        modelStack.push();
+        modelStack.translate(xPosition, yPosition, 1050);
+        modelStack.scale(1, 1, -1);
+        RenderSystem.applyModelViewMatrix();
+
         matrixStack.push();
-        DiffuseLighting.enableForLevel(matrixStack.peek().getPositionMatrix());
-        matrixStack.translate(xPosition, yPosition, 300);
+        matrixStack.translate(0, 0, 1000);
         matrixStack.scale(scale, scale, scale);
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-15));
+
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(15));
+        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(180));
         matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
-        matrixStack.scale(1, -1, -1);
-        renderPlayerEntity(matrixStack, thePlayer, renderContext, dispatcher);
+
+        DiffuseLighting.method_34742();
+
+        VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+
+        renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
+
+        immediate.draw();
+
         matrixStack.pop();
+        modelStack.pop();
+        RenderSystem.applyModelViewMatrix();
+        DiffuseLighting.enableGuiDepthLighting();
     }
 
     protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
@@ -275,12 +294,10 @@ public class PlayerPreview extends DrawableHelper {
             }
         }
 
-        matrixStack.translate(x, y, z);
-
         Entity camera = minecraft.getCameraEntity();
         minecraft.setCameraEntity(thePlayer);
 
-        dispatcher.render(thePlayer, 0, 0, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
+        dispatcher.render(thePlayer, x, y, z, 0, 1, matrixStack, renderContext, 0xF000F0);
 
         minecraft.setCameraEntity(camera);
 
