@@ -401,7 +401,12 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         float deltaTime = updateCounter + partialTick - lastPartialTick;
         lastPartialTick = updateCounter + partialTick;
 
-        panorama.render(partialTick, 1);
+        if (client.world == null) {
+            panorama.render(partialTick, 1);
+        } else {
+           renderBackground(matrices);
+        }
+
         previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
 
         float xPos1 = width / 4F;
