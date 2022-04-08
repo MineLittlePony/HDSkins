@@ -35,7 +35,7 @@ public class FileSaverScreen extends FileSelectorScreen {
                 currentDirectory = Paths.get(textInput.getText());
 
                 if (Files.exists(currentDirectory)) {
-                    client.setScreen(new ConfirmationScreen(this, "Ovewrite file?", () -> {
+                    client.setScreen(new ConfirmationScreen(this, "Overwrite file?", () -> {
                         navigateTo(currentDirectory);
                     }));
                 } else {
