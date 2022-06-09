@@ -4,7 +4,7 @@ buildscript {
     }
 }
 plugins {
-    id 'fabric-loom' version '0.10-SNAPSHOT'
+    id 'fabric-loom' version '0.12-SNAPSHOT'
     id 'maven-publish'
     id 'com.modrinth.minotaur' version '1.1.0'
     id 'org.ajoberstar.reckon' version '0.13.0'
@@ -57,7 +57,7 @@ dependencies {
     modApi fabricApi.module("fabric-api-base", project.fabric_version)
     modApi fabricApi.module("fabric-lifecycle-events-v1", project.fabric_version)
     modApi fabricApi.module("fabric-resource-loader-v0", project.fabric_version)
-    modApi fabricApi.module("fabric-renderer-registries-v1", project.fabric_version)
+    modApi fabricApi.module("fabric-rendering-v1", project.fabric_version)
 
     implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
     include "org.apache.httpcomponents:httpmime:${project.http_client_version}"

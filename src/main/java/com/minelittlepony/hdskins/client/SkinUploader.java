@@ -31,10 +31,9 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import java.util.Collections;
 import java.util.Set;
@@ -43,15 +42,15 @@ public class SkinUploader implements Closeable {
 
     private static final Logger logger = LogManager.getLogger();
 
-    public static final Text ERR_ALL_FINE = LiteralText.EMPTY;
-    public static final Text ERR_NO_SERVER = new TranslatableText("hdskins.error.noserver");
-    public static final Text ERR_OFFLINE = new TranslatableText("hdskins.error.offline");
-    public static final Text ERR_SESSION = new TranslatableText("hdskins.error.session");
+    public static final Text ERR_ALL_FINE = ScreenTexts.EMPTY;
+    public static final Text ERR_NO_SERVER = Text.translatable("hdskins.error.noserver");
+    public static final Text ERR_OFFLINE = Text.translatable("hdskins.error.offline");
+    public static final Text ERR_SESSION = Text.translatable("hdskins.error.session");
 
-    public static final Text ERR_MOJANG = new TranslatableText("hdskins.error.mojang");
+    public static final Text ERR_MOJANG = Text.translatable("hdskins.error.mojang");
     public static final String ERR_MOJANG_WAIT = "hdskins.error.mojang.wait";
 
-    public static final Text STATUS_FETCH = new TranslatableText("hdskins.fetch");
+    public static final Text STATUS_FETCH = Text.translatable("hdskins.fetch");
 
     private Optional<SkinServer> gateway;
 
@@ -277,14 +276,14 @@ public class SkinUploader implements Closeable {
 
             if (code >= 500) {
                 logger.error(ex.getReasonPhrase(), ex);
-                setError(new LiteralText("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
+                setError(Text.literal("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
             } else if (code >= 400 && code != 403 && code != 404) {
                 logger.error(ex.getReasonPhrase(), ex);
-                setError(new LiteralText(ex.getReasonPhrase()));
+                setError(Text.literal(ex.getReasonPhrase()));
             }
         } else {
             logger.error("Unhandled exception", throwable);
-            setError(new LiteralText(throwable.toString()));
+            setError(Text.literal(throwable.toString()));
         }
     }
 

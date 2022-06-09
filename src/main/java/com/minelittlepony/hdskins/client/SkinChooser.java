@@ -5,7 +5,6 @@ import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
 
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -27,15 +26,15 @@ public class SkinChooser {
 
     public static final String[] EXTENSIONS = new String[]{"png", "PNG"};
 
-    public static final Text ERR_UNREADABLE = new TranslatableText("hdskins.error.unreadable");
-    public static final Text ERR_EXT = new TranslatableText("hdskins.error.ext");
-    public static final Text ERR_OPEN = new TranslatableText("hdskins.error.open");
-    public static final Text ERR_INVALID_TOO_LARGE = new TranslatableText("hdskins.error.invalid.too_large");
-    public static final Text ERR_INVALID_SHAPE = new TranslatableText("hdskins.error.invalid.shape");
-    public static final Text ERR_INVALID_POWER_OF_TWO = new TranslatableText("hdskins.error.invalid.power_of_two");
-    public static final Text ERR_INVALID = new TranslatableText("hdskins.error.invalid");
+    public static final Text ERR_UNREADABLE = Text.translatable("hdskins.error.unreadable");
+    public static final Text ERR_EXT = Text.translatable("hdskins.error.ext");
+    public static final Text ERR_OPEN = Text.translatable("hdskins.error.open");
+    public static final Text ERR_INVALID_TOO_LARGE = Text.translatable("hdskins.error.invalid.too_large");
+    public static final Text ERR_INVALID_SHAPE = Text.translatable("hdskins.error.invalid.shape");
+    public static final Text ERR_INVALID_POWER_OF_TWO = Text.translatable("hdskins.error.invalid.power_of_two");
+    public static final Text ERR_INVALID = Text.translatable("hdskins.error.invalid");
 
-    public static final Text MSG_CHOOSE = new TranslatableText("hdskins.choose");
+    public static final Text MSG_CHOOSE = Text.translatable("hdskins.choose");
 
     private static boolean isPowerOfTwo(int number) {
         return number != 0 && (number & number - 1) == 0;

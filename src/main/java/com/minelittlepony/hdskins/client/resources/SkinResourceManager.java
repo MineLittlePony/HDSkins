@@ -79,17 +79,15 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             textures.invalidateAll();
 
             sender.getAllNamespaces().stream().map(domain -> new Identifier(domain, "textures/skins/skins.json")).forEach(identifier -> {
-                try {
-                    sender.getAllResources(identifier).stream()
-                        .map(this::loadSkinData)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .forEach(data -> {
-                            data.skins.forEach(s -> {
-                                store.computeIfAbsent(s.getType(), SkinStore::new).addSkin(s);
-                            });
+                sender.getAllResources(identifier).stream()
+                    .map(this::loadSkinData)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(data -> {
+                        data.skins.forEach(s -> {
+                            store.computeIfAbsent(s.getType(), SkinStore::new).addSkin(s);
                         });
-                } catch (IOException ignored) { }
+                    });
             });
 
             clientProfiler.pop();
@@ -102,9 +100,9 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
         return ID;
     }
 
-    private Optional<SkinData> loadSkinData(Resource res) throws JsonParseException {
-        try (Resource resource = res) {
-            return Optional.ofNullable(gson.fromJson(new InputStreamReader(resource.getInputStream()), SkinData.class));
+    private Optional<SkinData> loadSkinData(Resource res) {
+        try (var reader = new InputStreamReader(res.getInputStream())) {
+            return Optional.ofNullable(gson.fromJson(reader, SkinData.class));
         } catch (JsonParseException e) {
             logger.warn("Invalid skins.json in " + res.getResourcePackName(), e);
         } catch (IOException ignored) {}

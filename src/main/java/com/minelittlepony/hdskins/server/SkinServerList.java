@@ -2,8 +2,7 @@ package com.minelittlepony.hdskins.server;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.ProfileUtils;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -49,18 +48,14 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
         skinServers.clear();
 
         logger.info("Loading skin servers");
-        try {
-            for (Resource res : mgr.getAllResources(SKIN_SERVERS)) {
-                logger.info("Found {} in {}", res.getId(), res.getResourcePackName());
-                try (Resource r = res) {
-                    SkinServerJson json = gson.fromJson(new InputStreamReader(r.getInputStream()), SkinServerJson.class);
-                    json.apply(skinServers);
-                } catch (Exception e) {
-                    logger.warn("Unable to load resource '{}' from '{}'", SKIN_SERVERS, res.getResourcePackName(), e);
-                }
+        for (Resource res : mgr.getAllResources(SKIN_SERVERS)) {
+            logger.info("Found {} in {}", SKIN_SERVERS, res.getResourcePackName());
+            try (var reader = new InputStreamReader(res.getInputStream())) {
+                SkinServerJson json = gson.fromJson(reader, SkinServerJson.class);
+                json.apply(skinServers);
+            } catch (IOException | JsonParseException e) {
+                logger.warn("Unable to load resource '{}' from '{}'", SKIN_SERVERS, res.getResourcePackName(), e);
             }
-        } catch (IOException e) {
-            logger.error("Unable to read {} from resource packs. No servers will be used.", SKIN_SERVERS, e);
         }
     }
 

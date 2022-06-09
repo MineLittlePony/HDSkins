@@ -22,6 +22,7 @@
   "hdskins.filetype.file": "%s File",
   "hdskins.filetype.unknown": "File",
   "hdskins.save.title": "Choose save location",
+  "hdskins.save.overwrite": "Overwrite file?",
   "hdskins.fetch": "Fetching skin...",
   "hdskins.failed": "Uploading skin failed",
   "hdskins.request": "Sending request to server please wait...",

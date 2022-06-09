@@ -21,7 +21,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.LightingProvider;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.dimension.*;
 
 public class DummyWorld extends ClientWorld {
     public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
@@ -62,7 +62,7 @@ public class DummyWorld extends ClientWorld {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
-                net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).entryOf(DimensionType.OVERWORLD_REGISTRY_KEY),
+                net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).entryOf(DimensionTypes.OVERWORLD),
                 0,
                 0,
                 MinecraftClient.getInstance()::getProfiler,

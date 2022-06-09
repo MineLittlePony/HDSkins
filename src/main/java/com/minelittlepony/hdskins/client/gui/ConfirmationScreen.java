@@ -8,14 +8,14 @@ import com.minelittlepony.common.client.gui.element.Label;
 
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 public class ConfirmationScreen extends GameGui {
 
     private final Runnable action;
 
-    public ConfirmationScreen(@NotNull Screen parent, String title, Runnable action) {
-        super(new LiteralText(title), parent);
+    public ConfirmationScreen(@NotNull Screen parent, Text title, Runnable action) {
+        super(title, parent);
 
         this.action = action;
     }

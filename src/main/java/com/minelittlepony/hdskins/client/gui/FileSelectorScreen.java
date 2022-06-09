@@ -23,10 +23,9 @@ import com.minelittlepony.hdskins.util.net.FileTypes;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
@@ -58,7 +57,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     private String filterMessage = "";
 
     public FileSelectorScreen(String title) {
-        super(new LiteralText(title));
+        super(Text.literal(title));
 
         filesList.margin.top = 60;
         filesList.margin.bottom = 30;
@@ -74,7 +73,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         renderDirectory();
 
-        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, LiteralText.EMPTY));
+        addButton(textInput = new TextFieldWidget(getFont(), 10, 30, width - 50, 18, ScreenTexts.EMPTY));
         textInput.setEditable(true);
         textInput.setMaxLength(Integer.MAX_VALUE);
         textInput.setText(currentDirectory.toAbsolutePath().toString());
@@ -243,7 +242,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
             this.path = path;
 
-            Text name = new LiteralText(path.getFileName().toString());
+            Text name = Text.literal(path.getFileName().toString());
             MutableText format = describeFile(path);
             format.setStyle(format.getStyle().withColor(Formatting.GRAY).withItalic(true));
 
@@ -278,16 +277,16 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
         protected MutableText describeFile(Path path) {
             if (Files.isDirectory(path)) {
-                return new TranslatableText("hdskins.filetype.directory");
+                return Text.translatable("hdskins.filetype.directory");
             }
 
             String extension = FileTypes.getExtension(path);
 
             if (extension.isEmpty()) {
-                return new TranslatableText("hdskins.filetype.unknown");
+                return Text.translatable("hdskins.filetype.unknown");
             }
 
-            return new TranslatableText("hdskins.filetype.file", extension.toUpperCase());
+            return Text.translatable("hdskins.filetype.file", extension.toUpperCase());
         }
     }
 

@@ -45,7 +45,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     public DummyPlayer(ClientWorld world, TextureProxy textures) {
-        super(world, MinecraftClient.getInstance().getSession().getProfile());
+        super(world, MinecraftClient.getInstance().getSession().getProfile(), null);
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
@@ -245,7 +245,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Arm getMainArm() {
-        return MinecraftClient.getInstance().options.mainArm;
+        return MinecraftClient.getInstance().options.getMainArm().getValue();
     }
 
     @Override

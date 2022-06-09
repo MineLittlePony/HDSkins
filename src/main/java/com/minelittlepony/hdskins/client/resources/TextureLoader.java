@@ -2,8 +2,8 @@ package com.minelittlepony.hdskins.client.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,39 +42,33 @@ public class TextureLoader {
         executor = Executors.newSingleThreadExecutor();
     }
 
-    public CompletableFuture<Identifier> loadAsync(Identifier original) {
+    public CompletableFuture<Identifier> loadAsync(Identifier imageId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                @Nullable
-                NativeImage image = getImage(original);
-
-                @Nullable
-                final NativeImage updated = HDPlayerSkinTexture.filterPlayerSkins(image);
-
-                if (updated == null || updated == image) {
-                    return original; // don't load a new image
-                }
-
-                Identifier conv = new Identifier(original.getNamespace() + "-converted", original.getPath());
-
-                return CompletableFuture.supplyAsync(() -> {
-                    mc.getTextureManager().registerTexture(conv, new NativeImageBackedTexture(updated));
-                    return conv;
-                }, mc).get();
-            } catch (InterruptedException | ExecutionException e) {
-                HDSkins.LOGGER.warn("Errored while processing {}. Using original.", original, e);
-
-                return original;
-            }
-        }, executor);
+            return getImage(imageId)
+                    .flatMap(image -> Optional.ofNullable(HDPlayerSkinTexture.filterPlayerSkins(image))
+                            .filter(i -> i != null && i != image)
+                    );
+        }, executor).thenApplyAsync(updated -> {
+            return updated.map(image -> {
+                Identifier convertedId = new Identifier(imageId.getNamespace() + "-converted", imageId.getPath());
+                mc.getTextureManager().registerTexture(convertedId, new NativeImageBackedTexture(image));
+                return convertedId;
+            }).orElse(imageId);
+        }, mc).exceptionally(t -> {
+            HDSkins.LOGGER.warn("Errored while processing {}. Using original.", imageId, t);
+            return imageId;
+        });
     }
 
     @Nullable
-    private NativeImage getImage(Identifier res) {
-        try (InputStream in = mc.getResourceManager().getResource(res).getInputStream()) {
-            return NativeImage.read(in);
-        } catch (IOException e) {
+    private Optional<NativeImage> getImage(Identifier res) {
+        return mc.getResourceManager().getResource(res).map(resource -> {
+            try (InputStream in = resource.getInputStream()) {
+                return NativeImage.read(in);
+            } catch (IOException e) {
+                HDSkins.LOGGER.warn("Errored while reading image file ({}): {}.", res, e);
+            }
             return null;
-        }
+        });
     }
 }

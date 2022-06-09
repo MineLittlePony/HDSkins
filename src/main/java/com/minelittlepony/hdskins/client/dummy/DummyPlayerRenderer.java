@@ -22,9 +22,9 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.stat.StatHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -80,7 +80,7 @@ public class DummyPlayerRenderer {
         blockRenderer.getModelRenderer().render(world, blockRenderer.getModel(state),
                 state, BlockPos.ORIGIN, stack,
                 renderContext.getBuffer(RenderLayers.getMovingBlockLayer(state)),
-                false, new Random(),
+                false, Random.create(),
                 state.getRenderingSeed(BlockPos.ORIGIN), OverlayTexture.DEFAULT_UV);
     }
 

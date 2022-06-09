@@ -8,7 +8,10 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
+import net.minecraft.text.Text;
+
 public class FileSaverScreen extends FileSelectorScreen {
+    public static final Text SAVE_OVERWRITE = Text.translatable("hdskins.save.overwrite");
 
     private Button saveBtn;
 
@@ -35,7 +38,7 @@ public class FileSaverScreen extends FileSelectorScreen {
                 currentDirectory = Paths.get(textInput.getText());
 
                 if (Files.exists(currentDirectory)) {
-                    client.setScreen(new ConfirmationScreen(this, "Overwrite file?", () -> {
+                    client.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
                         navigateTo(currentDirectory);
                     }));
                 } else {
