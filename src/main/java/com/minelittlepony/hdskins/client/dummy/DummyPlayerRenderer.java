@@ -42,7 +42,7 @@ public class DummyPlayerRenderer {
                     new StatHandler(),
                     new ClientRecipeBook(), false, false
             );
-        });
+        }, MinecraftClient.getInstance());
     });
 
     public static void wrap(Runnable action) {
