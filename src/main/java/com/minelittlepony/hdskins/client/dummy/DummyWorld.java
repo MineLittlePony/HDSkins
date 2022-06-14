@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
+import com.minelittlepony.hdskins.client.HDSkins;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -25,7 +26,15 @@ import net.minecraft.world.dimension.DimensionType;
 
 public class DummyWorld extends ClientWorld {
     public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
-        return CompletableFuture.supplyAsync(() -> new DummyWorld(DummyNetworkHandler.INSTANCE.get()));
+        return CompletableFuture.supplyAsync(() -> new DummyWorld(DummyNetworkHandler.INSTANCE.get())).exceptionallyAsync(t -> {
+            HDSkins.LOGGER.error("Could not asynchrnously load a dummy world. Falling back to on-thread construction. This may impact performance.", t);
+            try {
+                return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
+            } catch (Throwable tt) {
+                HDSkins.LOGGER.fatal("Dummy world failed spectacularly. Report this to the devs. D:", t);
+                throw tt;
+            }
+        }, MinecraftClient.getInstance());
     });
 
     public static CompletableFuture<? extends ClientWorld> getOrDummyFuture() {
