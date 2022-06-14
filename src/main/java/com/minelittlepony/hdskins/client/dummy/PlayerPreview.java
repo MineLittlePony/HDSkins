@@ -69,10 +69,14 @@ public class PlayerPreview extends DrawableHelper {
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
 
         DummyWorld.getOrDummyFuture().thenAcceptAsync(w -> {
-            remotePlayer = Optional.of(createEntity(w, remoteTextures));
-            localPlayer = Optional.of(createEntity(w, localTextures));
-            minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer.get();
-        });
+            try {
+                remotePlayer = Optional.of(createEntity(w, remoteTextures));
+                localPlayer = Optional.of(createEntity(w, localTextures));
+                minecraft.getEntityRenderDispatcher().targetedEntity = localPlayer.get();
+            } catch (Throwable t) {
+                HDSkins.LOGGER.error("Error creating players", t);
+            }
+        }, MinecraftClient.getInstance());
     }
 
     protected DummyPlayer createEntity(ClientWorld world, TextureProxy textures) {
