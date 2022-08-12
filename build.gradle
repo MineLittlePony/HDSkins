@@ -15,6 +15,7 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+    withSourcesJar()
 }
 
 outlet.allowSnapshotsForProject = false
@@ -85,11 +86,6 @@ processResources {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
 }
 
 import com.modrinth.minotaur.TaskModrinthUpload
