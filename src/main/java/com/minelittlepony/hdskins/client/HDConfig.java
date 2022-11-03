@@ -1,16 +1,15 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.common.util.settings.JsonConfig;
-import com.minelittlepony.common.util.settings.Setting;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class HDConfig extends JsonConfig {
+import com.minelittlepony.common.util.settings.*;
+
+public class HDConfig extends Config {
 
     public final Setting<Path> lastChosenFile = value("lastChosenFile", Paths.get("/"));
 
     public HDConfig(Path path) {
-        super(path);
+        super(FLATTENED_JSON_ADAPTER, path);
     }
 }
