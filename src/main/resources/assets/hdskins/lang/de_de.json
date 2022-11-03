@@ -1,7 +1,7 @@
 {
   "hdskins.choose": "Suche eine Datei aus",
   "hdskins.manager": "Skin Verwaltung",
-  "hdskins.error.unreadable": "Datei ist nicht lesbar!",
+  "hdskins.error.unreadable": "Die Datei ist nicht lesbar!",
   "hdskins.error.ext": "Datei entspricht nicht dem PNG Dateiformat!",
   "hdskins.error.open": "Fehler beim öffnen der Skindatei!",
   "hdskins.error.invalid.too_large": "Datei muss kleiner sein als 1024px in der Länge",
