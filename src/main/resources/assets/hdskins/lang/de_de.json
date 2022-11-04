@@ -3,7 +3,7 @@
   "hdskins.manager": "Skin Verwaltung",
   "hdskins.error.unreadable": "Die Datei ist nicht lesbar!",
   "hdskins.error.ext": "Datei entspricht nicht dem PNG Dateiformat!",
-  "hdskins.error.open": "Fehler beim öffnen der Skindatei!",
+  "hdskins.error.open": "Fehler beim Öffnen der Skindatei!",
   "hdskins.error.invalid.too_large": "Datei muss kleiner sein als 1024px in der Länge",
   "hdskins.error.invalid.shape": "Falsche Form.",
   "hdskins.error.invalid.power_of_two": "Falsche Form.",
@@ -11,7 +11,7 @@
   "hdskins.error.select": "Suche zuerst einen Skin aus!",
   "hdskins.error.mojang": "Mojang API Fehler",
   "hdskins.error.mojang.wait": "Bitte warte %d Minute(n)",
-  "hdskins.error.noserver": "Es sind keine gültiges Skinserver verfügbar!",
+  "hdskins.error.noserver": "Es sind keine gültigen Skinserver verfügbar!",
   "hdskins.error.offline": "- Server ist Offline -",
   "hdskins.error.session": "Ungültige Sitzung: Bitte starten Sie Minecraft neu.",
   "hdskins.open.title": "Skin wählen",
@@ -56,7 +56,7 @@
   "hdskins.options.browse": "Suchen",
   "hdskins.options.skindrops": "Experimenteller Skin Drop",
   "hdskins.options.cache": "Skin Cache Bereinigen",
-  "hdskins.warning.experimental": "§6WARNUNG: Dieses Feature ist §4Experimentel!§6,was heißt Dinge können(und werden) schief gehen! Mit der Aktivierung bestätigst du, Verantwortung über dich, und deine Tiere zu nehmen.",
+  "hdskins.warning.experimental": "§6WARNUNG: Dieses Feature ist §4Experimentel!§6, was heißt Dinge können (und werden) schief gehen! Mit der Aktivierung bestätigst du, Verantwortung für dich, und deine Tiere zu übernehmennehmen.",
   "hdskins.warning.disabled.title": "§c%s %s",
   "hdskins.warning.disabled.description": "§4(DEAKTIVIERT)\n§7Dieses Feature wird nicht von deinem Skinserver ünterstützt.\n§7 Bitte wähle einen anderen Server."
 }
