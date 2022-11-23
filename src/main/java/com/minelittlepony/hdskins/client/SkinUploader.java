@@ -18,7 +18,6 @@ import com.google.common.base.Throwables;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
-import com.minelittlepony.hdskins.client.dummy.TextureProxy;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.Feature;
@@ -143,14 +142,14 @@ public class SkinUploader implements Closeable {
                 && !uploadInProgress()
                 && !localSkin.isPending()
                 && localSkin.isSet()
-                && previewer.getLocal().map(DummyPlayer::getTextures).filter(TextureProxy::isUsingLocal).isPresent();
+                && previewer.getClientTexture().isSetupComplete();
     }
 
     public boolean canClear() {
         return !offline
                 && !hasError()
                 && !fetchingSkin
-                && previewer.getRemote().map(DummyPlayer::getTextures).filter(TextureProxy::isUsingRemote).isPresent();
+                && previewer.getServerTexture().isSetupComplete();
     }
 
     public boolean hasError() {
@@ -181,7 +180,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(TextureProxy::dispose);
+        previewer.getClientTexture().close();
         skinMetadata.put(field, value);
     }
 
@@ -222,7 +221,7 @@ public class SkinUploader implements Closeable {
     }
 
     public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
-        return previewer.getRemote().map(DummyPlayer::getTextures).flatMap(t -> t.get(skinType).getServerTexture());
+        return previewer.getServerTexture().get(skinType).getServerTexture();
     }
 
     protected void fetchRemote() {
@@ -231,30 +230,25 @@ public class SkinUploader implements Closeable {
         throttlingNeck = false;
         offline = true;
         gateway.ifPresent(gateway -> {
-            previewer.getRemote().map(DummyPlayer::getTextures).ifPresentOrElse(t -> {
-                offline = false;
-                fetchingSkin = true;
-                t.reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
-                    if (type == skinType) {
-                        fetchingSkin = false;
-                        if (wasPending) {
-                            GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                        }
+            offline = false;
+            fetchingSkin = true;
+            previewer.getServerTexture().reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
+                if (type == skinType) {
+                    fetchingSkin = false;
+                    if (wasPending) {
+                        GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
                     }
-                    listener.onSetRemoteSkin(type, location, profileTexture);
-                }).handleAsync((a, throwable) -> {
+                }
+                listener.onSetRemoteSkin(type, location, profileTexture);
+            }).handleAsync((a, throwable) -> {
 
-                    if (throwable != null) {
-                        handleException(throwable.getCause());
-                    } else {
-                        retries = 1;
-                    }
-                    return a;
-                }, MinecraftClient.getInstance());
-            }, () -> {
-                offline = false;
-                pending = true;
-            });
+                if (throwable != null) {
+                    handleException(throwable.getCause());
+                } else {
+                    retries = 1;
+                }
+                return a;
+            }, MinecraftClient.getInstance());
         });
     }
 
@@ -289,7 +283,7 @@ public class SkinUploader implements Closeable {
 
     @Override
     public void close() throws IOException {
-        previewer.apply(p -> p.getTextures().dispose());
+        previewer.close();
     }
 
     public void setLocalSkin(Path skinFile) {
@@ -297,10 +291,6 @@ public class SkinUploader implements Closeable {
     }
 
     public void update() {
-        if (!previewer.getRemote().isPresent()) {
-            return;
-        }
-
         previewer.apply(DummyPlayer::updateModel);
         localSkin.update();
 
@@ -316,19 +306,17 @@ public class SkinUploader implements Closeable {
     }
 
     private void fileRemoved() {
-        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(t -> mc.execute(t::dispose));
+        mc.execute(previewer.getClientTexture()::close);
     }
 
     private void fileChanged(Path path) {
-        previewer.getLocal().map(DummyPlayer::getTextures).ifPresent(t -> {
-            try {
-                logger.debug("Set {} {}", skinType, path);
-                t.get(skinType).setLocal(path);
-                listener.onSetLocalSkin(skinType);
-            } catch (IOException e) {
-                HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
-            }
-        });
+        try {
+            logger.debug("Set {} {}", skinType, path);
+            previewer.getClientTexture().get(skinType).setLocal(path);
+            listener.onSetLocalSkin(skinType);
+        } catch (IOException e) {
+            HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
+        }
     }
 
     public interface ISkinUploadHandler {

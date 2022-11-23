@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.client.dummy;
 
 import static com.mojang.blaze3d.systems.RenderSystem.*;
 
+import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,6 +14,8 @@ import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.resources.LocalPlayerSkins;
+import com.minelittlepony.hdskins.client.resources.ServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -35,7 +38,7 @@ import net.minecraft.util.Util;
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview extends DrawableHelper {
+public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSkins.Posture {
 
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
@@ -50,16 +53,24 @@ public class PlayerPreview extends DrawableHelper {
         map.put(SkinType.SKIN, NO_SKIN_ALEX);
     });
 
+    public static Identifier getDefaultTexture(SkinType type, boolean slimArms) {
+        if (slimArms && NO_TEXTURES_ALEX.containsKey(type)) {
+            return NO_TEXTURES_ALEX.get(type);
+        }
+        return NO_TEXTURES.getOrDefault(type, NO_SKIN_STEVE);
+    }
+
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
 
-    protected final TextureProxy localTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
-    protected final TextureProxy remoteTextures = new TextureProxy(profile, this::getBlankSteveSkin, this::getBlankAlexSkin);
-
     private Optional<DummyPlayer> localPlayer = Optional.empty();
+    protected final LocalPlayerSkins localTextures = new LocalPlayerSkins(this);
+
     private Optional<DummyPlayer> remotePlayer = Optional.empty();
+    protected final ServerPlayerSkins remoteTextures = new ServerPlayerSkins(this);
 
     private int pose;
+    private SkinType activeSkinType;
 
     private final Iterator<EquipmentSet> equipmentSets;
     private EquipmentSet activeEquipmentSet;
@@ -79,7 +90,7 @@ public class PlayerPreview extends DrawableHelper {
         }, MinecraftClient.getInstance());
     }
 
-    protected DummyPlayer createEntity(ClientWorld world, TextureProxy textures) {
+    protected DummyPlayer createEntity(ClientWorld world, PlayerSkins<?> textures) {
         return new DummyPlayer(world, textures);
     }
 
@@ -95,22 +106,36 @@ public class PlayerPreview extends DrawableHelper {
         return activeEquipmentSet;
     }
 
-    public void setPose(int pose) {
-        this.pose = pose;
-
-        localTextures.setPose(pose);
-        remoteTextures.setPose(pose);
+    @Override
+    public GameProfile getProfile() {
+        return profile;
     }
 
+    public void setPose(int pose) {
+        this.pose = pose;
+    }
+
+    @Override
     public int getPose() {
         return pose;
     }
 
     public void setModelType(String model) {
-        boolean thinArmType = VanillaModels.isSlim(model);
+        localTextures.setPreviewThinArms(VanillaModels.isSlim(model));
+    }
 
-        localTextures.setPreviewThinArms(thinArmType);
-        remoteTextures.setPreviewThinArms(thinArmType);
+    public void setSkinType(SkinType type) {
+        activeSkinType = type;
+    }
+
+    @Override
+    public SkinType getActiveSkinType() {
+        return activeSkinType;
+    }
+
+    @Override
+    public Identifier getDefaultSkin(SkinType type, boolean slim) {
+        return slim ? getBlankAlexSkin(type) : getBlankSteveSkin(type);
     }
 
     public void setJumping(boolean jumping) {
@@ -130,15 +155,12 @@ public class PlayerPreview extends DrawableHelper {
         getRemote().ifPresent(action);
     }
 
-    public Identifier getBlankSteveSkin(SkinType type) {
-        return NO_TEXTURES.get(type);
+    public Identifier getBlankAlexSkin(SkinType type) {
+        return getDefaultTexture(type, true);
     }
 
-    public Identifier getBlankAlexSkin(SkinType type) {
-        if (NO_TEXTURES_ALEX.containsKey(type)) {
-            return NO_TEXTURES_ALEX.get(type);
-        }
-        return getBlankSteveSkin(type);
+    public Identifier getBlankSteveSkin(SkinType type) {
+        return getDefaultTexture(type, false);
     }
 
     public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
@@ -308,16 +330,25 @@ public class PlayerPreview extends DrawableHelper {
         matrixStack.pop();
     }
 
-    public void setSkinType(SkinType type) {
-        localTextures.setSkinType(type);
-        remoteTextures.setSkinType(type);
-    }
-
     public Optional<DummyPlayer> getRemote() {
         return remotePlayer;
     }
 
+    public ServerPlayerSkins getServerTexture() {
+        return remoteTextures;
+    }
+
+    public LocalPlayerSkins getClientTexture() {
+        return localTextures;
+    }
+
     public Optional<DummyPlayer> getLocal() {
         return localPlayer;
+    }
+
+    @Override
+    public void close() {
+        remoteTextures.close();
+        localTextures.close();
     }
 }

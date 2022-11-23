@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;
-import com.minelittlepony.hdskins.client.resources.LocalTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 /**
@@ -33,18 +32,18 @@ import com.minelittlepony.hdskins.profile.SkinType;
 public class DummyPlayer extends AbstractClientPlayerEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
-    private TextureProxy textures;
+    private PlayerSkins<?> textures;
 
     private AttributeContainer attributes;
 
     public final MrBoaty boat;
 
     @Deprecated
-    public DummyPlayer(TextureProxy textures) {
+    public DummyPlayer(PlayerSkins<?> textures) {
         this(DummyWorld.getOrDummyFuture().getNow(null), textures);
     }
 
-    public DummyPlayer(ClientWorld world, TextureProxy textures) {
+    public DummyPlayer(ClientWorld world, PlayerSkins<?> textures) {
         super(world, MinecraftClient.getInstance().getSession().getProfile(), null);
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
@@ -61,12 +60,10 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         return this.attributes;
     }
 
-    public TextureProxy getTextures() {
+    public PlayerSkins<?> getTextures() {
         // initialization order is annoying
         if (textures == null) {
-            textures = new TextureProxy(MinecraftClient.getInstance().getSession().getProfile(),
-                    type -> PlayerPreview.NO_SKIN_STEVE,
-                    type -> PlayerPreview.NO_SKIN_ALEX);
+            return PlayerSkins.EMPTY;
         }
         return textures;
     }
@@ -78,12 +75,12 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public boolean canRenderElytraTexture() {
-        return getTextures().getSkinType() == SkinType.ELYTRA;
+        return getTextures().getPosture().getActiveSkinType() == SkinType.ELYTRA;
     }
 
     @Override
     public boolean canRenderCapeTexture() {
-        return getTextures().getSkinType() == SkinType.CAPE;
+        return getTextures().getPosture().getActiveSkinType() == SkinType.CAPE;
     }
 
     @Override
@@ -103,21 +100,19 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Identifier getSkinTexture() {
-        LocalTexture localTex = getTextures().get(SkinType.SKIN);
-        Identifier texture = localTex.getId();
-        return texture == null ? localTex.getDefault() : texture;
+        return getTextures().get(SkinType.SKIN).getId();
     }
 
     @Nullable
     @Override
     public Identifier getCapeTexture() {
-        return getTextures().getSkinType() == SkinType.CAPE ? getTextures().get(SkinType.CAPE).getId() : null;
+        return getTextures().getPosture().getActiveSkinType() == SkinType.CAPE ? getTextures().get(SkinType.CAPE).getId() : null;
     }
 
     @Nullable
     @Override
     public Identifier getElytraTexture() {
-        return getTextures().getSkinType() == SkinType.ELYTRA ? getTextures().get(SkinType.ELYTRA).getId() : null;
+        return getTextures().getPosture().getActiveSkinType() == SkinType.ELYTRA ? getTextures().get(SkinType.ELYTRA).getId() : null;
     }
 
     @Override
@@ -127,22 +122,22 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public boolean hasVehicle() {
-        return getTextures().previewRiding;
+        return getTextures().getPosture().getPose() == PlayerSkins.POSE_RIDING;
     }
 
     @Override
     public boolean isSleeping() {
-        return getTextures().previewSleeping;
+        return getTextures().getPosture().getPose() == PlayerSkins.POSE_SLEEPING;
     }
 
     @Override
     public boolean isSwimming() {
-        return getTextures().previewSwimming;
+        return getTextures().getPosture().getPose() == PlayerSkins.POSE_SWIMMING;
     }
 
     @Override
     public boolean isUsingRiptide() {
-        return getTextures().previewRiptide;
+        return getTextures().getPosture().getPose() == PlayerSkins.POSE_RIPTIDE;
     }
 
     @Override
@@ -191,8 +186,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     public void updateModel() {
-
-        SkinType type = getTextures().getSkinType();
+        SkinType type = getTextures().getPosture().getActiveSkinType();
 
         if ((type == SkinType.ELYTRA) != (getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA)) {
             equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA : Items.AIR).getDefaultStack());
