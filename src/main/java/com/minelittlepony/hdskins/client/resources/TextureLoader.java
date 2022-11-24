@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -19,8 +20,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 
 public class TextureLoader {
-
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final MinecraftClient CLIENT = MinecraftClient.getInstance();
 
     /**
      * Schedule texture loading on the main thread.
@@ -28,14 +28,20 @@ public class TextureLoader {
      * @param texture
      */
     public static void loadTexture(final Identifier textureLocation, final AbstractTexture texture) {
-        mc.execute(() -> {
+        CLIENT.execute(() -> {
             RenderSystem.recordRenderCall(() -> {
-                mc.getTextureManager().registerTexture(textureLocation, texture);
+                CLIENT.getTextureManager().registerTexture(textureLocation, texture);
             });
         });
     }
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private final Function<NativeImage, NativeImage> filter;
+
+    public TextureLoader(Function<NativeImage, NativeImage> filter) {
+        this.filter = filter;
+    }
 
     public void stop() {
         executor.shutdownNow();
@@ -43,18 +49,15 @@ public class TextureLoader {
     }
 
     public CompletableFuture<Identifier> loadAsync(Identifier imageId) {
-        return CompletableFuture.supplyAsync(() -> {
-            return getImage(imageId)
-                    .flatMap(image -> Optional.ofNullable(HDPlayerSkinTexture.filterPlayerSkins(image))
-                            .filter(i -> i != null && i != image)
-                    );
-        }, executor).thenApplyAsync(updated -> {
+        return CompletableFuture.supplyAsync(() -> getImage(imageId), executor)
+        .thenApplyAsync(loaded -> loaded.flatMap(image -> Optional.ofNullable(filter.apply(image)).filter(i -> i != null && i != image)), CLIENT)
+        .thenApplyAsync(updated -> {
             return updated.map(image -> {
                 Identifier convertedId = new Identifier(imageId.getNamespace() + "-converted", imageId.getPath());
-                mc.getTextureManager().registerTexture(convertedId, new NativeImageBackedTexture(image));
+                CLIENT.getTextureManager().registerTexture(convertedId, new NativeImageBackedTexture(image));
                 return convertedId;
             }).orElse(imageId);
-        }, mc).exceptionally(t -> {
+        }, CLIENT).exceptionally(t -> {
             HDSkins.LOGGER.warn("Errored while processing {}. Using original.", imageId, t);
             return imageId;
         });
@@ -62,7 +65,7 @@ public class TextureLoader {
 
     @Nullable
     private Optional<NativeImage> getImage(Identifier res) {
-        return mc.getResourceManager().getResource(res).map(resource -> {
+        return CLIENT.getResourceManager().getResource(res).map(resource -> {
             try (InputStream in = resource.getInputStream()) {
                 return NativeImage.read(in);
             } catch (IOException e) {

@@ -3,10 +3,7 @@ package com.minelittlepony.hdskins.client.dummy;
 import static com.mojang.blaze3d.systems.RenderSystem.*;
 
 import java.io.Closeable;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -14,8 +11,7 @@ import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
-import com.minelittlepony.hdskins.client.resources.LocalPlayerSkins;
-import com.minelittlepony.hdskins.client.resources.ServerPlayerSkins;
+import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -27,6 +23,7 @@ import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.RotationAxis;
@@ -135,7 +132,9 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
     @Override
     public Identifier getDefaultSkin(SkinType type, boolean slim) {
-        return slim ? getBlankAlexSkin(type) : getBlankSteveSkin(type);
+        Identifier skin = slim ? getBlankAlexSkin(type) : getBlankSteveSkin(type);
+
+        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? DefaultSkinHelper.getTexture(profile.getId()) : skin, skin);
     }
 
     public void setJumping(boolean jumping) {
