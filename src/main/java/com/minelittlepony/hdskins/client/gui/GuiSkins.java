@@ -19,11 +19,13 @@ import com.minelittlepony.hdskins.server.Feature;
 import com.minelittlepony.hdskins.server.SkinServerList;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.blaze3d.systems.RenderSystem;
+
+import net.minecraft.class_8002;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.CubeMapRenderer;
-import net.minecraft.client.gui.RotatingCubeMapRenderer;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.*;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -33,6 +35,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -462,12 +465,27 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             if (uploadInProgress) {
                 drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);
             } else if (showError) {
-                int blockHeight = (height - getFont().getWrappedLinesHeight(errorMsg.getString(), width - 10)) / 2;
+                int maxWidth = Math.min(width - 10, getFont().getWidth(errorMsg));
+                int messageHeight = getFont().getWrappedLinesHeight(errorMsg.getString(), maxWidth) + getFont().fontHeight + 10;
+                int blockY = (height - messageHeight) / 2;
+                int blockX = (width - maxWidth) / 2;
 
-                drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockHeight - getFont().fontHeight * 2, 0xffff55, 0);
-                drawTextBlock(matrices, errorMsg, 5, blockHeight, width - 10, 0xff5555);
+                int padding = 2;
+                drawTooltipDecorations(matrices, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
+
+                drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
+                drawTextBlock(matrices, errorMsg, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
             }
         }
+    }
+
+    static void drawTooltipDecorations(MatrixStack matrices, int x, int y, int width, int height) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        class_8002.method_47946(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
 
     private void punchServer(Text uploadMsg) {

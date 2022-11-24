@@ -21,7 +21,6 @@ import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecureTextureException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Session;
@@ -39,8 +38,12 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.MODEL_VARIANTS,
             Feature.MODEL_TYPES);
 
-    private transient final String address = "https://api.mojang.com";
+    private transient final String address = "https://api.minecraftservices.com";
     private transient final String verify = "https://authserver.mojang.com/validate";
+
+    private transient final String skinUploadAddress = address + "/minecraft/profile/skins";
+    private transient final String activeSkinAddress = skinUploadAddress + "/active";
+
 
     private transient final boolean requireSecure = true;
 
@@ -93,26 +96,15 @@ public class YggdrasilSkinServer implements SkinServer {
 
         switch (upload.getSchemaAction()) {
             case "none":
-                execute(HttpRequest.newBuilder(createProfileUri(upload))
+                execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
                         .DELETE()
                         .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
                         .build());
                 break;
             case "file":
-                execute(HttpRequest.newBuilder(createProfileUri(upload))
+                execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
                         .PUT(FileTypes.multiPart(mapMetadata(upload.metadata()))
                                 .field("file", upload.image())
-                                .build())
-                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
-                        .build());
-                break;
-            case "http":
-            case "https":
-                execute(HttpRequest.newBuilder(createProfileUri(upload))
-                        .PUT(FileTypes.multiPart(mapMetadata(upload.metadata()))
-                                .field("file", upload.image().toString())
                                 .build())
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
                         .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
@@ -127,18 +119,11 @@ public class YggdrasilSkinServer implements SkinServer {
         client.getSessionProperties().clear();
     }
 
-    private URI createProfileUri(SkinUpload upload) {
-        return URI.create(String.format("%s/user/profile/%s/%s", address,
-                UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
-                upload.type().getParameterizedName())
-        );
-    }
-
     private Map<String, String> mapMetadata(Map<String, String> metadata) {
-        return metadata.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-            String value = entry.getValue();
-            return "model".contentEquals(entry.getKey()) && "default".contentEquals(value) ? "classic" : value;
-        }));
+        Map<String, String> result = new HashMap<>();
+        String model = metadata.getOrDefault("model", "classic");
+        result.put("variant", "default".contentEquals(model) ? "classic" : model);
+        return result;
     }
 
     private void authorize(Session session) throws IOException {

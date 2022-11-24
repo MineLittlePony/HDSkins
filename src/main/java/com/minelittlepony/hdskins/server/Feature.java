@@ -35,8 +35,6 @@ public enum Feature {
     /**
      * Whether a server supports thin (Alex) skins or just default (Steve) skins.
      * Servers without this will typically fall back to using the player's uuid on the client side.
-     *
-     * (unused)
      */
     MODEL_VARIANTS,
     /**
