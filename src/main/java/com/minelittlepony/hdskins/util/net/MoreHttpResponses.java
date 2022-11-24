@@ -1,138 +1,95 @@
 package com.minelittlepony.hdskins.util.net;
 
-import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
+import java.net.http.*;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 /**
  * Utility class for getting different response types from a http response.
  */
 @FunctionalInterface
-public interface MoreHttpResponses extends AutoCloseable {
+public interface MoreHttpResponses {
+    int SC_MULTIPLE_CHOICES = 300;
+    HttpClient CLIENT = HttpClient.newHttpClient();
     Gson GSON = new GsonBuilder()
             .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
-    CloseableHttpResponse response();
-
-    default boolean ok() {
-        return responseCode() < HttpStatus.SC_MULTIPLE_CHOICES;
+    static MoreHttpResponses execute(HttpRequest request) throws IOException {
+        try {
+            HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());
+            return () -> response;
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
     }
 
-    default boolean json() {
-        return "application/json".contentEquals(contentType().getMimeType());
-    }
+    HttpResponse<InputStream> response();
 
-    default int responseCode() {
-        return response().getStatusLine().getStatusCode();
-    }
-
-    default Optional<HttpEntity> entity() {
-        return Optional.ofNullable(response().getEntity());
-    }
-
-    default ContentType contentType() {
-        return entity()
-                .map(ContentType::get)
-                .orElse(ContentType.DEFAULT_TEXT);
-    }
-
-    default InputStream inputStream() throws IOException {
-        return response().getEntity().getContent();
+    default boolean contentTypeMatches(String contentType) {
+        return response()
+                .headers()
+                .allValues(FileTypes.HEADER_CONTENT_TYPE)
+                .stream()
+                .anyMatch(s -> s.toLowerCase().contains(contentType));
     }
 
     default BufferedReader reader() throws IOException {
-        return new BufferedReader(new InputStreamReader(inputStream(), StandardCharsets.UTF_8));
-    }
-
-    default byte[] bytes() throws IOException {
-        try (InputStream input = inputStream()) {
-            return ByteStreams.toByteArray(input);
-        }
-    }
-
-    default String text() throws IOException {
-        try (BufferedReader reader = reader()) {
-            return CharStreams.toString(reader);
-        }
-    }
-
-    default Stream<String> lines() throws IOException {
-        try (BufferedReader reader = reader()) {
-            return reader.lines();
-        }
+        return new BufferedReader(new InputStreamReader(response().body(), StandardCharsets.UTF_8));
     }
 
     default <T> T json(Class<T> type, String errorMessage) throws IOException {
-        return json((Type)type, errorMessage);
-    }
 
-    default <T> T json(Type type, String errorMessage) throws IOException {
-        if (!json()) {
-            String text = text();
+        if (!contentTypeMatches(FileTypes.APPLICATION_JSON)) {
+            String text;
+            try (BufferedReader reader = reader()) {
+                text = CharStreams.toString(reader);
+            }
             HDSkins.LOGGER.error(errorMessage, text);
-            throw new IOException(text);
+            throw new HttpException(text, response().statusCode(), null);
         }
 
         try (BufferedReader reader = reader()) {
-            return GSON.fromJson(reader, type);
+            T t = GSON.fromJson(reader, type);
+            if (t == null) {
+                String text;
+                try (BufferedReader r = reader()) {
+                    text = CharStreams.toString(r);
+                }
+                throw new HttpException(errorMessage + "\n " + text, response().statusCode(), null);
+            }
+            return t;
         }
     }
 
-    default <T> T unwrapAsJson(Type type) throws IOException {
-        if (ok()) {
-            return json(type, "Server returned a non-json response!");
+    default boolean ok() {
+        return response().statusCode() < SC_MULTIPLE_CHOICES;
+    }
+
+    default MoreHttpResponses requireOk() throws IOException {
+        if (!ok()) {
+            JsonObject json = json(JsonObject.class, "Server did not respond correctly. Status Code " + response().statusCode());
+            if (json.has("message")) {
+                throw new HttpException(json.get("message").getAsString(), response().statusCode(), null);
+            } else {
+                throw new HttpException(json.toString(), response().statusCode(), null);
+            }
         }
-
-        throw exception();
-    }
-
-    default IOException exception() throws IOException {
-        return new IOException(json(JsonObject.class, "Server error wasn't in json: {}").get("message").getAsString());
-    }
-
-    @Override
-    default void close() throws IOException {
-        response().close();
-    }
-
-    static MoreHttpResponses execute(CloseableHttpClient client, HttpUriRequest request) throws IOException {
-        CloseableHttpResponse response = client.execute(request);
-        return () -> response;
-    }
-
-    static NameValuePair[] mapAsParameters(Map<String, String> parameters) {
-        return parameters.entrySet().stream()
-                .map(entry ->
-                    new BasicNameValuePair(entry.getKey(), entry.getValue())
-                )
-                .toArray(NameValuePair[]::new);
+        return this;
     }
 }

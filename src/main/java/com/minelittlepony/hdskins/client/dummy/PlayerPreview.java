@@ -67,7 +67,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     protected final ServerPlayerSkins remoteTextures = new ServerPlayerSkins(this);
 
     private int pose;
-    private SkinType activeSkinType;
+    private SkinType activeSkinType = SkinType.SKIN;
 
     private final Iterator<EquipmentSet> equipmentSets;
     private EquipmentSet activeEquipmentSet;

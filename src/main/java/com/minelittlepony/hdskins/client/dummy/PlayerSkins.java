@@ -76,7 +76,7 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
 
     public boolean isSetupComplete() {
         return textures.size() > 0
-            && textures.values().stream().allMatch(PlayerSkin::isReady);
+            && get(getPosture().getActiveSkinType()).isReady();
     }
 
     public T get(SkinType type) {

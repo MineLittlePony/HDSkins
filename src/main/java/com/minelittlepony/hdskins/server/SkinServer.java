@@ -7,13 +7,7 @@ import com.mojang.authlib.exceptions.AuthenticationException;
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
 public interface SkinServer {
-
-    CloseableHttpClient HTTP_CLIENT = HttpClients.createSystem();
-
     /**
      * Returns the set of features that this skin server supports.
      */

@@ -4,27 +4,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
-import com.minelittlepony.hdskins.util.net.HttpException;
-import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
+import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Session;
-import org.apache.http.HttpHeaders;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.message.BasicNameValuePair;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.net.http.HttpRequest;
 import java.util.Set;
 import java.util.UUID;
 
@@ -50,6 +40,16 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
+    public Set<Feature> getFeatures() {
+        return FEATURES;
+    }
+
+    @Override
+    public boolean supportsSkinType(SkinType skinType) {
+        return skinType.isKnown() && skinType != SkinType.CAPE;
+    }
+
+    @Override
     public boolean ownsUrl(String url) {
         try {
             url = new URI(url).getHost();
@@ -64,13 +64,12 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, new HttpGet(getTexturesURI(profile)))) {
-            if (response.ok()) {
-                return response.unwrapAsJson(TexturePayload.class);
-            }
-
-            throw new HttpException(response.response());
-        }
+        Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/user/%s", getApiPrefix(), UUIDTypeAdapter.fromUUID(profile.getId()))))
+                    .GET()
+                    .build())
+                .requireOk()
+                .json(TexturePayload.class, "Invalid texture payload");
     }
 
     @Override
@@ -92,67 +91,49 @@ public class ValhallaSkinServer implements SkinServer {
 
         switch (upload.getSchemaAction()) {
             case "none":
-                resetSkin(upload);
+                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                        .DELETE()
+                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                        .build())
+                    .requireOk();
                 break;
             case "file":
-                uploadFile(upload);
+                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                        .PUT(FileTypes.multiPart(upload.metadata())
+                                .field("file", upload.image())
+                                .build())
+                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                        .build())
+                    .requireOk();
                 break;
             case "http":
             case "https":
-                uploadUrl(upload);
+                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                        .POST(FileTypes.multiPart(upload.metadata())
+                                .field("file", upload.image().toString())
+                                .build())
+                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                        .build())
+                    .requireOk();
                 break;
             default:
                 throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
         }
     }
 
-    private void resetSkin(SkinUpload upload) throws IOException {
-        upload(RequestBuilder.delete()
-                .setUri(buildUserTextureUri(upload))
-                .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
-                .build());
-    }
-
-    private void uploadFile(SkinUpload upload) throws IOException {
-        final File file = new File(upload.image());
-
-        MultipartEntityBuilder b = MultipartEntityBuilder.create()
-                .addBinaryBody("file", file, ContentType.create("image/png"), file.getName());
-
-        upload.metadata().forEach(b::addTextBody);
-
-        upload(RequestBuilder.put()
-                .setUri(buildUserTextureUri(upload))
-                .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
-                .setEntity(b.build())
-                .build());
-    }
-
-    private void uploadUrl(SkinUpload upload) throws IOException {
-        upload(RequestBuilder.post()
-                .setUri(buildUserTextureUri(upload))
-                .addHeader(HttpHeaders.AUTHORIZATION, this.accessToken)
-                .addParameter("file", upload.image().toString())
-                .addParameters(mapAsParameters(upload.metadata()))
-                .build());
-    }
-
-    static NameValuePair[] mapAsParameters(Map<String, String> parameters) {
-        return parameters.entrySet().stream()
-                .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
-                .toArray(NameValuePair[]::new);
-    }
-
-    private void upload(HttpUriRequest request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request)) {
-            if (!response.ok()) {
-                throw response.exception();
-            }
-        }
+    private URI buildUserTextureUri(SkinUpload upload) {
+        return URI.create(String.format("%s/user/%s/%s", getApiPrefix(),
+                UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
+                upload.type().getParameterizedName()
+        ));
     }
 
     private void authorize(Session session) throws IOException, AuthenticationException {
-        if (this.accessToken != null) {
+        if (accessToken != null) {
             return;
         }
         GameProfile profile = session.getProfile();
@@ -169,55 +150,32 @@ public class ValhallaSkinServer implements SkinServer {
         if (!response.userId.equals(profile.getId())) {
             throw new IOException("UUID mismatch!"); // probably won't ever throw
         }
-        this.accessToken = response.accessToken;
+        accessToken = response.accessToken;
     }
 
     private AuthHandshake authHandshake(String name) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HTTP_CLIENT, RequestBuilder.post()
-                .setUri(getHandshakeURI())
-                .addParameter("name", name)
-                .build())) {
-            return resp.unwrapAsJson(AuthHandshake.class);
-        }
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/auth/handshake", getApiPrefix())))
+                .POST(FileTypes.multiPart()
+                        .field("name", name)
+                        .build())
+                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                .build())
+                .requireOk()
+                .json(AuthHandshake.class, "Invalid handshake response");
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        try (MoreHttpResponses resp = MoreHttpResponses.execute(HTTP_CLIENT, RequestBuilder.post()
-                .setUri(getResponseURI())
-                .addParameter("name", name)
-                .addParameter("verifyToken", String.valueOf(verifyToken))
-                .build())) {
-            return resp.unwrapAsJson(AuthResponse.class);
-        }
-    }
-
-    private URI buildUserTextureUri(SkinUpload upload) {
-        String user = UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId());
-        String skinType = upload.type().getParameterizedName();
-        return URI.create(String.format("%s/user/%s/%s", this.getApiPrefix(), user, skinType));
-    }
-
-    private URI getTexturesURI(GameProfile profile) {
-        Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
-        return URI.create(String.format("%s/user/%s", this.getApiPrefix(), UUIDTypeAdapter.fromUUID(profile.getId())));
-    }
-
-    private URI getHandshakeURI() {
-        return URI.create(String.format("%s/auth/handshake", this.getApiPrefix()));
-    }
-
-    private URI getResponseURI() {
-        return URI.create(String.format("%s/auth/response", this.getApiPrefix()));
-    }
-
-    @Override
-    public Set<Feature> getFeatures() {
-        return FEATURES;
-    }
-
-    @Override
-    public boolean supportsSkinType(SkinType skinType) {
-        return skinType.isKnown() && skinType != SkinType.CAPE;
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/auth/response", getApiPrefix())))
+                .POST(FileTypes.multiPart()
+                        .field("name", name)
+                        .field("verifyToken", verifyToken)
+                        .build())
+                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                .build())
+                .requireOk()
+                .json(AuthResponse.class, "Invalid auth response");
     }
 
     @Override

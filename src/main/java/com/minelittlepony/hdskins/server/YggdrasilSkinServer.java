@@ -1,25 +1,20 @@
 package com.minelittlepony.hdskins.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
-
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
+import com.minelittlepony.hdskins.util.net.FileTypes;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
@@ -86,8 +81,6 @@ public class YggdrasilSkinServer implements SkinServer {
             HDSkins.LOGGER.error(e);
         }
 
-
-
         return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
                 entry -> SkinType.forVanilla(entry.getKey()),
                 Map.Entry::getValue
@@ -100,70 +93,68 @@ public class YggdrasilSkinServer implements SkinServer {
 
         switch (upload.getSchemaAction()) {
             case "none":
-                send(appendHeaders(upload, RequestBuilder.delete()));
+                execute(HttpRequest.newBuilder(createProfileUri(upload))
+                        .DELETE()
+                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                        .build());
+                break;
+            case "file":
+                execute(HttpRequest.newBuilder(createProfileUri(upload))
+                        .PUT(FileTypes.multiPart(mapMetadata(upload.metadata()))
+                                .field("file", upload.image())
+                                .build())
+                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                        .build());
+                break;
+            case "http":
+            case "https":
+                execute(HttpRequest.newBuilder(createProfileUri(upload))
+                        .PUT(FileTypes.multiPart(mapMetadata(upload.metadata()))
+                                .field("file", upload.image().toString())
+                                .build())
+                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                        .build());
                 break;
             default:
-                send(prepareUpload(upload, RequestBuilder.put()));
+                throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
         client.getSessionProperties().clear();
     }
 
-    private RequestBuilder prepareUpload(SkinUpload upload, RequestBuilder request) throws IOException {
-        request = appendHeaders(upload, request);
-        switch (upload.getSchemaAction()) {
-            case "file":
-                final File file = new File(upload.image());
-
-                MultipartEntityBuilder b = MultipartEntityBuilder.create()
-                        .addBinaryBody("file", file, ContentType.create("image/png"), file.getName());
-
-                mapMetadata(upload.metadata()).forEach(b::addTextBody);
-
-                return request.setEntity(b.build());
-            case "http":
-            case "https":
-                return request
-                        .addParameter("file", upload.image().toString())
-                        .addParameters(MoreHttpResponses.mapAsParameters(mapMetadata(upload.metadata())));
-            default:
-                throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
-        }
-    }
-
-    private RequestBuilder appendHeaders(SkinUpload upload, RequestBuilder request) {
-        return request
-                .setUri(URI.create(String.format("%s/user/profile/%s/%s", address,
-                        UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
-                        upload.type().getParameterizedName())))
-                .addHeader("authorization", "Bearer " + upload.session().getAccessToken());
-    }
-
-    private Map<String, String> mapMetadata(Map<String, String> metadata) {
-        return metadata.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> {
-                    String value = entry.getValue();
-                    if ("model".contentEquals(entry.getKey()) && "default".contentEquals(value)) {
-                        return "classic";
-                    }
-                    return value;
-                })
+    private URI createProfileUri(SkinUpload upload) {
+        return URI.create(String.format("%s/user/profile/%s/%s", address,
+                UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
+                upload.type().getParameterizedName())
         );
     }
 
-    private void authorize(Session session) throws IOException {
-        RequestBuilder request = RequestBuilder.post().setUri(verify);
-        request.setEntity(new TokenRequest(session).toEntity());
-
-        send(request);
+    private Map<String, String> mapMetadata(Map<String, String> metadata) {
+        return metadata.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+            String value = entry.getValue();
+            return "model".contentEquals(entry.getKey()) && "default".contentEquals(value) ? "classic" : value;
+        }));
     }
 
-    private void send(RequestBuilder request) throws IOException {
-        try (MoreHttpResponses response = MoreHttpResponses.execute(HTTP_CLIENT, request.build())) {
-            if (!response.ok()) {
-                throw new IOException(response.json(ErrorResponse.class, "Server error wasn't in json: {}").toString());
-            }
+    private void authorize(Session session) throws IOException {
+        JsonObject json = new JsonObject();
+        json.addProperty("accessToken", session.getAccessToken());
+        execute(HttpRequest.newBuilder(URI.create(verify))
+                .POST(BodyPublishers.ofString(json.toString()))
+                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
+                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                .build());
+    }
+
+    private void execute(HttpRequest request) throws IOException {
+        MoreHttpResponses response = MoreHttpResponses.execute(request);
+        if (!response.ok()) {
+            throw new IOException(response.json(ErrorResponse.class, "Server did not respond correctly. Status Code " + response.response().statusCode()).toString());
         }
     }
 
@@ -173,21 +164,6 @@ public class YggdrasilSkinServer implements SkinServer {
                 .append("address", address)
                 .append("secured", requireSecure)
                 .toString();
-    }
-
-    static class TokenRequest {
-        static final Gson GSON = new Gson();
-
-        @NotNull
-        private final String accessToken;
-
-        TokenRequest(Session session) {
-            accessToken = session.getAccessToken();
-        }
-
-        public StringEntity toEntity() throws IOException {
-            return new StringEntity(GSON.toJson(this), ContentType.APPLICATION_JSON);
-        }
     }
 
     class ErrorResponse {

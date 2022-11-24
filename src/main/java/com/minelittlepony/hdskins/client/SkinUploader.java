@@ -5,11 +5,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,12 +29,10 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import java.util.Collections;
 import java.util.Set;
 
 public class SkinUploader implements Closeable {
@@ -55,8 +52,6 @@ public class SkinUploader implements Closeable {
     private Optional<SkinServer> gateway;
 
     private Text errorMessage = ERR_ALL_FINE;
-
-    private SkinType skinType = SkinType.SKIN;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
@@ -93,7 +88,7 @@ public class SkinUploader implements Closeable {
     public void cycleGateway() {
         if (skinServers.hasNext()) {
             gateway = Optional.ofNullable(skinServers.next());
-            setSkinType(gateway.flatMap(g -> g.supportsSkinType(skinType) ? Optional.of(skinType) : getSupportedSkinTypes().stream().findFirst()).orElse(SkinType.UNKNOWN));
+            setSkinType(gateway.flatMap(g -> g.supportsSkinType(previewer.getActiveSkinType()) ? Optional.of(previewer.getActiveSkinType()) : getSupportedSkinTypes().findFirst()).orElse(SkinType.UNKNOWN));
             fetchRemote();
         } else {
             setError(ERR_NO_SERVER);
@@ -105,23 +100,17 @@ public class SkinUploader implements Closeable {
     }
 
     public Set<Feature> getFeatures() {
-        return gateway.map(SkinServer::getFeatures).orElseGet(Collections::emptySet);
+        return gateway.map(SkinServer::getFeatures).orElse(Set.of());
     }
 
-    public List<SkinType> getSupportedSkinTypes() {
-        var reg = SkinType.REGISTRY;
-        return gateway.map(g -> {
-            return SkinType.REGISTRY.stream().filter(g::supportsSkinType).collect(Collectors.toList());
-        }).orElse(Collections.emptyList());
+    public Stream<SkinType> getSupportedSkinTypes() {
+        return gateway.stream().flatMap(g -> SkinType.REGISTRY.stream().filter(g::supportsSkinType)).distinct();
     }
 
     public void setSkinType(SkinType type) {
-        if (type == skinType) {
+        if (type == previewer.getActiveSkinType()) {
             return;
         }
-
-        skinType = type;
-
         previewer.setSkinType(type);
         listener.onSkinTypeChanged(type);
     }
@@ -190,10 +179,6 @@ public class SkinUploader implements Closeable {
         return skinMetadata.getOrDefault(field, "");
     }
 
-    public SkinType getSkinType() {
-        return skinType;
-    }
-
     public boolean tryClearStatus() {
         hasError();
         uploadInProgress();
@@ -213,9 +198,9 @@ public class SkinUploader implements Closeable {
         return CompletableFuture.runAsync(() -> {
             gateway.ifPresent(gateway -> {
                 try {
-                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), skinType, localSkin.toUri(), skinMetadata));
+                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), previewer.getActiveSkinType(), localSkin.toUri(), skinMetadata));
                     setError(ERR_ALL_FINE);
-                } catch (IOException | AuthenticationException e) {
+                } catch (Exception e) {
                     handleException(e);
                 }
             });
@@ -223,7 +208,7 @@ public class SkinUploader implements Closeable {
     }
 
     public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
-        return previewer.getServerTexture().get(skinType).getServerTexture();
+        return previewer.getServerTexture().get(previewer.getActiveSkinType()).getServerTexture();
     }
 
     protected void fetchRemote() {
@@ -235,7 +220,7 @@ public class SkinUploader implements Closeable {
             offline = false;
             fetchingSkin = true;
             previewer.getServerTexture().reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
-                if (type == skinType) {
+                if (type == previewer.getActiveSkinType()) {
                     fetchingSkin = false;
                     if (wasPending) {
                         GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
@@ -313,6 +298,7 @@ public class SkinUploader implements Closeable {
 
     private void fileChanged(Path path) {
         try {
+            SkinType skinType = previewer.getActiveSkinType();
             logger.debug("Set {} {}", skinType, path);
             previewer.getClientTexture().get(skinType).setLocal(path);
             listener.onSetLocalSkin(skinType);

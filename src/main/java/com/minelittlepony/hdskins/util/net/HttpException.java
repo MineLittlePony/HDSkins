@@ -12,10 +12,12 @@ public class HttpException extends IOException {
 
     private final int statusCode;
 
+    @Deprecated
     public HttpException(HttpResponse response) {
         this(response.getStatusLine());
     }
 
+    @Deprecated
     public HttpException(StatusLine status) {
         this(status.getReasonPhrase(), status.getStatusCode(), null);
     }

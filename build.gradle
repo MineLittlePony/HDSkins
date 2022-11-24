@@ -60,9 +60,6 @@ dependencies {
     modApi fabricApi.module("fabric-resource-loader-v0", project.fabric_version)
     modApi fabricApi.module("fabric-rendering-v1", project.fabric_version)
 
-    implementation "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-    include "org.apache.httpcomponents:httpmime:${project.http_client_version}"
-
     modApi "com.minelittlepony:kirin:${project.kirin_version}"
     include "com.minelittlepony:kirin:${project.kirin_version}"
 

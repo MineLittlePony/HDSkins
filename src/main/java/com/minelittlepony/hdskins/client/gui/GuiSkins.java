@@ -209,7 +209,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         row += 24;
         addButton(btnSkinType = new Cycler(width - 25, row, 20, 20))
                 .onChange(i -> {
-                    List<SkinType> types = uploader.getSupportedSkinTypes();
+                    List<SkinType> types = uploader.getSupportedSkinTypes().toList();
                     i %= types.size();
                     uploader.setSkinType(types.get(i));
                     return i;
@@ -255,10 +255,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     private void setupSkinToggler() {
-        List<SkinType> types = uploader.getSupportedSkinTypes();
+        List<SkinType> types = uploader.getSupportedSkinTypes().toList();
         btnSkinType
             .setStyles(types.stream().map(SkinType::getStyle).toArray(Style[]::new))
-            .setValue(types.indexOf(uploader.getSkinType()));
+            .setValue(types.indexOf(previewer.getActiveSkinType()));
 
     }
 
