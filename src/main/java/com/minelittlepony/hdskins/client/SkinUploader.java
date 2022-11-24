@@ -30,6 +30,7 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -108,6 +109,7 @@ public class SkinUploader implements Closeable {
     }
 
     public List<SkinType> getSupportedSkinTypes() {
+        var reg = SkinType.REGISTRY;
         return gateway.map(g -> {
             return SkinType.REGISTRY.stream().filter(g::supportsSkinType).collect(Collectors.toList());
         }).orElse(Collections.emptyList());

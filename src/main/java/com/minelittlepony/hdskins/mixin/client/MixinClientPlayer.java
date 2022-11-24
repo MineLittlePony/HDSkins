@@ -8,6 +8,6 @@ import net.minecraft.client.network.PlayerListEntry;
 
 @Mixin(AbstractClientPlayerEntity.class)
 public interface MixinClientPlayer {
-    @Accessor("cachedScoreboardEntry")
+    @Accessor("playerListEntry")
     PlayerListEntry getBackingClientData();
 }

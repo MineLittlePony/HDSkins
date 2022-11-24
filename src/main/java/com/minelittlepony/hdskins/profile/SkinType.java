@@ -17,7 +17,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 public class SkinType implements Comparable<SkinType> {
 

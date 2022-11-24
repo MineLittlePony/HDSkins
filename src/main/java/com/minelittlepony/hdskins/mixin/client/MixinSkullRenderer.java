@@ -27,7 +27,7 @@ abstract class MixinSkullRenderer implements BlockEntityRenderer<SkullBlockEntit
             Identifier skin = HDSkins.getInstance().getProfileRepository().getTextures(profile).get(SkinType.SKIN);
 
             if (skin != null) {
-                info.setReturnValue(RenderLayer.getEntityCutout(skin));
+                info.setReturnValue(RenderLayer.getEntityCutoutNoCullZOffset(skin));
             }
         }
     }

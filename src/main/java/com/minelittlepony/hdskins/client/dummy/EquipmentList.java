@@ -21,7 +21,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 
 import java.util.EnumMap;
 import java.util.Iterator;
@@ -38,8 +38,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
-            .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registry.ITEM))
-            .registerTypeAdapter(SoundEvent.class, new RegistryTypeAdapter<>(Registry.SOUND_EVENT))
+            .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registries.ITEM))
+            .registerTypeAdapter(SoundEvent.class, new RegistryTypeAdapter<>(Registries.SOUND_EVENT))
             .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 
