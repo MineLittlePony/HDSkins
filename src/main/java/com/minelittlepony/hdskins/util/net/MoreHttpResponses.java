@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -53,28 +52,27 @@ public interface MoreHttpResponses {
         return new BufferedReader(new InputStreamReader(response().body(), StandardCharsets.UTF_8));
     }
 
+    default String text() throws IOException {
+        try (BufferedReader reader = reader()) {
+            return CharStreams.toString(reader);
+        }
+    }
+
     default <T> T json(Class<T> type, String errorMessage) throws IOException {
 
         if (!contentTypeMatches(FileTypes.APPLICATION_JSON)) {
-            String text;
-            try (BufferedReader reader = reader()) {
-                text = CharStreams.toString(reader);
-            }
+            String text = text();
             HDSkins.LOGGER.error(errorMessage, text);
             throw new HttpException(text, response().statusCode(), null);
         }
 
-        try (BufferedReader reader = reader()) {
-            T t = GSON.fromJson(reader, type);
-            if (t == null) {
-                String text;
-                try (BufferedReader r = reader()) {
-                    text = CharStreams.toString(r);
-                }
-                throw new HttpException(errorMessage + "\n " + text, response().statusCode(), null);
-            }
-            return t;
+        String text = text();
+
+        T t = GSON.fromJson(text, type);
+        if (t == null) {
+            throw new HttpException(errorMessage + "\n " + text, response().statusCode(), null);
         }
+        return t;
     }
 
     default boolean ok() {

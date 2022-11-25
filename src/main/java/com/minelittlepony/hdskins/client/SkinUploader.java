@@ -3,10 +3,7 @@ package com.minelittlepony.hdskins.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -33,7 +30,6 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import java.util.Set;
 
 public class SkinUploader implements Closeable {
 
@@ -244,13 +240,7 @@ public class SkinUploader implements Closeable {
 
         fetchingSkin = false;
 
-        if (throwable instanceof AuthenticationUnavailableException) {
-            offline = true;
-        } else if (throwable instanceof InvalidCredentialsException) {
-            setError(ERR_SESSION);
-        } else if (throwable instanceof AuthenticationException) {
-            throttlingNeck = true;
-        } else if (throwable instanceof HttpException) {
+        if (throwable instanceof HttpException) {
             HttpException ex = (HttpException)throwable;
 
             int code = ex.getStatusCode();
@@ -261,10 +251,22 @@ public class SkinUploader implements Closeable {
             } else if (code >= 400 && code != 403 && code != 404) {
                 logger.error(ex.getReasonPhrase(), ex);
                 setError(Text.literal(ex.getReasonPhrase()));
+            } else {
+                logger.error(ex.getReasonPhrase(), ex);
             }
         } else {
-            logger.error("Unhandled exception", throwable);
-            setError(Text.literal(throwable.toString()));
+            logger.error("Unexpected error whilst contacting server at " + Objects.toString(gateway.orElse(null)), throwable);
+
+            if (throwable instanceof AuthenticationUnavailableException) {
+                offline = true;
+            } else if (throwable instanceof InvalidCredentialsException) {
+                setError(ERR_SESSION);
+            } else if (throwable instanceof AuthenticationException) {
+                throttlingNeck = true;
+            } else {
+                logger.error("Unhandled exception", throwable);
+                setError(Text.literal(throwable.toString()));
+            }
         }
     }
 
