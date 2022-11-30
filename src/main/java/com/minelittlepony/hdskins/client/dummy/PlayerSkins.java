@@ -1,5 +1,7 @@
 package com.minelittlepony.hdskins.client.dummy;
 
+import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
@@ -37,6 +39,11 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
                 @Override
                 public Identifier getDefaultSkin(SkinType type, boolean slim) {
                     return PlayerPreview.getDefaultTexture(type, slim);
+                }
+
+                @Override
+                public EquipmentSet getEquipment() {
+                    return HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
                 }
             },
             (type, blankSkin) -> new PlayerSkins.PlayerSkin() {
@@ -100,6 +107,8 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
 
     public interface Posture {
         GameProfile getProfile();
+
+        EquipmentSet getEquipment();
 
         int getPose();
 

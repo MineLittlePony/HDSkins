@@ -110,12 +110,16 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
         public void apply(LivingEntity entity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
-                entity.equipStack(slot, new ItemStack(equipment.getOrDefault(slot, Items.AIR)));
+                entity.equipStack(slot, getStack(slot));
             }
         }
 
         public SoundEvent getSound() {
             return sound == null ? SoundEvents.ITEM_ARMOR_EQUIP_GENERIC : sound;
+        }
+
+        public ItemStack getStack(EquipmentSlot slot) {
+            return equipment.getOrDefault(slot, Items.AIR).getDefaultStack();
         }
 
         public ItemStack getStack() {

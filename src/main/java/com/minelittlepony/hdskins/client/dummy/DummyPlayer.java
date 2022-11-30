@@ -189,7 +189,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         SkinType type = getTextures().getPosture().getActiveSkinType();
 
         if ((type == SkinType.ELYTRA) != (getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA)) {
-            equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA : Items.AIR).getDefaultStack());
+            equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultStack() : textures.getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
         }
 
         lastHandSwingProgress = handSwingProgress;

@@ -93,14 +93,17 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
     public ItemStack cycleEquipment() {
         activeEquipmentSet = equipmentSets.next();
-
-        apply(activeEquipmentSet::apply);
-
+        applyEquipment();
         return activeEquipmentSet.getStack();
     }
 
+    @Override
     public EquipmentSet getEquipment() {
         return activeEquipmentSet;
+    }
+
+    public void applyEquipment() {
+        apply(activeEquipmentSet::apply);
     }
 
     @Override
