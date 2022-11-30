@@ -129,7 +129,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 updateCounter -= 5;
             } else if (right) {
                 updateCounter += 5;
-            } else {
+            } else if (!isDragging()) {
                 updateCounter++;
             }
         }
@@ -313,6 +313,10 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         lastMouseX = mouseX;
 
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            setDragging(true);
+        }
+
         if (canTakeEvents() && !super.mouseClicked(mouseX, mouseY, button)) {
             int bottom = height - 40;
             int mid = width / 2;
@@ -335,8 +339,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
+        super.mouseDragged(mouseX, mouseY, button, changeX, changeY);
 
-        if (canTakeEvents() && !super.mouseDragged(mouseX, mouseY, button, changeX, changeY)) {
+        if (canTakeEvents()) {
             updateCounter -= (lastMouseX - mouseX);
             lastMouseX = mouseX;
 
