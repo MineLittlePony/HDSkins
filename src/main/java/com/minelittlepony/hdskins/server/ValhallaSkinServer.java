@@ -63,7 +63,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
+    public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
         Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
         return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/user/%s", getApiPrefix(), UUIDTypeAdapter.fromUUID(profile.getId()))))
                     .GET()
@@ -73,7 +73,7 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         try {
             uploadPlayerSkin(upload);
         } catch (IOException e) {

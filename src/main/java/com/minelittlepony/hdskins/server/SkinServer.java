@@ -5,7 +5,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.*;
 
 public interface SkinServer {
     /**
@@ -14,7 +14,7 @@ public interface SkinServer {
     Set<Feature> getFeatures();
 
     /**
-     * Determines whether this provider is the source of the provided url.
+     * Determines whether this server is the source of the provided url.
      */
     boolean ownsUrl(String url);
 
@@ -26,20 +26,40 @@ public interface SkinServer {
     boolean supportsSkinType(SkinType skinType);
 
     /**
-     * Synchronously loads texture information for the provided profile.
+     * Loads texture information for the provided profile.
      *
      * @return The parsed server response as a textures payload.
      * @throws IOException If any authentication or network error occurs.
      */
-    TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException;
+    TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException;
 
     /**
-     * Synchronously uploads a skin to this server.
+     * Uploads a player's skin to this server.
      *
      * @param upload The payload to send.
      * @return A server response object.
-     * @throws IOException             If any authentication or network error occurs.
+     *
+     * @throws IOException
      * @throws AuthenticationException
      */
-    void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException;
+    void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException;
+
+    /***
+     * Loads a player's detailed profile from this server.
+     * @param profile The game profile of the player being queried
+     * @return The pre-populated profile of the given player.
+     * @throws IOException
+     * @throws AuthenticationException
+     */
+    default Optional<SkinServerProfile> loadProfile(GameProfile profile) throws IOException, AuthenticationException {
+        return Optional.empty();
+    }
+
+    interface SkinServerProfile {
+        List<String> getTextureUrls(SkinType type);
+
+        boolean isActive(SkinType type, String texture);
+
+        void setActive(SkinType type, String texture);
+    }
 }

@@ -15,8 +15,7 @@ import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.server.Feature;
-import com.minelittlepony.hdskins.server.SkinServerList;
+import com.minelittlepony.hdskins.server.*;
 import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -101,8 +100,8 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
         client = MinecraftClient.getInstance();
         previewer = createPreviewer();
+        chooser = new SkinChooser(previewer, this);
         uploader = new SkinUploader(servers, previewer, this);
-        chooser = new SkinChooser(uploader);
     }
 
     public PlayerPreview createPreviewer() {
@@ -135,6 +134,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
             }
         }
 
+        chooser.update();
         uploader.update();
 
         updateButtons();
@@ -154,9 +154,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .getStyle().setText("hdskins.options.browse");
 
         addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
-                .setEnabled(uploader.canUpload())
+                .setEnabled(uploader.canUpload() && chooser.hasSelection())
                 .onClick(sender -> {
-                    if (uploader.canUpload()) {
+                    if (uploader.canUpload() && chooser.hasSelection()) {
                         punchServer(HD_SKINS_UPLOAD);
                     }
                 })
@@ -168,7 +168,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        chooser.openSavePNG(I18n.translate("hdskins.save.title"), client.getSession().getUsername());
+                        chooser.openSavePNG(uploader, I18n.translate("hdskins.save.title"), client.getSession().getUsername());
                     }
                 })
                 .getStyle()
@@ -356,7 +356,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public boolean charTyped(char keyChar, int keyCode) {
         if (canTakeEvents()) {
-            if (!chooser.pickingInProgress() && !uploader.uploadInProgress()) {
+            if (!chooser.pickingInProgress() && !uploader.isBusy()) {
                 return super.charTyped(keyChar, keyCode);
             }
         }
@@ -419,7 +419,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         float xPos1 = width / 4F;
         float xPos2 = width * 0.75F;
 
-        if (chooser.getStatus() != null && !uploader.canUpload()) {
+        if (chooser.hasStatus()) {
             fill(matrices, 40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
             drawCenteredLabel(matrices, chooser.getStatus(), (int)xPos1, height / 2 - 4, 0xffffff, 0);
         }
@@ -432,21 +432,20 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
             Text status = uploader.getStatus();
 
-            if (status == SkinUploader.ERR_MOJANG) {
+            if (status == SkinUploader.STATUS_MOJANG) {
                 drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 10, 0xff5555, 0);
                 drawCenteredLabel(matrices, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
             } else {
-                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 4, status == SkinUploader.ERR_OFFLINE ? 0xff5555 : 0xffffff, 0);
+                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
             }
         }
 
         super.render(matrices, mouseX, mouseY, partialTick);
 
-        boolean uploadInProgress = uploader.uploadInProgress();
-        boolean showError = uploader.hasError();
+        boolean showBanner = uploader.hasBannerMessage();
 
-        if (uploadInProgress || showError || msgFadeOpacity > 0) {
-            if (!uploadInProgress && !showError) {
+        if (showBanner || msgFadeOpacity > 0) {
+            if (!showBanner) {
                 msgFadeOpacity -= deltaTime / 10;
             } else if (msgFadeOpacity < 1) {
                 msgFadeOpacity += deltaTime / 10;
@@ -460,13 +459,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
 
             fill(matrices, 0, 0, width, height, opacity);
 
-            Text errorMsg = uploader.getError();
+            Text bannerMessage = uploader.getBannerMessage();
 
-            if (uploadInProgress) {
-                drawCenteredLabel(matrices, errorMsg, width / 2, height / 2, 0xffffff, 0);
-            } else if (showError) {
-                int maxWidth = Math.min(width - 10, getFont().getWidth(errorMsg));
-                int messageHeight = getFont().getWrappedLinesHeight(errorMsg.getString(), maxWidth) + getFont().fontHeight + 10;
+            if (showBanner) {
+                int maxWidth = Math.min(width - 10, getFont().getWidth(bannerMessage));
+                int messageHeight = getFont().getWrappedLinesHeight(bannerMessage.getString(), maxWidth) + getFont().fontHeight + 10;
                 int blockY = (height - messageHeight) / 2;
                 int blockX = (width - maxWidth) / 2;
 
@@ -474,7 +471,9 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
                 drawTooltipDecorations(matrices, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
 
                 drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
-                drawTextBlock(matrices, errorMsg, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+                drawTextBlock(matrices, bannerMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+            } else {
+                drawCenteredLabel(matrices, bannerMessage, width / 2, height / 2, 0xffffff, 0);
             }
         }
     }
@@ -489,7 +488,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     }
 
     private void punchServer(Text uploadMsg) {
-        uploader.uploadSkin(uploadMsg).whenComplete((o, t) -> {
+        uploader.uploadSkin(uploadMsg, chooser.getSelection()).whenComplete((o, t) -> {
             if (t != null) {
                 t.printStackTrace();
             }
@@ -504,7 +503,7 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
         Set<Feature> features = uploader.getFeatures();
 
         btnClear.active = uploader.canClear();
-        btnUpload.active = uploader.canUpload() && features.contains(Feature.UPLOAD_USER_SKIN);
+        btnUpload.active = uploader.canUpload() && chooser.hasSelection() && features.contains(Feature.UPLOAD_USER_SKIN);
         btnDownload.active = uploader.canClear() && !chooser.pickingInProgress();
         btnBrowse.active = !chooser.pickingInProgress();
 

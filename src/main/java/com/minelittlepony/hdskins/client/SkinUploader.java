@@ -2,28 +2,19 @@ package com.minelittlepony.hdskins.client;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
-import com.google.common.base.Throwables;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.server.Feature;
-import com.minelittlepony.hdskins.server.SkinServer;
-import com.minelittlepony.hdskins.server.SkinServerList;
-import com.minelittlepony.hdskins.server.SkinUpload;
-import com.minelittlepony.hdskins.util.net.HttpException;
-import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
-import com.mojang.authlib.exceptions.InvalidCredentialsException;
+import com.minelittlepony.hdskins.server.*;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.screen.ScreenTexts;
@@ -32,40 +23,30 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class SkinUploader implements Closeable {
-
-    private static final Logger logger = LogManager.getLogger();
-
-    public static final Text ERR_ALL_FINE = ScreenTexts.EMPTY;
-    public static final Text ERR_NO_SERVER = Text.translatable("hdskins.error.noserver");
-    public static final Text ERR_OFFLINE = Text.translatable("hdskins.error.offline");
+    public static final Text STATUS_OK = ScreenTexts.EMPTY;
+    public static final Text STATUS_NO_SERVER = Text.translatable("hdskins.error.noserver");
+    public static final Text STATUS_OFFLINE = Text.translatable("hdskins.error.offline");
     public static final Text ERR_SESSION = Text.translatable("hdskins.error.session");
 
-    public static final Text ERR_MOJANG = Text.translatable("hdskins.error.mojang");
+    public static final Text STATUS_MOJANG = Text.translatable("hdskins.error.mojang");
+    public static final Text STATUS_BUSY = Text.translatable("hdskins.status.busy");
     public static final String ERR_MOJANG_WAIT = "hdskins.error.mojang.wait";
 
     public static final Text STATUS_FETCH = Text.translatable("hdskins.fetch");
 
-    private Optional<SkinServer> gateway;
-
-    private Text errorMessage = ERR_ALL_FINE;
+    private Text bannerMessage = STATUS_OK;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
-    private volatile boolean fetchingSkin = false;
-    private volatile boolean throttlingNeck = false;
-    private volatile boolean offline = false;
-    private volatile boolean pending = false;
-
-    private volatile boolean sendingSkin = false;
+    private volatile boolean pendingRefresh = false;
 
     private int reloadCounter = 0;
     private int retries = 1;
 
     private final PlayerPreview previewer;
 
-    private final WatchedFile localSkin = new WatchedFile(this::fileChanged, this::fileRemoved);
-
-    private final Iterator<SkinServer> skinServers;
+    private final Iterator<Gateway> gateways;
+    private Optional<Gateway> gateway;
 
     private final ISkinUploadHandler listener;
 
@@ -76,31 +57,31 @@ public class SkinUploader implements Closeable {
         this.listener = listener;
 
         skinMetadata.put("model", VanillaModels.DEFAULT);
-        skinServers = servers.getCycler();
+        gateways = servers.getCycler();
 
         cycleGateway();
     }
 
     public void cycleGateway() {
-        if (skinServers.hasNext()) {
-            gateway = Optional.ofNullable(skinServers.next());
-            setSkinType(gateway.flatMap(g -> g.supportsSkinType(previewer.getActiveSkinType()) ? Optional.of(previewer.getActiveSkinType()) : getSupportedSkinTypes().findFirst()).orElse(SkinType.UNKNOWN));
-            fetchRemote();
+        if (gateways.hasNext()) {
+            gateway = Optional.ofNullable(gateways.next());
+            setSkinType(gateway.flatMap(g -> g.getServer().supportsSkinType(previewer.getActiveSkinType()) ? Optional.of(previewer.getActiveSkinType()) : getSupportedSkinTypes().findFirst()).orElse(SkinType.UNKNOWN));
+            pendingRefresh = true;
         } else {
-            setError(ERR_NO_SERVER);
+            setBannerMessage(STATUS_NO_SERVER);
         }
     }
 
     public String getGatewayText() {
-        return gateway.map(SkinServer::toString).orElse("");
+        return gateway.map(Gateway::getServer).map(SkinServer::toString).orElse("");
     }
 
     public Set<Feature> getFeatures() {
-        return gateway.map(SkinServer::getFeatures).orElse(Set.of());
+        return gateway.map(Gateway::getServer).map(SkinServer::getFeatures).orElse(Set.of());
     }
 
     public Stream<SkinType> getSupportedSkinTypes() {
-        return gateway.stream().flatMap(g -> SkinType.REGISTRY.stream().filter(g::supportsSkinType)).distinct();
+        return gateway.stream().flatMap(Gateway::getSupportedSkinTypes);
     }
 
     public void setSkinType(SkinType type) {
@@ -111,59 +92,70 @@ public class SkinUploader implements Closeable {
         listener.onSkinTypeChanged(type);
     }
 
-    public boolean uploadInProgress() {
-        return sendingSkin;
-    }
-
     public boolean isThrottled() {
-        return throttlingNeck;
+        return gateway.filter(Gateway::isThrottled).isPresent();
     }
 
     public int getRetries() {
         return retries;
     }
 
+    private boolean isOnline() {
+        return gateway.filter(Gateway::isOnline).isPresent() || getBannerMessage() == ERR_SESSION;
+    }
+
+    public boolean isBusy() {
+        return gateway.filter(Gateway::isBusy).isPresent();
+    }
+
     public boolean canUpload() {
-        return !offline
-                && !hasError()
-                && !uploadInProgress()
-                && !localSkin.isPending()
-                && localSkin.isSet()
+        return isOnline()
+                && !hasBannerMessage()
+                && !isBusy()
                 && previewer.getClientTexture().isSetupComplete();
     }
 
     public boolean canClear() {
-        return !offline
-                && !hasError()
-                && !fetchingSkin
+        return isOnline()
+                && !hasBannerMessage()
+                && !isBusy()
                 && previewer.getServerTexture().isSetupComplete();
     }
 
-    public boolean hasError() {
-        return errorMessage != ERR_ALL_FINE;
+    public boolean hasBannerMessage() {
+        return bannerMessage != STATUS_OK;
     }
 
-    public Text getError() {
-        return errorMessage;
+    public Text getBannerMessage() {
+        return bannerMessage;
     }
 
-    protected void setError(Text er) {
-        errorMessage = er;
-        sendingSkin = false;
+    protected void setBannerMessage(Text er) {
+        bannerMessage = er;
     }
 
     public boolean hasStatus() {
-        return fetchingSkin || isThrottled() || offline || !previewer.getRemote().isPresent();
+        return getStatus() != STATUS_OK;
     }
 
     public Text getStatus() {
+        if (isBusy()) {
+            return STATUS_BUSY;
+        }
+
+        if (gateway.isEmpty()) {
+            return STATUS_OFFLINE;
+        }
+
         if (isThrottled()) {
-            return ERR_MOJANG;
+            return STATUS_MOJANG;
         }
-        if (offline || errorMessage == ERR_SESSION) {
-            return  ERR_OFFLINE;
+
+        if (!isOnline()) {
+            return STATUS_OFFLINE;
         }
-        return STATUS_FETCH;
+
+        return STATUS_OK;
     }
 
     public void setMetadataField(String field, String value) {
@@ -176,31 +168,20 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean tryClearStatus() {
-        hasError();
-        uploadInProgress();
-        isThrottled();
-
-        if (!hasError() || (!uploadInProgress() || isThrottled())) {
-            setError(ERR_ALL_FINE);
+        if (!hasBannerMessage() || (!isBusy() || isThrottled())) {
+            setBannerMessage(STATUS_OK);
             return true;
         }
 
         return false;
     }
 
-    public CompletableFuture<Void> uploadSkin(Text statusMsg) {
-        setError(statusMsg);
-        sendingSkin = true;
-        return CompletableFuture.runAsync(() -> {
-            gateway.ifPresent(gateway -> {
-                try {
-                    gateway.performSkinUpload(new SkinUpload(mc.getSession(), previewer.getActiveSkinType(), localSkin.toUri(), skinMetadata));
-                    setError(ERR_ALL_FINE);
-                } catch (Exception e) {
-                    handleException(e);
-                }
-            });
-        }).thenRunAsync(this::fetchRemote, MinecraftClient.getInstance());
+    public CompletableFuture<Void> uploadSkin(Text statusMsg, @Nullable URI skin) {
+        setBannerMessage(statusMsg);
+        return gateway
+                .map(g -> g.uploadSkin(new SkinUpload(mc.getSession(), previewer.getActiveSkinType(), skin, skinMetadata), this::setBannerMessage))
+                .map(future -> future.thenRunAsync(this::fetchRemote, MinecraftClient.getInstance()))
+                .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
     }
 
     public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
@@ -208,16 +189,15 @@ public class SkinUploader implements Closeable {
     }
 
     protected void fetchRemote() {
-        boolean wasPending = pending;
-        pending = false;
-        throttlingNeck = false;
-        offline = true;
+        boolean wasPending = pendingRefresh;
+        pendingRefresh = false;
         gateway.ifPresent(gateway -> {
-            offline = false;
-            fetchingSkin = true;
-            previewer.getServerTexture().reloadRemoteSkin(gateway, (type, location, profileTexture) -> {
+            gateway.setThrottled(false);
+            gateway.setOffline(false);
+            gateway.setBusy(true);
+            previewer.getServerTexture().reloadRemoteSkin(gateway.getServer(), (type, location, profileTexture) -> {
                 if (type == previewer.getActiveSkinType()) {
-                    fetchingSkin = false;
+                    gateway.setBusy(false);
                     if (wasPending) {
                         GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
                     }
@@ -226,7 +206,7 @@ public class SkinUploader implements Closeable {
             }).handleAsync((a, throwable) -> {
 
                 if (throwable != null) {
-                    handleException(throwable.getCause());
+                    gateway.handleException(throwable, this::setBannerMessage);
                 } else {
                     retries = 1;
                 }
@@ -235,53 +215,13 @@ public class SkinUploader implements Closeable {
         });
     }
 
-    private void handleException(Throwable throwable) {
-        throwable = Throwables.getRootCause(throwable);
-
-        fetchingSkin = false;
-
-        if (throwable instanceof HttpException) {
-            HttpException ex = (HttpException)throwable;
-
-            int code = ex.getStatusCode();
-
-            if (code >= 500) {
-                logger.error(ex.getReasonPhrase(), ex);
-                setError(Text.literal("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
-            } else if (code >= 400 && code != 403 && code != 404) {
-                logger.error(ex.getReasonPhrase(), ex);
-                setError(Text.literal(ex.getReasonPhrase()));
-            } else {
-                logger.error(ex.getReasonPhrase(), ex);
-            }
-        } else {
-            logger.error("Unexpected error whilst contacting server at " + Objects.toString(gateway.orElse(null)), throwable);
-
-            if (throwable instanceof AuthenticationUnavailableException) {
-                offline = true;
-            } else if (throwable instanceof InvalidCredentialsException) {
-                setError(ERR_SESSION);
-            } else if (throwable instanceof AuthenticationException) {
-                throttlingNeck = true;
-            } else {
-                logger.error("Unhandled exception", throwable);
-                setError(Text.literal(throwable.toString()));
-            }
-        }
-    }
-
     @Override
     public void close() throws IOException {
         previewer.close();
     }
 
-    public void setLocalSkin(Path skinFile) {
-        localSkin.set(skinFile);
-    }
-
     public void update() {
         previewer.apply(DummyPlayer::updateModel);
-        localSkin.update();
 
         if (isThrottled()) {
             reloadCounter = (reloadCounter + 1) % (200 * retries);
@@ -289,23 +229,8 @@ public class SkinUploader implements Closeable {
                 retries++;
                 fetchRemote();
             }
-        } else if (pending) {
+        } else if (pendingRefresh) {
             fetchRemote();
-        }
-    }
-
-    private void fileRemoved() {
-        mc.execute(previewer.getClientTexture()::close);
-    }
-
-    private void fileChanged(Path path) {
-        try {
-            SkinType skinType = previewer.getActiveSkinType();
-            logger.debug("Set {} {}", skinType, path);
-            previewer.getClientTexture().get(skinType).setLocal(path);
-            listener.onSetLocalSkin(skinType);
-        } catch (IOException e) {
-            HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
         }
     }
 

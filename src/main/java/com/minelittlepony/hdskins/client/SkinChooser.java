@@ -1,16 +1,22 @@
 package com.minelittlepony.hdskins.client;
 
+import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
+import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
 import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
+import com.minelittlepony.hdskins.profile.SkinType;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.text.Text;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -21,6 +27,7 @@ import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
 
 public class SkinChooser {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final int MAX_SKIN_DIMENSION = 1024;
 
@@ -43,19 +50,38 @@ public class SkinChooser {
     @Nullable
     private FileDialog openFileThread;
 
-    private final SkinUploader uploader;
+    private final PlayerPreview previewer;
+    private final ISkinUploadHandler listener;
 
     private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
 
+    private final WatchedFile localSkin = new WatchedFile(this::fileChanged, this::fileRemoved);
+
     private volatile Text status = MSG_CHOOSE;
 
-    public SkinChooser(SkinUploader uploader) {
-        this.uploader = uploader;
+    public SkinChooser(PlayerPreview previewer, ISkinUploadHandler listener) {
+        this.previewer = previewer;
+        this.listener = listener;
         addImageValidation(this::acceptsSkinDimensions);
     }
 
     public void addImageValidation(Function<NativeImage, Text> validator) {
         validators.add(validator);
+    }
+
+    private void fileRemoved() {
+        MinecraftClient.getInstance().execute(previewer.getClientTexture()::close);
+    }
+
+    private void fileChanged(Path path) {
+        try {
+            SkinType skinType = previewer.getActiveSkinType();
+            LOGGER.debug("Set {} {}", skinType, path);
+            previewer.getClientTexture().get(skinType).setLocal(path);
+            listener.onSetLocalSkin(skinType);
+        } catch (IOException e) {
+            HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
+        }
     }
 
     public boolean pickingInProgress() {
@@ -64,6 +90,23 @@ public class SkinChooser {
 
     public Text getStatus() {
         return status;
+    }
+
+    public boolean hasStatus() {
+        return getStatus() != MSG_CHOOSE || !hasSelection();
+    }
+
+    public boolean hasSelection() {
+        return !localSkin.isPending() && localSkin.isSet();
+    }
+
+    @Nullable
+    public URI getSelection() {
+        return localSkin.toUri();
+    }
+
+    public void update() {
+        localSkin.update();
     }
 
     public void openBrowsePNG(String title) {
@@ -78,7 +121,7 @@ public class SkinChooser {
         }).launch();
     }
 
-    public void openSavePNG(String title, String filename) {
+    public void openSavePNG(SkinUploader uploader, String title, String filename) {
         openFileThread = new FileSaverScreen(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
@@ -117,7 +160,7 @@ public class SkinChooser {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElseGet(() -> {
-                    uploader.setLocalSkin(skinFile);
+                    localSkin.set(skinFile);
 
                     return MSG_CHOOSE;
                 });

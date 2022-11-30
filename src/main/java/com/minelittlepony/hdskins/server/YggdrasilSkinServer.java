@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
@@ -44,7 +42,6 @@ public class YggdrasilSkinServer implements SkinServer {
     private transient final String skinUploadAddress = address + "/minecraft/profile/skins";
     private transient final String activeSkinAddress = skinUploadAddress + "/active";
 
-
     private transient final boolean requireSecure = true;
 
     @Override
@@ -63,7 +60,7 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public TexturePayload loadProfileData(GameProfile profile) throws IOException, AuthenticationException {
+    public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
 
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
 
@@ -91,7 +88,7 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public void performSkinUpload(SkinUpload upload) throws IOException, AuthenticationException {
+    public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.session());
 
         switch (upload.getSchemaAction()) {
@@ -158,6 +155,25 @@ public class YggdrasilSkinServer implements SkinServer {
         @Override
         public String toString() {
             return String.format("%s: %s", error, errorMessage);
+        }
+    }
+
+    class ProfileResponse {
+        public String id;
+        public String name;
+        public List<Skin> skins;
+        public List<Skin> capes;
+
+        class Skin {
+            public String id;
+            public State state;
+            public String url;
+            public String alias;
+        }
+
+        enum State {
+            ACTIVE,
+            INACTIVE
         }
     }
 }

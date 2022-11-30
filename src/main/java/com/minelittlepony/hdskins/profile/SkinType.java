@@ -21,7 +21,9 @@ import net.minecraft.registry.Registry;
 
 public class SkinType implements Comparable<SkinType> {
 
-    public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(new Identifier("hdskins", "skin_type"), "hdskins:unknown");
+    public static final SkinType UNKNOWN = new SkinType(new Identifier("hdskins", "unknown"), ItemStack.EMPTY);
+
+    public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(new Identifier("hdskins", "skin_type"), SkinType::getId, UNKNOWN);
 
     private static final TypeAdapter<SkinType> ADAPTER = new RegistryTypeAdapter<>(REGISTRY) {
         @Override
@@ -38,7 +40,6 @@ public class SkinType implements Comparable<SkinType> {
     };
     private static final Map<MinecraftProfileTexture.Type, SkinType> VANILLA = new EnumMap<>(MinecraftProfileTexture.Type.class);
 
-    public static final SkinType UNKNOWN = register(new Identifier("hdskins", "unknown"), ItemStack.EMPTY);
     public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN, new ItemStack(Items.LEATHER_CHESTPLATE));
     public static final SkinType CAPE = forVanilla(MinecraftProfileTexture.Type.CAPE, new ItemStack(Items.BARRIER));
     public static final SkinType ELYTRA = forVanilla(MinecraftProfileTexture.Type.ELYTRA, new ItemStack(Items.ELYTRA));

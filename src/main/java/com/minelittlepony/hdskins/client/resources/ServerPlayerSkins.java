@@ -26,7 +26,7 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
     public CompletableFuture<Void> reloadRemoteSkin(SkinServer gateway, SkinCallback listener) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return new PreviewTextureManager(gateway.loadProfileData(posture.getProfile()));
+                return new PreviewTextureManager(gateway.loadSkins(posture.getProfile()));
             } catch (IOException | AuthenticationException e) {
                 throw new RuntimeException(e);
             }

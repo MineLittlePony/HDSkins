@@ -49,7 +49,7 @@ class ProfileCache {
             for (SkinServer server : hd.getSkinServerList().getSkinServers()) {
                 try {
                     if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
-                        server.loadProfileData(profile).getTextures().forEach((type, texture) -> {
+                        server.loadSkins(profile).getTextures().forEach((type, texture) -> {
                             if (requestedSkinTypes.remove(type)) {
                                 textureMap.putIfAbsent(type, texture);
                             }

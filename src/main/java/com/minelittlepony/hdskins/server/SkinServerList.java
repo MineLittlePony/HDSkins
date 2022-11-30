@@ -36,7 +36,7 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
             .registerTypeAdapter(SkinServer.class, SkinServerSerializer.instance)
             .create();
 
-    private List<SkinServer> skinServers = new LinkedList<>();
+    private List<Gateway> skinServers = new LinkedList<>();
 
     @Override
     public Identifier getFabricId() {
@@ -59,7 +59,7 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
         }
     }
 
-    public List<SkinServer> getSkinServers() {
+    public List<Gateway> getSkinServers() {
         return ImmutableList.copyOf(skinServers);
     }
 
@@ -71,11 +71,11 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
 
     private boolean isUrlPermitted(Map<SkinType, MinecraftProfileTexture> blob) {
         return blob.values().stream().map(MinecraftProfileTexture::getUrl).allMatch(url -> {
-            return skinServers.stream().anyMatch(s -> s.ownsUrl(url));
+            return skinServers.stream().anyMatch(s -> s.getServer().ownsUrl(url));
         });
     }
 
-    public Iterator<SkinServer> getCycler() {
+    public Iterator<Gateway> getCycler() {
         return Iterators.cycle(getSkinServers());
     }
 
@@ -88,12 +88,12 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
         InsertType insert = InsertType.END;
         List<SkinServer> servers = Collections.emptyList();
 
-        private void apply(List<SkinServer> skinServers) {
+        private void apply(List<Gateway> skinServers) {
             if (overwrite) {
                 skinServers.clear();
             }
             logger.info("Found {} servers", servers.size());
-            insert.consumer.accept(skinServers, servers);
+            insert.consumer.accept(skinServers, servers.stream().map(Gateway::new).toList());
         }
     }
 
@@ -101,9 +101,9 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
         START(SkinServerList::addAllStart),
         END(List::addAll);
 
-        final BiConsumer<List<SkinServer>, List<SkinServer>> consumer;
+        final BiConsumer<List<Gateway>, List<Gateway>> consumer;
 
-        InsertType(BiConsumer<List<SkinServer>, List<SkinServer>> consumer) {
+        InsertType(BiConsumer<List<Gateway>, List<Gateway>> consumer) {
             this.consumer = consumer;
         }
 
