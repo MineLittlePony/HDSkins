@@ -13,13 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.*;
 
-public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable {
+public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable {
     public static final int POSE_STANDING = 0;
     public static final int POSE_SLEEPING = 1;
     public static final int POSE_RIDING = 2;
     public static final int POSE_SWIMMING = 3;
     public static final int POSE_RIPTIDE = 4;
-    public static final PlayerSkins<?> EMPTY = new PlayerSkins<>(
+    public static final PlayerSkins<PlayerSkin> EMPTY = new PlayerSkins<>(
             new Posture() {
                 @Override
                 public GameProfile getProfile() {
@@ -45,11 +45,14 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
                 public EquipmentSet getEquipment() {
                     return HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
                 }
-            },
-            (type, blankSkin) -> new PlayerSkins.PlayerSkin() {
+            }
+    ) {
+        @Override
+        public PlayerSkin createTexture(SkinType type, Supplier<Identifier> blank) {
+            return new PlayerSkins.PlayerSkin() {
                 @Override
                 public Identifier getId() {
-                    return blankSkin.get();
+                    return blank.get();
                 }
 
                 @Override
@@ -59,19 +62,19 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
                 public boolean isReady() {
                     return false;
                 }
-            }
-    );
+            };
+        }
+    };
 
     protected final Map<SkinType, T> textures = new HashMap<>();
 
     protected final Posture posture;
 
-    private final BiFunction<SkinType, Supplier<Identifier>, T> textureFactory;
-
-    protected PlayerSkins(Posture posture, BiFunction<SkinType, Supplier<Identifier>, T> textureFactory) {
+    protected PlayerSkins(Posture posture) {
         this.posture = posture;
-        this.textureFactory = textureFactory;
     }
+
+    protected abstract T createTexture(SkinType type, Supplier<Identifier> blank);
 
     public Posture getPosture() {
         return posture;
@@ -87,7 +90,7 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
     }
 
     public T get(SkinType type) {
-        return textures.computeIfAbsent(type, t -> textureFactory.apply(t, () -> posture.getDefaultSkin(t, usesThinSkin())));
+        return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, usesThinSkin())));
     }
 
     @Override
@@ -103,6 +106,10 @@ public class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable 
         void close();
 
         boolean isReady();
+    }
+
+    public interface SkinFactory<T extends PlayerSkins.PlayerSkin, K extends PlayerSkins<? extends T>> {
+        T create(SkinType type, Supplier<Identifier> blank, K parent);
     }
 
     public interface Posture {

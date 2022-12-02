@@ -39,7 +39,10 @@ public class TextureLoader {
 
     private final Function<NativeImage, NativeImage> filter;
 
-    public TextureLoader(Function<NativeImage, NativeImage> filter) {
+    private final String id;
+
+    public TextureLoader(String id, Function<NativeImage, NativeImage> filter) {
+        this.id = id;
         this.filter = filter;
     }
 
@@ -50,10 +53,12 @@ public class TextureLoader {
 
     public CompletableFuture<Identifier> loadAsync(Identifier imageId) {
         return CompletableFuture.supplyAsync(() -> getImage(imageId), executor)
-        .thenApplyAsync(loaded -> loaded.flatMap(image -> Optional.ofNullable(filter.apply(image)).filter(i -> i != null && i != image)), CLIENT)
+        .thenApplyAsync(loaded -> loaded
+                .flatMap(image -> Optional.ofNullable(filter.apply(image))
+                .filter(i -> i != null && i != image)), CLIENT)
         .thenApplyAsync(updated -> {
             return updated.map(image -> {
-                Identifier convertedId = new Identifier(imageId.getNamespace() + "-converted", imageId.getPath());
+                Identifier convertedId = new Identifier(imageId.getNamespace(), "dynamic/" + id + "/" + imageId.getPath());
                 CLIENT.getTextureManager().registerTexture(convertedId, new NativeImageBackedTexture(image));
                 return convertedId;
             }).orElse(imageId);

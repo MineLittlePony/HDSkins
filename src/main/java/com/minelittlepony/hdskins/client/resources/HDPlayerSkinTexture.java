@@ -17,8 +17,8 @@ public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilte
 
     private final SkinType skinType;
 
-    public HDPlayerSkinTexture(File cacheFile, String url, SkinType skinType, Identifier fallbackSkin, Runnable runnable) {
-        super(cacheFile, url, fallbackSkin, false, runnable);
+    public HDPlayerSkinTexture(File cacheFile, String url, SkinType skinType, Identifier id, Runnable runnable) {
+        super(cacheFile, url, id, false, runnable);
         this.skinType = skinType;
     }
 

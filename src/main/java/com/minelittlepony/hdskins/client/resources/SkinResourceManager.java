@@ -55,7 +55,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
-    private final TextureLoader loader = new TextureLoader(HDPlayerSkinTexture::filterPlayerSkins);
+    private final TextureLoader loader = new TextureLoader("hd_skins", HDPlayerSkinTexture::filterPlayerSkins);
 
     private final Map<SkinType, SkinStore> store = new HashMap<>();
 

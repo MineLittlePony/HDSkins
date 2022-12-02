@@ -122,6 +122,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
     public void setModelType(String model) {
         localTextures.setPreviewThinArms(VanillaModels.isSlim(model));
+        localTextures.close();
     }
 
     public void setSkinType(SkinType type) {
@@ -336,11 +337,11 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         return remotePlayer;
     }
 
-    public ServerPlayerSkins getServerTexture() {
+    public ServerPlayerSkins getServerTextures() {
         return remoteTextures;
     }
 
-    public LocalPlayerSkins getClientTexture() {
+    public LocalPlayerSkins getClientTextures() {
         return localTextures;
     }
 

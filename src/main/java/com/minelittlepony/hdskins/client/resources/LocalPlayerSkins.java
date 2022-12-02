@@ -20,12 +20,16 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
     private boolean previewThinArms = false;
 
     public LocalPlayerSkins(Posture posture) {
-        super(posture, LocalTexture::new);
+        super(posture);
+    }
+
+    @Override
+    protected LocalTexture createTexture(SkinType type, Supplier<Identifier> blank) {
+        return new LocalTexture(type, blank);
     }
 
     public void setPreviewThinArms(boolean thinArms) {
         previewThinArms = thinArms;
-        close();
     }
 
     @Override
@@ -33,14 +37,14 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
         return previewThinArms;
     }
 
-    public static class LocalTexture implements PlayerSkins.PlayerSkin {
+    public class LocalTexture implements PlayerSkins.PlayerSkin {
         private final Identifier id;
         private final Supplier<Identifier> defaultTexture;
 
-        private Optional<PreviewTextureManager.FileTexture> local = Optional.empty();
+        private Optional<Texture.MemoryTexture> local = Optional.empty();
 
         public LocalTexture(SkinType type, Supplier<Identifier> blank) {
-            id = new Identifier("hdskins", "generated_preview/" + type.getPathName());
+            id = new Identifier("hdskins", "generated_preview/" + posture.getProfile().getId().toString() + "/" + type.getPathName());
             defaultTexture = blank;
         }
 
@@ -53,7 +57,7 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
             local.ifPresent(AbstractTexture::close);
 
             try (InputStream input = Files.newInputStream(file)) {
-                PreviewTextureManager.FileTexture image = new PreviewTextureManager.FileTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input)), id);
+                Texture.MemoryTexture image = new Texture.MemoryTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input)), id);
                 MinecraftClient.getInstance().getTextureManager().registerTexture(id, image);
                 local = Optional.of(image);
             }
@@ -61,7 +65,7 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
 
         @Override
         public boolean isReady() {
-            return local.filter(PreviewTextureManager.Texture::isLoaded).isPresent();
+            return local.filter(Texture::isLoaded).isPresent();
         }
 
         @Override

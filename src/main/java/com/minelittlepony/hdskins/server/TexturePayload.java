@@ -1,8 +1,6 @@
 package com.minelittlepony.hdskins.server;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -50,5 +48,9 @@ public class TexturePayload {
 
     public Map<SkinType, MinecraftProfileTexture> getTextures() {
         return textures;
+    }
+
+    public Optional<MinecraftProfileTexture> getTexture(SkinType type) {
+        return textures.containsKey(type) ? Optional.of(textures.get(type)) : Optional.empty();
     }
 }

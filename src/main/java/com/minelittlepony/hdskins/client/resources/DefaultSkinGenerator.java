@@ -11,7 +11,7 @@ import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
 public class DefaultSkinGenerator {
-    private static final TextureLoader LOADER = new TextureLoader(image -> {
+    private static final TextureLoader LOADER = new TextureLoader("default_player_skin", image -> {
         NativeImage copy = new NativeImage(image.getFormat(), image.getWidth(), image.getHeight(), false);
         for (int x = 0; x < image.getWidth(); x++) {
             for (int y = 0; y < image.getHeight(); y++) {

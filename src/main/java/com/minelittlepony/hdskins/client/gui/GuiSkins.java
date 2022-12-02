@@ -11,12 +11,13 @@ import com.minelittlepony.hdskins.client.FileDrop;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinChooser;
 import com.minelittlepony.hdskins.client.SkinUploader;
-import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
+import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
 import com.minelittlepony.hdskins.util.Edge;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.class_8002;
@@ -44,7 +45,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Callback {
+public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Callback {
     public static final Text HD_SKINS_TITLE = Text.translatable("hdskins.gui.title");
     public static final Text HD_SKINS_UPLOAD = Text.translatable("hdskins.upload");
     public static final Text HD_SKINS_REQUEST = Text.translatable("hdskins.request");
@@ -291,6 +292,11 @@ public class GuiSkins extends GameGui implements ISkinUploadHandler, FileDrop.Ca
     @Override
     public void onSkinTypeChanged(SkinType newType) {
         playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+    }
+
+    @Override
+    public void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
+        playSound(SoundEvents.ENTITY_VILLAGER_YES);
     }
 
     protected void switchSkinMode(String model) {

@@ -1,10 +1,7 @@
 package com.minelittlepony.hdskins.client.profile;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -15,8 +12,7 @@ import com.google.common.cache.LoadingCache;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.ProfileUtils;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.minelittlepony.hdskins.server.Feature;
-import com.minelittlepony.hdskins.server.SkinServer;
+import com.minelittlepony.hdskins.server.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -40,16 +36,16 @@ class ProfileCache {
         }
 
         return CompletableFuture.supplyAsync(() -> {
-            List<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream()
+            Set<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream()
                     .filter(SkinType::isKnown)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
 
             Map<SkinType, MinecraftProfileTexture> textureMap = new HashMap<>();
 
-            for (SkinServer server : hd.getSkinServerList().getSkinServers()) {
+            for (Gateway gateway : hd.getSkinServerList().getSkinServers()) {
                 try {
-                    if (!server.getFeatures().contains(Feature.SYNTHETIC)) {
-                        server.loadSkins(profile).getTextures().forEach((type, texture) -> {
+                    if (!gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
+                        gateway.getServer().loadSkins(profile).getTextures().forEach((type, texture) -> {
                             if (requestedSkinTypes.remove(type)) {
                                 textureMap.putIfAbsent(type, texture);
                             }

@@ -1,6 +1,6 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.SkinUploader.ISkinUploadHandler;
+import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
 import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
@@ -51,7 +51,7 @@ public class SkinChooser {
     private FileDialog openFileThread;
 
     private final PlayerPreview previewer;
-    private final ISkinUploadHandler listener;
+    private final SkinChangeListener listener;
 
     private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
 
@@ -59,7 +59,7 @@ public class SkinChooser {
 
     private volatile Text status = MSG_CHOOSE;
 
-    public SkinChooser(PlayerPreview previewer, ISkinUploadHandler listener) {
+    public SkinChooser(PlayerPreview previewer, SkinChangeListener listener) {
         this.previewer = previewer;
         this.listener = listener;
         addImageValidation(this::acceptsSkinDimensions);
@@ -70,14 +70,14 @@ public class SkinChooser {
     }
 
     private void fileRemoved() {
-        MinecraftClient.getInstance().execute(previewer.getClientTexture()::close);
+        MinecraftClient.getInstance().execute(previewer.getClientTextures()::close);
     }
 
     private void fileChanged(Path path) {
         try {
             SkinType skinType = previewer.getActiveSkinType();
             LOGGER.debug("Set {} {}", skinType, path);
-            previewer.getClientTexture().get(skinType).setLocal(path);
+            previewer.getClientTextures().get(skinType).setLocal(path);
             listener.onSetLocalSkin(skinType);
         } catch (IOException e) {
             HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
@@ -128,7 +128,7 @@ public class SkinChooser {
             openFileThread = null;
 
             if (success) {
-                uploader.getServerTexture().ifPresent(texture -> {
+                previewer.getServerTextures().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {
                     try (InputStream response = texture.openStream()) {
                         Files.copy(response, file);
                     } catch (IOException e) {

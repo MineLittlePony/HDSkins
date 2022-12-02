@@ -101,6 +101,22 @@ public class Gateway {
         });
     }
 
+    public CompletableFuture<TexturePayload> fetchSkins(GameProfile profile, Consumer<Text> errorCallback) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                setBusy(true);
+                var result = server.loadSkins(profile);
+                errorCallback.accept(SkinUploader.STATUS_OK);
+                return result;
+            } catch (Exception e) {
+                handleException(e, errorCallback);
+                throw new RuntimeException(e);
+            } finally {
+                setBusy(false);
+            }
+        });
+    }
+
     public void handleException(Throwable throwable, Consumer<Text> errorCallback) {
         throwable = Throwables.getRootCause(throwable);
 

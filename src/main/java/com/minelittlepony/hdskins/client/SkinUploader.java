@@ -9,16 +9,13 @@ import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
-import com.minelittlepony.hdskins.client.resources.PreviewTextureManager;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -48,11 +45,11 @@ public class SkinUploader implements Closeable {
     private final Iterator<Gateway> gateways;
     private Optional<Gateway> gateway;
 
-    private final ISkinUploadHandler listener;
+    private final SkinChangeListener listener;
 
     private final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public SkinUploader(SkinServerList servers, PlayerPreview previewer, ISkinUploadHandler listener) {
+    public SkinUploader(SkinServerList servers, PlayerPreview previewer, SkinChangeListener listener) {
         this.previewer = previewer;
         this.listener = listener;
 
@@ -112,14 +109,14 @@ public class SkinUploader implements Closeable {
         return isOnline()
                 && !hasBannerMessage()
                 && !isBusy()
-                && previewer.getClientTexture().isSetupComplete();
+                && previewer.getClientTextures().isSetupComplete();
     }
 
     public boolean canClear() {
         return isOnline()
                 && !hasBannerMessage()
                 && !isBusy()
-                && previewer.getServerTexture().isSetupComplete();
+                && previewer.getServerTextures().isSetupComplete();
     }
 
     public boolean hasBannerMessage() {
@@ -159,7 +156,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getClientTexture().close();
+        previewer.getClientTextures().close();
         skinMetadata.put(field, value);
     }
 
@@ -184,30 +181,13 @@ public class SkinUploader implements Closeable {
                 .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
     }
 
-    public Optional<PreviewTextureManager.UriTexture> getServerTexture() {
-        return previewer.getServerTexture().get(previewer.getActiveSkinType()).getServerTexture();
-    }
-
     protected void fetchRemote() {
-        boolean wasPending = pendingRefresh;
         pendingRefresh = false;
         gateway.ifPresent(gateway -> {
-            gateway.setThrottled(false);
-            gateway.setOffline(false);
-            gateway.setBusy(true);
-            previewer.getServerTexture().reloadRemoteSkin(gateway.getServer(), (type, location, profileTexture) -> {
-                if (type == previewer.getActiveSkinType()) {
-                    gateway.setBusy(false);
-                    if (wasPending) {
-                        GameGui.playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                    }
-                }
-                listener.onSetRemoteSkin(type, location, profileTexture);
-            }).handleAsync((a, throwable) -> {
-
-                if (throwable != null) {
-                    gateway.handleException(throwable, this::setBannerMessage);
-                } else {
+            gateway.fetchSkins(previewer.getProfile(), this::setBannerMessage)
+                .thenAcceptAsync(textures -> previewer.getServerTextures().setSkins(textures, listener::onSetRemoteSkin), MinecraftClient.getInstance())
+                .handleAsync((a, throwable) -> {
+                if (throwable == null) {
                     retries = 1;
                 }
                 return a;
@@ -234,15 +214,11 @@ public class SkinUploader implements Closeable {
         }
     }
 
-    public interface ISkinUploadHandler {
-        default void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
-        }
+    public interface SkinChangeListener {
+        default void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {}
 
-        default void onSetLocalSkin(SkinType type) {
-        }
+        default void onSetLocalSkin(SkinType type) {}
 
-        default void onSkinTypeChanged(SkinType newType) {
-
-        }
+        default void onSkinTypeChanged(SkinType newType) {}
     }
 }
