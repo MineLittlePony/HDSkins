@@ -6,8 +6,9 @@ import java.net.URL;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.*;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 
 public interface Texture extends AutoCloseable {
@@ -84,6 +85,22 @@ public interface Texture extends AutoCloseable {
 
         public boolean usesThinArms() {
             return VanillaModels.isSlim(model);
+        }
+
+        @Override
+        protected TextureData loadTextureData(ResourceManager resourceManager) {
+            if (!resourceManager.getResource(location).isPresent()) {
+                if (MinecraftClient.getInstance().getTextureManager().getOrDefault(location, null) instanceof NativeImageBackedTexture tex) {
+                    NativeImage image = tex.getImage();
+                    if (image != null) {
+                        NativeImage copy = new NativeImage(image.getWidth(), image.getHeight(), true);
+                        copy.copyFrom(image);
+                        return new TextureData(null, copy);
+                    }
+                }
+            }
+
+            return super.loadTextureData(resourceManager);
         }
     }
 }
