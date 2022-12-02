@@ -63,7 +63,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         return skinsGuiFunc.apply(parent, servers);
     }
 
-    private int updateCounter = 0;
+    private int updateCounter = 72;
     private float lastPartialTick;
 
     private Button btnBrowse;
