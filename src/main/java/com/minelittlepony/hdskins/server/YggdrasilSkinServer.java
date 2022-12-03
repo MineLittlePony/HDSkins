@@ -141,6 +141,23 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public Optional<SkinServerProfile<?>> loadProfile(GameProfile profile) throws IOException, AuthenticationException {
+
+        MoreHttpResponses response = MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
+                .GET()
+                .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + MinecraftClient.getInstance().getSession().getAccessToken())
+                .build());
+
+        if (!response.ok()) {
+            return Optional.empty();
+        }
+
+        ProfileResponse prof = response.json(ProfileResponse.class, "Server send invalid profile response");
+        prof.profile = profile;
+        return Optional.of(prof);
+    }
+
+    @Override
     public String toString() {
         return new IndentedToStringStyle.Builder(this)
                 .append("address", address)
@@ -158,22 +175,60 @@ public class YggdrasilSkinServer implements SkinServer {
         }
     }
 
-    class ProfileResponse {
+    class ProfileResponse implements SkinServerProfile<ProfileResponse.Skin> {
         public String id;
         public String name;
         public List<Skin> skins;
         public List<Skin> capes;
 
-        class Skin {
+        transient GameProfile profile;
+
+        class Skin implements SkinServerProfile.Skin {
             public String id;
             public State state;
             public String url;
             public String alias;
+
+            @Override
+            public String getModel() {
+                return alias;
+            }
+
+            @Override
+            public boolean isActive() {
+                return state == State.ACTIVE;
+            }
+
+            @Override
+            public String getUri() {
+                return url;
+            }
         }
 
         enum State {
             ACTIVE,
             INACTIVE
+        }
+
+        @Override
+        public GameProfile getGameProfile() {
+            return profile;
+        }
+
+        @Override
+        public List<Skin> getSkins(SkinType type) {
+            if (type == SkinType.SKIN) {
+                return skins;
+            }
+            if (type == SkinType.CAPE) {
+                return capes;
+            }
+            return List.of();
+        }
+
+        @Override
+        public void setActive(SkinType type, Skin texture) {
+
         }
     }
 }

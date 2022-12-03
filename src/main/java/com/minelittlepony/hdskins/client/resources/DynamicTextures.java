@@ -34,18 +34,14 @@ public class DynamicTextures {
     public Optional<Texture.UriTexture> loadTexture(SkinType type, Identifier def) {
         return getTextureMetadata(type).map(texture -> {
             Identifier id = new Identifier("hdskins", String.format("dynamic/%s/%s", type.getId().getPath(), texture.getHash()));
-            Texture.UriTexture skinTexture = Texture.UriTexture.create(id, createTempFile(texture.getHash()), texture.getUrl(), type, texture.getMetadata("model"), def, () -> {
+            return TextureLoader.loadTexture(id, Texture.UriTexture.create(id, createTempFile(texture.getHash()), texture.getUrl(), type, texture.getMetadata("model"), def, () -> {
                 loadCallback.onSkinAvailable(type, id, texture);
-            });
-
-            TextureLoader.loadTexture(id, skinTexture);
-
-            return skinTexture;
+            }));
         });
     }
 
     @Nullable
-    private static File createTempFile(String filename) {
+    public static File createTempFile(String filename) {
         try {
             File f = Files.createTempFile(filename, "skin-preview").toFile();
             f.delete();

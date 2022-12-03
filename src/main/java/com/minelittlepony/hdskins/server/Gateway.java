@@ -25,7 +25,7 @@ public class Gateway {
 
     private final SkinServer server;
 
-    private final LoadingCache<GameProfile, CompletableFuture<Optional<SkinServer.SkinServerProfile>>> profiles = CacheBuilder.newBuilder()
+    private final LoadingCache<GameProfile, CompletableFuture<Optional<SkinServer.SkinServerProfile<?>>>> profiles = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.SECONDS)
             .build(CacheLoader.from(this::loadUncachedProfile));
 
@@ -69,7 +69,7 @@ public class Gateway {
         return SkinType.REGISTRY.stream().filter(server::supportsSkinType).distinct();
     }
 
-    private CompletableFuture<Optional<SkinServer.SkinServerProfile>> loadUncachedProfile(GameProfile profile) {
+    private CompletableFuture<Optional<SkinServer.SkinServerProfile<?>>> loadUncachedProfile(GameProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return server.loadProfile(profile);
@@ -79,8 +79,8 @@ public class Gateway {
         });
     }
 
-    public CompletableFuture<Optional<SkinServerProfile>> getProfile(GameProfile profile) throws ExecutionException {
-        return profiles.get(profile);
+    public CompletableFuture<Optional<SkinServerProfile<?>>> getProfile(GameProfile profile) {
+        return profiles.getUnchecked(profile);
     }
 
     public void invalidateProfile(GameProfile profile) {
@@ -92,6 +92,22 @@ public class Gateway {
             try {
                 setBusy(true);
                 server.uploadSkin(payload);
+                invalidateProfile(payload.session().getProfile());
+                errorCallback.accept(SkinUploader.STATUS_OK);
+            } catch (Exception e) {
+                handleException(e, errorCallback);
+            } finally {
+                setBusy(false);
+            }
+        });
+    }
+
+    public <K extends SkinServerProfile.Skin> CompletableFuture<Void> swapSkin(SkinServerProfile<K> profile, SkinType type, int index, Consumer<Text> errorCallback) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                setBusy(true);
+                profile.setActive(type, profile.getSkins(type).get(index));
+                invalidateProfile(profile.getGameProfile());
                 errorCallback.accept(SkinUploader.STATUS_OK);
             } catch (Exception e) {
                 handleException(e, errorCallback);

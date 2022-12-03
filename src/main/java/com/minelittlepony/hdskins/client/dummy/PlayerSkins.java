@@ -19,34 +19,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     public static final int POSE_RIDING = 2;
     public static final int POSE_SWIMMING = 3;
     public static final int POSE_RIPTIDE = 4;
-    public static final PlayerSkins<PlayerSkin> EMPTY = new PlayerSkins<>(
-            new Posture() {
-                @Override
-                public GameProfile getProfile() {
-                    return MinecraftClient.getInstance().getSession().getProfile();
-                }
-
-                @Override
-                public int getPose() {
-                    return POSE_STANDING;
-                }
-
-                @Override
-                public SkinType getActiveSkinType() {
-                    return SkinType.SKIN;
-                }
-
-                @Override
-                public Identifier getDefaultSkin(SkinType type, boolean slim) {
-                    return PlayerPreview.getDefaultTexture(type, slim);
-                }
-
-                @Override
-                public EquipmentSet getEquipment() {
-                    return HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
-                }
-            }
-    ) {
+    public static final PlayerSkins<PlayerSkin> EMPTY = new PlayerSkins<>(Posture.NULL) {
         @Override
         public PlayerSkin createTexture(SkinType type, Supplier<Identifier> blank) {
             return new PlayerSkins.PlayerSkin() {
@@ -113,6 +86,33 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     }
 
     public interface Posture {
+        Posture NULL = new Posture() {
+            @Override
+            public GameProfile getProfile() {
+                return MinecraftClient.getInstance().getSession().getProfile();
+            }
+
+            @Override
+            public int getPose() {
+                return POSE_STANDING;
+            }
+
+            @Override
+            public SkinType getActiveSkinType() {
+                return SkinType.SKIN;
+            }
+
+            @Override
+            public Identifier getDefaultSkin(SkinType type, boolean slim) {
+                return PlayerPreview.getDefaultTexture(type, slim);
+            }
+
+            @Override
+            public EquipmentSet getEquipment() {
+                return HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
+            }
+        };
+
         GameProfile getProfile();
 
         EquipmentSet getEquipment();

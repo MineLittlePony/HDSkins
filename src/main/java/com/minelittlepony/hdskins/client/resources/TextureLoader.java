@@ -27,12 +27,13 @@ public class TextureLoader {
      * @param textureLocation
      * @param texture
      */
-    public static void loadTexture(final Identifier textureLocation, final AbstractTexture texture) {
+    public static <T extends AbstractTexture> T loadTexture(final Identifier textureLocation, final T texture) {
         CLIENT.execute(() -> {
             RenderSystem.recordRenderCall(() -> {
                 CLIENT.getTextureManager().registerTexture(textureLocation, texture);
             });
         });
+        return texture;
     }
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();

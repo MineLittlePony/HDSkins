@@ -6,11 +6,13 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.Consumer;
 
-import com.minelittlepony.hdskins.client.HDSkins;
+import org.jetbrains.annotations.Nullable;
+
 import com.minelittlepony.common.util.render.ClippingSpace;
-import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.client.*;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.gui.SkinListWidget;
 import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -26,11 +28,10 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.*;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 
 /**
  * Player previewer that renders the models to the screen.
@@ -66,6 +67,8 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     private Optional<DummyPlayer> remotePlayer = Optional.empty();
     protected final ServerPlayerSkins remoteTextures = new ServerPlayerSkins(this);
 
+    private final SkinListWidget skinList;
+
     private int pose;
     private SkinType activeSkinType = SkinType.SKIN;
 
@@ -75,6 +78,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     public PlayerPreview() {
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
+        skinList = new SkinListWidget(this);
 
         DummyWorld.getOrDummyFuture().thenAcceptAsync(w -> {
             try {
@@ -181,19 +185,45 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
         renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
                 width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack);
+                matrixStack, null);
 
         renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
                 width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack);
+                matrixStack, remote -> {
+                    matrixStack.push();
+                    matrixStack.translate(mid + 30, frameBottom, 0);
+                    skinList.render(remote, matrixStack, mouseX - (mid + 30), mouseY - frameBottom);
+                    matrixStack.pop();
+                });
 
         disableDepthTest();
+    }
+
+    public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
+        int mid = width / 2;
+        int bottom = height - 40;
+
+        if (skinList.mouseClicked(uploader, mouseX - (mid + 30), mouseY - bottom, button)) {
+            return true;
+        }
+
+        if (mouseY > 30 && mouseY < bottom) {
+            if (mouseX > 30 && mouseX < mid - 30) {
+                getLocal().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
+            }
+
+            if (mouseX > mid + 30 && mouseX < width - 30) {
+                getRemote().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
+            }
+        }
+
+        return false;
     }
 
     public void renderWorldAndPlayer(Optional<DummyPlayer> thePlayer,
             int frameLeft, int frameRight, int frameBottom, int frameTop,
             float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
-            MatrixStack matrixStack) {
+            MatrixStack matrixStack, @Nullable Consumer<DummyPlayer> postAction) {
 
         ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
@@ -204,6 +234,10 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
                 try {
                     DummyPlayerRenderer.wrap(() -> {
                         renderPlayerModel(player, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+
+                        if (postAction != null) {
+                            postAction.accept(player);
+                        }
                     });
                 } catch (Exception e) {
                     HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);

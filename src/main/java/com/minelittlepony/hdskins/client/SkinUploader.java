@@ -69,6 +69,10 @@ public class SkinUploader implements Closeable {
         }
     }
 
+    public Optional<Gateway> getGateway() {
+        return gateway;
+    }
+
     public String getGatewayText() {
         return gateway.map(Gateway::getServer).map(SkinServer::toString).orElse("");
     }
@@ -127,7 +131,7 @@ public class SkinUploader implements Closeable {
         return bannerMessage;
     }
 
-    protected void setBannerMessage(Text er) {
+    public void setBannerMessage(Text er) {
         bannerMessage = er;
     }
 
@@ -177,15 +181,27 @@ public class SkinUploader implements Closeable {
         setBannerMessage(statusMsg);
         return gateway
                 .map(g -> g.uploadSkin(new SkinUpload(mc.getSession(), previewer.getActiveSkinType(), skin, skinMetadata), this::setBannerMessage))
-                .map(future -> future.thenRunAsync(this::fetchRemote, MinecraftClient.getInstance()))
+                .map(future -> future.thenRunAsync(this::scheduleReload, MinecraftClient.getInstance()))
                 .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
+    }
+
+    public void scheduleReload() {
+        pendingRefresh = true;
     }
 
     protected void fetchRemote() {
         pendingRefresh = false;
         gateway.ifPresent(gateway -> {
             gateway.fetchSkins(previewer.getProfile(), this::setBannerMessage)
-                .thenAcceptAsync(textures -> previewer.getServerTextures().setSkins(textures, listener::onSetRemoteSkin), MinecraftClient.getInstance())
+                .thenAcceptAsync(textures -> {
+                    previewer.getServerTextures().setSkins(textures, listener::onSetRemoteSkin);
+
+                    gateway.getProfile(previewer.getProfile()).thenAccept(serverProfile -> {
+                        serverProfile.ifPresent(p -> {
+                            previewer.getServerTextures().setSkinList(p);
+                        });
+                    });
+                }, MinecraftClient.getInstance())
                 .handleAsync((a, throwable) -> {
                 if (throwable == null) {
                     retries = 1;

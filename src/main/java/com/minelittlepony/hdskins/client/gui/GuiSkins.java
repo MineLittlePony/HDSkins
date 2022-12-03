@@ -32,7 +32,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -323,24 +322,9 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
             setDragging(true);
         }
 
-        if (canTakeEvents() && !super.mouseClicked(mouseX, mouseY, button)) {
-            int bottom = height - 40;
-            int mid = width / 2;
-
-            if (mouseY > 30 && mouseY < bottom) {
-                if (mouseX > 30 && mouseX < mid - 30) {
-                    previewer.getLocal().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
-                }
-
-                if (mouseX > mid + 30 && mouseX < width - 30) {
-                    previewer.getRemote().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
-                }
-            }
-
-            return true;
-        }
-
-        return false;
+        return canTakeEvents()
+                && !super.mouseClicked(mouseX, mouseY, button)
+                && previewer.mouseClicked(uploader, width, height, mouseX, mouseY, button);
     }
 
     @Override

@@ -33,6 +33,8 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);
 
     private PlayerSkins<?> textures;
+    @Nullable
+    private PlayerSkins<?> overrideTextures;
 
     private AttributeContainer attributes;
 
@@ -62,10 +64,18 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     public PlayerSkins<?> getTextures() {
         // initialization order is annoying
+        if (overrideTextures != null) {
+            return overrideTextures;
+        }
+
         if (textures == null) {
             return PlayerSkins.EMPTY;
         }
         return textures;
+    }
+
+    public void setOverrideTextures(PlayerSkins<?> textures) {
+        this.overrideTextures = textures == PlayerSkins.EMPTY ? null : textures;
     }
 
     @Override
@@ -189,7 +199,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         SkinType type = getTextures().getPosture().getActiveSkinType();
 
         if ((type == SkinType.ELYTRA) != (getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA)) {
-            equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultStack() : textures.getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
+            equipStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultStack() : getTextures().getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
         }
 
         lastHandSwingProgress = handSwingProgress;

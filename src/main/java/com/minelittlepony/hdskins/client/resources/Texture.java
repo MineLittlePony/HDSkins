@@ -3,6 +3,8 @@ package com.minelittlepony.hdskins.client.resources;
 import java.io.*;
 import java.net.URL;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -44,11 +46,13 @@ public interface Texture extends AutoCloseable {
 
         private final Identifier id;
 
-        public static Texture.UriTexture create(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
+        public static Texture.UriTexture create(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, @Nullable Runnable callback) {
             boolean[] uploaded = new boolean[1];
             return new UriTexture(id, cacheFile, url, type, model, fallback, () -> {
                 uploaded[0] = true;
-                callack.run();
+                if (callback != null) {
+                    callback.run();
+                }
             }) {
                 @Override
                 public boolean isLoaded() {
