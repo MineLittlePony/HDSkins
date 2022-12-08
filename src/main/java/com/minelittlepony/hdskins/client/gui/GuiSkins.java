@@ -145,8 +145,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         dropper.subscribe();
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
-        addButton(new Label(34, 29)).getStyle().setText("hdskins.local").setColor(0xffffff);
-        addButton(new Label(width / 2 + 34, 29)).getStyle().setText("hdskins.server").setColor(0xffffff);
 
         addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
                 .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
@@ -255,6 +253,8 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .getStyle()
                 .setText("?")
                 .setTooltip(uploader.getGatewayText(), 0, 10);
+
+        previewer.init(this);
     }
 
     private void setupSkinToggler() {
@@ -409,31 +409,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
            renderBackground(matrices);
         }
 
-        previewer.render(width, height, mouseX, mouseY, updateCounter, partialTick);
-
-        float xPos1 = width / 4F;
-        float xPos2 = width * 0.75F;
-
-        if (chooser.hasStatus()) {
-            fill(matrices, 40, height / 2 - 12, width / 2 - 40, height / 2 + 12, 0xB0000000);
-            drawCenteredLabel(matrices, chooser.getStatus(), (int)xPos1, height / 2 - 4, 0xffffff, 0);
-        }
-
-        if (uploader.hasStatus()) {
-
-            int lineHeight = uploader.isThrottled() ? 18 : 12;
-
-            fill(matrices, (int)(xPos2 - width / 4 + 40), height / 2 - lineHeight, width - 40, height / 2 + lineHeight, 0xB0000000);
-
-            Text status = uploader.getStatus();
-
-            if (status == SkinUploader.STATUS_MOJANG) {
-                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(matrices, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), (int)xPos2, height / 2 + 2, 0xff5555, 0);
-            } else {
-                drawCenteredLabel(matrices, status, (int)xPos2, height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
-            }
-        }
+        previewer.render(matrices, mouseX, mouseY, updateCounter, partialTick, chooser, uploader);
 
         super.render(matrices, mouseX, mouseY, partialTick);
 

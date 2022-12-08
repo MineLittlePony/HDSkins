@@ -24,8 +24,8 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
         super(posture);
     }
 
-    public void setSkinList(SkinServer.SkinServerProfile<?> profile) {
-        this.profile = Optional.of(profile);
+    public void setSkinList(Optional<SkinServer.SkinServerProfile<?>> profile) {
+        this.profile = profile;
         skinLists.clear();
     }
 

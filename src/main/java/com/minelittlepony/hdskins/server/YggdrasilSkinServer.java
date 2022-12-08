@@ -175,7 +175,7 @@ public class YggdrasilSkinServer implements SkinServer {
         }
     }
 
-    class ProfileResponse implements SkinServerProfile<ProfileResponse.Skin> {
+    static class ProfileResponse implements SkinServerProfile<ProfileResponse.Skin> {
         public String id;
         public String name;
         public List<Skin> skins;
@@ -183,7 +183,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
         transient GameProfile profile;
 
-        class Skin implements SkinServerProfile.Skin {
+        static class Skin implements SkinServerProfile.Skin {
             public String id;
             public State state;
             public String url;

@@ -197,9 +197,7 @@ public class SkinUploader implements Closeable {
                     previewer.getServerTextures().setSkins(textures, listener::onSetRemoteSkin);
 
                     gateway.getProfile(previewer.getProfile()).thenAccept(serverProfile -> {
-                        serverProfile.ifPresent(p -> {
-                            previewer.getServerTextures().setSkinList(p);
-                        });
+                        previewer.getServerTextures().setSkinList(serverProfile);
                     });
                 }, MinecraftClient.getInstance())
                 .handleAsync((a, throwable) -> {

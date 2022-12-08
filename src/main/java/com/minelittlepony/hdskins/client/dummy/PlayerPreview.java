@@ -8,10 +8,15 @@ import java.util.function.Consumer;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.minelittlepony.common.client.gui.ITextContext;
+import com.minelittlepony.common.client.gui.dimension.Bounds;
+import com.minelittlepony.common.client.gui.dimension.Padding;
+import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.*;
 import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.gui.SkinListWidget;
 import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -32,11 +37,14 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSkins.Posture {
+public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSkins.Posture, ITextContext {
+    private static final int MARGIN = 30;
+    private static final int LABEL_BACKGROUND = 0xB0000000;
 
     public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
     public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
@@ -67,6 +75,11 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     private Optional<DummyPlayer> remotePlayer = Optional.empty();
     protected final ServerPlayerSkins remoteTextures = new ServerPlayerSkins(this);
 
+    public final Bounds localFrameBounds = new Bounds(MARGIN, MARGIN, 0, 0);
+    public final Bounds serverFrameBounds = new Bounds(MARGIN, MARGIN, 0, 0);
+    private int horizon;
+    private float scale;
+
     private final SkinListWidget skinList;
 
     private int pose;
@@ -78,7 +91,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     public PlayerPreview() {
         activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
         equipmentSets = HDSkins.getInstance().getDummyPlayerEquipmentList().getCycler();
-        skinList = new SkinListWidget(this);
+        skinList = new SkinListWidget(this, serverFrameBounds);
 
         DummyWorld.getOrDummyFuture().thenAcceptAsync(w -> {
             try {
@@ -170,70 +183,109 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         return getDefaultTexture(type, false);
     }
 
-    public void render(int width, int height, int mouseX, int mouseY, int ticks, float partialTick) {
+    public void init(GuiSkins screen) {
+        localFrameBounds.left = MARGIN;
+        localFrameBounds.height = screen.height - 70;
+        localFrameBounds.width = (screen.width / 2) - 70;
 
-        int mid = width / 2;
-        int horizon = height / 2 + height / 5;
-        int frameBottom = height - 40;
+        serverFrameBounds.height = localFrameBounds.height;
+        serverFrameBounds.width = localFrameBounds.width;
+        serverFrameBounds.left = screen.width - MARGIN - serverFrameBounds.width;
 
-        float yPos = height * 0.75F;
-        float scale = height / 4F;
+        horizon = screen.height / 2 + screen.height / 5;
 
+        scale = screen.height / 4F;
+
+        Padding padding = new Padding(0, 5, 0, 0);
+
+        Label label;
+        screen.addButton(label = new Label(0, 0))
+            .getStyle()
+            .setText("hdskins.local")
+            .setColor(0xffffff);
+        label.setBounds(localFrameBounds.offset(padding));
+        screen.addButton(label = new Label(0, 0)).getStyle().setText("hdskins.server").setColor(0xffffff);
+        label.setBounds(serverFrameBounds.offset(padding));
+
+        skinList.init(screen);
+    }
+
+    public void render(MatrixStack matrices, int mouseX, int mouseY, int ticks, float partialTick, SkinChooser chooser, SkinUploader uploader) {
         MatrixStack matrixStack = new MatrixStack();
 
         enableDepthTest();
 
-        renderWorldAndPlayer(getLocal(), 30, mid - 30, frameBottom, 30,
-                width / 4F,    yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+        renderWorldAndPlayer(getLocal(), localFrameBounds, horizon, mouseX, mouseY, ticks, partialTick, scale,
                 matrixStack, null);
 
-        renderWorldAndPlayer(getRemote(), mid + 30, width - 30, frameBottom, 30,
-                width * 0.75F, yPos, horizon, mouseX, mouseY, ticks, partialTick, scale,
+        renderWorldAndPlayer(getRemote(), serverFrameBounds, horizon, mouseX, mouseY, ticks, partialTick, scale,
                 matrixStack, remote -> {
-                    matrixStack.push();
-                    matrixStack.translate(mid + 30, frameBottom, 0);
-                    skinList.render(remote, matrixStack, mouseX - (mid + 30), mouseY - frameBottom);
-                    matrixStack.pop();
+                    skinList.render(remote, matrixStack, mouseX, mouseY);
                 });
 
         disableDepthTest();
+
+        if (chooser.hasStatus()) {
+            matrices.push();
+            localFrameBounds.translate(matrices);
+            fill(matrices, 10, localFrameBounds.height / 2 - 12, localFrameBounds.width - 10, localFrameBounds.height / 2 + 12, LABEL_BACKGROUND);
+            drawCenteredLabel(matrices, chooser.getStatus(), localFrameBounds.width / 2, localFrameBounds.height / 2 - 4, 0xFFFFFF, 0);
+            matrices.pop();
+        }
+
+        if (uploader.hasStatus()) {
+            matrices.push();
+            serverFrameBounds.translate(matrices);
+
+            int lineHeight = uploader.isThrottled() ? 18 : 12;
+
+            fill(matrices, 10, serverFrameBounds.height / 2 - lineHeight, serverFrameBounds.width - 10, serverFrameBounds.height / 2 + lineHeight, LABEL_BACKGROUND);
+
+            Text status = uploader.getStatus();
+
+            if (status == SkinUploader.STATUS_MOJANG) {
+                drawCenteredLabel(matrices, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 10, 0xff5555, 0);
+                drawCenteredLabel(matrices, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), serverFrameBounds.width / 2, serverFrameBounds.height / 2 + 2, 0xff5555, 0);
+            } else {
+                drawCenteredLabel(matrices, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
+            }
+
+            matrices.pop();
+        }
+
     }
 
     public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
-        int mid = width / 2;
-        int bottom = height - 40;
 
-        if (skinList.mouseClicked(uploader, mouseX - (mid + 30), mouseY - bottom, button)) {
+        if (skinList.mouseClicked(uploader, mouseX, mouseY, button)) {
             return true;
         }
 
-        if (mouseY > 30 && mouseY < bottom) {
-            if (mouseX > 30 && mouseX < mid - 30) {
-                getLocal().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
-            }
+        if (localFrameBounds.contains(mouseX, mouseY)) {
+            getLocal().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
+        }
 
-            if (mouseX > mid + 30 && mouseX < width - 30) {
-                getRemote().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
-            }
+        if (serverFrameBounds.contains(mouseX, mouseY)) {
+            getRemote().ifPresent(p -> p.swingHand(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
         }
 
         return false;
     }
 
     public void renderWorldAndPlayer(Optional<DummyPlayer> thePlayer,
-            int frameLeft, int frameRight, int frameBottom, int frameTop,
-            float xPos, float yPos, int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
+            Bounds frame,
+            int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             MatrixStack matrixStack, @Nullable Consumer<DummyPlayer> postAction) {
 
-        ClippingSpace.renderClipped(frameLeft, frameTop, frameRight - frameLeft, frameBottom - frameTop, () -> {
+        ClippingSpace.renderClipped(frame.left, frame.top, frame.width, frame.height, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-            drawBackground(matrixStack, frameLeft, frameRight, frameBottom, frameTop, horizon);
+            drawBackground(matrixStack, frame.left, frame.left + frame.width, frame.top + frame.height, frame.top, horizon);
 
             thePlayer.ifPresent(player -> {
                 try {
                     DummyPlayerRenderer.wrap(() -> {
-                        renderPlayerModel(player, xPos, yPos, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+                        renderPlayerModel(player, frame.left + frame.width / 2, frame.top + frame.height * 0.8F, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
 
                         if (postAction != null) {
                             postAction.accept(player);

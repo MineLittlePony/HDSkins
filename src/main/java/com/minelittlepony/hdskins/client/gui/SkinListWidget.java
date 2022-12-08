@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.lwjgl.glfw.GLFW;
 
 import com.minelittlepony.common.client.gui.GameGui;
+import com.minelittlepony.common.client.gui.dimension.Bounds;
+import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.dummy.*;
@@ -23,6 +25,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
 public class SkinListWidget extends DrawableHelper {
@@ -31,46 +34,128 @@ public class SkinListWidget extends DrawableHelper {
 
     private final MinecraftClient client = MinecraftClient.getInstance();
 
-    public SkinListWidget(PlayerPreview previewer) {
+    private final Bounds containerBounds;
+    private final Bounds bounds = new Bounds(0, 0, 0, 32);
+
+    private float prevScrollPosition;
+    private float scrollPosition;
+    private int targetScrollPosition;
+
+    private Button scrollLeft;
+    private Button scrollRight;
+
+    public SkinListWidget(PlayerPreview previewer, Bounds bounds) {
         this.previewer = previewer;
+        this.containerBounds = bounds;
+    }
+
+    public void init(GuiSkins screen) {
+        bounds.width = containerBounds.width - 20;
+        bounds.left = containerBounds.left + 10;
+        bounds.top = containerBounds.top + containerBounds.height - bounds.height;
+
+        screen.addButton(scrollLeft = new Button(bounds.left - 10, bounds.top, 10, bounds.height))
+            .onClick(sender -> scrollBy(-1))
+            .getStyle().setText("<");
+        screen.addButton(scrollRight = new Button(bounds.left + bounds.width, bounds.top, 10, bounds.height))
+            .onClick(sender -> scrollBy(1))
+            .getStyle().setText(">");
+    }
+
+    private void scrollBy(int steps) {
+        targetScrollPosition += steps;
+        int skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size();
+
+        int pageSize = bounds.width / bounds.height;
+
+        targetScrollPosition = skins < pageSize ? 0 : MathHelper.clamp(targetScrollPosition, 0, skins);
+    }
+
+    private float getScrollOffset() {
+        return -MathHelper.lerp(MinecraftClient.getInstance().getTickDelta(), prevScrollPosition, scrollPosition) * bounds.height;
     }
 
     public void render(DummyPlayer player, MatrixStack matrices, int mouseX, int mouseY) {
 
+        prevScrollPosition = scrollPosition;
+        if (targetScrollPosition != scrollPosition) {
+            if (scrollPosition > targetScrollPosition) {
+                if (scrollPosition - targetScrollPosition < 0.2F) {
+                    scrollPosition = targetScrollPosition;
+                } else {
+                    scrollPosition -= 0.1F;
+                }
+            }
+            if (scrollPosition < targetScrollPosition) {
+                if (targetScrollPosition - scrollPosition < 0.2F) {
+                    scrollPosition = targetScrollPosition;
+                } else {
+                    scrollPosition += 0.1F;
+                }
+            }
+        }
+
         List<Skin> skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType());
 
-        int frameWidth = 16;
+        scrollLeft.setVisible(!skins.isEmpty());
+        scrollLeft.setEnabled(!skins.isEmpty() && scrollPosition > 0);
+        scrollRight.setVisible(!skins.isEmpty());
+
+        if (skins.isEmpty()) {
+            return;
+        }
+
+        int pageSize = bounds.width / bounds.height;
+
+        scrollRight.setEnabled(!skins.isEmpty() && skins.size() >= pageSize && skins.size() > scrollPosition);
+
+        int frameWidth = bounds.height;
 
         boolean sneaking = player.isSneaking();
         if (sneaking) {
             player.setSneaking(false);
         }
 
-        fill(matrices, 0, -frameWidth - 3, 10000, 0, 0xA0000000);
+        matrices.push();
 
-        mouseY += frameWidth;
+        bounds.translate(matrices);
+        matrices.translate(getScrollOffset(), 0, 0);
 
-        matrices.translate(2, -2, 0);
+        fill(matrices, 0, frameWidth, bounds.width, 0, 0xA0000000);
 
-        if (mouseY >= 0 && mouseY <= frameWidth) {
-            int index = mouseX / frameWidth;
+        int index = (int)(mouseX - (bounds.left + getScrollOffset())) / frameWidth;
 
-            if (index >= 0 && index <= skins.size()) {
-                fill(matrices, index * frameWidth, -frameWidth, (index + 1) * frameWidth, 0, 0xA0AAAAAA);
-            }
+        boolean hovered = bounds.contains(mouseX, mouseY);
+
+        if (hovered && index < skins.size()) {
+            fill(matrices, index * frameWidth, 0, (index + 1) * frameWidth, frameWidth, 0xA0AAAAAA);
         }
 
         try {
-            matrices.translate(0, -1, 0);
-
             for (int i = 0; i < skins.size(); i++) {
                 Skin skin = skins.get(i);
 
-                fill(matrices, (i * frameWidth), -frameWidth + 1, ((i + 1) * frameWidth), 0, 0xA0000000);
+                fill(matrices, (i * frameWidth), 0, ((i + 1) * frameWidth), frameWidth, 0xA0000000);
 
                 if (skin.isReady()) {
                     player.setOverrideTextures(new PreviousServerPlayerSkins(skin));
-                    renderPlayerModel(matrices, player, (i * frameWidth) + frameWidth / 2, 0, 7);
+
+                    float limbD = player.limbDistance;
+                    int y = frameWidth;
+                    if (hovered && i == index) {
+                        y -= 3;
+                        player.limbDistance = 1F;
+                    }
+
+                    renderPlayerModel(matrices, player, (i * frameWidth) + frameWidth / 2, y, 13);
+                    player.limbDistance = limbD;
+                }
+
+                if (skin.active()) {
+                    fill(matrices, (i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, 0xFFFFFFFF);
+                    fill(matrices, ((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, 0xFFFFFFFF);
+                    fill(matrices, (i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, 0xFFFFFFFF);
+                    fill(matrices, (i * frameWidth), 0, ((i + 1) * frameWidth), 1, 0xFFFFFFFF);
                 }
             }
         } finally {
@@ -80,6 +165,8 @@ public class SkinListWidget extends DrawableHelper {
                 player.setSneaking(true);
             }
         }
+
+        matrices.pop();
     }
 
     public boolean mouseClicked(SkinUploader uploader, double mouseX, double mouseY, int button) {
@@ -88,18 +175,17 @@ public class SkinListWidget extends DrawableHelper {
             return false;
         }
 
-        int frameHeight = 64;
-        int frameWidth = 64;
+        int frameWidth = bounds.height;
 
-        mouseY += frameHeight;
-
-        if (mouseY < 0 || mouseY > frameHeight) {
+        if (!bounds.contains(mouseX, mouseY)) {
             return false;
         }
 
+        mouseX -= bounds.left + getScrollOffset();
+
         int index = (int)(mouseX / frameWidth);
 
-        if (index < 0 || index > previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size()) {
+        if (index >= previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size()) {
             return false;
         }
 
@@ -128,6 +214,8 @@ public class SkinListWidget extends DrawableHelper {
 
         thePlayer.setHeadYaw(0);
         thePlayer.setPitch(0);
+        float swingProgress = thePlayer.handSwingProgress;
+        thePlayer.handSwingProgress = 0;
 
         MatrixStack modelStack = RenderSystem.getModelViewStack();
         modelStack.push();
@@ -141,6 +229,7 @@ public class SkinListWidget extends DrawableHelper {
 
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15));
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
+        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
 
         DiffuseLighting.method_34742();
 
@@ -154,6 +243,8 @@ public class SkinListWidget extends DrawableHelper {
         modelStack.pop();
         RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();
+
+        thePlayer.handSwingProgress = swingProgress;
     }
 
     protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
