@@ -6,9 +6,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
 import com.minelittlepony.common.util.settings.ToStringAdapter;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.util.RegistryTypeAdapter;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -38,8 +38,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::new))
-            .registerTypeAdapter(Item.class, new RegistryTypeAdapter<>(Registries.ITEM))
-            .registerTypeAdapter(SoundEvent.class, new RegistryTypeAdapter<>(Registries.SOUND_EVENT))
+            .registerTypeAdapter(Item.class, RegistryTypeAdapter.of(Registries.ITEM))
+            .registerTypeAdapter(SoundEvent.class, RegistryTypeAdapter.of(Registries.SOUND_EVENT))
             .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
             .create();
 

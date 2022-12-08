@@ -153,9 +153,12 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
     @Override
     public Identifier getDefaultSkin(SkinType type, boolean slim) {
-        Identifier skin = slim ? getBlankAlexSkin(type) : getBlankSteveSkin(type);
-
+        Identifier skin = getBlankSkin(type, slim);
         return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? DefaultSkinHelper.getTexture(profile.getId()) : skin, skin);
+    }
+
+    public Identifier getBlankSkin(SkinType type, boolean slim) {
+        return getDefaultTexture(type, slim);
     }
 
     public void setJumping(boolean jumping) {
@@ -175,21 +178,12 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         getRemote().ifPresent(action);
     }
 
-    public Identifier getBlankAlexSkin(SkinType type) {
-        return getDefaultTexture(type, true);
-    }
-
-    public Identifier getBlankSteveSkin(SkinType type) {
-        return getDefaultTexture(type, false);
-    }
-
     public void init(GuiSkins screen) {
         localFrameBounds.left = MARGIN;
         localFrameBounds.height = screen.height - 70;
         localFrameBounds.width = (screen.width / 2) - 70;
 
-        serverFrameBounds.height = localFrameBounds.height;
-        serverFrameBounds.width = localFrameBounds.width;
+        serverFrameBounds.copy(localFrameBounds);
         serverFrameBounds.left = screen.width - MARGIN - serverFrameBounds.width;
 
         horizon = screen.height / 2 + screen.height / 5;
@@ -280,7 +274,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         ClippingSpace.renderClipped(frame.left, frame.top, frame.width, frame.height, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-            drawBackground(matrixStack, frame.left, frame.left + frame.width, frame.top + frame.height, frame.top, horizon);
+            drawBackground(matrixStack, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
 
             thePlayer.ifPresent(player -> {
                 try {

@@ -181,9 +181,7 @@ public class SkinListWidget extends DrawableHelper {
             return false;
         }
 
-        mouseX -= bounds.left + getScrollOffset();
-
-        int index = (int)(mouseX / frameWidth);
+        int index = (int)((mouseX - (bounds.left + getScrollOffset())) / frameWidth);
 
         if (index >= previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size()) {
             return false;
@@ -248,14 +246,6 @@ public class SkinListWidget extends DrawableHelper {
     }
 
     protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
-        float x = 0;
-        float y = 0;
-        float z = 0;
-
-        if (thePlayer.isSneaking()) {
-            y -= 0.125D;
-        }
-
         matrixStack.push();
         matrixStack.translate(0.001, 0, 0.001);
 
@@ -267,8 +257,8 @@ public class SkinListWidget extends DrawableHelper {
 
         Entity camera = client.getCameraEntity();
         client.setCameraEntity(thePlayer);
-
-        dispatcher.render(thePlayer, x, y, z, 0, 1, matrixStack, renderContext, 0xF000F0);
+        float y = thePlayer.isSneaking() ? -0.125F : 0;
+        dispatcher.render(thePlayer, 0, y, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
 
         client.setCameraEntity(camera);
 
