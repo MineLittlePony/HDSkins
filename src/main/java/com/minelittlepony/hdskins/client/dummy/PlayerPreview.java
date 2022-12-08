@@ -372,7 +372,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         float z = 0;
 
         if (thePlayer.isSneaking()) {
-            y -= 0.125D;
+            y += 0.125D;
         }
 
         matrixStack.push();
