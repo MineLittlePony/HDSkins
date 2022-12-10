@@ -50,6 +50,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
     @Nullable
     private Set<Identifier> providedSkinTypes;
+    private long setAt;
 
     protected final Posture posture;
 
@@ -77,7 +78,9 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     }
 
     public Set<Identifier> getProvidedSkinTypes() {
-        if (providedSkinTypes == null) {
+        long now = System.currentTimeMillis();
+        if (providedSkinTypes == null || setAt < now) {
+            setAt = now + 500;
             providedSkinTypes = textures.keySet().stream().filter(this::isProvided).map(SkinType::getId).collect(Collectors.toSet());
         }
         return providedSkinTypes;
