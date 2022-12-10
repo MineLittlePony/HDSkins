@@ -20,12 +20,10 @@ import com.minelittlepony.hdskins.util.Edge;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.class_8002;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.render.*;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -33,8 +31,6 @@ import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -46,9 +42,6 @@ import java.util.function.BiFunction;
 
 public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Callback {
     public static final Text HD_SKINS_TITLE = Text.translatable("hdskins.gui.title");
-    public static final Text HD_SKINS_UPLOAD = Text.translatable("hdskins.upload");
-    public static final Text HD_SKINS_REQUEST = Text.translatable("hdskins.request");
-    public static final Text HD_SKINS_FAILED = Text.translatable("hdskins.failed");
     public static final Text HD_SKINS_OPTION_DISABLED_DESC = Text.translatable("hdskins.warning.disabled.description");
 
     private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
@@ -63,7 +56,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     }
 
     private int updateCounter = 72;
-    private float lastPartialTick;
 
     private Button btnBrowse;
     private FeatureButton btnUpload;
@@ -75,8 +67,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
     private Cycler btnSkinType;
 
-    private float msgFadeOpacity = 0;
-
     private double lastMouseX = 0;
 
     private boolean jumpState = false;
@@ -87,6 +77,8 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     protected final SkinChooser chooser;
 
     private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
+
+    private final StatusBanner banner;
 
     private final FileDrop dropper = FileDrop.newDropEvent(this);
 
@@ -102,6 +94,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         previewer = createPreviewer();
         chooser = new SkinChooser(previewer, this);
         uploader = new SkinUploader(servers, previewer, this);
+        banner = new StatusBanner(uploader);
     }
 
     public PlayerPreview createPreviewer() {
@@ -155,7 +148,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .setEnabled(uploader.canUpload() && chooser.hasSelection())
                 .onClick(sender -> {
                     if (uploader.canUpload() && chooser.hasSelection()) {
-                        punchServer(HD_SKINS_UPLOAD);
+                        punchServer(StatusBanner.HD_SKINS_UPLOAD);
                     }
                 })
                 .getStyle()
@@ -177,7 +170,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        punchServer(HD_SKINS_REQUEST);
+                        punchServer(StatusBanner.HD_SKINS_REQUEST);
                     }
                 })
                 .getStyle()
@@ -311,7 +304,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     }
 
     protected boolean canTakeEvents() {
-        return !chooser.pickingInProgress() && uploader.tryClearStatus() && msgFadeOpacity == 0;
+        return !chooser.pickingInProgress() && uploader.tryClearStatus() && !banner.isVisible();
     }
 
     @Override
@@ -400,9 +393,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
         RenderSystem.disableCull();
 
-        float deltaTime = updateCounter + partialTick - lastPartialTick;
-        lastPartialTick = updateCounter + partialTick;
-
         if (client.world == null) {
             panorama.render(partialTick, 1);
         } else {
@@ -410,53 +400,8 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         }
 
         previewer.render(matrices, mouseX, mouseY, updateCounter, partialTick, chooser, uploader);
-
         super.render(matrices, mouseX, mouseY, partialTick);
-
-        boolean showBanner = uploader.hasBannerMessage();
-
-        if (showBanner || msgFadeOpacity > 0) {
-            if (!showBanner) {
-                msgFadeOpacity -= deltaTime / 10;
-            } else if (msgFadeOpacity < 1) {
-                msgFadeOpacity += deltaTime / 10;
-            }
-
-            msgFadeOpacity = MathHelper.clamp(msgFadeOpacity, 0, 1);
-        }
-
-        if (msgFadeOpacity > 0) {
-            int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
-
-            fill(matrices, 0, 0, width, height, opacity);
-
-            Text bannerMessage = uploader.getBannerMessage();
-
-            if (bannerMessage != HD_SKINS_UPLOAD && bannerMessage != HD_SKINS_REQUEST) {
-                int maxWidth = Math.min(width - 10, getFont().getWidth(bannerMessage));
-                int messageHeight = getFont().getWrappedLinesHeight(bannerMessage.getString(), maxWidth) + getFont().fontHeight + 10;
-                int blockY = (height - messageHeight) / 2;
-                int blockX = (width - maxWidth) / 2;
-
-                int padding = 2;
-                drawTooltipDecorations(matrices, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
-
-                drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
-                drawTextBlock(matrices, bannerMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
-            } else {
-                uploader.tryClearStatus();
-                drawCenteredLabel(matrices, bannerMessage, width / 2, height / 2, 0xffffff, 0);
-            }
-        }
-    }
-
-    static void drawTooltipDecorations(MatrixStack matrices, int x, int y, int width, int height) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        class_8002.method_47946(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        banner.render(matrices, partialTick, width, height);
     }
 
     private void punchServer(Text uploadMsg) {
@@ -471,7 +416,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     }
 
     private void updateButtons() {
-
         Set<Feature> features = uploader.getFeatures();
 
         btnClear.active = uploader.canClear();
