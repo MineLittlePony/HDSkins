@@ -1,23 +1,33 @@
 package com.minelittlepony.hdskins.client;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
+import com.minelittlepony.hdskins.mixin.client.MixinClientPlayer;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.util.Identifier;
 
 public class PlayerSkins {
+    @Nullable
+    public static PlayerSkins of(AbstractClientPlayerEntity player) {
+        ClientPlayerInfo info = ((ClientPlayerInfo)((MixinClientPlayer)player).getBackingClientData());
+        if (info == null) {
+            return null;
+        }
+        return info.getSkins();
+    }
 
     private final ClientPlayerInfo playerInfo;
+
+    private final Set<Identifier> providedSkinTypes = new HashSet<>();
 
     private final Map<SkinType, Identifier> customTextures = new HashMap<>();
 
@@ -27,6 +37,10 @@ public class PlayerSkins {
 
     public PlayerSkins(ClientPlayerInfo playerInfo) {
         this.playerInfo = playerInfo;
+    }
+
+    public Set<Identifier> getProvidedSkinTypes() {
+        return providedSkinTypes;
     }
 
     @Nullable
@@ -56,11 +70,13 @@ public class PlayerSkins {
     private void onCustomTextureLoaded(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
         customTextures.put(type, location);
         customProfiles.put(type, profileTexture);
+        providedSkinTypes.add(type.getId());
     }
 
     private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
         playerInfo.getVanillaTextures().put(type, location);
         vanillaProfiles.put(SkinType.forVanilla(type), profileTexture);
+        providedSkinTypes.add(SkinType.forVanilla(type).getId());
     }
 
     private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {

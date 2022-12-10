@@ -74,6 +74,11 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
                 .orElseGet(() -> VanillaModels.isSlim(DefaultSkinHelper.getModel(posture.getProfile().getId())));
     }
 
+    @Override
+    protected boolean isProvided(SkinType type) {
+        return get(type).isReady();
+    }
+
     public record Skin(
             Supplier<Identifier> blank,
             Optional<Texture.UriTexture> texture,

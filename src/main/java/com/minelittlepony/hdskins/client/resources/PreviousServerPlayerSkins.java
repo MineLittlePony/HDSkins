@@ -21,4 +21,9 @@ public class PreviousServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.Ski
     protected Skin createTexture(SkinType type, Supplier<Identifier> blank) {
         return skin;
     }
+
+    @Override
+    protected boolean isProvided(SkinType type) {
+        return getPosture().getActiveSkinType() == type;
+    }
 }

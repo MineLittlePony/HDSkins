@@ -9,9 +9,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 
 import java.io.Closeable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.Nullable;
 
 public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable {
     public static final int POSE_STANDING = 0;
@@ -37,9 +39,17 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
                 }
             };
         }
+
+        @Override
+        protected boolean isProvided(SkinType type) {
+            return false;
+        }
     };
 
     protected final Map<SkinType, T> textures = new HashMap<>();
+
+    @Nullable
+    private Set<Identifier> providedSkinTypes;
 
     protected final Posture posture;
 
@@ -66,10 +76,20 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, usesThinSkin())));
     }
 
+    public Set<Identifier> getProvidedSkinTypes() {
+        if (providedSkinTypes == null) {
+            providedSkinTypes = textures.keySet().stream().filter(this::isProvided).map(SkinType::getId).collect(Collectors.toSet());
+        }
+        return providedSkinTypes;
+    }
+
+    protected abstract boolean isProvided(SkinType type);
+
     @Override
     public void close() {
         textures.values().forEach(PlayerSkin::close);
         textures.clear();
+        providedSkinTypes = null;
     }
 
     public interface PlayerSkin extends Closeable {

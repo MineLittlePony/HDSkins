@@ -37,6 +37,11 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
         return previewThinArms;
     }
 
+    @Override
+    protected boolean isProvided(SkinType type) {
+        return getPosture().getActiveSkinType() == type;
+    }
+
     public class LocalTexture implements PlayerSkins.PlayerSkin {
         private final Identifier id;
         private final Supplier<Identifier> defaultTexture;
