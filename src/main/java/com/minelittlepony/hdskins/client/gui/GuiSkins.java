@@ -432,7 +432,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
             Text bannerMessage = uploader.getBannerMessage();
 
-            if (showBanner) {
+            if (bannerMessage != HD_SKINS_UPLOAD && bannerMessage != HD_SKINS_REQUEST) {
                 int maxWidth = Math.min(width - 10, getFont().getWidth(bannerMessage));
                 int messageHeight = getFont().getWrappedLinesHeight(bannerMessage.getString(), maxWidth) + getFont().fontHeight + 10;
                 int blockY = (height - messageHeight) / 2;
@@ -444,6 +444,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
                 drawTextBlock(matrices, bannerMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
             } else {
+                uploader.tryClearStatus();
                 drawCenteredLabel(matrices, bannerMessage, width / 2, height / 2, 0xffffff, 0);
             }
         }

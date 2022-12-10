@@ -169,7 +169,7 @@ public class SkinUploader implements Closeable {
     }
 
     public boolean tryClearStatus() {
-        if (!hasBannerMessage() || (!isBusy() || isThrottled())) {
+        if (!hasBannerMessage() || !(isBusy() || isThrottled())) {
             setBannerMessage(STATUS_OK);
             return true;
         }

@@ -93,7 +93,6 @@ public class Gateway {
                 setBusy(true);
                 server.uploadSkin(payload);
                 invalidateProfile(payload.session().getProfile());
-                errorCallback.accept(SkinUploader.STATUS_OK);
             } catch (Exception e) {
                 handleException(e, errorCallback);
             } finally {
@@ -108,7 +107,6 @@ public class Gateway {
                 setBusy(true);
                 profile.setActive(type, profile.getSkins(type).get(index));
                 invalidateProfile(profile.getGameProfile());
-                errorCallback.accept(SkinUploader.STATUS_OK);
             } catch (Exception e) {
                 handleException(e, errorCallback);
             } finally {
@@ -121,9 +119,7 @@ public class Gateway {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 setBusy(true);
-                var result = server.loadSkins(profile);
-                errorCallback.accept(SkinUploader.STATUS_OK);
-                return result;
+                return server.loadSkins(profile);
             } catch (Exception e) {
                 handleException(e, errorCallback);
                 throw new RuntimeException(e);
