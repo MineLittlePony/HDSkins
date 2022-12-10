@@ -154,7 +154,11 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     @Override
     public Identifier getDefaultSkin(SkinType type, boolean slim) {
         Identifier skin = getBlankSkin(type, slim);
-        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? DefaultSkinHelper.getTexture(profile.getId()) : skin, skin);
+        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? DefaultSkinHelper.getTexture(profile.getId()) : skin, skin, getExclusion());
+    }
+
+    protected TextureLoader.Exclusion getExclusion() {
+        return TextureLoader.Exclusion.NULL;
     }
 
     public Identifier getBlankSkin(SkinType type, boolean slim) {

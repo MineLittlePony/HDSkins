@@ -29,11 +29,11 @@ public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilte
         if (skinType != SkinType.SKIN) {
             return image;
         }
-        return filterPlayerSkins(image);
+        return filterPlayerSkins(image, TextureLoader.Exclusion.NULL);
     }
 
     @Nullable
-    public static NativeImage filterPlayerSkins(@Nullable NativeImage image) {
+    public static NativeImage filterPlayerSkins(@Nullable NativeImage image, TextureLoader.Exclusion exclusion) {
 
         if (image == null) {
             return image;

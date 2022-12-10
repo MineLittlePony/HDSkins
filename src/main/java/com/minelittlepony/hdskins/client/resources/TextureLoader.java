@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -38,11 +38,11 @@ public class TextureLoader {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private final Function<NativeImage, NativeImage> filter;
+    private final BiFunction<NativeImage, Exclusion, NativeImage> filter;
 
     private final String id;
 
-    public TextureLoader(String id, Function<NativeImage, NativeImage> filter) {
+    public TextureLoader(String id, BiFunction<NativeImage, Exclusion, NativeImage> filter) {
         this.id = id;
         this.filter = filter;
     }
@@ -53,9 +53,13 @@ public class TextureLoader {
     }
 
     public CompletableFuture<Identifier> loadAsync(Identifier imageId) {
+        return loadAsync(imageId, Exclusion.NULL);
+    }
+
+    public CompletableFuture<Identifier> loadAsync(Identifier imageId, Exclusion exclusion) {
         return CompletableFuture.supplyAsync(() -> getImage(imageId), executor)
         .thenApplyAsync(loaded -> loaded
-                .flatMap(image -> Optional.ofNullable(filter.apply(image))
+                .flatMap(image -> Optional.ofNullable(filter.apply(image, exclusion))
                 .filter(i -> i != null && i != image)), CLIENT)
         .thenApplyAsync(updated -> {
             return updated.map(image -> {
@@ -79,5 +83,11 @@ public class TextureLoader {
             }
             return null;
         });
+    }
+
+    public interface Exclusion {
+        Exclusion NULL = (x, y) -> false;
+
+        boolean includes(int x, int y);
     }
 }

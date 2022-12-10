@@ -57,7 +57,7 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
             local.ifPresent(AbstractTexture::close);
 
             try (InputStream input = Files.newInputStream(file)) {
-                Texture.MemoryTexture image = new Texture.MemoryTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input)), id);
+                Texture.MemoryTexture image = new Texture.MemoryTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input), TextureLoader.Exclusion.NULL), id);
                 MinecraftClient.getInstance().getTextureManager().registerTexture(id, image);
                 local = Optional.of(image);
             }
