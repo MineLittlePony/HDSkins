@@ -9,7 +9,6 @@ import com.google.common.cache.*;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 
 public class DefaultSkinGenerator {
     private static final TextureLoader LOADER = new TextureLoader("default_player_skin", (image, exclusion) -> {
@@ -33,7 +32,7 @@ public class DefaultSkinGenerator {
     });
     private static final LoadingCache<Pair<Identifier, TextureLoader.Exclusion>, CompletableFuture<Identifier>> CACHE = CacheBuilder.newBuilder()
             .expireAfterAccess(15, TimeUnit.MINUTES)
-            .build(CacheLoader.from(pair -> LOADER.loadAsync(pair.getLeft(), pair.getRight())));
+            .build(CacheLoader.from(pair -> LOADER.loadAsync(pair.left(), pair.right())));
 
     public static Identifier generateGreyScale(Identifier id, Identifier fallback, TextureLoader.Exclusion exclusion) {
         try {
@@ -51,4 +50,6 @@ public class DefaultSkinGenerator {
         randomBytes[8]  |= 0x80;  /* set to IETF variant  */
         return DefaultSkinHelper.getTexture(UUID.nameUUIDFromBytes(randomBytes));
     }
+
+    record Pair<A, B>(A left, B right) {}
 }
