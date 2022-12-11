@@ -60,6 +60,8 @@ public class SkinListWidget extends DrawableHelper {
         screen.addButton(scrollRight = new Button(bounds.left + bounds.width, bounds.top, 10, bounds.height))
             .onClick(sender -> scrollBy(1))
             .getStyle().setText(">");
+
+        updateButtons();
     }
 
     private void scrollBy(int steps) {
@@ -73,6 +75,18 @@ public class SkinListWidget extends DrawableHelper {
 
     private float getScrollOffset() {
         return -MathHelper.lerp(MinecraftClient.getInstance().getTickDelta(), prevScrollPosition, scrollPosition) * bounds.height;
+    }
+
+    private void updateButtons() {
+        List<Skin> skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType());
+
+        boolean hasContent = !skins.isEmpty();
+        int pageSize = bounds.width / bounds.height;
+
+        scrollLeft.setVisible(hasContent);
+        scrollLeft.setEnabled(hasContent && scrollPosition > 0);
+        scrollRight.setVisible(hasContent);
+        scrollRight.setEnabled(hasContent && skins.size() >= pageSize && skins.size() > scrollPosition);
     }
 
     public void render(DummyPlayer player, MatrixStack matrices, int mouseX, int mouseY) {
@@ -95,19 +109,12 @@ public class SkinListWidget extends DrawableHelper {
             }
         }
 
+        updateButtons();
+
         List<Skin> skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType());
-
-        scrollLeft.setVisible(!skins.isEmpty());
-        scrollLeft.setEnabled(!skins.isEmpty() && scrollPosition > 0);
-        scrollRight.setVisible(!skins.isEmpty());
-
         if (skins.isEmpty()) {
             return;
         }
-
-        int pageSize = bounds.width / bounds.height;
-
-        scrollRight.setEnabled(!skins.isEmpty() && skins.size() >= pageSize && skins.size() > scrollPosition);
 
         int frameWidth = bounds.height;
 
