@@ -4,8 +4,8 @@ import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.hdskins.client.SkinUploader;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.class_8002;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -86,7 +86,7 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
         BufferBuilder buffer = tessellator.getBuffer();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        class_8002.method_47946(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
+        TooltipBackgroundRenderer.render(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
         BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
 
