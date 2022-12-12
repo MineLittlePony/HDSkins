@@ -81,7 +81,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         long now = System.currentTimeMillis();
         if (providedSkinTypes == null || setAt < now) {
             setAt = now + 500;
-            providedSkinTypes = textures.keySet().stream().filter(this::isProvided).map(SkinType::getId).collect(Collectors.toSet());
+            providedSkinTypes = SkinType.REGISTRY.stream().filter(this::isProvided).map(SkinType::getId).collect(Collectors.toSet());
         }
         return providedSkinTypes;
     }
