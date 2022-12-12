@@ -43,12 +43,14 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
     }
 
     public class LocalTexture implements PlayerSkins.PlayerSkin {
+        private final SkinType type;
         private final Identifier id;
         private final Supplier<Identifier> defaultTexture;
 
         private Optional<Texture.MemoryTexture> local = Optional.empty();
 
         public LocalTexture(SkinType type, Supplier<Identifier> blank) {
+            this.type = type;
             id = new Identifier("hdskins", "generated_preview/" + posture.getProfile().getId().toString() + "/" + type.getPathName());
             defaultTexture = blank;
         }
@@ -62,7 +64,10 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
             local.ifPresent(AbstractTexture::close);
 
             try (InputStream input = Files.newInputStream(file)) {
-                Texture.MemoryTexture image = new Texture.MemoryTexture(HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input), TextureLoader.Exclusion.NULL), id);
+                Texture.MemoryTexture image = new Texture.MemoryTexture(
+                        type != SkinType.SKIN
+                            ? NativeImage.read(input)
+                            : HDPlayerSkinTexture.filterPlayerSkins(NativeImage.read(input), TextureLoader.Exclusion.NULL), id);
                 MinecraftClient.getInstance().getTextureManager().registerTexture(id, image);
                 local = Optional.of(image);
             }
