@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 
@@ -98,11 +99,21 @@ public class ValhallaSkinServer implements SkinServer {
                     .requireOk();
                 break;
             case "file":
+                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                        .PUT(FileTypes.multiPart(upload.metadata())
+                                .field("file", Path.of(upload.image()))
+                                .build())
+                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                        .build())
+                    .requireOk();
+                break;
             case "http":
             case "https":
                 MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .PUT(FileTypes.multiPart(upload.metadata())
-                                .field("file", upload.image())
+                        .POST(FileTypes.multiPart(upload.metadata())
+                                .field("file", upload.image().toString())
                                 .build())
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
                         .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)

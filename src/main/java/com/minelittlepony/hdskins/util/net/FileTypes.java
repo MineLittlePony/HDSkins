@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Flow.Subscriber;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -57,6 +59,7 @@ public interface FileTypes {
         private static final byte[] TAIL = ("--" + MULTI_PART_BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8);
 
         private final List<byte[]> buffer = new ArrayList<>();
+        private long length = 0;
 
         public MultiPartBuilder field(String name, Object value) {
             append(HEAD);
@@ -82,6 +85,7 @@ public interface FileTypes {
             append("Content-Type: " + getMimeType(file) + "\r\n");
             append(NEWLINE);
             append(Files.readAllBytes(file));
+            append(NEWLINE);
             return this;
         }
 
@@ -91,12 +95,35 @@ public interface FileTypes {
 
         public MultiPartBuilder append(byte[] data) {
             buffer.add(data);
+
+            length += data.length;
             return this;
         }
 
         public BodyPublisher build() {
             append(TAIL);
-            return BodyPublishers.ofByteArrays(buffer);
+
+            StringBuilder builder = new StringBuilder();
+            for (byte[] chunk : buffer) {
+                builder.append(new String(chunk, StandardCharsets.UTF_8));
+            }
+
+            System.out.println("Request Body:");
+            System.out.println(builder.toString());
+
+
+            BodyPublisher publisher = BodyPublishers.ofByteArrays(buffer);
+            return new BodyPublisher() {
+                @Override
+                public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
+                    publisher.subscribe(subscriber);
+                }
+
+                @Override
+                public long contentLength() {
+                    return length;
+                }
+            };
         }
     }
 }
