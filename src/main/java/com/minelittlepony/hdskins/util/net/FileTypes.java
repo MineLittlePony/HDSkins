@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.util.net;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.nio.charset.StandardCharsets;
@@ -60,9 +61,17 @@ public interface FileTypes {
         public MultiPartBuilder field(String name, Object value) {
             append(HEAD);
             append("Content-Disposition: form-data; name=\"" + name + "\"\r\n");
+            append("Content-Type: text/plain; charset=UTF-8\r\n");
             append(NEWLINE);
             append(String.valueOf(value) + "\r\n");
             return this;
+        }
+
+        public MultiPartBuilder field(String name, URI file) throws IOException {
+            if ("file".equals(file.getAuthority())) {
+                return field(name, Path.of(file));
+            }
+            return field(name, file.toString());
         }
 
         public MultiPartBuilder field(String name, Path file) throws IOException {

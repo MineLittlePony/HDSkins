@@ -98,21 +98,11 @@ public class ValhallaSkinServer implements SkinServer {
                     .requireOk();
                 break;
             case "file":
-                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .PUT(FileTypes.multiPart(upload.metadata())
-                                .field("file", upload.image())
-                                .build())
-                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
-                        .build())
-                    .requireOk();
-                break;
             case "http":
             case "https":
                 MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .POST(FileTypes.multiPart(upload.metadata())
-                                .field("file", upload.image().toString())
+                        .PUT(FileTypes.multiPart(upload.metadata())
+                                .field("file", upload.image())
                                 .build())
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
                         .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
