@@ -176,15 +176,19 @@ public class SkinChooser {
         int w = img.getWidth();
         int h = img.getHeight();
 
-        if (!isPowerOfTwo(w)) {
-            return ERR_INVALID_POWER_OF_TWO;
+        if (previewer.getActiveSkinType().isVanilla()) {
+            if (!isPowerOfTwo(w)) {
+                return ERR_INVALID_POWER_OF_TWO;
+            }
+            if (!(w == h || w == h * 2)) {
+                return ERR_INVALID_SHAPE;
+            }
         }
+
         if (w > MAX_SKIN_DIMENSION) {
             return ERR_INVALID_TOO_LARGE;
         }
-        if (!(w == h || w == h * 2)) {
-            return ERR_INVALID_SHAPE;
-        }
+
         return null;
     }
 }
