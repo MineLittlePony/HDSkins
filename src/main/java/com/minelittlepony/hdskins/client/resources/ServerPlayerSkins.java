@@ -76,7 +76,7 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
 
     @Override
     protected boolean isProvided(SkinType type) {
-        return get(type).isReady();
+        return get(type).isReady() || textureManager.flatMap(manager -> manager.getTextureMetadata(type)).isPresent();
     }
 
     public record Skin(
