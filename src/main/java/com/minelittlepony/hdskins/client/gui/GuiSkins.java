@@ -31,9 +31,12 @@ import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -148,7 +151,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .setEnabled(uploader.canUpload() && chooser.hasSelection())
                 .onClick(sender -> {
                     if (uploader.canUpload() && chooser.hasSelection()) {
-                        punchServer(StatusBanner.HD_SKINS_UPLOAD);
+                        punchServer(StatusBanner.HD_SKINS_UPLOAD, chooser.getSelection());
                     }
                 })
                 .getStyle()
@@ -170,7 +173,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .setEnabled(uploader.canClear())
                 .onClick(sender -> {
                     if (uploader.canClear()) {
-                        punchServer(StatusBanner.HD_SKINS_REQUEST);
+                        punchServer(StatusBanner.HD_SKINS_REQUEST, null);
                     }
                 })
                 .getStyle()
@@ -404,8 +407,8 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         banner.render(matrices, partialTick, width, height);
     }
 
-    private void punchServer(Text uploadMsg) {
-        uploader.uploadSkin(uploadMsg, chooser.getSelection()).whenComplete((o, t) -> {
+    private void punchServer(Text uploadMsg, @Nullable URI file) {
+        uploader.uploadSkin(uploadMsg, file).whenComplete((o, t) -> {
             if (t != null) {
                 t.printStackTrace();
             }
