@@ -26,4 +26,4 @@ gradlew build
 
 Maven: `https://repo.minelittlepony-mod.com/maven/snapshot`
 
-Dependency: `com.minelittlepony:HDSkins:6.2-1.16-rc1
+Dependency: `com.minelittlepony:HDSkins:<version>`
