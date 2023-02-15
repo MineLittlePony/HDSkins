@@ -1,9 +1,12 @@
 HD Skins
 ========
 
-[![Build Status](https://travis-ci.org/MineLittlePony/HDSkins.svg?branch=1.16)](https://travis-ci.org/MineLittlePony/HDSkins)
+[![Current Version](https://img.shields.io/github/v/tag/MineLittlePony/HDSkins)](https://img.shields.io/github/v/tag/MineLittlePony/HDSkins)
+[![Build Status](https://github.com/MineLittlePony/HDSkins/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/MineLittlePony/HDSkins/actions/workflows/gradle-build.yml)
 [![Jitpack](https://jitpack.io/v/MineLittlePony/HDSkins.svg)](https://jitpack.io/#MineLittlePony/HDSkins)
-
+![Downloads](https://img.shields.io/github/downloads/MineLittlePony/HDSkins/total.svg?color=yellowgreen)
+![License](https://img.shields.io/github/license/MineLittlePony/HDSkins)
+![](https://img.shields.io/badge/api-fabric-orange.svg)
 
 The Minecraft HDSkins mod from the VoxelModPack.
 
