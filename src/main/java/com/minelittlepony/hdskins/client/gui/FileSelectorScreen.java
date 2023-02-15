@@ -236,7 +236,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
             this.path = path;
 
-            Text name = Text.literal(path.getFileName().toString().replace('§', '?'));
+            Text name = Text.literal(path.getFileName().toString().replace(Formatting.FORMATTING_CODE_PREFIX, '?'));
             MutableText format = describeFile(path);
             format.setStyle(format.getStyle().withColor(Formatting.GRAY).withItalic(true));
 
