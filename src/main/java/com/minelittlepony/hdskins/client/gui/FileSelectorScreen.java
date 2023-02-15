@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -139,23 +138,18 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
             directory = directory.getParent();
         }
 
-        File[] files = null;
         try {
-            files = directory.toFile().listFiles();
-        } catch (Throwable e) {}
+            return Files.list(directory).filter(this::filterPath);
+        } catch (IOException e) {
 
-        if (files == null) {
-            return Stream.empty();
         }
 
-        return Lists.newArrayList(files).stream()
-                .map(File::toPath)
-                .filter(this::filterPath);
+        return Stream.empty();
     }
 
     protected boolean filterPath(Path path) {
         try {
-            if (Files.isHidden(path)) {
+            if (path == null || Files.isHidden(path)) {
                 return false;
             }
         } catch (IOException e) {
@@ -242,7 +236,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
             this.path = path;
 
-            Text name = Text.literal(path.getFileName().toString());
+            Text name = Text.literal(path.getFileName().toString().replace('§', '?'));
             MutableText format = describeFile(path);
             format.setStyle(format.getStyle().withColor(Formatting.GRAY).withItalic(true));
 
@@ -250,7 +244,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
                     .setPosition(6, 6)
                     .setTexture(ICONS)
                     .setTextureSize(53, 53)
-                    .setSize(14, 11);
+                    .setSize(13, 11);
 
             onClick(self -> onPathSelected(this));
             setEnabled(Files.isReadable(path));
