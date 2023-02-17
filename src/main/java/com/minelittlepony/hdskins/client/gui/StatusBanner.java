@@ -5,11 +5,11 @@ import com.minelittlepony.hdskins.client.SkinUploader;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Matrix4f;
 
 public class StatusBanner extends DrawableHelper implements ITextContext {
     public static final Text HD_SKINS_UPLOAD = Text.translatable("hdskins.upload");
@@ -84,10 +84,24 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
     static void drawTooltipDecorations(MatrixStack matrices, int x, int y, int width, int height) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        TooltipBackgroundRenderer.render(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-    }
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
 
+        int k = width;
+        int l = x;
+        int m = y;
+        int n = height;
+        fillGradient(matrix4f, buffer, l - 3, m - 4, l + k + 3, m - 3, 400, -267386864, -267386864);
+        fillGradient(matrix4f, buffer, l - 3, m + n + 3, l + k + 3, m + n + 4, 400, -267386864, -267386864);
+        fillGradient(matrix4f, buffer, l - 3, m - 3, l + k + 3, m + n + 3, 400, -267386864, -267386864);
+        fillGradient(matrix4f, buffer, l - 4, m - 3, l - 3, m + n + 3, 400, -267386864, -267386864);
+        fillGradient(matrix4f, buffer, l + k + 3, m - 3, l + k + 4, m + n + 3, 400, -267386864, -267386864);
+        fillGradient(matrix4f, buffer, l - 3, m - 3 + 1, l - 3 + 1, m + n + 3 - 1, 400, 0x505000FF, 1344798847);
+        fillGradient(matrix4f, buffer, l + k + 2, m - 3 + 1, l + k + 3, m + n + 3 - 1, 400, 0x505000FF, 1344798847);
+        fillGradient(matrix4f, buffer, l - 3, m - 3, l + k + 3, m - 3 + 1, 400, 0x505000FF, 0x505000FF);
+        fillGradient(matrix4f, buffer, l - 3, m + n + 2, l + k + 3, m + n + 3, 400, 1344798847, 1344798847);
+
+        BufferRenderer.drawWithShader(buffer.end());
+    }
 }

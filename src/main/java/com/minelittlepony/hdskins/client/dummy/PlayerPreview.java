@@ -34,7 +34,7 @@ import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.*;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -278,7 +278,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         ClippingSpace.renderClipped(frame.left, frame.top, frame.width, frame.height, () -> {
             Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-            drawBackground(matrixStack, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
+            drawBackground(matrixStack, frame.left, frame.left + frame.width, frame.top + frame.height, frame.top, horizon);
 
             thePlayer.ifPresent(player -> {
                 try {
@@ -338,9 +338,9 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         matrixStack.translate(0, 0, 1000);
         matrixStack.scale(scale, scale, scale);
 
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15));
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rot));
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(15));
+        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(180));
+        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot));
 
         DiffuseLighting.method_34742();
 
@@ -383,14 +383,14 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         matrixStack.translate(0.001, offset, 0.001);
 
         if (thePlayer.isSleeping()) {
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90));
+            matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(90));
 
             y += 0.7F;
             x += 1;
         }
         if (thePlayer.isSwimming()) {
             DummyWorld.fillWith(Blocks.WATER.getDefaultState());
-            matrixStack.multiply(RotationAxis.NEGATIVE_X.rotationDegrees(45));
+            matrixStack.multiply(Vec3f.NEGATIVE_X.getDegreesQuaternion(45));
 
             if (thePlayer.getVelocity().x < 100) {
                 thePlayer.addVelocity(100, 0, 0);

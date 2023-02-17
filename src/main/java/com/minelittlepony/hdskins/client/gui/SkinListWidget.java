@@ -26,7 +26,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3f;
 
 public class SkinListWidget extends DrawableHelper {
 
@@ -232,9 +232,9 @@ public class SkinListWidget extends DrawableHelper {
         matrixStack.translate(0, 0, 1000);
         matrixStack.scale(scale, scale, scale);
 
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15));
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(15));
+        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(180));
+        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(220));
 
         DiffuseLighting.method_34742();
 
