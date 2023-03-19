@@ -186,7 +186,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
-    public Entity getPrimaryPassenger() {
+    public Entity getVehicle() {
         return hasVehicle() ? boat : null;
     }
 
@@ -214,8 +214,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
             handSwingTicks = 0;
         }
 
-        limbAngle = (limbAngle + 1) % 360;
-        limbDistance = isSprinting() ? (isSneaking() ? 0.1F : 1) : 0;
+        limbAnimator.updateLimbs(isSprinting() ? (isSneaking() ? 0.1F : 1) : 0, 1);
 
         handSwingProgress = handSwingTicks / 8F;
 

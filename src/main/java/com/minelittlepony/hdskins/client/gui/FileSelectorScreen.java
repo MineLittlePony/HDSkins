@@ -111,7 +111,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
-        renderBackground(matrices, 0);
+        renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, partialTicks);
 
         filesList.render(matrices, mouseX, mouseY, partialTicks);

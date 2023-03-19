@@ -147,15 +147,15 @@ public class SkinListWidget extends DrawableHelper {
                 if (skin.isReady()) {
                     player.setOverrideTextures(new PreviousServerPlayerSkins(skin));
 
-                    float limbD = player.limbDistance;
+                    float limbD = player.limbAnimator.getSpeed();
                     int y = frameWidth;
                     if (hovered && i == index) {
                         y -= 3;
-                        player.limbDistance = 1F;
+                        player.limbAnimator.setSpeed(1);
                     }
 
                     renderPlayerModel(matrices, player, (i * frameWidth) + frameWidth / 2, y, 13);
-                    player.limbDistance = limbD;
+                    player.limbAnimator.setSpeed(limbD);
                 }
 
                 if (skin.active()) {

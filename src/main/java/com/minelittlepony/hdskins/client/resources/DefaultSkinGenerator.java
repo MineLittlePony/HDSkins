@@ -9,6 +9,7 @@ import com.google.common.cache.*;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 
 public class DefaultSkinGenerator {
     private static final TextureLoader LOADER = new TextureLoader("default_player_skin", (image, exclusion) -> {
@@ -23,7 +24,7 @@ public class DefaultSkinGenerator {
                     float g = image.getGreen(x, y) / 255F;
                     float b = image.getBlue(x, y) / 255F;
                     int brightness = (int)((0.2126F * r + 0.7152F * g + 0.0722F * b) * 255);
-                    copy.setColor(x, y, NativeImage.packColor(a, brightness, brightness, brightness));
+                    copy.setColor(x, y, ColorHelper.Argb.getArgb(a, brightness, brightness, brightness));
                 }
             }
         }
