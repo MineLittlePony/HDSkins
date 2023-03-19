@@ -214,7 +214,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
             handSwingTicks = 0;
         }
 
-        limbAnimator.updateLimbs(isSprinting() ? (isSneaking() ? 0.1F : 1) : 0, 1);
+        limbAnimator.updateLimbs(isSprinting() ? (isSneaking() ? 0.1F : 1) : (isSwimming() ? 1 : 0), 0.1F);
 
         handSwingProgress = handSwingTicks / 8F;
 
