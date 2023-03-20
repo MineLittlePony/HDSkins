@@ -19,12 +19,13 @@ public class DefaultSkinGenerator {
                 if (exclusion.includes(x, y)) {
                     copy.setColor(x, y, image.getColor(x, y));
                 } else {
-                    int a = image.getOpacity(x, y);
-                    float r = image.getRed(x, y) / 255F;
-                    float g = image.getGreen(x, y) / 255F;
-                    float b = image.getBlue(x, y) / 255F;
+                    int color = image.getColor(x, y);
+                    int a = ColorHelper.Abgr.getAlpha(color);
+                    float r = ColorHelper.Abgr.getRed(color) / 255F;
+                    float g = ColorHelper.Abgr.getGreen(color) / 255F;
+                    float b = ColorHelper.Abgr.getBlue(color) / 255F;
                     int brightness = (int)((0.2126F * r + 0.7152F * g + 0.0722F * b) * 255);
-                    copy.setColor(x, y, ColorHelper.Argb.getArgb(a, brightness, brightness, brightness));
+                    copy.setColor(x, y, ColorHelper.Abgr.getAbgr(a, brightness, brightness, brightness));
                 }
             }
         }
