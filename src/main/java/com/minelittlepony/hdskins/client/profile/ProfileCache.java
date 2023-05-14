@@ -45,7 +45,7 @@ class ProfileCache {
             for (Gateway gateway : hd.getSkinServerList().getSkinServers()) {
                 try {
                     if (!gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
-                        gateway.getServer().loadSkins(profile).getTextures().forEach((type, texture) -> {
+                        gateway.getServer().loadSkins(profile).textures().forEach((type, texture) -> {
                             if (requestedSkinTypes.remove(type)) {
                                 textureMap.putIfAbsent(type, texture);
                             }

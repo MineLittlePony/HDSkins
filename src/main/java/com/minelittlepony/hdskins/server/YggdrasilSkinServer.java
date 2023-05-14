@@ -81,10 +81,16 @@ public class YggdrasilSkinServer implements SkinServer {
             HDSkins.LOGGER.error(e);
         }
 
-        return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
-                entry -> SkinType.forVanilla(entry.getKey()),
-                Map.Entry::getValue
-        )));
+        return new TexturePayload(
+                System.currentTimeMillis(),
+                profile.getId(),
+                profile.getName(),
+                true,
+                textures.entrySet().stream().collect(Collectors.toMap(
+                    entry -> SkinType.forVanilla(entry.getKey()),
+                    Map.Entry::getValue
+                ))
+        );
     }
 
     @Override
