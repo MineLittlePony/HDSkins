@@ -82,10 +82,7 @@ public class YggdrasilSkinServer implements SkinServer {
         }
 
         return new TexturePayload(
-                System.currentTimeMillis(),
-                profile.getId(),
-                profile.getName(),
-                true,
+                profile,
                 textures.entrySet().stream().collect(Collectors.toMap(
                     entry -> SkinType.forVanilla(entry.getKey()),
                     Map.Entry::getValue

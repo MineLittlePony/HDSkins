@@ -1,18 +1,24 @@
 package com.minelittlepony.hdskins.server;
 
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public record TexturePayload(
-    long timestamp,
-    UUID profileId,
-    String profileName,
-    boolean isPublic,
-    Map<SkinType, MinecraftProfileTexture> textures) {
+        long timestamp,
+        UUID profileId,
+        String profileName,
+        boolean isPublic,
+        Map<SkinType, MinecraftProfileTexture> textures) {
+
+    public TexturePayload(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textures) {
+        this(System.currentTimeMillis(), profile.getId(), profile.getName(), true, new HashMap<>(textures));
+    }
 
     public Optional<MinecraftProfileTexture> getTexture(SkinType type) {
         return textures.containsKey(type) ? Optional.of(textures.get(type)) : Optional.empty();
