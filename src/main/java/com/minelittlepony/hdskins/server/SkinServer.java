@@ -34,6 +34,16 @@ public interface SkinServer {
     TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException;
 
     /**
+     * Load texture history for the provided profile.
+     *
+     * @param profile The profile whose history to load
+     * @return The texture history
+     *
+     * @throws IOException
+     */
+    TextureHistory loadSkinHistory(GameProfile profile) throws IOException;
+
+    /**
      * Uploads a player's skin to this server.
      *
      * @param upload The payload to send.
@@ -70,4 +80,5 @@ public interface SkinServer {
             String getUri();
         }
     }
+
 }

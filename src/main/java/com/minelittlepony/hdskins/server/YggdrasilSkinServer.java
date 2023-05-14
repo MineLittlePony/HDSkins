@@ -158,6 +158,11 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public TextureHistory loadSkinHistory(GameProfile profile) throws IOException {
+        throw new IOException("Texture history is not implemented yet");
+    }
+
+    @Override
     public String toString() {
         return new IndentedToStringStyle.Builder(this)
                 .append("address", address)

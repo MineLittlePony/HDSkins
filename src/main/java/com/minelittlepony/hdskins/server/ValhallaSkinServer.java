@@ -4,7 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
-import com.minelittlepony.hdskins.util.net.*;
+import com.minelittlepony.hdskins.util.net.FileTypes;
+import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
@@ -71,6 +72,16 @@ public class ValhallaSkinServer implements SkinServer {
                     .build())
                 .requireOk()
                 .json(TexturePayload.class, "Invalid texture payload");
+    }
+
+    @Override
+    public TextureHistory loadSkinHistory(GameProfile profile) throws IOException {
+        Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/history/%s", getApiPrefix(), profile.getId().toString())))
+                        .GET()
+                        .build())
+                .requireOk()
+                .json(TextureHistory.class, "Invalid history payload");
     }
 
     @Override
