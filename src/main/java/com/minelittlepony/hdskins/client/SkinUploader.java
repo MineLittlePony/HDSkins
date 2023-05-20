@@ -3,6 +3,7 @@ package com.minelittlepony.hdskins.client;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -177,10 +178,24 @@ public class SkinUploader implements Closeable {
         return false;
     }
 
-    public CompletableFuture<Void> uploadSkin(Text statusMsg, @Nullable URI skin) {
+    private SkinUpload createSkinUpload(@Nullable URI skin) {
+        if (skin == null) {
+            return new SkinUpload.Delete(mc.getSession(), previewer.getActiveSkinType());
+        }
+        if ("file".equals(skin.getScheme())) {
+            return new SkinUpload.FileUpload(mc.getSession(), previewer.getActiveSkinType(), Paths.get(skin), skinMetadata);
+        }
+        if (Set.of("http", "https").contains(skin.getScheme())) {
+            return new SkinUpload.UriUpload(mc.getSession(), previewer.getActiveSkinType(), skin, skinMetadata);
+        }
+        throw new IllegalArgumentException("URI scheme not supported for skin upload: " + skin.getScheme());
+    }
+
+    public CompletableFuture<Void> uploadSkin(Text statusMsg, @Nullable URI skinUri) {
         setBannerMessage(statusMsg);
+        var skin = createSkinUpload(skinUri);
         return gateway
-                .map(g -> g.uploadSkin(new SkinUpload(mc.getSession(), previewer.getActiveSkinType(), skin, skinMetadata), this::setBannerMessage))
+                .map(g -> g.uploadSkin(skin, this::setBannerMessage))
                 .map(future -> future.thenRunAsync(this::scheduleReload, MinecraftClient.getInstance()))
                 .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
     }

@@ -91,25 +91,26 @@ public class YggdrasilSkinServer implements SkinServer {
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.session());
 
-        switch (upload.getSchemaAction()) {
-            case "none":
-                execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
-                        .DELETE()
-                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
-                        .build());
-                break;
-            case "file":
-                execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
-                        .PUT(FileTypes.multiPart(mapMetadata(upload.metadata()))
-                                .field("file", upload.image())
-                                .build())
-                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
-                        .build());
-                break;
-            default:
-                throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
+        if (upload instanceof SkinUpload.Delete) {
+            execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
+                    .DELETE()
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                    .build());
+        } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
+            execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
+                    .PUT(FileTypes.multiPart(mapMetadata(fileUpload.metadata()))
+                            .field("file", fileUpload.file())
+                            .build())
+                    .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                    .build());
+        } else if (upload instanceof SkinUpload.UriUpload) {
+            // TODO yes it does! https://wiki.vg/Mojang_API#Change_Skin
+            // The question is whether it supports non-minecraft urls
+            throw new IOException("Yggdrasil does not support URI uploads");
+        } else {
+            throw new IllegalArgumentException("Unsupported SkinUpload type: " + upload.getClass());
         }
 
         MinecraftClient client = MinecraftClient.getInstance();

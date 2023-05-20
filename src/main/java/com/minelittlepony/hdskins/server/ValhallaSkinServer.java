@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
-import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 
@@ -90,39 +89,34 @@ public class ValhallaSkinServer implements SkinServer {
     private void uploadPlayerSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.session());
 
-        switch (upload.getSchemaAction()) {
-            case "none":
-                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .DELETE()
-                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
-                        .build())
+        if (upload instanceof SkinUpload.Delete) {
+            MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                            .DELETE()
+                            .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .build())
                     .requireOk();
-                break;
-            case "file":
-                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .PUT(FileTypes.multiPart(upload.metadata())
-                                .field("file", Path.of(upload.image()))
-                                .build())
-                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
-                        .build())
+        } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
+            MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                            .PUT(FileTypes.multiPart(fileUpload.metadata())
+                                    .field("file", fileUpload.file())
+                                    .build())
+                            .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                            .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                            .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .build())
                     .requireOk();
-                break;
-            case "http":
-            case "https":
-                MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
-                        .POST(FileTypes.multiPart(upload.metadata())
-                                .field("file", upload.image().toString())
-                                .build())
-                        .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                        .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
-                        .build())
+        } else if (upload instanceof SkinUpload.UriUpload uriUpload) {
+            MoreHttpResponses.execute(HttpRequest.newBuilder(buildUserTextureUri(upload))
+                            .POST(FileTypes.multiPart(uriUpload.metadata())
+                                    .field("file", uriUpload.uri().toString())
+                                    .build())
+                            .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                            .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                            .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .build())
                     .requireOk();
-                break;
-            default:
-                throw new IOException("Unsupported URI scheme: " + upload.getSchemaAction());
+        } else {
+            throw new IllegalArgumentException("Unsupported Upload type: " + upload.getClass().getName());
         }
     }
 
