@@ -115,6 +115,11 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         renderBackground(context);
         super.render(context, mouseX, mouseY, partialTicks);

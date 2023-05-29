@@ -8,10 +8,8 @@ import java.nio.file.Paths;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.filedialog.FileDialog;
-import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
-import net.fabricmc.loader.FabricLoader;
 import net.minecraft.text.Text;
 
 public class FileSaverScreen extends FileSelectorScreen {
@@ -94,7 +92,7 @@ public class FileSaverScreen extends FileSelectorScreen {
 
         if (parent != null && name != null && !Files.isWritable(parent)) {
             client.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
-                onDirectorySelected(GamePaths.getGameDirectory());
+                onDirectorySelected(GamePaths.getGameDirectory().resolve(name));
                 /*
                 FileDialogs.NATIVE.save("Save File", name.toString()).startIn(parent).andThen((p, success) -> {
                     if (success) {
