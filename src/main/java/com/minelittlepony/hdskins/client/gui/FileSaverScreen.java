@@ -1,17 +1,22 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.minelittlepony.common.client.gui.element.Button;
+import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.filedialog.FileDialog;
+import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
+import net.fabricmc.loader.FabricLoader;
 import net.minecraft.text.Text;
 
 public class FileSaverScreen extends FileSelectorScreen {
     public static final Text SAVE_OVERWRITE = Text.translatable("hdskins.save.overwrite");
+    public static final Text SAVE_READONLY = Text.translatable("hdskins.save.readonly");
 
     private Button saveBtn;
 
@@ -35,15 +40,17 @@ public class FileSaverScreen extends FileSelectorScreen {
 
         addButton(saveBtn = new Button(width/2 - 50, height - 25, 100, 20))
             .onClick(p -> {
-                currentDirectory = Paths.get(textInput.getText());
+                try {
+                    currentDirectory = Paths.get(textInput.getText());
 
-                if (Files.exists(currentDirectory)) {
-                    client.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
-                        navigateTo(currentDirectory);
-                    }));
-                } else {
-                    onFileSelected(currentDirectory);
-                }
+                    if (Files.exists(currentDirectory)) {
+                        client.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
+                            navigateTo(currentDirectory);
+                        }));
+                    } else {
+                        onFileSelected(currentDirectory);
+                    }
+                } catch (InvalidPathException ignored) {}
             })
             .getStyle()
                 .setText("hdskins.directory.save");
@@ -59,9 +66,11 @@ public class FileSaverScreen extends FileSelectorScreen {
     }
 
     protected void updateButtonStates(String value) {
-        Path selection = Paths.get(value.trim());
+        try {
+            Path selection = Paths.get(value.trim());
 
-        saveBtn.setEnabled(selection != null && !Files.isDirectory(selection));
+            saveBtn.setEnabled(selection != null && !Files.isDirectory(selection));
+        } catch (InvalidPathException ignored) {}
     }
 
     @Override
@@ -79,13 +88,40 @@ public class FileSaverScreen extends FileSelectorScreen {
     }
 
     @Override
+    protected void onFileSelected(Path fileLocation) {
+        Path parent = fileLocation.getParent();
+        Path name = fileLocation.getFileName();
+
+        if (parent != null && name != null && !Files.isWritable(parent)) {
+            client.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
+                onDirectorySelected(GamePaths.getGameDirectory());
+                /*
+                FileDialogs.NATIVE.save("Save File", name.toString()).startIn(parent).andThen((p, success) -> {
+                    if (success) {
+                        super.onFileSelected(p);
+                    } else {
+                        finish();
+                    }
+                }).launch();*/
+            }));
+            return;
+        }
+
+        super.onFileSelected(fileLocation);
+    }
+
+    @Override
     public void navigateTo(Path path) {
         Path userInput = Paths.get(textInput.getText());
         String fileName = "";
 
         if (userInput != null) {
-            fileName = userInput.getFileName().toString().trim();
+            userInput = userInput.getFileName();
+            if (userInput != null) {
+                fileName = userInput.getFileName().toString().trim();
+            }
         }
+
         if (fileName.isEmpty()) {
             fileName = savingFileName;
         } else {
@@ -105,7 +141,9 @@ public class FileSaverScreen extends FileSelectorScreen {
                 path = FileTypes.changeExtension(path, extensionFilter);
             }
 
-            onDirectorySelected(path.toAbsolutePath());
+            path = path.toAbsolutePath();
+
+            onDirectorySelected(path);
         } else {
             super.navigateTo(path);
         }

@@ -9,6 +9,11 @@ import java.nio.file.Path;
  */
 public interface FileDialog {
     /**
+     * Sets the starting directory for this dialogue when it's opened
+     */
+    FileDialog startIn(Path directory);
+
+    /**
      * Called to filter the types of files this dialogue is allowed to work with.
      */
     FileDialog filter(String extension, String description);

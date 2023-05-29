@@ -24,6 +24,12 @@ abstract class AbstractNativeFileDialog implements FileDialog {
     private Callback callback = (file, done) -> {};
 
     @Override
+    public FileDialog startIn(Path currentDirectory) {
+        this.currentDirectory = currentDirectory;
+        return this;
+    }
+
+    @Override
     public FileDialog filter(String extension, String description) {
         this.extensionFilter = extension;
         this.filterMessage = description;

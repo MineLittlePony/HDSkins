@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.minelittlepony.common.client.gui.GameGui;
@@ -92,10 +94,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
                 .setText("hdskins.directory.up");
 
         addButton(new Button(width/2 + 60, height - 25, 100, 20))
-            .onClick(p -> {
-                finish();
-                callback.onDialogClosed(currentDirectory, false);
-            })
+            .onClick(p -> finish())
             .getStyle()
                 .setText("hdskins.options.close");
 
@@ -107,6 +106,12 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
                     .setColor(0x88EEEEEE)
                     .setText("* " + filterMessage);
         }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        callback.onDialogClosed(currentDirectory, false);
     }
 
     @Override
@@ -147,7 +152,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         return Stream.empty();
     }
 
-    protected boolean filterPath(Path path) {
+    protected boolean filterPath(@Nullable Path path) {
         try {
             if (path == null || Files.isHidden(path)) {
                 return false;
@@ -285,6 +290,12 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     @Override
+    public FileDialog startIn(Path currentDirectory) {
+        this.currentDirectory = currentDirectory;
+        return this;
+    }
+
+    @Override
     public FileDialog filter(String extension, String description) {
         extensionFilter = Strings.nullToEmpty(extension);
         filterMessage = Strings.nullToEmpty(description);
@@ -308,5 +319,4 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         MinecraftClient.getInstance().setScreen(this);
         return this;
     }
-
 }
