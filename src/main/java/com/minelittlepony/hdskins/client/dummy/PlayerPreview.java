@@ -229,6 +229,7 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
         if (chooser.hasStatus()) {
             matrices.push();
             localFrameBounds.translate(matrices);
+            matrices.translate(0, 0, 300);
             context.fill(10, localFrameBounds.height / 2 - 12, localFrameBounds.width - 10, localFrameBounds.height / 2 + 12, LABEL_BACKGROUND);
             drawCenteredLabel(context, chooser.getStatus(), localFrameBounds.width / 2, localFrameBounds.height / 2 - 4, 0xFFFFFF, 0);
             matrices.pop();
@@ -237,6 +238,7 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
         if (uploader.hasStatus()) {
             matrices.push();
             serverFrameBounds.translate(matrices);
+            matrices.translate(0, 0, 300);
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
