@@ -47,7 +47,6 @@ public class SkinChooser {
     }
 
     private boolean pickingInProgress;
-;
     private final PlayerPreview previewer;
     private final SkinChangeListener listener;
 
@@ -135,6 +134,10 @@ public class SkinChooser {
 
             if (success) {
                 previewer.getServerTextures().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {
+                    try {
+                        Files.deleteIfExists(file);
+                    } catch (IOException ignored) { }
+
                     try (InputStream response = texture.openStream()) {
                         Files.copy(response, file);
                     } catch (IOException e) {
