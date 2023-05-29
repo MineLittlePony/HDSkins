@@ -110,5 +110,4 @@ public class FileSaverScreen extends FileSelectorScreen {
             super.navigateTo(path);
         }
     }
-
 }

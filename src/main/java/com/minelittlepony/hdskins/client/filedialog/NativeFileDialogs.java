@@ -42,6 +42,5 @@ class NativeFileDialogs implements FileDialogs {
             return null;
         }
         return PointerBuffer.create(ByteBuffer.wrap(filter.getBytes(StandardCharsets.UTF_8)));
-
     }
 }

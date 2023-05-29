@@ -1,9 +1,8 @@
 package com.minelittlepony.hdskins.client.filedialog;
 
 public interface FileDialogs {
-
-    FileDialogs guiFD = new GuiFileDialogs();
-    FileDialogs nativeFD = new NativeFileDialogs();
+    FileDialogs INTEGRATED = new GuiFileDialogs();
+    FileDialogs NATIVE = new NativeFileDialogs();
 
     FileDialog open(String title);
 
