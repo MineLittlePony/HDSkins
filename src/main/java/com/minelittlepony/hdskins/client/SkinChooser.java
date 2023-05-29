@@ -2,8 +2,7 @@ package com.minelittlepony.hdskins.client;
 
 import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
-import com.minelittlepony.hdskins.client.gui.FileSaverScreen;
-import com.minelittlepony.hdskins.client.gui.FileSelectorScreen;
+import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -47,9 +46,8 @@ public class SkinChooser {
         return number != 0 && (number & number - 1) == 0;
     }
 
-    @Nullable
-    private FileDialog openFileThread;
-
+    private boolean pickingInProgress;
+;
     private final PlayerPreview previewer;
     private final SkinChangeListener listener;
 
@@ -63,6 +61,13 @@ public class SkinChooser {
         this.previewer = previewer;
         this.listener = listener;
         addImageValidation(this::acceptsSkinDimensions);
+    }
+
+    private FileDialogs getFileDialogs() {
+        if (HDSkins.getInstance().getConfig().useNativeFileChooser.get()) {
+            return FileDialogs.nativeFD;
+        }
+        return FileDialogs.guiFD;
     }
 
     public void addImageValidation(Function<NativeImage, Text> validator) {
@@ -85,7 +90,7 @@ public class SkinChooser {
     }
 
     public boolean pickingInProgress() {
-        return openFileThread != null;
+        return pickingInProgress;
     }
 
     public Text getStatus() {
@@ -110,10 +115,11 @@ public class SkinChooser {
     }
 
     public void openBrowsePNG(String title) {
-        openFileThread = new FileSelectorScreen(title)
+        pickingInProgress = true;
+        getFileDialogs().open(title)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
-            openFileThread = null;
+            pickingInProgress = false;
 
             if (success) {
                 selectFile(file);
@@ -122,10 +128,10 @@ public class SkinChooser {
     }
 
     public void openSavePNG(SkinUploader uploader, String title, String filename) {
-        openFileThread = new FileSaverScreen(title, filename)
+        getFileDialogs().save(title, filename)
                 .filter(".png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
-            openFileThread = null;
+            pickingInProgress = false;
 
             if (success) {
                 previewer.getServerTextures().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {

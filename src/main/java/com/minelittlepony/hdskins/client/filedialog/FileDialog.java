@@ -1,14 +1,13 @@
-package com.minelittlepony.hdskins.client;
+package com.minelittlepony.hdskins.client.filedialog;
 
 import java.nio.file.Path;
 
 /**
  * A file dialog for opening and reading files.
- * 
+ * <p>
  * Implementations may vary.
  */
 public interface FileDialog {
-
     /**
      * Called to filter the types of files this dialogue is allowed to work with.
      */
@@ -25,7 +24,7 @@ public interface FileDialog {
     FileDialog launch();
 
     @FunctionalInterface
-    public interface Callback {
+    interface Callback {
         void onDialogClosed(Path file, boolean success);
     }
 }

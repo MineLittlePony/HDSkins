@@ -14,7 +14,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
-import com.minelittlepony.hdskins.client.FileDialog;
+import com.minelittlepony.hdskins.client.filedialog.FileDialog;
 import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.util.net.FileTypes;

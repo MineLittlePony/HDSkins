@@ -8,6 +8,7 @@ import com.minelittlepony.common.util.settings.*;
 public class HDConfig extends Config {
 
     public final Setting<Path> lastChosenFile = value("lastChosenFile", Paths.get("/"));
+    public final Setting<Boolean> useNativeFileChooser = value("useNativeFileChooser", false);
 
     public HDConfig(Path path) {
         super(FLATTENED_JSON_ADAPTER, path);
