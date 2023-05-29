@@ -3,11 +3,13 @@ package com.minelittlepony.hdskins.client;
 import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
 import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
+import com.minelittlepony.hdskins.client.gui.ConfirmationScreen;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -140,6 +142,10 @@ public class SkinChooser {
 
                     try (InputStream response = texture.openStream()) {
                         Files.copy(response, file);
+
+                        MinecraftClient.getInstance().setScreen(new ConfirmationScreen(MinecraftClient.getInstance().currentScreen, Text.translatable("hdskins.save.completed"), () -> {
+                            Util.getOperatingSystem().open(file.toUri());
+                        }));
                     } catch (IOException e) {
                         LogManager.getLogger().error("Failed to save remote skin.", e);
                     }
