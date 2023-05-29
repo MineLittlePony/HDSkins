@@ -16,7 +16,7 @@ import com.minelittlepony.hdskins.util.net.FileTypes;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.minecraft.InsecureTextureException;
+import com.mojang.authlib.minecraft.InsecurePublicKeyException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 
@@ -77,7 +77,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
         try {
             textures.putAll(session.getTextures(profile, requireSecure));
-        } catch (InsecureTextureException e) {
+        } catch (InsecurePublicKeyException e) {
             HDSkins.LOGGER.error(e);
         }
 

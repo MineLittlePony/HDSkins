@@ -58,7 +58,7 @@ public class DummyPlayerRenderer {
                 }
 
                 client.player = player;
-                client.world = (ClientWorld)player.world;
+                client.world = (ClientWorld)player.getWorld();
                 OutsideWorldRenderer.configure(client.world);
             }
 

@@ -30,7 +30,7 @@ class DummyNetworkHandler extends ClientPlayNetworkHandler {
                 new ClientConnection(NetworkSide.CLIENTBOUND),
                 null,
                 profile,
-                new WorldSession(TelemetrySender.NOOP, false, null)
+                new WorldSession(TelemetrySender.NOOP, false, null, null)
         );
 
 

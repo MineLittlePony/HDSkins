@@ -20,8 +20,8 @@ import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -110,11 +110,11 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
-        renderBackground(matrices);
-        super.render(matrices, mouseX, mouseY, partialTicks);
+    public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
+        renderBackground(context);
+        super.render(context, mouseX, mouseY, partialTicks);
 
-        filesList.render(matrices, mouseX, mouseY, partialTicks);
+        filesList.render(context, mouseX, mouseY, partialTicks);
     }
 
     protected void renderDirectory() {

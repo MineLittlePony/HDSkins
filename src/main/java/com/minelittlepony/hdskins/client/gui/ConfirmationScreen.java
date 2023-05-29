@@ -6,8 +6,8 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Label;
 
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class ConfirmationScreen extends GameGui {
@@ -42,11 +42,11 @@ public class ConfirmationScreen extends GameGui {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
-        parent.render(matrices, -1, -1, partialTicks);
+    public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
+        parent.render(context, -1, -1, partialTicks);
 
-        fill(matrices, 0, 0, width, height, 0x88000000);
+        context.fill(0, 0, width, height, 0x88000000);
 
-        super.render(matrices, mouseX, mouseY, partialTicks);
+        super.render(context, mouseX, mouseY, partialTicks);
     }
 }

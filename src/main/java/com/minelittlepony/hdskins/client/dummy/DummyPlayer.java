@@ -239,7 +239,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         if (y < 0) {
             y = 0;
         }
-        onGround = y == 0;
+        setOnGround(y == 0);
 
         setPos(getX(), y, getZ());
 

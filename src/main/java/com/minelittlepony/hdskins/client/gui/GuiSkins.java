@@ -25,7 +25,6 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
@@ -268,7 +267,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         try {
             uploader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            HDSkins.LOGGER.error("Could not dispose of the uploader", e);
         }
 
         HDSkins.getInstance().getProfileRepository().clear();
@@ -393,18 +392,18 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick) {
+    public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
         RenderSystem.disableCull();
 
         if (client.world == null) {
             panorama.render(partialTick, 1);
         } else {
-           renderBackground(matrices);
+           renderBackground(context);
         }
 
-        previewer.render(matrices, mouseX, mouseY, updateCounter, partialTick, chooser, uploader);
-        super.render(matrices, mouseX, mouseY, partialTick);
-        banner.render(matrices, partialTick, width, height);
+        previewer.render(context, mouseX, mouseY, updateCounter, partialTick, chooser, uploader);
+        super.render(context, mouseX, mouseY, partialTick);
+        banner.render(context, partialTick, width, height);
     }
 
     private void punchServer(Text uploadMsg, @Nullable URI file) {

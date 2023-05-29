@@ -2,16 +2,13 @@ package com.minelittlepony.hdskins.client.gui;
 
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.hdskins.client.SkinUploader;
-import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
-public class StatusBanner extends DrawableHelper implements ITextContext {
+public class StatusBanner implements ITextContext {
     public static final Text HD_SKINS_UPLOAD = Text.translatable("hdskins.upload");
     public static final Text HD_SKINS_REQUEST = Text.translatable("hdskins.request");
     public static final Text HD_SKINS_FAILED = Text.translatable("hdskins.failed");
@@ -26,7 +23,7 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
         this.uploader = uploader;
     }
 
-    public void render(MatrixStack matrices, float deltaTime, int width, int height) {
+    public void render(DrawContext context, float deltaTime, int width, int height) {
 
         boolean showBanner = uploader.hasBannerMessage();
 
@@ -55,7 +52,7 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
         if (msgFadeOpacity > 0) {
             int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
 
-            fill(matrices, 0, 0, width, height, opacity);
+            context.fill(0, 0, width, height, opacity);
 
             if (showBanner || msgFadeOpacity >= 1) {
                 int maxWidth = Math.min(width - 10, getFont().getWidth(lastShownMessage));
@@ -64,14 +61,14 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
                 int blockX = (width - maxWidth) / 2;
                 int padding = 6;
 
-                drawTooltipDecorations(matrices, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
+                drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
 
                 if (lastShownMessage != HD_SKINS_UPLOAD && lastShownMessage != HD_SKINS_REQUEST) {
-                    drawCenteredLabel(matrices, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
-                    drawTextBlock(matrices, lastShownMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+                    drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
+                    drawTextBlock(context, lastShownMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
                 } else {
                     uploader.tryClearStatus();
-                    drawCenteredLabel(matrices, lastShownMessage, width / 2, height / 2, 0xffffff, 0);
+                    drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, 0xffffff, 0);
                 }
             }
         }
@@ -81,13 +78,8 @@ public class StatusBanner extends DrawableHelper implements ITextContext {
         return msgFadeOpacity > 0;
     }
 
-    static void drawTooltipDecorations(MatrixStack matrices, int x, int y, int width, int height) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        TooltipBackgroundRenderer.render(DrawableHelper::fillGradient, matrices.peek().getPositionMatrix(), buffer, x, y, width, height, 400);
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
+    static void drawTooltipDecorations(DrawContext context, int x, int y, int width, int height) {
+        TooltipBackgroundRenderer.render(context, x, y, width, height, 400);
     }
 
 }

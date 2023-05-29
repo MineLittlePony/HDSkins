@@ -25,7 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
@@ -42,7 +42,7 @@ import net.minecraft.text.Text;
 /**
  * Player previewer that renders the models to the screen.
  */
-public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSkins.Posture, ITextContext {
+public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int MARGIN = 30;
     private static final int LABEL_BACKGROUND = 0xB0000000;
 
@@ -208,26 +208,29 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         skinList.init(screen);
     }
 
-    public void render(MatrixStack matrices, int mouseX, int mouseY, int ticks, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        MatrixStack matrixStack = new MatrixStack();
+    public void render(DrawContext context, int mouseX, int mouseY, int ticks, float partialTick, SkinChooser chooser, SkinUploader uploader) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        DrawContext d = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
 
         enableDepthTest();
 
         renderWorldAndPlayer(getLocal(), localFrameBounds, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack, null);
+                context, null);
 
         renderWorldAndPlayer(getRemote(), serverFrameBounds, horizon, mouseX, mouseY, ticks, partialTick, scale,
-                matrixStack, remote -> {
-                    skinList.render(remote, matrixStack, mouseX, mouseY);
+                context, remote -> {
+                    skinList.render(remote, d, mouseX, mouseY);
                 });
 
         disableDepthTest();
 
+        MatrixStack matrices = context.getMatrices();
+
         if (chooser.hasStatus()) {
             matrices.push();
             localFrameBounds.translate(matrices);
-            fill(matrices, 10, localFrameBounds.height / 2 - 12, localFrameBounds.width - 10, localFrameBounds.height / 2 + 12, LABEL_BACKGROUND);
-            drawCenteredLabel(matrices, chooser.getStatus(), localFrameBounds.width / 2, localFrameBounds.height / 2 - 4, 0xFFFFFF, 0);
+            context.fill(10, localFrameBounds.height / 2 - 12, localFrameBounds.width - 10, localFrameBounds.height / 2 + 12, LABEL_BACKGROUND);
+            drawCenteredLabel(context, chooser.getStatus(), localFrameBounds.width / 2, localFrameBounds.height / 2 - 4, 0xFFFFFF, 0);
             matrices.pop();
         }
 
@@ -237,15 +240,15 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
 
             int lineHeight = uploader.isThrottled() ? 18 : 12;
 
-            fill(matrices, 10, serverFrameBounds.height / 2 - lineHeight, serverFrameBounds.width - 10, serverFrameBounds.height / 2 + lineHeight, LABEL_BACKGROUND);
+            context.fill(10, serverFrameBounds.height / 2 - lineHeight, serverFrameBounds.width - 10, serverFrameBounds.height / 2 + lineHeight, LABEL_BACKGROUND);
 
             Text status = uploader.getStatus();
 
             if (status == SkinUploader.STATUS_MOJANG) {
-                drawCenteredLabel(matrices, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(matrices, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), serverFrameBounds.width / 2, serverFrameBounds.height / 2 + 2, 0xff5555, 0);
+                drawCenteredLabel(context, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 10, 0xff5555, 0);
+                drawCenteredLabel(context, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), serverFrameBounds.width / 2, serverFrameBounds.height / 2 + 2, 0xff5555, 0);
             } else {
-                drawCenteredLabel(matrices, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
+                drawCenteredLabel(context, status, serverFrameBounds.width / 2, serverFrameBounds.height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
             }
 
             matrices.pop();
@@ -273,17 +276,17 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
     public void renderWorldAndPlayer(Optional<DummyPlayer> thePlayer,
             Bounds frame,
             int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
-            MatrixStack matrixStack, @Nullable Consumer<DummyPlayer> postAction) {
+            DrawContext context, @Nullable Consumer<DummyPlayer> postAction) {
 
         ClippingSpace.renderClipped(frame.left, frame.top, frame.width, frame.height, () -> {
-            Immediate context = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+            Immediate buffers = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-            drawBackground(matrixStack, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
+            drawBackground(context, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
 
             thePlayer.ifPresent(player -> {
                 try {
                     DummyPlayerRenderer.wrap(() -> {
-                        renderPlayerModel(player, frame.left + frame.width / 2, frame.top + frame.height * 0.8F, scale, horizon - mouseY, mouseX, ticks, partialTick, matrixStack, context);
+                        renderPlayerModel(player, frame.left + frame.width / 2, frame.top + frame.height * 0.8F, scale, horizon - mouseY, mouseX, ticks, partialTick, context, buffers);
 
                         if (postAction != null) {
                             postAction.accept(player);
@@ -294,13 +297,13 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
                 }
             });
 
-            context.draw();
+            buffers.draw();
         });
     }
 
-    protected void drawBackground(MatrixStack matrices, int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
-        fill(matrices,         frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
-        fillGradient(matrices, frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
+    protected void drawBackground(DrawContext context, int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
+        context.fill(        frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
+        context.fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
     }
 
     /*
@@ -312,7 +315,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
      *     |
      *      mouseX
      */
-    protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, MatrixStack matrixStack, VertexConsumerProvider renderContext) {
+    protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, DrawContext context, VertexConsumerProvider renderContext) {
 
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
@@ -334,6 +337,7 @@ public class PlayerPreview extends DrawableHelper implements Closeable, PlayerSk
         modelStack.scale(1, 1, -1);
         RenderSystem.applyModelViewMatrix();
 
+        MatrixStack matrixStack = context.getMatrices();
         matrixStack.push();
         matrixStack.translate(0, 0, 1000);
         matrixStack.scale(scale, scale, scale);
