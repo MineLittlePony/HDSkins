@@ -15,6 +15,7 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.registry.Registry;
 
 public class SkinType implements Comparable<SkinType> {
@@ -23,7 +24,9 @@ public class SkinType implements Comparable<SkinType> {
 
     public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(new Identifier("hdskins", "skin_type"), SkinType::getId, UNKNOWN);
 
-    private static final TypeAdapter<SkinType> ADAPTER = RegistryTypeAdapter.of(REGISTRY, (ls, registry) -> registry.stream().filter(type -> type.getParameterizedName().equals(ls)).findFirst().orElse(UNKNOWN));
+    private static final TypeAdapter<SkinType> ADAPTER = RegistryTypeAdapter.of(REGISTRY, (ls, registry) -> {
+        return registry.stream().filter(type -> type.getParameterizedName().equals(ls)).findFirst().orElseGet(() -> createUnsupported(ls));
+    });
     private static final Map<MinecraftProfileTexture.Type, SkinType> VANILLA = new EnumMap<>(MinecraftProfileTexture.Type.class);
 
     public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN, new ItemStack(Items.LEATHER_CHESTPLATE));
@@ -53,7 +56,7 @@ public class SkinType implements Comparable<SkinType> {
     public Style getStyle() {
         return new Style()
                 .setIcon(iconStack)
-                .setTooltip("hdskins.mode." + getParameterizedName(), 0, 10);
+                .setTooltip(Util.createTranslationKey("skin_type", getId()), 0, 10);
     }
 
     public final Identifier getId() {
@@ -102,6 +105,16 @@ public class SkinType implements Comparable<SkinType> {
 
     public static Stream<SkinType> values() {
         return REGISTRY.stream();
+    }
+
+    private static SkinType createUnsupported(String parameterizedName) {
+        return register(deParameterize(parameterizedName), Items.BARRIER.getDefaultStack());
+    }
+
+    private static Identifier deParameterize(String parameterizedName) {
+        String[] parts = parameterizedName.split("_", 2);
+        parts[1] = parts[1].replace('_', '/');
+        return new Identifier(parts[0], parts[1]);
     }
 
     public static SkinType register(Identifier id, ItemStack iconStack) {
