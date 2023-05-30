@@ -1,7 +1,7 @@
 HD Skins
 ========
 
-[![Current Version](https://img.shields.io/github/v/tag/MineLittlePony/HDSkins)](https://img.shields.io/github/v/tag/MineLittlePony/HDSkins)
+[![Current Version](https://img.shields.io/github/v/release/MineLittlePony/HDSkins)](https://github.com/MineLittlePony/HdSkins/releases/latest)
 [![Build Status](https://github.com/MineLittlePony/HDSkins/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/MineLittlePony/HDSkins/actions/workflows/gradle-build.yml)
 [![Jitpack](https://jitpack.io/v/MineLittlePony/HDSkins.svg)](https://jitpack.io/#MineLittlePony/HDSkins)
 ![Downloads](https://img.shields.io/github/downloads/MineLittlePony/HDSkins/total.svg?color=yellowgreen)
