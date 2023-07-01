@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
@@ -68,6 +69,10 @@ public class DummyWorld extends ClientWorld {
     };
 
     private DummyWorld(ClientPlayNetworkHandler net) {
+        this(net, new DummyWorldRenderer());
+    }
+
+    private DummyWorld(ClientPlayNetworkHandler net, WorldRenderer worldRenderer) {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
@@ -75,10 +80,11 @@ public class DummyWorld extends ClientWorld {
                 0,
                 0,
                 MinecraftClient.getInstance()::getProfiler,
-                MinecraftClient.getInstance().worldRenderer,
+                worldRenderer,
                 true,
                 0);
         chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(RegistryKeys.BIOME).entryOf(BiomeKeys.PLAINS));
+        worldRenderer.setWorld(this);
     }
 
     @Override
