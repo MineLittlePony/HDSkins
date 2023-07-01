@@ -15,6 +15,7 @@ import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.registry.*;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.*;
@@ -27,10 +28,12 @@ import net.minecraft.world.dimension.*;
 
 public class DummyWorld extends ClientWorld {
     public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
-        return CompletableFuture.supplyAsync(() -> new DummyWorld(DummyNetworkHandler.INSTANCE.get())).exceptionallyAsync(t -> {
+        return DummyWorldRenderer.FUTURE_INSTANCE.get()
+                .thenApplyAsync(worldRenderer -> new DummyWorld(DummyNetworkHandler.INSTANCE.get(), worldRenderer), Util.getMainWorkerExecutor())
+                .exceptionallyAsync(t -> {
             HDSkins.LOGGER.error("Could not asynchrnously load a dummy world. Falling back to on-thread construction. This may impact performance.", t);
             try {
-                return new DummyWorld(DummyNetworkHandler.INSTANCE.get());
+                return new DummyWorld(DummyNetworkHandler.INSTANCE.get(), new DummyWorldRenderer());
             } catch (Throwable tt) {
                 HDSkins.LOGGER.fatal("Dummy world failed spectacularly. Report this to the devs. D:", t);
                 throw tt;
@@ -67,10 +70,6 @@ public class DummyWorld extends ClientWorld {
         @Override
         public LightingProvider getLightingProvider() { return lighting; }
     };
-
-    private DummyWorld(ClientPlayNetworkHandler net) {
-        this(net, new DummyWorldRenderer());
-    }
 
     private DummyWorld(ClientPlayNetworkHandler net, WorldRenderer worldRenderer) {
         super(net,

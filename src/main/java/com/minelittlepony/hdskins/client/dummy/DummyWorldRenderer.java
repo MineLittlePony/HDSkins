@@ -1,6 +1,8 @@
 package com.minelittlepony.hdskins.client.dummy;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -21,6 +23,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
 
 final class DummyWorldRenderer extends WorldRenderer {
+
+    public static final Supplier<CompletableFuture<DummyWorldRenderer>> FUTURE_INSTANCE = () -> {
+        return CompletableFuture.supplyAsync(DummyWorldRenderer::new, MinecraftClient.getInstance());
+    };
+
     public DummyWorldRenderer() {
         super(MinecraftClient.getInstance(),
                 MinecraftClient.getInstance().getEntityRenderDispatcher(),
