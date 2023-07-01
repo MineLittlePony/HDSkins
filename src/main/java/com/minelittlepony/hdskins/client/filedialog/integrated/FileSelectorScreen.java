@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.gui;
+package com.minelittlepony.hdskins.client.filedialog.integrated;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +17,7 @@ import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.packing.GridPacker;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.client.filedialog.FileDialog;
+import com.minelittlepony.hdskins.client.filedialog.FileSystemUtil;
 import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.util.net.FileTypes;
@@ -40,7 +41,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     private static final TextureSprite AUDIO = new TextureSprite().setTextureOffset(14, 14);
     private static final TextureSprite VIDEO = new TextureSprite().setTextureOffset(28, 14);
 
-    protected Path currentDirectory = Paths.get("/");
+    protected Path currentDirectory;
 
     private FileDialog.Callback callback = (f, b) -> {};
 
@@ -66,6 +67,9 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         filesList.getContentPadding().setAll(10);
 
         currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
+        if (!Files.exists(currentDirectory)) {
+            currentDirectory = FileSystemUtil.getUserContentDirectory(FileSystemUtil.CONTENT_TYPE_DOWNLOAD);
+        }
     }
 
     @Override
@@ -147,6 +151,9 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
         if (!Files.isDirectory(directory)) {
             directory = directory.getParent();
         }
+        if (directory == null) {
+            directory = FileSystemUtil.getUserContentDirectory(FileSystemUtil.CONTENT_TYPE_DOWNLOAD);
+        }
 
         try {
             return Files.list(directory).filter(this::filterPath);
@@ -158,6 +165,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     protected boolean filterPath(@Nullable Path path) {
+        if (true) return path != null;
         try {
             if (path == null || Files.isHidden(path)) {
                 return false;

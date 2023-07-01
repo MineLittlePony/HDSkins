@@ -68,7 +68,7 @@ public class SkinChooser {
         if (HDSkins.getInstance().getConfig().useNativeFileChooser.get()) {
             return FileDialogs.NATIVE;
         }
-        return FileDialogs.INTEGRATED;
+        return FileDialogs.DEFAULT;
     }
 
     public void addImageValidation(Function<NativeImage, Text> validator) {
