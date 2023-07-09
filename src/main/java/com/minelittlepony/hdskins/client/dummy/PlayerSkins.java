@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.client.dummy;
 
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.VanillaSkins;
 import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -127,7 +128,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
             @Override
             public Identifier getDefaultSkin(SkinType type, boolean slim) {
-                return PlayerPreview.getDefaultTexture(type, slim);
+                return VanillaSkins.getDefaultTexture(type, slim);
             }
 
             @Override

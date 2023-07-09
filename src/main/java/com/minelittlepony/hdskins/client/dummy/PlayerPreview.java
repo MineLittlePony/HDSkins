@@ -46,26 +46,6 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
     private static final int MARGIN = 30;
     private static final int LABEL_BACKGROUND = 0xB0000000;
 
-    public static final Identifier NO_SKIN_STEVE = new Identifier("hdskins", "textures/mob/noskin.png");
-    public static final Identifier NO_SKIN_ALEX = new Identifier("hdskins", "textures/mob/noskin_alex.png");
-    public static final Identifier NO_SKIN_CAPE = new Identifier("hdskins", "textures/mob/noskin_cape.png");
-
-    public static final Map<SkinType, Identifier> NO_TEXTURES = Util.make(new HashMap<>(), map -> {
-        map.put(SkinType.SKIN, NO_SKIN_STEVE);
-        map.put(SkinType.CAPE, NO_SKIN_CAPE);
-        map.put(SkinType.ELYTRA, new Identifier("textures/entity/elytra.png"));
-    });
-    public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Util.make(new HashMap<>(), map -> {
-        map.put(SkinType.SKIN, NO_SKIN_ALEX);
-    });
-
-    public static Identifier getDefaultTexture(SkinType type, boolean slimArms) {
-        if (slimArms && NO_TEXTURES_ALEX.containsKey(type)) {
-            return NO_TEXTURES_ALEX.get(type);
-        }
-        return NO_TEXTURES.getOrDefault(type, NO_SKIN_STEVE);
-    }
-
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
 
@@ -154,7 +134,7 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
     @Override
     public Identifier getDefaultSkin(SkinType type, boolean slim) {
         Identifier skin = getBlankSkin(type, slim);
-        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? DefaultSkinHelper.getTexture(profile.getId()) : skin, skin, getExclusion());
+        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? VanillaSkins.getTexture(profile.getId(), slim) : skin, skin, getExclusion());
     }
 
     protected TextureLoader.Exclusion getExclusion() {
@@ -162,7 +142,7 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
     }
 
     public Identifier getBlankSkin(SkinType type, boolean slim) {
-        return getDefaultTexture(type, slim);
+        return VanillaSkins.getDefaultTexture(type, slim);
     }
 
     public void setJumping(boolean jumping) {
