@@ -83,7 +83,6 @@ public class DummyWorld extends ClientWorld {
                 true,
                 0);
         chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(RegistryKeys.BIOME).entryOf(BiomeKeys.PLAINS));
-        worldRenderer.setWorld(this);
     }
 
     @Override
