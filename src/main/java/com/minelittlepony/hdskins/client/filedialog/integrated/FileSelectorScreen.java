@@ -165,7 +165,6 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
     }
 
     protected boolean filterPath(@Nullable Path path) {
-        if (true) return path != null;
         try {
             if (path == null || Files.isHidden(path)) {
                 return false;
