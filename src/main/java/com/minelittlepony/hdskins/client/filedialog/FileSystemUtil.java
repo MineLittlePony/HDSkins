@@ -18,19 +18,8 @@ public interface FileSystemUtil {
     String CONTENT_TYPE_DOWNLOAD = "Download";
 
     static boolean isSandboxed() {
-        try {
-            Path testPath = getUserDirectory().resolve(".hdskinsfstest" + System.currentTimeMillis() + ".tmp");
-            try {
-                Files.createFile(testPath);
-                return !Files.isReadable(testPath);
-            } finally {
-                Files.deleteIfExists(testPath);
-            }
-        } catch (Exception e) {
-            HDSkins.LOGGER.error(e);
-        }
-
-        return true;
+        return !Strings.nullToEmpty(System.getenv("FLATPAK_ID")).isEmpty()
+            && !Strings.nullToEmpty(System.getenv("FLATPAK_SANDBOX_DIR")).isEmpty();
     }
 
     static Path getActiveDirectory() {
