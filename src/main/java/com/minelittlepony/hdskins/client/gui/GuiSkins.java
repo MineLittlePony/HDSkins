@@ -3,9 +3,11 @@ package com.minelittlepony.hdskins.client.gui;
 import com.google.common.base.Preconditions;
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.Tooltip;
+import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
+import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.client.FileDrop;
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -25,8 +27,6 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -40,9 +40,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
 public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Callback {
+    public static final Identifier WIDGETS_TEXTURE = new Identifier("hdskins", "textures/gui/widgets.png");
     public static final Text HD_SKINS_TITLE = Text.translatable("hdskins.gui.title");
     public static final Text HD_SKINS_OPTION_DISABLED_DESC = Text.translatable("hdskins.warning.disabled.description");
 
@@ -64,8 +66,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     private FeatureButton btnDownload;
     private FeatureButton btnClear;
 
-    private FeatureSwitch btnModeSteve;
-    private FeatureSwitch btnModeAlex;
+    private FeatureCycler btnSkinVariant;
 
     private Cycler btnSkinType;
 
@@ -138,72 +139,16 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     @Override
     public void init() {
         dropper.subscribe();
+        previewer.init(this);
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
 
-        addButton(btnBrowse = new Button(width / 2 - 150, height - 27, 90, 20))
-                .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
-                .setEnabled(!client.getWindow().isFullscreen())
-                .getStyle().setText("hdskins.options.browse");
-
-        addButton(btnUpload = new FeatureButton(width / 2 - 24, height / 2 - 40, 48, 20))
-                .setEnabled(uploader.canUpload() && chooser.hasSelection())
-                .onClick(sender -> {
-                    if (uploader.canUpload() && chooser.hasSelection()) {
-                        punchServer(StatusBanner.HD_SKINS_UPLOAD, chooser.getSelection());
-                    }
-                })
-                .getStyle()
-                .setText("hdskins.options.chevy")
-                .setTooltip("hdskins.options.chevy.title");
-
-        addButton(btnDownload = new FeatureButton(width / 2 - 24, height / 2 + 20, 48, 20))
-                .setEnabled(uploader.canClear())
-                .onClick(sender -> {
-                    if (uploader.canClear()) {
-                        chooser.openSavePNG(uploader, I18n.translate("hdskins.save.title"), client.getSession().getUsername());
-                    }
-                })
-                .getStyle()
-                .setText("hdskins.options.download")
-                .setTooltip("hdskins.options.download.title");
-
-        addButton(btnClear = new FeatureButton(width / 2 + 60, height - 27, 90, 20))
-                .setEnabled(uploader.canClear())
-                .onClick(sender -> {
-                    if (uploader.canClear()) {
-                        punchServer(StatusBanner.HD_SKINS_REQUEST, null);
-                    }
-                })
-                .getStyle()
-                .setText("hdskins.options.clear");
-
-        addButton(new Button(width / 2 - 50, height - 25, 100, 20))
-                .onClick(sender -> finish())
-                .getStyle()
-                .setText("hdskins.options.close");
-
-
-        int row = 32;
-
-        addButton(btnModeSteve = new FeatureSwitch(width - 25, row))
-                .onClick(sender -> switchSkinMode(VanillaModels.DEFAULT))
-                .setEnabled(VanillaModels.isSlim(uploader.getMetadataField("model")))
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
-                .setTooltip("hdskins.mode.steve", 0, 10);
-
-
-        row += 19;
-        addButton(btnModeAlex = new FeatureSwitch(width - 25, row))
-                .onClick(sender -> switchSkinMode(VanillaModels.SLIM))
-                .setEnabled(VanillaModels.isFat(uploader.getMetadataField("model")))
-                .getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0xfff500)
-                .setTooltip("hdskins.mode.alex", 0, 10);
-
-        row += 24;
-        addButton(btnSkinType = new Cycler(width - 25, row, 20, 20))
+        int typeSelectorWidth = Math.max(previewer.localFrameBounds.width, 200);
+        addButton(btnSkinType = new LabelledCycler(
+                (width - typeSelectorWidth) / 2,
+                previewer.localFrameBounds.top - 25,
+                typeSelectorWidth, 20
+            ))
                 .onChange(i -> {
                     List<SkinType> types = uploader.getSupportedSkinTypes().toList();
                     i %= types.size();
@@ -212,22 +157,38 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 });
         setupSkinToggler();
 
-        row += 24;
-        addButton(new Cycler(width - 25, row, 20, 20))
-                .setStyles(
-                        new Style().setIcon(Items.IRON_BOOTS).setTooltip("hdskins.mode.stand", 0, 10),
-                        new Style().setIcon(Items.CLOCK).setTooltip("hdskins.mode.sleep", 0, 10),
-                        new Style().setIcon(Items.OAK_BOAT).setTooltip("hdskins.mode.ride", 0, 10),
-                        new Style().setIcon(Items.CAULDRON).setTooltip("hdskins.mode.swim", 0, 10),
-                        new Style().setIcon(Items.HEART_OF_THE_SEA).setTooltip("hdskins.mode.riptide", 0, 10))
-                .setValue(previewer.getPose())
-                .onChange(i -> {
-                    playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-                    previewer.setPose(i);
-                    return i;
-                });
+        addButton(btnUpload = new FeatureButton(width / 2 - 10, height / 2 - 20, 20, 40))
+            .setEnabled(uploader.canUpload() && chooser.hasSelection())
+            .onClick(sender -> {
+                if (uploader.canUpload() && chooser.hasSelection()) {
+                    punchServer(StatusBanner.HD_SKINS_UPLOAD, chooser.getSelection());
+                }
+            })
+            .getStyle()
+            .setIcon(new TextureSprite()
+                    .setTexture(WIDGETS_TEXTURE)
+                    .setPosition(2, 12)
+                    .setSize(16, 16)
+                    .setTextureOffset(16, 48))
+                .setTooltip("hdskins.options.chevy.title");
 
-        addButton(new Button(width - 25, height - 40, 20, 20))
+        initLocalPreviewButtons(previewer.localFrameBounds);
+        initServerPreviewButtons(previewer.serverFrameBounds);
+
+        addButton(new Button(width / 2 - 25, previewer.serverFrameBounds.bottom() + 10, 50, 20))
+            .onClick(sender -> finish())
+            .getStyle()
+                .setText("hdskins.options.close");
+    }
+
+    protected void initLocalPreviewButtons(Bounds area) {
+        addButton(btnBrowse = new Button(area.left, area.bottom() + 5, 50, 20))
+            .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
+            .setEnabled(!client.getWindow().isFullscreen())
+            .getStyle().setText("hdskins.options.browse");
+
+        Button clothingCycler;
+        addButton(clothingCycler = new Button(btnBrowse.getBounds().right() + 5, btnBrowse.getBounds().top, 20, 20))
                 .onClick(sender -> {
                     sender.getStyle()
                         .setIcon(previewer.cycleEquipment())
@@ -235,21 +196,131 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                     playSound(previewer.getEquipment().getSound());
                 })
                 .getStyle()
-                .setIcon(previewer.getEquipment().getStack())
-                .setTooltip(Text.translatable("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())), 0, 10);
+                    .setIcon(previewer.getEquipment().getStack())
+                    .setTooltip(Text.translatable("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())), 0, 10);
 
-        addButton(new Button(width - 25, height - 65, 20, 20))
-                .onClick(sender -> {
-                    uploader.cycleGateway();
-                    playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                    setupSkinToggler();
-                    sender.getStyle().setTooltip(uploader.getGatewayText());
-                })
-                .getStyle()
-                .setText("?")
+        addButton(btnSkinVariant = new FeatureCycler(clothingCycler.getBounds().right() + 5, clothingCycler.getBounds().top))
+            .setStyles(
+                    new FeatureStyle(btnSkinVariant)
+                        .setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(32, 0))
+                        .setTooltip(Text.translatable("hdskins.arm_style", Text.translatable("hdskins.mode.steve")), 0, 10),
+                    new FeatureStyle(btnSkinVariant)
+                        .setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(32, 16))
+                        .setTooltip(Text.translatable("hdskins.arm_style", Text.translatable("hdskins.mode.alex")), 0, 10)
+            )
+            .setValue(VanillaModels.isFat(uploader.getMetadataField("model")) ? 2 : 1)
+            .onChange(i -> {
+                switchSkinMode(i == 1 ? VanillaModels.SLIM : VanillaModels.DEFAULT);
+                return i;
+            });
+
+        addButton(new Cycler(btnSkinVariant.getBounds().right() + 5, btnSkinVariant.getBounds().top, 20, 20))
+            .setStyles(
+                    new Style().setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 0)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.stand")), 0, 10),
+                    new Style().setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 16)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.sleep")), 0, 10),
+                    new Style().setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 32)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.ride")), 0, 10),
+                    new Style().setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 48)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.swim")), 0, 10),
+                    new Style().setIcon(new TextureSprite()
+                            .setTexture(WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 64)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.riptide")), 0, 10))
+            .setValue(previewer.getPose())
+            .onChange(i -> {
+                playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+                previewer.setPose(i);
+                return i;
+            });
+    }
+
+    protected void initServerPreviewButtons(Bounds area) {
+        Button serverSelector;
+        addButton(serverSelector = new Button(area.right() - 20, area.bottom() + 5, 20, 20))
+            .onClick(sender -> {
+                uploader.cycleGateway();
+                playSound(SoundEvents.ENTITY_VILLAGER_YES);
+                setupSkinToggler();
+                sender.getStyle().setTooltip(uploader.getGatewayText());
+            })
+            .getStyle()
+                .setIcon(new TextureSprite()
+                        .setTexture(WIDGETS_TEXTURE)
+                        .setPosition(2, 2)
+                        .setSize(16, 16)
+                        .setTextureOffset(80, 0))
                 .setTooltip(uploader.getGatewayText(), 0, 10);
 
-        previewer.init(this);
+
+        Button btnClearAll;
+        addButton(btnClearAll = new FeatureButton(serverSelector.getBounds().left - 25, serverSelector.getBounds().top, 20, 20))
+            .onClick(sender -> {
+                if (uploader.canClear()) {
+                    punchServer(StatusBanner.HD_SKINS_REQUEST, null);
+                }
+            })
+            .getStyle()
+                .setIcon(new TextureSprite()
+                    .setTexture(WIDGETS_TEXTURE)
+                    .setPosition(2, 2)
+                    .setSize(16, 16)
+                    .setTextureOffset(48, 16))
+                .setTooltip("hdskins.options.clear_all");
+
+        addButton(btnClear = new FeatureButton(btnClearAll.getBounds().left - 25, btnClearAll.getBounds().top, 20, 20))
+                .setEnabled(uploader.canClear())
+                .onClick(sender -> {
+                    if (uploader.canClear()) {
+                        punchServer(StatusBanner.HD_SKINS_REQUEST, null);
+                    }
+                })
+                .getStyle()
+                    .setIcon(new TextureSprite()
+                        .setTexture(WIDGETS_TEXTURE)
+                        .setPosition(2, 2)
+                        .setSize(16, 16)
+                        .setTextureOffset(48, 0))
+                    .setTooltip("hdskins.options.clear");
+
+
+        addButton(btnDownload = new FeatureButton(btnClear.getBounds().left - 25, btnClear.getBounds().top, 20, 20))
+                .setEnabled(uploader.canClear())
+                .onClick(sender -> {
+                    if (uploader.canClear()) {
+                        chooser.openSavePNG(uploader, I18n.translate("hdskins.save.title"), client.getSession().getUsername());
+                    }
+                })
+                .getStyle()
+                    .setIcon(new TextureSprite()
+                        .setTexture(WIDGETS_TEXTURE)
+                        .setPosition(2, 2)
+                        .setSize(16, 16)
+                        .setTextureOffset(0, 0))
+                    .setTooltip("hdskins.options.download.title");
+
     }
 
     private void setupSkinToggler() {
@@ -295,11 +366,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
     protected void switchSkinMode(String model) {
         playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-
-        boolean thinArmType = VanillaModels.isSlim(model);
-
-        btnModeSteve.active = thinArmType;
-        btnModeAlex.active = !thinArmType;
 
         uploader.setMetadataField("model", model);
         previewer.setModelType(model);
@@ -406,15 +472,17 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         banner.render(context, partialTick, width, height);
     }
 
-    private void punchServer(Text uploadMsg, @Nullable URI file) {
-        uploader.uploadSkin(uploadMsg, file).whenComplete((o, t) -> {
-            if (t != null) {
-                t.printStackTrace();
-            }
+    private CompletableFuture<?> punchServer(Text uploadMsg, @Nullable URI file) {
+        try {
+            return uploader.uploadSkin(uploadMsg, file).whenComplete((o, t) -> {
+                if (t != null) {
+                    t.printStackTrace();
+                }
+                updateButtons();
+            });
+        } finally {
             updateButtons();
-        });
-
-        updateButtons();
+        }
     }
 
     private void updateButtons() {
@@ -429,9 +497,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         boolean variants = !features.contains(Feature.MODEL_VARIANTS);
 
         btnSkinType.setEnabled(types);
-
-        btnModeSteve.setLocked(variants);
-        btnModeAlex.setLocked(variants);
+        btnSkinVariant.setLocked(variants);
 
         btnClear.setLocked(!features.contains(Feature.DELETE_USER_SKIN));
         btnUpload.setLocked(!features.contains(Feature.UPLOAD_USER_SKIN));
@@ -449,6 +515,21 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         }
     }
 
+    protected class FeatureCycler extends Cycler {
+        public FeatureCycler(int x, int y) {
+            super(x, y, 20, 20);
+
+            setStyle(new FeatureStyle(this));
+            setStyles(getStyle());
+        }
+
+        public void setLocked(boolean lock) {
+            for (Style i : getStyles()) {
+                ((FeatureStyle)i).setLocked(lock);
+            }
+        }
+    }
+
     protected class FeatureSwitch extends Button {
         public FeatureSwitch(int x, int y) {
             super(x, y, 20, 20);
@@ -461,7 +542,7 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         }
     }
 
-    protected class FeatureStyle extends Style {
+    protected static class FeatureStyle extends Style {
 
         private final Button element;
 

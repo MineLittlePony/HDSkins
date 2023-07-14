@@ -30,7 +30,6 @@ import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider.Immediate;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.*;
@@ -43,7 +42,8 @@ import net.minecraft.text.Text;
  * Player previewer that renders the models to the screen.
  */
 public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextContext {
-    private static final int MARGIN = 30;
+    private static final int HOR_MARGIN = 30;
+    private static final int TOP = 50;
     private static final int LABEL_BACKGROUND = 0xB0000000;
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
@@ -55,8 +55,8 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
     private Optional<DummyPlayer> remotePlayer = Optional.empty();
     protected final ServerPlayerSkins remoteTextures = new ServerPlayerSkins(this);
 
-    public final Bounds localFrameBounds = new Bounds(MARGIN, MARGIN, 0, 0);
-    public final Bounds serverFrameBounds = new Bounds(MARGIN, MARGIN, 0, 0);
+    public final Bounds localFrameBounds = new Bounds(TOP, HOR_MARGIN, 0, 0);
+    public final Bounds serverFrameBounds = new Bounds(TOP, HOR_MARGIN, 0, 0);
     private int horizon;
     private float scale;
 
@@ -163,12 +163,12 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
     }
 
     public void init(GuiSkins screen) {
-        localFrameBounds.left = MARGIN;
-        localFrameBounds.height = screen.height - 70;
+        localFrameBounds.left = HOR_MARGIN;
+        localFrameBounds.height = screen.height - 90;
         localFrameBounds.width = (screen.width / 2) - 70;
 
         serverFrameBounds.copy(localFrameBounds);
-        serverFrameBounds.left = screen.width - MARGIN - serverFrameBounds.width;
+        serverFrameBounds.left = screen.width - HOR_MARGIN - serverFrameBounds.width;
 
         horizon = screen.height / 2 + screen.height / 5;
 
@@ -260,27 +260,24 @@ public class PlayerPreview implements Closeable, PlayerSkins.Posture, ITextConte
             int horizon, int mouseX, int mouseY, int ticks, float partialTick, float scale,
             DrawContext context, @Nullable Consumer<DummyPlayer> postAction) {
 
-        ClippingSpace.renderClipped(frame.left, frame.top, frame.width, frame.height, () -> {
-            Immediate buffers = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+        context.enableScissor(frame.left, frame.top, frame.right(), frame.bottom());
+        drawBackground(context, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
 
-            drawBackground(context, frame.left, frame.right(), frame.bottom(), frame.top, horizon);
+        thePlayer.ifPresent(player -> {
+            try {
+                DummyPlayerRenderer.wrap(() -> {
+                    renderPlayerModel(player, frame.left + frame.width / 2, frame.top + frame.height * 0.9F, scale, horizon - mouseY, mouseX, ticks, partialTick, context, context.getVertexConsumers());
 
-            thePlayer.ifPresent(player -> {
-                try {
-                    DummyPlayerRenderer.wrap(() -> {
-                        renderPlayerModel(player, frame.left + frame.width / 2, frame.top + frame.height * 0.8F, scale, horizon - mouseY, mouseX, ticks, partialTick, context, buffers);
-
-                        if (postAction != null) {
-                            postAction.accept(player);
-                        }
-                    });
-                } catch (Exception e) {
-                    HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
-                }
-            });
-
-            buffers.draw();
+                    if (postAction != null) {
+                        postAction.accept(player);
+                    }
+                });
+            } catch (Exception e) {
+                HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
+            }
         });
+        context.draw();
+        context.disableScissor();
     }
 
     protected void drawBackground(DrawContext context, int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {

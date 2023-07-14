@@ -7,16 +7,20 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
+import com.minelittlepony.common.client.gui.sprite.ItemStackSprite;
+import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
 import com.minelittlepony.common.util.registry.Registries;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.registry.Registry;
+import net.minecraft.text.Text;
 
 public class SkinType implements Comparable<SkinType> {
 
@@ -35,10 +39,16 @@ public class SkinType implements Comparable<SkinType> {
 
     private final Identifier id;
     private final ItemStack iconStack;
+    private final Identifier icon;
 
     protected SkinType(Identifier id, ItemStack iconStack) {
         this.id = id;
+        this.icon = getId().withPath(p -> "textures/gui/skin_type/" + p + ".png");
         this.iconStack = iconStack;
+    }
+
+    public Identifier icon() {
+        return icon;
     }
 
     public String name() {
@@ -54,9 +64,24 @@ public class SkinType implements Comparable<SkinType> {
     }
 
     public Style getStyle() {
+
+        if (iconStack.getItem() == Items.BARRIER) {
+            return new Style()
+                    .setIcon(new TextureSprite()
+                            .setTexture(UNKNOWN.icon())
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureSize(16, 16))
+                    .setText(Text.translatable("skin_type.hdskins.unknown", getId().toString()))
+                    .setTooltip(getId().toString(), 0, 10);
+        }
+
         return new Style()
-                .setIcon(iconStack)
-                .setTooltip(Util.createTranslationKey("skin_type", getId()), 0, 10);
+                .setIcon(MinecraftClient.getInstance().getResourceManager().getResource(icon).isEmpty()
+                        ? new ItemStackSprite().setStack(iconStack)
+                        : new TextureSprite().setTexture(icon).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
+                .setText(Text.translatable("hdskins.skin_type", Text.translatable(Util.createTranslationKey("skin_type", getId()))))
+                .setTooltip(getId().toString(), 0, 10);
     }
 
     public final Identifier getId() {

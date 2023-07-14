@@ -5,6 +5,7 @@ import com.minelittlepony.hdskins.client.SkinUploader;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
@@ -50,6 +51,9 @@ public class StatusBanner implements ITextContext {
         msgFadeOpacity = MathHelper.clamp(msgFadeOpacity, 0, 1);
 
         if (msgFadeOpacity > 0) {
+            MatrixStack matrices = context.getMatrices();
+
+            matrices.push();
             int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
 
             context.fill(0, 0, width, height, opacity);
@@ -62,6 +66,7 @@ public class StatusBanner implements ITextContext {
                 int padding = 6;
 
                 drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
+                matrices.translate(0, 0, 400);
 
                 if (lastShownMessage != HD_SKINS_UPLOAD && lastShownMessage != HD_SKINS_REQUEST) {
                     drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
@@ -71,6 +76,8 @@ public class StatusBanner implements ITextContext {
                     drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, 0xffffff, 0);
                 }
             }
+
+            matrices.pop();
         }
     }
 
@@ -78,8 +85,9 @@ public class StatusBanner implements ITextContext {
         return msgFadeOpacity > 0;
     }
 
+    @SuppressWarnings("deprecation")
     static void drawTooltipDecorations(DrawContext context, int x, int y, int width, int height) {
-        TooltipBackgroundRenderer.render(context, x, y, width, height, 400);
+        context.draw(() -> TooltipBackgroundRenderer.render(context, x, y, width, height, 400));
     }
 
 }
