@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.resources;
+package com.minelittlepony.hdskins.client.gui.player.skins;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
 
-import com.minelittlepony.hdskins.client.dummy.PlayerSkins;
+import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
+import com.minelittlepony.hdskins.client.resources.Texture;
+import com.minelittlepony.hdskins.client.resources.TextureLoader;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -28,8 +30,9 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
         return new LocalTexture(type, blank);
     }
 
-    public void setPreviewThinArms(boolean thinArms) {
+    public final void setPreviewThinArms(boolean thinArms) {
         previewThinArms = thinArms;
+        close();
     }
 
     @Override

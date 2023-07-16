@@ -2,23 +2,20 @@ package com.minelittlepony.hdskins.client;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.jetbrains.annotations.Nullable;
-
-import com.minelittlepony.hdskins.client.dummy.DummyPlayer;
-import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
+import com.minelittlepony.hdskins.client.gui.DualPreview;
+import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
+import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
+import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public class SkinUploader implements Closeable {
     public static final Text STATUS_OK = ScreenTexts.EMPTY;
@@ -41,29 +38,40 @@ public class SkinUploader implements Closeable {
     private int reloadCounter = 0;
     private int retries = 1;
 
-    private final PlayerPreview previewer;
+    private final DualPreview previewer;
 
     private final Iterator<Gateway> gateways;
     private Optional<Gateway> gateway;
 
-    private final SkinChangeListener listener;
+    private SkinCallback uploadListener = SkinCallback.NOOP;
+    private Consumer<SkinType> skinTypeChangedListener = t -> {};
 
-    private final MinecraftClient mc = MinecraftClient.getInstance();
-
-    public SkinUploader(SkinServerList servers, PlayerPreview previewer, SkinChangeListener listener) {
+    public SkinUploader(Iterator<Gateway> gateways, DualPreview previewer) {
         this.previewer = previewer;
-        this.listener = listener;
-
+        this.gateways = gateways;
         skinMetadata.put("model", VanillaModels.DEFAULT);
-        gateways = servers.getCycler();
-
         cycleGateway();
+    }
+
+    public void addSkinUploadedEventListener(SkinCallback listener) {
+        this.uploadListener = this.uploadListener.andThen(listener);
+    }
+
+    public void addSkinTypeChangedEventListener(Consumer<SkinType> listener) {
+        this.skinTypeChangedListener = this.skinTypeChangedListener.andThen(listener);
+    }
+
+    public Map<String, String> getMetadata() {
+        return skinMetadata;
     }
 
     public void cycleGateway() {
         if (gateways.hasNext()) {
             gateway = Optional.ofNullable(gateways.next());
-            setSkinType(gateway.flatMap(g -> g.getServer().supportsSkinType(previewer.getActiveSkinType()) ? Optional.of(previewer.getActiveSkinType()) : getSupportedSkinTypes().findFirst()).orElse(SkinType.UNKNOWN));
+            setSkinType(gateway.flatMap(g -> g.getServer().supportsSkinType(previewer.getActiveSkinType())
+                    ? Optional.of(previewer.getActiveSkinType())
+                    : getSupportedSkinTypes().findFirst()
+            ).orElse(SkinType.UNKNOWN));
             pendingRefresh = true;
         } else {
             setBannerMessage(STATUS_NO_SERVER);
@@ -91,7 +99,7 @@ public class SkinUploader implements Closeable {
             return;
         }
         previewer.setSkinType(type);
-        listener.onSkinTypeChanged(type);
+        skinTypeChangedListener.accept(type);
     }
 
     public boolean isThrottled() {
@@ -110,18 +118,20 @@ public class SkinUploader implements Closeable {
         return gateway.filter(Gateway::isBusy).isPresent();
     }
 
-    public boolean canUpload() {
-        return isOnline()
-                && !hasBannerMessage()
-                && !isBusy()
-                && previewer.getClientTextures().isSetupComplete();
+    private boolean isSkinOperationsBlocked() {
+        return !getFeatures().contains(Feature.UPLOAD_USER_SKIN) || !isOnline() || hasBannerMessage() || isBusy();
     }
 
-    public boolean canClear() {
-        return isOnline()
-                && !hasBannerMessage()
-                && !isBusy()
-                && previewer.getServerTextures().isSetupComplete();
+    public boolean canUpload(SkinType type) {
+        return !isSkinOperationsBlocked() && previewer.getLocal().getSkins().get(type).isReady();
+    }
+
+    public boolean canClear(SkinType type) {
+        return !isSkinOperationsBlocked() && previewer.getRemote().getSkins().get(type).isReady();
+    }
+
+    public boolean canClearAny() {
+        return !isSkinOperationsBlocked() && previewer.getRemote().getSkins().hasAny();
     }
 
     public boolean hasBannerMessage() {
@@ -161,7 +171,7 @@ public class SkinUploader implements Closeable {
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getClientTextures().close();
+        previewer.getLocal().getSkins().close();
         skinMetadata.put(field, value);
     }
 
@@ -178,24 +188,10 @@ public class SkinUploader implements Closeable {
         return false;
     }
 
-    private SkinUpload createSkinUpload(@Nullable URI skin) {
-        if (skin == null) {
-            return new SkinUpload.Delete(mc.getSession(), previewer.getActiveSkinType());
-        }
-        if ("file".equals(skin.getScheme())) {
-            return new SkinUpload.FileUpload(mc.getSession(), previewer.getActiveSkinType(), Paths.get(skin), skinMetadata);
-        }
-        if (Set.of("http", "https").contains(skin.getScheme())) {
-            return new SkinUpload.UriUpload(mc.getSession(), previewer.getActiveSkinType(), skin, skinMetadata);
-        }
-        throw new IllegalArgumentException("URI scheme not supported for skin upload: " + skin.getScheme());
-    }
-
-    public CompletableFuture<Void> uploadSkin(Text statusMsg, @Nullable URI skinUri) {
+    public CompletableFuture<Void> uploadSkin(Text statusMsg, SkinUpload payload) {
         setBannerMessage(statusMsg);
-        var skin = createSkinUpload(skinUri);
         return gateway
-                .map(g -> g.uploadSkin(skin, this::setBannerMessage))
+                .map(g -> g.uploadSkin(payload, this::setBannerMessage))
                 .map(future -> future.thenRunAsync(this::scheduleReload, MinecraftClient.getInstance()))
                 .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
     }
@@ -207,20 +203,21 @@ public class SkinUploader implements Closeable {
     protected void fetchRemote() {
         pendingRefresh = false;
         gateway.ifPresent(gateway -> {
-            gateway.fetchSkins(previewer.getProfile(), this::setBannerMessage)
+            gateway
+                .fetchSkins(previewer.getProfile(), this::setBannerMessage)
                 .thenAcceptAsync(textures -> {
-                    previewer.getServerTextures().setSkins(textures, listener::onSetRemoteSkin);
-
+                    ServerPlayerSkins skins = previewer.getRemote().getSkins();
+                    skins.loadTextures(textures, uploadListener);
                     gateway.getProfile(previewer.getProfile()).thenAccept(serverProfile -> {
-                        previewer.getServerTextures().setSkinList(serverProfile);
+                        skins.loadProfile(serverProfile);
                     });
                 }, MinecraftClient.getInstance())
                 .handleAsync((a, throwable) -> {
-                if (throwable == null) {
-                    retries = 1;
-                }
-                return a;
-            }, MinecraftClient.getInstance());
+                    if (throwable == null) {
+                        retries = 1;
+                    }
+                    return a;
+                }, MinecraftClient.getInstance());
         });
     }
 
@@ -241,13 +238,5 @@ public class SkinUploader implements Closeable {
         } else if (pendingRefresh) {
             fetchRemote();
         }
-    }
-
-    public interface SkinChangeListener {
-        default void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {}
-
-        default void onSetLocalSkin(SkinType type) {}
-
-        default void onSkinTypeChanged(SkinType newType) {}
     }
 }

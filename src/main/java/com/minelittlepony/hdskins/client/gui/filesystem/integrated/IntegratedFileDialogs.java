@@ -1,7 +1,7 @@
-package com.minelittlepony.hdskins.client.filedialog.integrated;
+package com.minelittlepony.hdskins.client.gui.filesystem.integrated;
 
-import com.minelittlepony.hdskins.client.filedialog.FileDialog;
-import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
 
 public final class IntegratedFileDialogs implements FileDialogs {
     @Override

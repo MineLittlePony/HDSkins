@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.filedialog.integrated;
+package com.minelittlepony.hdskins.client.gui.filesystem.integrated;
 
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -7,8 +7,8 @@ import java.nio.file.Paths;
 
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.util.GamePaths;
-import com.minelittlepony.hdskins.client.filedialog.FileDialog;
 import com.minelittlepony.hdskins.client.gui.ConfirmationScreen;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
 import net.minecraft.text.Text;

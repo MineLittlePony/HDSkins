@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client;
+package com.minelittlepony.hdskins.client.gui.filesystem;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,7 +51,6 @@ public class FileDrop {
 
     /**
      * Starts listening for drop events.
-     * @return
      */
     public FileDrop subscribe() {
         if (!cancelled && hook == null) {

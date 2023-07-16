@@ -1,9 +1,8 @@
-package com.minelittlepony.hdskins.client.resources;
+package com.minelittlepony.hdskins.client.gui.player.skins;
 
 import java.util.function.Supplier;
 
-import com.minelittlepony.hdskins.client.dummy.PlayerSkins;
-import com.minelittlepony.hdskins.client.resources.ServerPlayerSkins.Skin;
+import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.util.Identifier;

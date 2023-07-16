@@ -92,7 +92,7 @@ public class Gateway {
             try {
                 setBusy(true);
                 server.uploadSkin(payload);
-                invalidateProfile(payload.session().getProfile());
+                invalidateProfile(payload.session().profile());
             } catch (Exception e) {
                 handleException(e, errorCallback);
             } finally {

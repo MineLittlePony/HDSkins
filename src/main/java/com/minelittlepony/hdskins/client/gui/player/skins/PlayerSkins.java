@@ -1,12 +1,17 @@
-package com.minelittlepony.hdskins.client.dummy;
+package com.minelittlepony.hdskins.client.gui.player.skins;
 
+import com.minelittlepony.common.client.gui.sprite.TextureSprite;
+import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.VanillaSkins;
-import com.minelittlepony.hdskins.client.dummy.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.gui.GuiSkins;
+import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.EntityPose;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.io.Closeable;
@@ -17,11 +22,6 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements Closeable {
-    public static final int POSE_STANDING = 0;
-    public static final int POSE_SLEEPING = 1;
-    public static final int POSE_RIDING = 2;
-    public static final int POSE_SWIMMING = 3;
-    public static final int POSE_RIPTIDE = 4;
     public static final PlayerSkins<PlayerSkin> EMPTY = new PlayerSkins<>(Posture.NULL) {
         @Override
         public PlayerSkin createTexture(SkinType type, Supplier<Identifier> blank) {
@@ -69,13 +69,12 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         return false;
     }
 
-    public boolean isSetupComplete() {
-        return textures.size() > 0
-            && get(getPosture().getActiveSkinType()).isReady();
-    }
-
     public T get(SkinType type) {
         return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, usesThinSkin())));
+    }
+
+    public boolean hasAny() {
+        return textures.values().stream().anyMatch(PlayerSkins.PlayerSkin::isReady);
     }
 
     public Set<Identifier> getProvidedSkinTypes() {
@@ -117,8 +116,8 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
             }
 
             @Override
-            public int getPose() {
-                return POSE_STANDING;
+            public Pose getPose() {
+                return Pose.STAND;
             }
 
             @Override
@@ -141,10 +140,43 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
         EquipmentSet getEquipment();
 
-        int getPose();
+        Pose getPose();
 
         SkinType getActiveSkinType();
 
         Identifier getDefaultSkin(SkinType type, boolean slim);
+
+        public enum Pose {
+            STAND(EntityPose.STANDING),
+            SLEEP(EntityPose.SLEEPING),
+            RIDE(EntityPose.SITTING),
+            SWIM(EntityPose.SWIMMING),
+            RIPTIDE(EntityPose.SPIN_ATTACK);
+
+            public static final Pose[] VALUES = values();
+            public static final Style[] STYLES = Arrays.stream(VALUES).map(Pose::getStyle).toArray(Style[]::new);
+
+            private final Style style = new Style()
+                    .setIcon(new TextureSprite()
+                            .setTexture(GuiSkins.WIDGETS_TEXTURE)
+                            .setPosition(2, 2)
+                            .setSize(16, 16)
+                            .setTextureOffset(96, 16 * ordinal()))
+                        .setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode." + name().toLowerCase(Locale.ROOT))), 0, 10);
+
+            private final EntityPose pose;
+
+            Pose(EntityPose pose) {
+                this.pose = pose;
+            }
+
+            public Style getStyle() {
+                return style;
+            }
+
+            public EntityPose getPose() {
+                return pose;
+            }
+        }
     }
 }

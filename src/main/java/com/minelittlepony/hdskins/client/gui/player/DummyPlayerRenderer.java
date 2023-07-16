@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.dummy;
+package com.minelittlepony.hdskins.client.gui.player;
 
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
@@ -84,7 +84,7 @@ public class DummyPlayerRenderer {
                 state.getRenderingSeed(BlockPos.ORIGIN), OverlayTexture.DEFAULT_UV);
     }
 
-    static class BedHead extends BedBlockEntity {
+    public static class BedHead extends BedBlockEntity {
         public static BedHead instance = new BedHead();
 
         public BedHead() {

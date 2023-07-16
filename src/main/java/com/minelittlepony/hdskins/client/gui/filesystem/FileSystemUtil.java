@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.filedialog;
+package com.minelittlepony.hdskins.client.gui.filesystem;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

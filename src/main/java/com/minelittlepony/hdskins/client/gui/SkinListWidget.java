@@ -10,9 +10,11 @@ import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinUploader;
-import com.minelittlepony.hdskins.client.dummy.*;
-import com.minelittlepony.hdskins.client.resources.PreviousServerPlayerSkins;
-import com.minelittlepony.hdskins.client.resources.ServerPlayerSkins.Skin;
+import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
+import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
+import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
+import com.minelittlepony.hdskins.client.gui.player.skins.PreviousServerPlayerSkins;
+import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -28,9 +30,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
+/**
+ * Displays a list of previous skins the user has had in the past.
+ */
 public class SkinListWidget {
 
-    private final PlayerPreview previewer;
+    private final DualPreview previewer;
 
     private final MinecraftClient client = MinecraftClient.getInstance();
 
@@ -44,7 +49,7 @@ public class SkinListWidget {
     private Button scrollLeft;
     private Button scrollRight;
 
-    public SkinListWidget(PlayerPreview previewer, Bounds bounds) {
+    public SkinListWidget(DualPreview previewer, Bounds bounds) {
         this.previewer = previewer;
         this.containerBounds = bounds;
     }
@@ -66,7 +71,7 @@ public class SkinListWidget {
 
     private void scrollBy(int steps) {
         targetScrollPosition += steps;
-        int skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size();
+        int skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType()).size();
 
         int pageSize = bounds.width / bounds.height;
 
@@ -78,7 +83,7 @@ public class SkinListWidget {
     }
 
     private void updateButtons() {
-        List<Skin> skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType());
+        List<Skin> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
 
         boolean hasContent = !skins.isEmpty();
         int pageSize = bounds.width / bounds.height;
@@ -111,7 +116,7 @@ public class SkinListWidget {
 
         updateButtons();
 
-        List<Skin> skins = previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType());
+        List<Skin> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
         if (skins.isEmpty()) {
             return;
         }
@@ -192,7 +197,7 @@ public class SkinListWidget {
 
         int index = (int)((mouseX - (bounds.left + getScrollOffset())) / frameWidth);
 
-        if (index >= previewer.getServerTextures().getProfileSkins(previewer.getActiveSkinType()).size()) {
+        if (index >= previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType()).size()) {
             return false;
         }
 

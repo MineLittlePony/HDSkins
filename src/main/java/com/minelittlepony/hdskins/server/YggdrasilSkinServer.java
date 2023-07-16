@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
@@ -21,7 +22,6 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 
 @ServerType("mojang")
 public class YggdrasilSkinServer implements SkinServer {
@@ -94,7 +94,7 @@ public class YggdrasilSkinServer implements SkinServer {
         if (upload instanceof SkinUpload.Delete) {
             execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
                     .DELETE()
-                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken())
                     .build());
         } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
             execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
@@ -103,7 +103,7 @@ public class YggdrasilSkinServer implements SkinServer {
                             .build())
                     .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
                     .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().getAccessToken())
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken())
                     .build());
         } else if (upload instanceof SkinUpload.UriUpload) {
             // TODO yes it does! https://wiki.vg/Mojang_API#Change_Skin
@@ -126,7 +126,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
     private void authorize(Session session) throws IOException {
         JsonObject json = new JsonObject();
-        json.addProperty("accessToken", session.getAccessToken());
+        json.addProperty("accessToken", session.accessToken());
         execute(HttpRequest.newBuilder(URI.create(verify))
                 .POST(BodyPublishers.ofString(json.toString()))
                 .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)

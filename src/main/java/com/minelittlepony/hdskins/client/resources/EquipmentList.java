@@ -1,6 +1,5 @@
-package com.minelittlepony.hdskins.client.dummy;
+package com.minelittlepony.hdskins.client.resources;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,15 +18,16 @@ import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.registry.Registries;
 
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -90,8 +90,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         return emptySet;
     }
 
-    public Iterator<EquipmentSet> getCycler() {
-        return Iterators.cycle(equipmentSets);
+    public Stream<EquipmentSet> getValues() {
+        return equipmentSets.stream();
     }
 
     public static class EquipmentSet {
@@ -128,6 +128,10 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
 
         public Identifier getId() {
             return id;
+        }
+
+        public Text getTooltip() {
+            return Text.translatable("hdskins.equipment", Text.translatable("hdskins.equipment." + id.getPath()));
         }
     }
 }

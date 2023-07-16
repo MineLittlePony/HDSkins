@@ -1,11 +1,11 @@
-package com.minelittlepony.hdskins.client.filedialog.os;
+package com.minelittlepony.hdskins.client.gui.filesystem.os;
 
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
-import com.minelittlepony.hdskins.client.filedialog.FileDialog;
-import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

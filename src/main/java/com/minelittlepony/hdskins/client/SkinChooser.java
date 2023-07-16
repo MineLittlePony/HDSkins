@@ -1,9 +1,8 @@
 package com.minelittlepony.hdskins.client;
 
-import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
-import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
-import com.minelittlepony.hdskins.client.filedialog.FileDialogs;
 import com.minelittlepony.hdskins.client.gui.ConfirmationScreen;
+import com.minelittlepony.hdskins.client.gui.DualPreview;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -23,6 +22,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.jetbrains.annotations.Nullable;
@@ -49,8 +49,8 @@ public class SkinChooser {
     }
 
     private boolean pickingInProgress;
-    private final PlayerPreview previewer;
-    private final SkinChangeListener listener;
+    private final DualPreview previewer;
+    private Consumer<SkinType> listener = t -> {};
 
     private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
 
@@ -58,10 +58,13 @@ public class SkinChooser {
 
     private volatile Text status = MSG_CHOOSE;
 
-    public SkinChooser(PlayerPreview previewer, SkinChangeListener listener) {
+    public SkinChooser(DualPreview previewer) {
         this.previewer = previewer;
-        this.listener = listener;
         addImageValidation(this::acceptsSkinDimensions);
+    }
+
+    public void addSkinChangedEventListener(Consumer<SkinType> listener) {
+        this.listener = this.listener.andThen(listener);
     }
 
     private FileDialogs getFileDialogs() {
@@ -76,15 +79,15 @@ public class SkinChooser {
     }
 
     private void fileRemoved() {
-        MinecraftClient.getInstance().execute(previewer.getClientTextures()::close);
+        MinecraftClient.getInstance().execute(previewer.getLocal().getSkins()::close);
     }
 
     private void fileChanged(Path path) {
         try {
             SkinType skinType = previewer.getActiveSkinType();
             LOGGER.debug("Set {} {}", skinType, path);
-            previewer.getClientTextures().get(skinType).setLocal(path);
-            listener.onSetLocalSkin(skinType);
+            previewer.getLocal().getSkins().get(skinType).setLocal(path);
+            listener.accept(skinType);
         } catch (IOException e) {
             HDSkins.LOGGER.error("Could not load local path `" + path + "`", e);
         }
@@ -135,7 +138,7 @@ public class SkinChooser {
             pickingInProgress = false;
 
             if (success) {
-                previewer.getServerTextures().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {
+                previewer.getRemote().getSkins().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {
                     try {
                         Files.deleteIfExists(file);
                     } catch (IOException ignored) { }
@@ -205,5 +208,9 @@ public class SkinChooser {
         }
 
         return null;
+    }
+
+    public interface EventListener {
+        default void onSetLocalSkin(SkinType type) {}
     }
 }

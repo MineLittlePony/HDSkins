@@ -1,7 +1,7 @@
-package com.minelittlepony.hdskins.client.filedialog;
+package com.minelittlepony.hdskins.client.gui.filesystem;
 
-import com.minelittlepony.hdskins.client.filedialog.integrated.IntegratedFileDialogs;
-import com.minelittlepony.hdskins.client.filedialog.os.NativeFileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.integrated.IntegratedFileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.os.NativeFileDialogs;
 
 public interface FileDialogs {
     FileDialogs INTEGRATED = new IntegratedFileDialogs();

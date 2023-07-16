@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.dummy;
+package com.minelittlepony.hdskins.client.gui.player;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -22,7 +22,9 @@ import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.client.dummy.DummyPlayerRenderer.MrBoaty;
+import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer.MrBoaty;
+import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
+import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Pose;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 /**
@@ -132,36 +134,30 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public boolean hasVehicle() {
-        return getTextures().getPosture().getPose() == PlayerSkins.POSE_RIDING;
+        return getTextures().getPosture().getPose() == Pose.RIDE;
     }
 
     @Override
     public boolean isSleeping() {
-        return getTextures().getPosture().getPose() == PlayerSkins.POSE_SLEEPING;
+        return getTextures().getPosture().getPose() == Pose.SLEEP;
     }
 
     @Override
     public boolean isSwimming() {
-        return getTextures().getPosture().getPose() == PlayerSkins.POSE_SWIMMING;
+        return getTextures().getPosture().getPose() == Pose.SWIM;
     }
 
     @Override
     public boolean isUsingRiptide() {
-        return getTextures().getPosture().getPose() == PlayerSkins.POSE_RIPTIDE;
+        return getTextures().getPosture().getPose() == Pose.RIPTIDE;
     }
 
     @Override
     public EntityPose getPose() {
-        if (isSleeping()) {
-            return EntityPose.SLEEPING;
-        }
-        if (isSwimming()) {
-            return EntityPose.SWIMMING;
-        }
-        if (isSneaking()) {
+        if (getTextures().getPosture().getPose() == Pose.STAND && isSneaking()) {
             return EntityPose.CROUCHING;
         }
-        return EntityPose.STANDING;
+        return getTextures().getPosture().getPose().getPose();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client.dummy;
+package com.minelittlepony.hdskins.client.gui.player;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;

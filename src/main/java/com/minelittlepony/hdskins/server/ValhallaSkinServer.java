@@ -3,13 +3,12 @@ package com.minelittlepony.hdskins.server;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.util.UUIDTypeAdapter;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Session;
 
 import java.io.IOException;
 import java.net.URI;
@@ -122,7 +121,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private URI buildUserTextureUri(SkinUpload upload) {
         return URI.create(String.format("%s/user/%s/%s", getApiPrefix(),
-                UUIDTypeAdapter.fromUUID(upload.session().getProfile().getId()),
+                UUIDTypeAdapter.fromUUID(upload.session().profile().getId()),
                 upload.type().getParameterizedName()
         ));
     }
@@ -131,15 +130,14 @@ public class ValhallaSkinServer implements SkinServer {
         if (accessToken != null) {
             return;
         }
-        GameProfile profile = session.getProfile();
+        GameProfile profile = session.profile();
         AuthHandshake handshake = authHandshake(profile.getName());
 
         if (handshake.offline) {
             return;
         }
 
-        // join the session server
-        MinecraftClient.getInstance().getSessionService().joinServer(profile, session.getAccessToken(), handshake.serverId);
+        session.validate(handshake.serverId);
 
         AuthResponse response = authResponse(profile.getName(), handshake.verifyToken);
         if (!response.userId.equals(profile.getId())) {

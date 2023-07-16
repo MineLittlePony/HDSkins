@@ -3,9 +3,9 @@ package com.minelittlepony.hdskins.client;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
-import com.minelittlepony.hdskins.client.dummy.EquipmentList;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.profile.ProfileRepository;
+import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
 

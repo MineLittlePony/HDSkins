@@ -1,10 +1,12 @@
-package com.minelittlepony.hdskins.client.resources;
+package com.minelittlepony.hdskins.client.gui.player.skins;
 
 import java.util.*;
 import java.util.function.*;
 
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.client.dummy.PlayerSkins;
+import com.minelittlepony.hdskins.client.resources.DynamicTextures;
+import com.minelittlepony.hdskins.client.resources.Texture;
+import com.minelittlepony.hdskins.client.resources.TextureLoader;
 import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
@@ -24,12 +26,12 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
         super(posture);
     }
 
-    public void setSkinList(Optional<SkinServer.SkinServerProfile<?>> profile) {
+    public void loadProfile(Optional<SkinServer.SkinServerProfile<?>> profile) {
         this.profile = profile;
         skinLists.clear();
     }
 
-    public void setSkins(TexturePayload payload, SkinCallback loadCallback) {
+    public void loadTextures(TexturePayload payload, SkinCallback loadCallback) {
         super.close();
         textureManager = Optional.of(new DynamicTextures(payload, loadCallback));
     }

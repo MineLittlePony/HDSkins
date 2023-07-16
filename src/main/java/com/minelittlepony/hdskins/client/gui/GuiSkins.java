@@ -2,48 +2,43 @@ package com.minelittlepony.hdskins.client.gui;
 
 import com.google.common.base.Preconditions;
 import com.minelittlepony.common.client.gui.GameGui;
-import com.minelittlepony.common.client.gui.Tooltip;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
-import com.minelittlepony.hdskins.client.FileDrop;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinChooser;
 import com.minelittlepony.hdskins.client.SkinUploader;
-import com.minelittlepony.hdskins.client.SkinUploader.SkinChangeListener;
+import com.minelittlepony.hdskins.client.gui.element.FeatureButton;
+import com.minelittlepony.hdskins.client.gui.element.FeatureCycler;
+import com.minelittlepony.hdskins.client.gui.element.FeatureStyle;
+import com.minelittlepony.hdskins.client.gui.element.LabelledCycler;
+import com.minelittlepony.hdskins.client.gui.element.ReactiveUiElement;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDrop;
+import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.client.dummy.PlayerPreview;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
-import com.minelittlepony.hdskins.util.Edge;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
-public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Callback {
+public class GuiSkins extends GameGui {
     public static final Identifier WIDGETS_TEXTURE = new Identifier("hdskins", "textures/gui/widgets.png");
     public static final Text HD_SKINS_TITLE = Text.translatable("hdskins.gui.title");
     public static final Text HD_SKINS_OPTION_DISABLED_DESC = Text.translatable("hdskins.warning.disabled.description");
@@ -59,49 +54,51 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         return skinsGuiFunc.apply(parent, servers);
     }
 
+    private LabelledCycler btnSkinType;
+
     private int updateCounter = 72;
-
-    private Button btnBrowse;
-    private FeatureButton btnUpload;
-    private FeatureButton btnDownload;
-    private FeatureButton btnClear;
-
-    private FeatureCycler btnSkinVariant;
-
-    private Cycler btnSkinType;
 
     private double lastMouseX = 0;
 
-    private boolean jumpState = false;
-    private boolean sneakState = false;
+    private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
 
-    protected final PlayerPreview previewer;
+    protected final DualPreview previewer;
+    protected final Controls controls;
     protected final SkinUploader uploader;
     protected final SkinChooser chooser;
 
-    private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
-
     private final StatusBanner banner;
+    private final FileDrop dropper;
 
-    private final FileDrop dropper = FileDrop.newDropEvent(this);
-
-    private final Edge ctrlKey = new Edge(this::ctrlToggled, Screen::hasControlDown);
-    private final Edge jumpKey = new Edge(this::jumpToggled, () -> client.options.jumpKey.isPressed());
-    private final Edge sneakKey = new Edge(this::sneakToggled, () -> client.options.sneakKey.isPressed());
-    private final Edge walkKey = new Edge(this::walkingToggled, () -> client.options.forwardKey.isPressed() || client.options.backKey.isPressed());
+    private final SkinUpload.Session session = new SkinUpload.Session(
+            MinecraftClient.getInstance().getSession().getProfile(),
+            MinecraftClient.getInstance().getSession().getAccessToken(),
+            (session, serverId) -> {
+                // join the session server
+                client.getSessionService().joinServer(session.profile(), session.accessToken(), serverId);
+            }
+    );
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(HD_SKINS_TITLE, parent);
-
         client = MinecraftClient.getInstance();
         previewer = createPreviewer();
-        chooser = new SkinChooser(previewer, this);
-        uploader = new SkinUploader(servers, previewer, this);
+        controls = new Controls(previewer);
+        chooser = new SkinChooser(previewer);
+        uploader = new SkinUploader(servers.getCycler(), previewer);
         banner = new StatusBanner(uploader);
+        dropper = FileDrop.newDropEvent(paths -> paths.stream().findFirst().ifPresent(chooser::selectFile));
+
+        uploader.addSkinTypeChangedEventListener(type -> {
+            playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+        });
+        uploader.addSkinUploadedEventListener((type, location, profileTexture) -> {
+            playSound(SoundEvents.ENTITY_VILLAGER_YES);
+        });
     }
 
-    public PlayerPreview createPreviewer() {
-        return new PlayerPreview();
+    protected DualPreview createPreviewer() {
+        return new DualPreview();
     }
 
     protected Identifier getBackground() {
@@ -110,15 +107,12 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
     @Override
     public void tick() {
-        KeyBinding.updatePressedStates();
+        controls.update();
+        chooser.update();
+        uploader.update();
 
         boolean left = client.options.leftKey.isPressed();
         boolean right = client.options.rightKey.isPressed();
-
-        ctrlKey.update();
-        jumpKey.update();
-        sneakKey.update();
-        walkKey.update();
 
         if (!(left && right)) {
             if (left) {
@@ -130,10 +124,11 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
             }
         }
 
-        chooser.update();
-        uploader.update();
-
-        updateButtons();
+        children().forEach(i -> {
+            if (i instanceof ReactiveUiElement r) {
+                r.update();
+            }
+        });
     }
 
     @Override
@@ -143,12 +138,15 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
 
-        int typeSelectorWidth = Math.max(previewer.localFrameBounds.width, 200);
+        int typeSelectorWidth = Math.max(previewer.local.bounds.width, 200);
         addButton(btnSkinType = new LabelledCycler(
                 (width - typeSelectorWidth) / 2,
-                previewer.localFrameBounds.top - 25,
+                previewer.local.bounds.top - 25,
                 typeSelectorWidth, 20
             ))
+                .onUpdate(sender -> {
+                    sender.setEnabled(uploader.getFeatures().contains(Feature.MODEL_TYPES));
+                })
                 .onChange(i -> {
                     List<SkinType> types = uploader.getSupportedSkinTypes().toList();
                     i %= types.size();
@@ -157,11 +155,15 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 });
         setupSkinToggler();
 
-        addButton(btnUpload = new FeatureButton(width / 2 - 10, height / 2 - 20, 20, 40))
-            .setEnabled(uploader.canUpload() && chooser.hasSelection())
+        addButton(new FeatureButton(width / 2 - 10, height / 2 - 20, 20, 40))
+            .onUpdate(sender -> {
+                sender.setEnabled(uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection());
+                sender.setLocked(!uploader.getFeatures().contains(Feature.UPLOAD_USER_SKIN));
+            })
+            .setEnabled(uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection())
             .onClick(sender -> {
-                if (uploader.canUpload() && chooser.hasSelection()) {
-                    punchServer(StatusBanner.HD_SKINS_UPLOAD, chooser.getSelection());
+                if (uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection()) {
+                    punchServer(StatusBanner.HD_SKINS_UPLOAD, SkinUpload.create(chooser.getSelection(), previewer.getActiveSkinType(), uploader.getMetadata(), session));
                 }
             })
             .getStyle()
@@ -172,87 +174,63 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                     .setTextureOffset(16, 48))
                 .setTooltip("hdskins.options.chevy.title");
 
-        initLocalPreviewButtons(previewer.localFrameBounds);
-        initServerPreviewButtons(previewer.serverFrameBounds);
+        initLocalPreviewButtons(previewer.local.bounds);
+        initServerPreviewButtons(previewer.remote.bounds);
 
-        addButton(new Button(width / 2 - 25, previewer.serverFrameBounds.bottom() + 10, 50, 20))
+        addButton(new Button(width / 2 - 25, previewer.remote.bounds.bottom() + 10, 50, 20))
             .onClick(sender -> finish())
             .getStyle()
                 .setText("hdskins.options.close");
     }
 
     protected void initLocalPreviewButtons(Bounds area) {
-        addButton(btnBrowse = new Button(area.left, area.bottom() + 5, 50, 20))
+        FeatureButton btnBrowse;
+        addButton(btnBrowse = new FeatureButton(area.left, area.bottom() + 5, 50, 20))
+            .onUpdate(sender -> sender.active = !chooser.pickingInProgress())
             .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
             .setEnabled(!client.getWindow().isFullscreen())
             .getStyle().setText("hdskins.options.browse");
 
-        Button clothingCycler;
-        addButton(clothingCycler = new Button(btnBrowse.getBounds().right() + 5, btnBrowse.getBounds().top, 20, 20))
-                .onClick(sender -> {
-                    sender.getStyle()
-                        .setIcon(previewer.cycleEquipment())
-                        .setTooltip(Text.translatable("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())));
-                    playSound(previewer.getEquipment().getSound());
-                })
-                .getStyle()
-                    .setIcon(previewer.getEquipment().getStack())
-                    .setTooltip(Text.translatable("hdskins.equipment", I18n.translate("hdskins.equipment." + previewer.getEquipment().getId().getPath())), 0, 10);
+        FeatureCycler clothingCycler;
+        List<EquipmentSet> equipments = HDSkins.getInstance().getDummyPlayerEquipmentList().getValues().toList();
+        addButton(clothingCycler = new FeatureCycler(btnBrowse.getBounds().right() + 5, btnBrowse.getBounds().top))
+                .setStyles(
+                        equipments.stream().map(equipment -> {
+                            return new FeatureStyle(clothingCycler)
+                                    .setIcon(equipment.getStack())
+                                    .setTooltip(equipment.getTooltip(), 0, 10);
+                        }).toArray(Style[]::new)
+                )
+                .setValue(equipments.indexOf(previewer.getEquipment()))
+                .onChange(i -> {
+                    previewer.setEquipment(equipments.get(i % equipments.size()));
+                    GameGui.playSound(previewer.getEquipment().getSound());
+                    return i;
+                });
 
+        FeatureCycler btnSkinVariant;
         addButton(btnSkinVariant = new FeatureCycler(clothingCycler.getBounds().right() + 5, clothingCycler.getBounds().top))
+            .onUpdate(sender -> sender.setLocked(!uploader.getFeatures().contains(Feature.MODEL_VARIANTS)))
             .setStyles(
-                    new FeatureStyle(btnSkinVariant)
-                        .setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(32, 0))
-                        .setTooltip(Text.translatable("hdskins.arm_style", Text.translatable("hdskins.mode.steve")), 0, 10),
-                    new FeatureStyle(btnSkinVariant)
-                        .setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(32, 16))
-                        .setTooltip(Text.translatable("hdskins.arm_style", Text.translatable("hdskins.mode.alex")), 0, 10)
+                    previewer.getSkinVariants().stream().map(variant -> {
+                        return new FeatureStyle(btnSkinVariant).setIcon(variant.icon()).setTooltip(variant.tooltip(), 0, 10);
+                    }).toArray(Style[]::new)
             )
             .setValue(VanillaModels.isFat(uploader.getMetadataField("model")) ? 2 : 1)
             .onChange(i -> {
-                switchSkinMode(i == 1 ? VanillaModels.SLIM : VanillaModels.DEFAULT);
+                playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+                String model = i == 1 ? VanillaModels.SLIM : VanillaModels.DEFAULT;
+                uploader.setMetadataField("model", model);
+                previewer.setModelType(model);
                 return i;
             });
 
         addButton(new Cycler(btnSkinVariant.getBounds().right() + 5, btnSkinVariant.getBounds().top, 20, 20))
-            .setStyles(
-                    new Style().setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(96, 0)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.stand")), 0, 10),
-                    new Style().setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(96, 16)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.sleep")), 0, 10),
-                    new Style().setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(96, 32)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.ride")), 0, 10),
-                    new Style().setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(96, 48)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.swim")), 0, 10),
-                    new Style().setIcon(new TextureSprite()
-                            .setTexture(WIDGETS_TEXTURE)
-                            .setPosition(2, 2)
-                            .setSize(16, 16)
-                            .setTextureOffset(96, 64)).setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode.riptide")), 0, 10))
-            .setValue(previewer.getPose())
+            .setStyles(DualPreview.Pose.STYLES)
+            .setValue(previewer.getPose().ordinal())
             .onChange(i -> {
                 playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-                previewer.setPose(i);
+                previewer.setPose(DualPreview.Pose.VALUES[i % DualPreview.Pose.VALUES.length]);
                 return i;
             });
     }
@@ -275,12 +253,18 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                 .setTooltip(uploader.getGatewayText(), 0, 10);
 
 
-        Button btnClearAll;
+        FeatureButton btnClearAll;
         addButton(btnClearAll = new FeatureButton(serverSelector.getBounds().left - 25, serverSelector.getBounds().top, 20, 20))
+            .onUpdate(sender -> {
+                sender.setEnabled(uploader.canClearAny());
+                sender.setLocked(!uploader.getFeatures().contains(Feature.DELETE_USER_SKIN));
+            })
             .onClick(sender -> {
-                if (uploader.canClear()) {
-                    punchServer(StatusBanner.HD_SKINS_REQUEST, null);
-                }
+                SkinType.REGISTRY.forEach(type -> {
+                    if (uploader.canClear(type)) {
+                        punchServer(StatusBanner.HD_SKINS_REQUEST, SkinUpload.delete(previewer.getActiveSkinType(), session));
+                    }
+                });
             })
             .getStyle()
                 .setIcon(new TextureSprite()
@@ -290,11 +274,16 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                     .setTextureOffset(48, 16))
                 .setTooltip("hdskins.options.clear_all");
 
+        FeatureButton btnClear;
         addButton(btnClear = new FeatureButton(btnClearAll.getBounds().left - 25, btnClearAll.getBounds().top, 20, 20))
-                .setEnabled(uploader.canClear())
+                .onUpdate(sender -> {
+                    sender.setEnabled(uploader.canClear(previewer.getActiveSkinType()));
+                    sender.setLocked(!uploader.getFeatures().contains(Feature.DELETE_USER_SKIN));
+                })
+                .setEnabled(uploader.canClearAny())
                 .onClick(sender -> {
-                    if (uploader.canClear()) {
-                        punchServer(StatusBanner.HD_SKINS_REQUEST, null);
+                    if (uploader.canClear(previewer.getActiveSkinType())) {
+                        punchServer(StatusBanner.HD_SKINS_REQUEST, SkinUpload.delete(previewer.getActiveSkinType(), session));
                     }
                 })
                 .getStyle()
@@ -305,11 +294,14 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
                         .setTextureOffset(48, 0))
                     .setTooltip("hdskins.options.clear");
 
-
-        addButton(btnDownload = new FeatureButton(btnClear.getBounds().left - 25, btnClear.getBounds().top, 20, 20))
-                .setEnabled(uploader.canClear())
+        addButton(new FeatureButton(btnClear.getBounds().left - 25, btnClear.getBounds().top, 20, 20))
+                .onUpdate(sender -> {
+                    sender.setEnabled(uploader.canClear(previewer.getActiveSkinType()) && !chooser.pickingInProgress());
+                    sender.setLocked(!uploader.getFeatures().contains(Feature.DOWNLOAD_USER_SKIN));
+                })
+                .setEnabled(uploader.canClear(previewer.getActiveSkinType()))
                 .onClick(sender -> {
-                    if (uploader.canClear()) {
+                    if (uploader.canClear(previewer.getActiveSkinType())) {
                         chooser.openSavePNG(uploader, I18n.translate("hdskins.save.title"), client.getSession().getUsername());
                     }
                 })
@@ -332,8 +324,8 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void removed() {
+        super.removed();
 
         try {
             uploader.close();
@@ -344,31 +336,6 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
         HDSkins.getInstance().getProfileRepository().clear();
 
         dropper.cancel();
-    }
-
-    @Override
-    public void onDrop(List<Path> paths) {
-        paths.stream().findFirst().ifPresent(path -> {
-            chooser.selectFile(path);
-            updateButtons();
-        });
-    }
-
-    @Override
-    public void onSkinTypeChanged(SkinType newType) {
-        playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-    }
-
-    @Override
-    public void onSetRemoteSkin(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
-        playSound(SoundEvents.ENTITY_VILLAGER_YES);
-    }
-
-    protected void switchSkinMode(String model) {
-        playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-
-        uploader.setMetadataField("model", model);
-        previewer.setModelType(model);
     }
 
     protected boolean canTakeEvents() {
@@ -411,173 +378,29 @@ public class GuiSkins extends GameGui implements SkinChangeListener, FileDrop.Ca
 
     @Override
     public boolean charTyped(char keyChar, int keyCode) {
-        if (canTakeEvents()) {
-            if (!chooser.pickingInProgress() && !uploader.isBusy()) {
-                return super.charTyped(keyChar, keyCode);
-            }
-        }
-
-        return false;
-    }
-
-    private void walkingToggled(boolean walking) {
-        previewer.setSprinting(walking);
-    }
-
-    private void jumpToggled(boolean jumping) {
-        if (jumping && ctrlKey.getState()) {
-            jumpState = !jumpState;
-        }
-
-        jumping |= jumpState;
-
-        previewer.setJumping(jumping);
-    }
-
-    private void sneakToggled(boolean sneaking) {
-        if (sneaking && ctrlKey.getState()) {
-            sneakState = !sneakState;
-        }
-
-        sneaking |= sneakState;
-
-        previewer.setSneaking(sneaking);
-
-    }
-
-    private void ctrlToggled(boolean ctrl) {
-        if (ctrl) {
-            if (sneakKey.getState()) {
-                sneakState = !sneakState;
-            }
-
-            if (jumpKey.getState()) {
-                jumpState = !jumpState;
-            }
-        }
+        return canTakeEvents() && !chooser.pickingInProgress() && !uploader.isBusy() && super.charTyped(keyChar, keyCode);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
         RenderSystem.disableCull();
 
         if (client.world == null) {
-            panorama.render(partialTick, 1);
+            panorama.render(tickDelta, 1);
         } else {
            renderBackground(context);
         }
 
-        previewer.render(context, mouseX, mouseY, updateCounter, partialTick, chooser, uploader);
-        super.render(context, mouseX, mouseY, partialTick);
-        banner.render(context, partialTick, width, height);
+        previewer.render(context, mouseX, mouseY, updateCounter, tickDelta, chooser, uploader);
+        super.render(context, mouseX, mouseY, tickDelta);
+        banner.render(context, tickDelta, width, height);
     }
 
-    private CompletableFuture<?> punchServer(Text uploadMsg, @Nullable URI file) {
-        try {
-            return uploader.uploadSkin(uploadMsg, file).whenComplete((o, t) -> {
-                if (t != null) {
-                    t.printStackTrace();
-                }
-                updateButtons();
-            });
-        } finally {
-            updateButtons();
-        }
-    }
-
-    private void updateButtons() {
-        Set<Feature> features = uploader.getFeatures();
-
-        btnClear.active = uploader.canClear();
-        btnUpload.active = uploader.canUpload() && chooser.hasSelection() && features.contains(Feature.UPLOAD_USER_SKIN);
-        btnDownload.active = uploader.canClear() && !chooser.pickingInProgress();
-        btnBrowse.active = !chooser.pickingInProgress();
-
-        boolean types = features.contains(Feature.MODEL_TYPES);
-        boolean variants = !features.contains(Feature.MODEL_VARIANTS);
-
-        btnSkinType.setEnabled(types);
-        btnSkinVariant.setLocked(variants);
-
-        btnClear.setLocked(!features.contains(Feature.DELETE_USER_SKIN));
-        btnUpload.setLocked(!features.contains(Feature.UPLOAD_USER_SKIN));
-        btnDownload.setLocked(!features.contains(Feature.DOWNLOAD_USER_SKIN));
-    }
-
-    protected class FeatureButton extends Button {
-        public FeatureButton(int x, int y, int width, int height) {
-            super(x, y, width, height);
-            setStyle(new FeatureStyle(this));
-        }
-
-        public void setLocked(boolean lock) {
-            ((FeatureStyle)getStyle()).setLocked(lock);
-        }
-    }
-
-    protected class FeatureCycler extends Cycler {
-        public FeatureCycler(int x, int y) {
-            super(x, y, 20, 20);
-
-            setStyle(new FeatureStyle(this));
-            setStyles(getStyle());
-        }
-
-        public void setLocked(boolean lock) {
-            for (Style i : getStyles()) {
-                ((FeatureStyle)i).setLocked(lock);
+    private CompletableFuture<?> punchServer(Text uploadMsg, SkinUpload payload) {
+        return uploader.uploadSkin(uploadMsg, payload).whenComplete((o, t) -> {
+            if (t != null) {
+                HDSkins.LOGGER.fatal("Exception caught whilst uploading skin", t);
             }
-        }
-    }
-
-    protected class FeatureSwitch extends Button {
-        public FeatureSwitch(int x, int y) {
-            super(x, y, 20, 20);
-
-            setStyle(new FeatureStyle(this));
-        }
-
-        public void setLocked(boolean lock) {
-            ((FeatureStyle)getStyle()).setLocked(lock);
-        }
-    }
-
-    protected static class FeatureStyle extends Style {
-
-        private final Button element;
-
-        private Optional<Tooltip> disabledTooltip = Optional.of(Tooltip.of(HD_SKINS_OPTION_DISABLED_DESC));
-
-        private boolean locked;
-
-        public FeatureStyle(Button element) {
-            this.element = element;
-        }
-
-        public FeatureStyle setLocked(boolean locked) {
-            this.locked = locked;
-            element.active &= !locked;
-
-            return this;
-        }
-
-        @Override
-        public Optional<Tooltip> getTooltip() {
-            if (locked) {
-                return disabledTooltip;
-            }
-            return super.getTooltip();
-        }
-
-        @Override
-        public Style setTooltip(Tooltip tooltip) {
-            disabledTooltip = Optional.of(Tooltip.of(
-                    Text.translatable("hdskins.warning.disabled.title",
-                            tooltip.getString(),
-                            HD_SKINS_OPTION_DISABLED_DESC
-                    )
-            ));
-            return super.setTooltip(tooltip);
-        }
+        });
     }
 }

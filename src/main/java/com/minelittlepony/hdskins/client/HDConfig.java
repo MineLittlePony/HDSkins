@@ -3,7 +3,7 @@ package com.minelittlepony.hdskins.client;
 import java.nio.file.Path;
 
 import com.minelittlepony.common.util.settings.*;
-import com.minelittlepony.hdskins.client.filedialog.FileSystemUtil;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileSystemUtil;
 
 public class HDConfig extends Config {
 

@@ -1,7 +1,7 @@
-package com.minelittlepony.hdskins.client.filedialog.os;
+package com.minelittlepony.hdskins.client.gui.filesystem.os;
 
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.filedialog.FileDialog;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
 
 import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
