@@ -9,7 +9,6 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.SkinUploader;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
@@ -35,7 +34,7 @@ import net.minecraft.util.math.RotationAxis;
  */
 public class SkinListWidget {
 
-    private final DualPreview previewer;
+    private final DualCarouselWidget previewer;
 
     private final MinecraftClient client = MinecraftClient.getInstance();
 
@@ -49,7 +48,7 @@ public class SkinListWidget {
     private Button scrollLeft;
     private Button scrollRight;
 
-    public SkinListWidget(DualPreview previewer, Bounds bounds) {
+    public SkinListWidget(DualCarouselWidget previewer, Bounds bounds) {
         this.previewer = previewer;
         this.containerBounds = bounds;
     }

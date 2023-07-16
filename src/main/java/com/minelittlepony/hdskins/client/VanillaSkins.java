@@ -27,15 +27,16 @@ public class VanillaSkins {
 
     private static final Map<Identifier, Identifier> TEXTURE_CONVERSION = new HashMap<>();
 
-    public static Identifier getDefaultTexture(SkinType type, boolean slimArms) {
-        if (slimArms && NO_TEXTURES_ALEX.containsKey(type)) {
+    public static Identifier getDefaultTexture(SkinType type, String variant) {
+        if (VanillaModels.isSlim(variant) && NO_TEXTURES_ALEX.containsKey(type)) {
             return NO_TEXTURES_ALEX.get(type);
         }
         return NO_TEXTURES.getOrDefault(type, NO_SKIN_STEVE);
     }
 
-    public static Identifier getTexture(UUID profileId, boolean slimArms) {
+    public static Identifier getTexture(UUID profileId, String variant) {
         return TEXTURE_CONVERSION.computeIfAbsent(DefaultSkinHelper.getTexture(profileId), skin -> {
+            boolean slimArms = VanillaModels.isSlim(variant);
             return skin.withPath(path -> path.replace(slimArms ? "/wide/" : "/slim/", slimArms ? "/slim/" : "/wide/"));
         });
     }

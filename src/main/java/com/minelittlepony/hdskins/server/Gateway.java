@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.*;
-import com.minelittlepony.hdskins.client.SkinUploader;
+import com.minelittlepony.hdskins.client.gui.SkinUploader;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer.SkinServerProfile;
 import com.minelittlepony.hdskins.util.net.HttpException;

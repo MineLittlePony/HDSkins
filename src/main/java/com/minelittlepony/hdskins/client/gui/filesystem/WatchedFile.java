@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client;
+package com.minelittlepony.hdskins.client.gui.filesystem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,7 +31,7 @@ public class WatchedFile {
     private Consumer<Path> onChange;
     private Runnable onRemove;
 
-    WatchedFile(Consumer<Path> change, Runnable remove) {
+    public WatchedFile(Consumer<Path> change, Runnable remove) {
         onChange = change;
         onRemove = remove;
     }

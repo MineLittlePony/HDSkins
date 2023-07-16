@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import com.minelittlepony.common.client.gui.ITextContext;
-import com.minelittlepony.hdskins.client.SkinUploader;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;

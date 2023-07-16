@@ -1,8 +1,8 @@
-package com.minelittlepony.hdskins.client;
+package com.minelittlepony.hdskins.client.gui;
 
-import com.minelittlepony.hdskins.client.gui.ConfirmationScreen;
-import com.minelittlepony.hdskins.client.gui.DualPreview;
+import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -27,6 +27,10 @@ import java.util.function.Function;
 
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Provides functionality for loading and saving skin files into the previewer,
+ * as well as input validation.
+ */
 public class SkinChooser {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -49,7 +53,7 @@ public class SkinChooser {
     }
 
     private boolean pickingInProgress;
-    private final DualPreview previewer;
+    private final DualCarouselWidget previewer;
     private Consumer<SkinType> listener = t -> {};
 
     private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
@@ -58,7 +62,7 @@ public class SkinChooser {
 
     private volatile Text status = MSG_CHOOSE;
 
-    public SkinChooser(DualPreview previewer) {
+    public SkinChooser(DualCarouselWidget previewer) {
         this.previewer = previewer;
         addImageValidation(this::acceptsSkinDimensions);
     }

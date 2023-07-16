@@ -7,8 +7,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import com.minelittlepony.common.client.gui.ITextContext;
-import com.minelittlepony.common.client.gui.sprite.ISprite;
-import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.hdskins.client.*;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.skins.LocalPlayerSkins;
@@ -27,9 +25,9 @@ import net.minecraft.util.*;
 import net.minecraft.text.Text;
 
 /**
- * Player previewer that renders the models to the screen.
+ * Handles the display of the dummy players in the GUI.
  */
-public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext {
+public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int LABEL_BACKGROUND = 0xB0000000;
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
@@ -43,14 +41,12 @@ public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext
     private Pose pose = Pose.STAND;
     private SkinType activeSkinType = SkinType.SKIN;
 
-    private List<SkinVariant> skinVariants = new ArrayList<>();
+    private Optional<SkinVariant> variant = Optional.empty();
+    private List<SkinVariant> skinVariants = new ArrayList<>(PlayerSkins.Posture.SkinVariant.VALUES);
 
     private EquipmentSet activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
 
-    public DualPreview() {
-        addSkinVariant("steve");
-        addSkinVariant("alex");
-
+    public DualCarouselWidget() {
         local = new Carousel<>(Text.translatable("hdskins.local"), new LocalPlayerSkins(this), this::createEntity);
         remote = new Carousel<>(Text.translatable("hdskins.server"), new ServerPlayerSkins(this), this::createEntity);
         skinList = new SkinListWidget(this, remote.bounds);
@@ -60,28 +56,12 @@ public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext
         return new DummyPlayer(world, textures);
     }
 
-    protected void addSkinVariant(String name) {
-        skinVariants.add(new SkinVariant(
-                Text.translatable("hdskins.arm_style", Text.translatable("hdskins.arm_style." + name)),
-                new TextureSprite()
-                    .setTexture(GuiSkins.WIDGETS_TEXTURE)
-                    .setPosition(2, 2)
-                    .setSize(16, 16)
-                    .setTextureOffset(32, 16 * skinVariants.size()),
-                name
-        ));
-    }
-
     public Carousel<ServerPlayerSkins> getRemote() {
         return remote;
     }
 
     public Carousel<LocalPlayerSkins> getLocal() {
         return local;
-    }
-
-    public List<SkinVariant> getSkinVariants() {
-        return skinVariants;
     }
 
     public void setEquipment(EquipmentSet equipment) {
@@ -108,8 +88,18 @@ public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext
         return pose;
     }
 
-    public void setModelType(String model) {
-        local.getSkins().setPreviewThinArms(VanillaModels.isSlim(model));
+    public void setSkinVariant(SkinVariant variant) {
+        this.variant = Optional.of(variant);
+        local.getSkins().close();
+    }
+
+    public List<SkinVariant> getSkinVariants() {
+        return skinVariants;
+    }
+
+    @Override
+    public Optional<SkinVariant> getSkinVariant() {
+        return variant;
     }
 
     public void setSkinType(SkinType type) {
@@ -122,17 +112,17 @@ public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext
     }
 
     @Override
-    public Identifier getDefaultSkin(SkinType type, boolean slim) {
-        Identifier skin = getBlankSkin(type, slim);
-        return DefaultSkinGenerator.generateGreyScale(type == SkinType.SKIN ? VanillaSkins.getTexture(getProfile().getId(), slim) : skin, skin, getExclusion());
+    public Identifier getDefaultSkin(SkinType type, String variant) {
+        Identifier skin = getBlankSkin(type, variant);
+        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getTexture(getProfile().getId(), variant) : skin, skin, getExclusion());
     }
 
-    protected TextureLoader.Exclusion getExclusion() {
+    public TextureLoader.Exclusion getExclusion() {
         return TextureLoader.Exclusion.NULL;
     }
 
-    public Identifier getBlankSkin(SkinType type, boolean slim) {
-        return VanillaSkins.getDefaultTexture(type, slim);
+    public Identifier getBlankSkin(SkinType type, String variant) {
+        return VanillaSkins.getDefaultTexture(type, variant);
     }
 
     public void setJumping(boolean jumping) {
@@ -222,6 +212,4 @@ public class DualPreview implements Closeable, PlayerSkins.Posture, ITextContext
         remote.close();
         local.close();
     }
-
-    public record SkinVariant (Text tooltip, ISprite icon, String name) { }
 }

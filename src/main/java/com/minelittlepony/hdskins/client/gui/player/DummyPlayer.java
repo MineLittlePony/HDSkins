@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer.MrBoaty;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Pose;
@@ -82,7 +81,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public String getModel() {
-        return getTextures().usesThinSkin() ? VanillaModels.SLIM : VanillaModels.DEFAULT;
+        return getTextures().getSkinVariant();
     }
 
     @Override
@@ -112,7 +111,11 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     @Override
     public Identifier getSkinTexture() {
-        return getTextures().get(SkinType.SKIN).getId();
+        Identifier id = getTextures().get(SkinType.SKIN).getId();
+        //return getTextures().getPosture().getActiveSkinType() == SkinType.SKIN
+        //        ? id
+        //        : NativeImageFilters.REDUCE_ALPHA.load(id, id, getTextures().getPosture().getExclusion());
+        return id;
     }
 
     @Nullable

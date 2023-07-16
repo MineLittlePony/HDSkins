@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.client.gui.player.skins;
 import java.util.*;
 import java.util.function.*;
 
-import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.resources.DynamicTextures;
 import com.minelittlepony.hdskins.client.resources.Texture;
 import com.minelittlepony.hdskins.client.resources.TextureLoader;
@@ -48,10 +47,9 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
                     String model = skin.getModel();
                     String uri = skin.getUri();
                     String hash = String.valueOf(uri.hashCode());
-                    boolean slim = VanillaModels.isSlim(model);
 
                     Identifier id = new Identifier("hdskins", String.format("dynamic/%s/%s", type.getId().getPath(), hash));
-                    Supplier<Identifier> blank = () -> posture.getDefaultSkin(t, slim);
+                    Supplier<Identifier> blank = () -> getPosture().getDefaultSkin(t, model);
 
                     return new Skin(blank, Optional.of(TextureLoader.loadTexture(id, Texture.UriTexture.create(id, DynamicTextures.createTempFile(hash), uri, type, model, blank.get(), null))), skin.isActive());
                 }).toList();
@@ -68,12 +66,11 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
     }
 
     @Override
-    public boolean usesThinSkin() {
+    public String getSkinVariant() {
         return textureManager
                 .flatMap(manager -> manager.getTextureMetadata(SkinType.SKIN))
                 .map(metadata -> metadata.getMetadata("model"))
-                .map(VanillaModels::isSlim)
-                .orElseGet(() -> VanillaModels.isSlim(DefaultSkinHelper.getModel(posture.getProfile().getId())));
+                .orElseGet(() -> DefaultSkinHelper.getModel(getPosture().getProfile().getId()));
     }
 
     @Override

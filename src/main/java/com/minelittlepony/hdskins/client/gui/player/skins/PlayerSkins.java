@@ -1,10 +1,14 @@
 package com.minelittlepony.hdskins.client.gui.player.skins;
 
+import com.minelittlepony.common.client.gui.sprite.ISprite;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.VanillaSkins;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
+import com.minelittlepony.hdskins.client.resources.TextureLoader;
+import com.minelittlepony.hdskins.client.resources.TextureLoader.Exclusion;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -53,7 +57,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     private Set<Identifier> providedSkinTypes;
     private long setAt;
 
-    protected final Posture posture;
+    private final Posture posture;
 
     protected PlayerSkins(Posture posture) {
         this.posture = posture;
@@ -65,12 +69,12 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         return posture;
     }
 
-    public boolean usesThinSkin() {
-        return false;
+    public String getSkinVariant() {
+        return VanillaModels.DEFAULT;
     }
 
     public T get(SkinType type) {
-        return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, usesThinSkin())));
+        return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, getSkinVariant())));
     }
 
     public boolean hasAny() {
@@ -126,13 +130,23 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
             }
 
             @Override
-            public Identifier getDefaultSkin(SkinType type, boolean slim) {
-                return VanillaSkins.getDefaultTexture(type, slim);
+            public Optional<SkinVariant> getSkinVariant() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Identifier getDefaultSkin(SkinType type, String variant) {
+                return VanillaSkins.getDefaultTexture(type, variant);
             }
 
             @Override
             public EquipmentSet getEquipment() {
                 return HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
+            }
+
+            @Override
+            public Exclusion getExclusion() {
+                return TextureLoader.Exclusion.NULL;
             }
         };
 
@@ -144,7 +158,26 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
         SkinType getActiveSkinType();
 
-        Identifier getDefaultSkin(SkinType type, boolean slim);
+        Optional<SkinVariant> getSkinVariant();
+
+        Identifier getDefaultSkin(SkinType type, String variant);
+
+        TextureLoader.Exclusion getExclusion();
+
+        public record SkinVariant (Text tooltip, ISprite icon, String name) {
+            public static final Set<SkinVariant> VALUES = new HashSet<>();
+            public static final SkinVariant DEFAULT = new SkinVariant(new Identifier("hdskins", VanillaModels.DEFAULT));
+            public static final SkinVariant SLIM = new SkinVariant(new Identifier("hdskins", VanillaModels.SLIM));
+
+            public SkinVariant(Identifier id) {
+                this(
+                        Text.translatable("hdskins.arm_style", Text.translatable(id.getNamespace() + ".arm_style." + id.getPath())),
+                        GuiSkins.createIcon(32, 16 * VALUES.size()),
+                        id.getPath()
+                );
+                VALUES.add(this);
+            }
+        }
 
         public enum Pose {
             STAND(EntityPose.STANDING),

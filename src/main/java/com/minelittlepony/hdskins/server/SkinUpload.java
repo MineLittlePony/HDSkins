@@ -46,13 +46,13 @@ public sealed interface SkinUpload permits SkinUpload.FileUpload, SkinUpload.Uri
 
     static SkinUpload create(@Nullable URI skin, SkinType type, Map<String, String> metadata, Session session) {
         if (skin == null) {
-            return new SkinUpload.Delete(session, type);
+            return new Delete(session, type);
         }
         if ("file".equals(skin.getScheme())) {
-            return new SkinUpload.FileUpload(session, type, Paths.get(skin), metadata);
+            return new FileUpload(session, type, Paths.get(skin), metadata);
         }
         if (Set.of("http", "https").contains(skin.getScheme())) {
-            return new SkinUpload.UriUpload(session, type, skin, metadata);
+            return new UriUpload(session, type, skin, metadata);
         }
         throw new IllegalArgumentException("URI scheme not supported for skin upload: " + skin.getScheme());
     }

@@ -1,4 +1,4 @@
-package com.minelittlepony.hdskins.client;
+package com.minelittlepony.hdskins.client.gui;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -7,7 +7,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.minelittlepony.hdskins.client.gui.DualPreview;
+import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinCallback;
@@ -17,6 +18,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 
+/**
+ * Uploader contains form data and server communication logic.
+ */
 public class SkinUploader implements Closeable {
     public static final Text STATUS_OK = ScreenTexts.EMPTY;
     public static final Text STATUS_NO_SERVER = Text.translatable("hdskins.error.noserver");
@@ -38,7 +42,7 @@ public class SkinUploader implements Closeable {
     private int reloadCounter = 0;
     private int retries = 1;
 
-    private final DualPreview previewer;
+    private final DualCarouselWidget previewer;
 
     private final Iterator<Gateway> gateways;
     private Optional<Gateway> gateway;
@@ -46,7 +50,7 @@ public class SkinUploader implements Closeable {
     private SkinCallback uploadListener = SkinCallback.NOOP;
     private Consumer<SkinType> skinTypeChangedListener = t -> {};
 
-    public SkinUploader(Iterator<Gateway> gateways, DualPreview previewer) {
+    public SkinUploader(Iterator<Gateway> gateways, DualCarouselWidget previewer) {
         this.previewer = previewer;
         this.gateways = gateways;
         skinMetadata.put("model", VanillaModels.DEFAULT);
@@ -193,7 +197,11 @@ public class SkinUploader implements Closeable {
         return gateway
                 .map(g -> g.uploadSkin(payload, this::setBannerMessage))
                 .map(future -> future.thenRunAsync(this::scheduleReload, MinecraftClient.getInstance()))
-                .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway"))).whenComplete((o, t) -> {
+                    if (t != null) {
+                        HDSkins.LOGGER.fatal("Exception caught whilst uploading skin", t);
+                    }
+                });
     }
 
     public void scheduleReload() {

@@ -75,6 +75,13 @@ public class TextureLoader {
 
     @Nullable
     private Optional<NativeImage> getImage(Identifier res) {
+
+        AbstractTexture tex = CLIENT.getTextureManager().getOrDefault(res, (AbstractTexture)null);
+
+        if (tex instanceof NativeImageBackedTexture nat) {
+            return Optional.ofNullable(nat.getImage());
+        }
+
         return CLIENT.getResourceManager().getResource(res).map(resource -> {
             try (InputStream in = resource.getInputStream()) {
                 return NativeImage.read(in);

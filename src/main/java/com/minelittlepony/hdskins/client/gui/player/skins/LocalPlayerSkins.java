@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
 
+import com.minelittlepony.hdskins.client.VanillaModels;
+import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.SkinVariant;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
 import com.minelittlepony.hdskins.client.resources.Texture;
 import com.minelittlepony.hdskins.client.resources.TextureLoader;
@@ -19,8 +21,6 @@ import net.minecraft.util.Identifier;
 
 public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture> {
 
-    private boolean previewThinArms = false;
-
     public LocalPlayerSkins(Posture posture) {
         super(posture);
     }
@@ -30,14 +30,9 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
         return new LocalTexture(type, blank);
     }
 
-    public final void setPreviewThinArms(boolean thinArms) {
-        previewThinArms = thinArms;
-        close();
-    }
-
     @Override
-    public boolean usesThinSkin() {
-        return previewThinArms;
+    public String getSkinVariant() {
+        return getPosture().getSkinVariant().map(SkinVariant::name).orElse(VanillaModels.DEFAULT);
     }
 
     @Override
@@ -54,7 +49,7 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
 
         public LocalTexture(SkinType type, Supplier<Identifier> blank) {
             this.type = type;
-            id = new Identifier("hdskins", "generated_preview/" + posture.getProfile().getId().toString() + "/" + type.getPathName());
+            id = new Identifier("hdskins", "generated_preview/" + getPosture().getProfile().getId().toString() + "/" + type.getPathName());
             defaultTexture = blank;
         }
 
