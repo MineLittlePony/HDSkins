@@ -32,7 +32,7 @@ import net.minecraft.util.math.RotationAxis;
 /**
  * Displays a list of previous skins the user has had in the past.
  */
-public class SkinListWidget {
+public class SkinListWidget implements Carousel.Element {
 
     private final DualCarouselWidget previewer;
 
@@ -93,6 +93,7 @@ public class SkinListWidget {
         scrollRight.setEnabled(hasContent && skins.size() >= pageSize && skins.size() > scrollPosition);
     }
 
+    @Override
     public void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY) {
 
         prevScrollPosition = scrollPosition;

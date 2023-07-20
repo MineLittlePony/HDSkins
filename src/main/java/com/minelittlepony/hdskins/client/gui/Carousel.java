@@ -1,11 +1,10 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
-import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
@@ -43,8 +42,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
 
     public final Bounds bounds = new Bounds(TOP, HOR_MARGIN, 0, 0);
 
-    private int horizon;
-    private float scale;
+    private final List<Element> elements = new ArrayList<>();
 
     public Carousel(Text title, T skins, BiFunction<ClientWorld, PlayerSkins<?>, DummyPlayer> playerFactory) {
         this.title = title;
@@ -56,6 +54,10 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
                 HDSkins.LOGGER.error("Error creating players", t);
             }
         }, MinecraftClient.getInstance());
+    }
+
+    public void addElement(Element element) {
+        elements.add(element);
     }
 
     public Optional<DummyPlayer> getEntity() {
@@ -74,23 +76,26 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         return false;
     }
 
-    public void init(GuiSkins screen) {
-        horizon = screen.height / 2 + screen.height / 5;
-        scale = screen.height / 4F;
-    }
-
-    public void render(int mouseX, int mouseY, int ticks, float partialTick, DrawContext context, @Nullable Consumer<DummyPlayer> postAction) {
+    public void render(int mouseX, int mouseY, int ticks, float partialTick, DrawContext context) {
         context.enableScissor(bounds.left, bounds.top, bounds.right(), bounds.bottom());
-        drawBackground(context, bounds.left, bounds.right(), bounds.bottom(), bounds.top, horizon);
+        int horizon = bounds.bottom() - 50;
+        drawBackground(context, horizon);
 
         entity.ifPresent(player -> {
             try {
                 DummyPlayerRenderer.wrap(() -> {
-                    renderPlayerModel(player, bounds.left + bounds.width / 2, bounds.top + bounds.height * 0.9F, scale, horizon - mouseY, mouseX, ticks, partialTick, context, context.getVertexConsumers());
+                    renderPlayerModel(player, context,
+                            bounds.left + bounds.width / 2,
+                            bounds.top + bounds.height * 0.9F,
+                            bounds.height / 3F,
+                            mouseX,
+                            bounds.top + bounds.height / 2 - mouseY,
+                            ticks + partialTick
+                    );
 
-                    if (postAction != null) {
-                        postAction.accept(player);
-                    }
+                    elements.forEach(element -> {
+                        element.render(player, context, mouseX, mouseY);
+                    });
                 });
             } catch (Exception e) {
                 HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
@@ -105,9 +110,9 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         context.getMatrices().pop();
     }
 
-    protected void drawBackground(DrawContext context, int frameLeft, int frameRight, int frameBottom, int frameTop, int horizon) {
-        context.fill(        frameLeft, frameTop, frameRight, frameBottom,                        0xA0000000);
-        context.fillGradient(frameLeft, horizon,  frameRight, frameBottom, 0x05FFFFFF, 0x40FFFFFF);
+    protected void drawBackground(DrawContext context, int horizon) {
+        bounds.draw(context, 0xA0000000);
+        context.fillGradient(bounds.left, horizon,  bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
     }
 
     /*
@@ -119,7 +124,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
      *     |
      *      mouseX
      */
-    protected void renderPlayerModel(DummyPlayer thePlayer, float xPosition, float yPosition, float scale, float mouseY, float mouseX, int ticks, float partialTick, DrawContext context, VertexConsumerProvider renderContext) {
+    protected void renderPlayerModel(DummyPlayer thePlayer, DrawContext context, float xPosition, float yPosition, float scale, float mouseX, float mouseY, float ticks) {
 
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
@@ -128,7 +133,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
             return;
         }
 
-        float rot = ((ticks + partialTick) * 2.5F) % 360;
+        float rot = (ticks * 2.5F) % 360;
         float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
         float lookX = (float)Math.atan((xPosition - mouseX) / 20) * -30;
 
@@ -228,5 +233,9 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
     @Override
     public void close() {
         skins.close();
+    }
+
+    public interface Element {
+        void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY);
     }
 }

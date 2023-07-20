@@ -6,6 +6,8 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.Consumer;
 
+import org.lwjgl.glfw.GLFW;
+
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.hdskins.client.*;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
@@ -30,6 +32,9 @@ import net.minecraft.text.Text;
 public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int LABEL_BACKGROUND = 0xB0000000;
 
+    private static final int PASSIVE_ROTATION_SPEED = 1;
+    private static final int MAX_MANUAL_ROTATION_SPEED = 20;
+
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getSession().getProfile();
 
@@ -46,10 +51,21 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     private EquipmentSet activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
 
-    public DualCarouselWidget() {
+    protected final Controls controls;
+
+    private float updateCounter = 72;
+    private float rotationSpeed;
+    private int prevRotationDirection;
+
+    private final GuiSkins screen;
+
+    public DualCarouselWidget(GuiSkins screen) {
+        this.screen = screen;
         local = new Carousel<>(Text.translatable("hdskins.local"), new LocalPlayerSkins(this), this::createEntity);
         remote = new Carousel<>(Text.translatable("hdskins.server"), new ServerPlayerSkins(this), this::createEntity);
         skinList = new SkinListWidget(this, remote.bounds);
+        controls = new Controls(this);
+        remote.addElement(skinList);
     }
 
     protected DummyPlayer createEntity(ClientWorld world, PlayerSkins<?> textures) {
@@ -117,6 +133,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getTexture(getProfile().getId(), variant) : skin, skin, getExclusion());
     }
 
+    @Override
     public TextureLoader.Exclusion getExclusion() {
         return TextureLoader.Exclusion.NULL;
     }
@@ -142,7 +159,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         getRemote().getEntity().ifPresent(action);
     }
 
-    public void init(GuiSkins screen) {
+    public void init() {
         local.bounds.left = Carousel.HOR_MARGIN;
         local.bounds.height = screen.height - 90;
         local.bounds.width = (screen.width / 2) - 70;
@@ -150,21 +167,39 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         remote.bounds.copy(local.bounds);
         remote.bounds.left = screen.width - Carousel.HOR_MARGIN - remote.bounds.width;
 
-        local.init(screen);
-        remote.init(screen);
         skinList.init(screen);
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, int ticks, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        DrawContext d = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
+    public void update() {
+        controls.update();
 
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        boolean left = client.options.leftKey.isPressed();
+        boolean right = client.options.rightKey.isPressed();
+
+        int rotationDirection = left ? -1 : right ? 1 : 0;
+
+        if (!(left && right) && !screen.isDragging()) {
+            if (rotationDirection == 0) {
+                rotationSpeed = (int)Math.max(PASSIVE_ROTATION_SPEED, rotationSpeed * 0.6F);
+                updateCounter += rotationSpeed;
+            } else {
+                if (prevRotationDirection != rotationDirection) {
+                    rotationSpeed = PASSIVE_ROTATION_SPEED;
+                }
+                rotationSpeed = Math.min(MAX_MANUAL_ROTATION_SPEED, rotationSpeed + PASSIVE_ROTATION_SPEED);
+                updateCounter -= rotationSpeed * rotationDirection;
+            }
+        }
+        prevRotationDirection = rotationDirection;
+    }
+
+    public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
         enableDepthTest();
 
-        local.render(mouseX, mouseY, ticks, partialTick, context, null);
-        remote.render(mouseX, mouseY, ticks, partialTick, context, remote -> {
-            skinList.render(remote, d, mouseX, mouseY);
-        });
+        local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
+        remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
 
         disableDepthTest();
 
@@ -202,9 +237,23 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     }
 
     public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
-        return skinList.mouseClicked(uploader, mouseX, mouseY, button)
-                || local.mouseClicked(width, height, mouseX, mouseY, button)
+        boolean listHit = skinList.mouseClicked(uploader, mouseX, mouseY, button);
+        boolean playerHit =
+                   local.mouseClicked(width, height, mouseX, mouseY, button)
                 || remote.mouseClicked(width, height, mouseX, mouseY, button);
+
+        if (playerHit && !listHit && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            screen.setDragging(true);
+        }
+
+        return listHit || playerHit;
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
+        if (screen.isDragging()) {
+            updateCounter += changeX;
+        }
+        return true;
     }
 
     @Override

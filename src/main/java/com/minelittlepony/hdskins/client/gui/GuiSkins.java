@@ -94,7 +94,6 @@ public class GuiSkins extends GameGui {
         super(HD_SKINS_TITLE, parent);
         client = MinecraftClient.getInstance();
         previewer = createPreviewer();
-        controls = new Controls(previewer);
         chooser = new SkinChooser(previewer);
         uploader = new SkinUploader(servers.getCycler(), previewer);
         banner = new StatusBanner(uploader);
@@ -109,7 +108,7 @@ public class GuiSkins extends GameGui {
     }
 
     protected DualCarouselWidget createPreviewer() {
-        return new DualCarouselWidget();
+        return new DualCarouselWidget(this);
     }
 
     protected Identifier getBackground() {
@@ -118,28 +117,15 @@ public class GuiSkins extends GameGui {
 
     @Override
     public void tick() {
-        controls.update();
+        previewer.update();
         chooser.update();
         uploader.update();
-
-        boolean left = client.options.leftKey.isPressed();
-        boolean right = client.options.rightKey.isPressed();
-
-        if (!(left && right)) {
-            if (left) {
-                updateCounter -= 5;
-            } else if (right) {
-                updateCounter += 5;
-            } else if (!isDragging()) {
-                updateCounter++;
-            }
-        }
     }
 
     @Override
     public void init() {
         dropper.subscribe();
-        previewer.init(this);
+        previewer.init();
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
 
@@ -307,12 +293,6 @@ public class GuiSkins extends GameGui {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        lastMouseX = mouseX;
-
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            setDragging(true);
-        }
-
         return canTakeEvents()
                 && !super.mouseClicked(mouseX, mouseY, button)
                 && previewer.mouseClicked(uploader, width, height, mouseX, mouseY, button);
@@ -320,28 +300,23 @@ public class GuiSkins extends GameGui {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
-        super.mouseDragged(mouseX, mouseY, button, changeX, changeY);
-
-        if (canTakeEvents()) {
-            updateCounter -= (lastMouseX - mouseX);
-            lastMouseX = mouseX;
-
-            return true;
-        }
-
-        lastMouseX = mouseX;
-
-        return false;
+        return canTakeEvents()
+                && previewer.mouseDragged(mouseX, mouseY, button, changeX, changeY)
+                && super.mouseDragged(mouseX, mouseY, button, changeX, changeY);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return keyCode != GLFW.GLFW_KEY_SPACE && super.keyPressed(keyCode, scanCode, modifiers);
+        return keyCode != GLFW.GLFW_KEY_SPACE
+                && super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean charTyped(char keyChar, int keyCode) {
-        return canTakeEvents() && !chooser.pickingInProgress() && !uploader.isBusy() && super.charTyped(keyChar, keyCode);
+        return canTakeEvents()
+                && !chooser.pickingInProgress()
+                && !uploader.isBusy()
+                && super.charTyped(keyChar, keyCode);
     }
 
     @Override
@@ -354,7 +329,7 @@ public class GuiSkins extends GameGui {
            renderBackground(context);
         }
 
-        previewer.render(context, mouseX, mouseY, updateCounter, tickDelta, chooser, uploader);
+        previewer.render(context, mouseX, mouseY, tickDelta, chooser, uploader);
         super.render(context, mouseX, mouseY, tickDelta);
         banner.render(context, tickDelta, width, height);
     }
