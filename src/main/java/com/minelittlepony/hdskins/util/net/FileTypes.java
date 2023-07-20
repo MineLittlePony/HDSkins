@@ -108,10 +108,6 @@ public interface FileTypes {
                 builder.append(new String(chunk, StandardCharsets.UTF_8));
             }
 
-            System.out.println("Request Body:");
-            System.out.println(builder.toString());
-
-
             BodyPublisher publisher = BodyPublishers.ofByteArrays(buffer);
             return new BodyPublisher() {
                 @Override
