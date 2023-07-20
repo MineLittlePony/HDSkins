@@ -123,19 +123,19 @@ public class SkinUploader implements Closeable {
     }
 
     private boolean isSkinOperationsBlocked() {
-        return !getFeatures().contains(Feature.UPLOAD_USER_SKIN) || !isOnline() || hasBannerMessage() || isBusy();
+        return !isOnline() || hasBannerMessage() || isBusy();
     }
 
     public boolean canUpload(SkinType type) {
-        return !isSkinOperationsBlocked() && previewer.getLocal().getSkins().get(type).isReady();
+        return getFeatures().contains(Feature.UPLOAD_USER_SKIN) && !isSkinOperationsBlocked() && previewer.getLocal().getSkins().get(type).isReady();
     }
 
     public boolean canClear(SkinType type) {
-        return !isSkinOperationsBlocked() && previewer.getRemote().getSkins().get(type).isReady();
+        return getFeatures().contains(Feature.DELETE_USER_SKIN) && !isSkinOperationsBlocked() && previewer.getRemote().getSkins().get(type).isReady();
     }
 
     public boolean canClearAny() {
-        return !isSkinOperationsBlocked() && previewer.getRemote().getSkins().hasAny();
+        return getFeatures().contains(Feature.DELETE_USER_SKIN) && !isSkinOperationsBlocked() && previewer.getRemote().getSkins().hasAny();
     }
 
     public boolean hasBannerMessage() {
