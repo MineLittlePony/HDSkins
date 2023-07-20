@@ -106,7 +106,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
 
         context.getMatrices().push();
         bounds.translate(context.getMatrices());
-        drawLabel(context, title, 5, 5, 0xffffff, 0);
+        drawLabel(context, title, 5, 5, 0xffffff, 900);
         context.getMatrices().pop();
     }
 
