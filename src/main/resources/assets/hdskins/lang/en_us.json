@@ -14,6 +14,7 @@
   "hdskins.error.noserver": "There was no valid skin server available",
   "hdskins.error.offline": "- Server Offline -",
   "hdskins.error.session": "Invalid session: Please try restarting Minecraft",
+  "hdskins.error.session.short": "Invalid session",
   "hdskins.status.busy": "Working...",
   "hdskins.open.title": "Choose skin",
   "hdskins.directory.up": "Parent Directory",

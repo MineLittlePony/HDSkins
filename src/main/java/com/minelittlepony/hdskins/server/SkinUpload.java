@@ -18,9 +18,32 @@ public sealed interface SkinUpload permits SkinUpload.FileUpload, SkinUpload.Uri
 
     SkinType type();
 
-    record Session (GameProfile profile, String accessToken, ValidateFunction validateFunction) {
+    record Session (GameProfile profile, String accessToken, Validator validator) {
         public void validate(String serverId) throws AuthenticationException {
-            validateFunction.accept(this, serverId);
+            validator.accept(this, serverId);
+        }
+
+        public boolean hasFailedValidation() {
+            return !validator.valid;
+        }
+
+        public static Validator validator(ValidateFunction function) {
+            return new Validator(function);
+        }
+
+        static final class Validator {
+            private boolean valid;
+            private final ValidateFunction function;
+
+            Validator(ValidateFunction function) {
+                this.function = function;
+            }
+
+            public void accept(Session session, String serverId) throws AuthenticationException {
+                valid = false;
+                function.accept(session, serverId);
+                valid = true;
+            }
         }
 
         public interface ValidateFunction {

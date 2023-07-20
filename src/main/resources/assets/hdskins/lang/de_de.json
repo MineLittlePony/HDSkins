@@ -14,6 +14,7 @@
   "hdskins.error.noserver": "Es sind keine gültigen Skinserver verfügbar!",
   "hdskins.error.offline": "- Server ist Offline -",
   "hdskins.error.session": "Ungültige Sitzung: Bitte starten Sie Minecraft neu.",
+  "hdskins.error.session.short": "Ungültige Sitzung",
   "hdskins.open.title": "Skin wählen",
   "hdskins.directory.up": "Überverzeichnis",
   "hdskins.directory.save": "Speichern",

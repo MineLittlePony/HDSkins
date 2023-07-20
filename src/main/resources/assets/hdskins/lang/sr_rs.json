@@ -14,6 +14,7 @@
   "hdskins.error.noserver": "Nema detektovanih i validnih skin servera",
   "hdskins.error.offline": "- Server je Oflajn -",
   "hdskins.error.session": "Invalidna Sesija [Ilegalni nalog detektovan]: Probaj da restartuješ Minecraft Launcher i da se uveriš da ne koristiš krakovane metode za pristup igrici. Ova opcija zahteva da igrač mora da kupi igricu i koristi onlajn nalog da bi funkcionisalo.",
+  "hdskins.error.session.short": "Invalidna Sesija",
   "hdskins.status.busy": "Radim...",
   "hdskins.open.title": "Odaberi skin",
   "hdskins.directory.up": "Za jedan direktorijum napred",

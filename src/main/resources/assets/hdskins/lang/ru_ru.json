@@ -14,6 +14,7 @@
   "hdskins.error.noserver": "Сервера скинов не обнаружены",
   "hdskins.error.offline": "- Сервер не в сети -",
   "hdskins.error.session": "Недействительная сессия: Перезапустите игру и лаунчер",
+  "hdskins.error.session.short": "Недействительная сессия",
   "hdskins.open.title": "Выберите скин",
   "hdskins.directory.up": "Вверх",
   "hdskins.directory.go": "->",

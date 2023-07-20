@@ -25,6 +25,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     public static final Text STATUS_OK = ScreenTexts.EMPTY;
     public static final Text STATUS_NO_SERVER = Text.translatable("hdskins.error.noserver");
     public static final Text STATUS_OFFLINE = Text.translatable("hdskins.error.offline");
+    public static final Text STATUS_SESSION = Text.translatable("hdskins.error.session.short");
     public static final Text ERR_SESSION = Text.translatable("hdskins.error.session");
 
     public static final Text STATUS_MOJANG = Text.translatable("hdskins.error.mojang");
@@ -47,18 +48,21 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     private final Iterator<Gateway> gateways;
     private Optional<Gateway> gateway;
 
-    private SkinCallback uploadListener = SkinCallback.NOOP;
+    private SkinCallback loadListener = SkinCallback.NOOP;
     private Consumer<SkinType> skinTypeChangedListener = t -> {};
 
-    public SkinUploader(Iterator<Gateway> gateways, DualCarouselWidget previewer) {
+    private final SkinUpload.Session session;
+
+    public SkinUploader(Iterator<Gateway> gateways, DualCarouselWidget previewer, SkinUpload.Session session) {
         this.previewer = previewer;
         this.gateways = gateways;
+        this.session = session;
         skinMetadata.put("model", VanillaModels.DEFAULT);
         cycleGateway();
     }
 
-    public void addSkinUploadedEventListener(SkinCallback listener) {
-        this.uploadListener = this.uploadListener.andThen(listener);
+    public void addSkinLoadedEventListener(SkinCallback listener) {
+        this.loadListener = this.loadListener.andThen(listener);
     }
 
     public void addSkinTypeChangedEventListener(Consumer<SkinType> listener) {
@@ -115,7 +119,8 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     }
 
     private boolean isOnline() {
-        return gateway.filter(Gateway::isOnline).isPresent() || getBannerMessage() == ERR_SESSION;
+        return gateway.filter(Gateway::isOnline).isPresent()
+                && getBannerMessage() != ERR_SESSION;
     }
 
     public boolean isBusy() {
@@ -172,6 +177,10 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
             return STATUS_OFFLINE;
         }
 
+        if (session.hasFailedValidation()) {
+            return STATUS_SESSION;
+        }
+
         return STATUS_OK;
     }
 
@@ -186,7 +195,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
 
     @Override
     public int getLabelColor(Text status) {
-        return isThrottled() ? RED : WHITE;
+        return isThrottled() || status == STATUS_SESSION || status == STATUS_OFFLINE ? RED : WHITE;
     }
 
     public void setMetadataField(String field, String value) {
@@ -230,7 +239,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
                 .fetchSkins(previewer.getProfile(), this::setBannerMessage)
                 .thenAcceptAsync(textures -> {
                     ServerPlayerSkins skins = previewer.getRemote().getSkins();
-                    skins.loadTextures(textures, uploadListener);
+                    skins.loadTextures(textures, loadListener);
                     gateway.getProfile(previewer.getProfile()).thenAccept(serverProfile -> {
                         skins.loadProfile(serverProfile);
                     });

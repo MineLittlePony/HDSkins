@@ -84,9 +84,10 @@ public class GuiSkins extends GameGui {
     private final SkinUpload.Session session = new SkinUpload.Session(
             MinecraftClient.getInstance().getSession().getProfile(),
             MinecraftClient.getInstance().getSession().getAccessToken(),
-            (session, serverId) -> {
+            SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
                 client.getSessionService().joinServer(session.profile(), session.accessToken(), serverId);
+            })
             }
     );
 
@@ -95,7 +96,7 @@ public class GuiSkins extends GameGui {
         client = MinecraftClient.getInstance();
         previewer = createPreviewer();
         chooser = new SkinChooser(previewer);
-        uploader = new SkinUploader(servers.getCycler(), previewer);
+        uploader = new SkinUploader(servers.getCycler(), previewer, session);
         banner = new StatusBanner(uploader);
         dropper = FileDrop.newDropEvent(paths -> paths.stream().findFirst().ifPresent(chooser::selectFile));
 
