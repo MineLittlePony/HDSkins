@@ -26,6 +26,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -70,6 +71,7 @@ public class GuiSkins extends GameGui {
         return () -> !isEnabled.getAsBoolean() ? disabledTooltip.getLines() : originalTooltip.getLines();
     }
 
+    @Nullable
     private Cycler btnSkinType;
 
     private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
@@ -88,7 +90,6 @@ public class GuiSkins extends GameGui {
                 // join the session server
                 client.getSessionService().joinServer(session.profile(), session.accessToken(), serverId);
             })
-            }
     );
 
     public GuiSkins(Screen parent, SkinServerList servers) {
@@ -103,8 +104,9 @@ public class GuiSkins extends GameGui {
         uploader.addSkinTypeChangedEventListener(type -> {
             playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
         });
-        uploader.addSkinUploadedEventListener((type, location, profileTexture) -> {
+        uploader.addSkinLoadedEventListener((type, location, profileTexture) -> {
             playSound(SoundEvents.ENTITY_VILLAGER_YES);
+            setupSkinToggler();
         });
     }
 
@@ -221,7 +223,6 @@ public class GuiSkins extends GameGui {
             .onClick(sender -> {
                 uploader.cycleGateway();
                 playSound(SoundEvents.ENTITY_VILLAGER_YES);
-                setupSkinToggler();
                 sender.getStyle().setTooltip(uploader.getGatewayText());
             })
             .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip(uploader.getGatewayText(), 0, 10))
@@ -267,10 +268,12 @@ public class GuiSkins extends GameGui {
     }
 
     private void setupSkinToggler() {
-        List<SkinType> types = uploader.getSupportedSkinTypes().toList();
-        btnSkinType
-            .setStyles(types.stream().map(SkinType::getStyle).toArray(Style[]::new))
-            .setValue(types.indexOf(previewer.getActiveSkinType()));
+        if (btnSkinType != null) {
+            List<SkinType> types = uploader.getSupportedSkinTypes().toList();
+            btnSkinType
+                .setStyles(types.stream().map(SkinType::getStyle).toArray(Style[]::new))
+                .setValue(types.indexOf(previewer.getActiveSkinType()));
+        }
     }
 
     @Override
