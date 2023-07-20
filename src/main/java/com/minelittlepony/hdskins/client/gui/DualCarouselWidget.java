@@ -21,7 +21,6 @@ import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.*;
 import net.minecraft.text.Text;
@@ -30,8 +29,6 @@ import net.minecraft.text.Text;
  * Handles the display of the dummy players in the GUI.
  */
 public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, ITextContext {
-    private static final int LABEL_BACKGROUND = 0xB0000000;
-
     private static final int PASSIVE_ROTATION_SPEED = 1;
     private static final int MAX_MANUAL_ROTATION_SPEED = 20;
 
@@ -197,43 +194,12 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
         enableDepthTest();
-
         local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
         remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
-
         disableDepthTest();
 
-        MatrixStack matrices = context.getMatrices();
-
-        if (chooser.hasStatus()) {
-            matrices.push();
-            local.bounds.translate(matrices);
-            matrices.translate(0, 0, 300);
-            context.fill(10, local.bounds.height / 2 - 12, local.bounds.width - 10, local.bounds.height / 2 + 12, LABEL_BACKGROUND);
-            drawCenteredLabel(context, chooser.getStatus(), local.bounds.width / 2, local.bounds.height / 2 - 4, 0xFFFFFF, 0);
-            matrices.pop();
-        }
-
-        if (uploader.hasStatus()) {
-            matrices.push();
-            remote.bounds.translate(matrices);
-            matrices.translate(0, 0, 300);
-
-            int lineHeight = uploader.isThrottled() ? 18 : 12;
-
-            context.fill(10, remote.bounds.height / 2 - lineHeight, remote.bounds.width - 10, remote.bounds.height / 2 + lineHeight, LABEL_BACKGROUND);
-
-            Text status = uploader.getStatus();
-
-            if (status == SkinUploader.STATUS_MOJANG) {
-                drawCenteredLabel(context, status, remote.bounds.width / 2, remote.bounds.height / 2 - 10, 0xff5555, 0);
-                drawCenteredLabel(context, Text.translatable(SkinUploader.ERR_MOJANG_WAIT, uploader.getRetries()), remote.bounds.width / 2, remote.bounds.height / 2 + 2, 0xff5555, 0);
-            } else {
-                drawCenteredLabel(context, status, remote.bounds.width / 2, remote.bounds.height / 2 - 4, status == SkinUploader.STATUS_OFFLINE ? 0xff5555 : 0xffffff, 0);
-            }
-
-            matrices.pop();
-        }
+        chooser.renderStatus(context, local.bounds);
+        uploader.renderStatus(context, remote.bounds);
     }
 
     public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {

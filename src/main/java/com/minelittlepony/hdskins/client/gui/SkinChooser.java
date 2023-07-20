@@ -31,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
  * Provides functionality for loading and saving skin files into the previewer,
  * as well as input validation.
  */
-public class SkinChooser {
+public class SkinChooser implements CarouselStatusLabel {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final int MAX_SKIN_DIMENSION = 1024;
@@ -105,6 +105,16 @@ public class SkinChooser {
         return status;
     }
 
+    @Override
+    public List<Text> getStatusLines() {
+        return List.of(getStatus());
+    }
+
+    public int getStatusColor(Text status) {
+        return status == MSG_CHOOSE ? WHITE : RED;
+    }
+
+    @Override
     public boolean hasStatus() {
         return getStatus() != MSG_CHOOSE || !hasSelection();
     }

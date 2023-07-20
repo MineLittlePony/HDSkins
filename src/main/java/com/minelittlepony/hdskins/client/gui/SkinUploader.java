@@ -21,7 +21,7 @@ import net.minecraft.text.Text;
 /**
  * Uploader contains form data and server communication logic.
  */
-public class SkinUploader implements Closeable {
+public class SkinUploader implements Closeable, CarouselStatusLabel {
     public static final Text STATUS_OK = ScreenTexts.EMPTY;
     public static final Text STATUS_NO_SERVER = Text.translatable("hdskins.error.noserver");
     public static final Text STATUS_OFFLINE = Text.translatable("hdskins.error.offline");
@@ -150,11 +150,12 @@ public class SkinUploader implements Closeable {
         bannerMessage = er;
     }
 
+    @Override
     public boolean hasStatus() {
         return getStatus() != STATUS_OK;
     }
 
-    public Text getStatus() {
+    private Text getStatus() {
         if (isBusy()) {
             return STATUS_BUSY;
         }
@@ -172,6 +173,20 @@ public class SkinUploader implements Closeable {
         }
 
         return STATUS_OK;
+    }
+
+    @Override
+    public List<Text> getStatusLines() {
+        Text status = getStatus();
+        if (status == STATUS_MOJANG) {
+            return List.of(status, Text.translatable(ERR_MOJANG_WAIT, getRetries()));
+        }
+        return List.of(status);
+    }
+
+    @Override
+    public int getLabelColor(Text status) {
+        return isThrottled() ? RED : WHITE;
     }
 
     public void setMetadataField(String field, String value) {
