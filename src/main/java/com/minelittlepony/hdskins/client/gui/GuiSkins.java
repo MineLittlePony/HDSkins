@@ -311,6 +311,10 @@ public class GuiSkins extends GameGui {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (modifiers == (GLFW.GLFW_MOD_ALT | GLFW.GLFW_MOD_CONTROL) && keyCode == GLFW.GLFW_KEY_R) {
+            client.reloadResources();
+            return true;
+        }
         return keyCode != GLFW.GLFW_KEY_SPACE
                 && super.keyPressed(keyCode, scanCode, modifiers);
     }
