@@ -80,7 +80,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
                     ? Optional.of(previewer.getActiveSkinType())
                     : getSupportedSkinTypes().findFirst()
             ).orElse(SkinType.UNKNOWN));
-            pendingRefresh = true;
+            scheduleReload();
         } else {
             setBannerMessage(STATUS_NO_SERVER);
         }
@@ -236,7 +236,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
         pendingRefresh = false;
         gateway.ifPresent(gateway -> {
             gateway
-                .fetchSkins(previewer.getProfile(), this::setBannerMessage)
+                .fetchSkins(previewer.getProfile(), session, this::setBannerMessage)
                 .thenAcceptAsync(textures -> {
                     ServerPlayerSkins skins = previewer.getRemote().getSkins();
                     skins.loadTextures(textures, loadListener);

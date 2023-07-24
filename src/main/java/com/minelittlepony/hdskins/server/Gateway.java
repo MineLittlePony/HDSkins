@@ -14,6 +14,7 @@ import com.google.common.cache.*;
 import com.minelittlepony.hdskins.client.gui.SkinUploader;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer.SkinServerProfile;
+import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.*;
@@ -115,7 +116,15 @@ public class Gateway {
         });
     }
 
-    public CompletableFuture<TexturePayload> fetchSkins(GameProfile profile, Consumer<Text> errorCallback) {
+    public CompletableFuture<TexturePayload> fetchSkins(GameProfile profile, Session session, Consumer<Text> errorCallback) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                server.authorize(session);
+            } catch (Throwable e) {
+                handleException(e, t -> {});
+            }
+        });
+
         return CompletableFuture.supplyAsync(() -> {
             try {
                 setBusy(true);

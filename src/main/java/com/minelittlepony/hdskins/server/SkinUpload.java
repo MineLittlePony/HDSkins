@@ -32,7 +32,7 @@ public sealed interface SkinUpload permits SkinUpload.FileUpload, SkinUpload.Uri
         }
 
         static final class Validator {
-            private boolean valid;
+            private boolean valid = true;
             private final ValidateFunction function;
 
             Validator(ValidateFunction function) {

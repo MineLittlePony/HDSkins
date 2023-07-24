@@ -126,7 +126,7 @@ public class ValhallaSkinServer implements SkinServer {
         ));
     }
 
-    private void authorize(Session session) throws IOException, AuthenticationException {
+    public void authorize(Session session) throws IOException, AuthenticationException {
         if (accessToken != null) {
             return;
         }

@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.server;
 
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
@@ -24,6 +25,16 @@ public interface SkinServer {
      *  return false for the things you <i>don't</i> support.
      */
     boolean supportsSkinType(SkinType skinType);
+
+    /**
+     * Checks whether the current session is valid.
+     * @param session The current session
+     *
+     * @throws IOException
+     * @throws AuthenticationException
+     * @see MinecraftSessionService.joinServer
+     */
+    void authorize(Session session) throws IOException, AuthenticationException;
 
     /**
      * Loads texture information for the provided profile.

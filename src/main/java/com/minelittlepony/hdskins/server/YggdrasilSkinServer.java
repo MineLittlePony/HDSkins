@@ -124,7 +124,8 @@ public class YggdrasilSkinServer implements SkinServer {
         return result;
     }
 
-    private void authorize(Session session) throws IOException {
+    @Override
+    public void authorize(Session session) throws IOException {
         JsonObject json = new JsonObject();
         json.addProperty("accessToken", session.accessToken());
         execute(HttpRequest.newBuilder(URI.create(verify))
