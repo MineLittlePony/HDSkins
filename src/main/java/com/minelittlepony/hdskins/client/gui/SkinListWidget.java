@@ -152,15 +152,15 @@ public class SkinListWidget implements Carousel.Element {
                 if (skin.isReady()) {
                     player.setOverrideTextures(new PreviousServerPlayerSkins(skin));
 
-                    float limbD = player.limbAnimator.getSpeed();
+                    float limbD = player.limbDistance;
                     int y = frameWidth;
                     if (hovered && i == index) {
                         y -= 3;
-                        player.limbAnimator.setSpeed(1);
+                        player.limbDistance = 1;
                     }
 
                     renderPlayerModel(matrices, player, (i * frameWidth) + frameWidth / 2, y, 13);
-                    player.limbAnimator.setSpeed(limbD);
+                    player.limbDistance = limbD;
                 }
 
                 if (skin.active()) {

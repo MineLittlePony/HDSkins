@@ -14,19 +14,18 @@ import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
 
 public interface NativeImageFilters {
     NativeImageFilters GREYSCALE = create("default_player_skin", color -> {
-        int a = ColorHelper.Abgr.getAlpha(color);
-        float r = ColorHelper.Abgr.getRed(color) / 255F;
-        float g = ColorHelper.Abgr.getGreen(color) / 255F;
-        float b = ColorHelper.Abgr.getBlue(color) / 255F;
+        int a = NativeImage.getAlpha(color);
+        float r = NativeImage.getRed(color) / 255F;
+        float g = NativeImage.getGreen(color) / 255F;
+        float b = NativeImage.getBlue(color) / 255F;
         int brightness = (int)((0.2126F * r + 0.7152F * g + 0.0722F * b) * 255);
-        return ColorHelper.Abgr.getAbgr(a, brightness, brightness, brightness);
+        return NativeImage.packColor(a, brightness, brightness, brightness);
     });
     NativeImageFilters REDUCE_ALPHA = create("default_player_skin_half_alpha", color -> {
-        int a = Math.min(ColorHelper.Abgr.getAlpha(color), 0x30);
+        int a = Math.min(NativeImage.getAlpha(color), 0x30);
         return (color & 0x00FFFFFF) | (a << 24);
     });
 
