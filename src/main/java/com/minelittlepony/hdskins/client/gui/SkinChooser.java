@@ -73,7 +73,7 @@ public class SkinChooser implements CarouselStatusLabel {
     }
 
     private FileDialogs getFileDialogs() {
-        if ((FileSystemUtil.IS_SANDBOXED && !HDSkins.getInstance().getConfig().enableSandboxingCheck.get())
+        if ((FileSystemUtil.IS_SANDBOXED && HDSkins.getInstance().getConfig().enableSandboxingCheck.get())
             || HDSkins.getInstance().getConfig().useNativeFileChooser.get()) {
             return FileDialogs.NATIVE;
         }
