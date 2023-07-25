@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.client.gui;
 
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
+import com.minelittlepony.hdskins.client.gui.filesystem.FileSystemUtil;
 import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -72,10 +73,12 @@ public class SkinChooser implements CarouselStatusLabel {
     }
 
     private FileDialogs getFileDialogs() {
-        if (HDSkins.getInstance().getConfig().useNativeFileChooser.get()) {
+        if ((FileSystemUtil.IS_SANDBOXED && !HDSkins.getInstance().getConfig().enableSandboxingCheck.get())
+            || HDSkins.getInstance().getConfig().useNativeFileChooser.get()) {
             return FileDialogs.NATIVE;
         }
-        return FileDialogs.DEFAULT;
+
+        return FileDialogs.INTEGRATED;
     }
 
     public void addImageValidation(Function<NativeImage, Text> validator) {
