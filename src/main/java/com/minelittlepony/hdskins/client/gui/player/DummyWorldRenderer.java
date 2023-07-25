@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -20,6 +19,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.world.BlockView;
 
 final class DummyWorldRenderer extends WorldRenderer {
@@ -52,7 +52,7 @@ final class DummyWorldRenderer extends WorldRenderer {
         // noop
     }
     @Override
-    public void reloadTransparencyPostProcessor() {
+    public void reloadTransparencyShader() {
         // noop
     }
     @Override

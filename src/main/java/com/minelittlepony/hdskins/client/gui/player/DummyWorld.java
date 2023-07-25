@@ -14,10 +14,10 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.registry.*;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -75,14 +75,14 @@ public class DummyWorld extends ClientWorld {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
-                net.getRegistryManager().get(RegistryKeys.DIMENSION_TYPE).entryOf(DimensionTypes.OVERWORLD),
+                net.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).entryOf(DimensionTypes.OVERWORLD),
                 0,
                 0,
                 MinecraftClient.getInstance()::getProfiler,
                 worldRenderer,
                 true,
                 0);
-        chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(RegistryKeys.BIOME).entryOf(BiomeKeys.PLAINS));
+        chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(Registry.BIOME_KEY).entryOf(BiomeKeys.PLAINS));
     }
 
     @Override

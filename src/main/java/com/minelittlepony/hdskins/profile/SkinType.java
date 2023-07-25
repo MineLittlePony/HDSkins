@@ -19,7 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.minecraft.registry.Registry;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.text.Text;
 
 public class SkinType implements Comparable<SkinType> {
@@ -43,7 +43,7 @@ public class SkinType implements Comparable<SkinType> {
 
     protected SkinType(Identifier id, ItemStack iconStack) {
         this.id = id;
-        this.icon = getId().withPath(p -> "textures/gui/skin_type/" + p + ".png");
+        this.icon = new Identifier(getId().getNamespace(), "textures/gui/skin_type/" + getId().getPath() + ".png");
         this.iconStack = iconStack;
     }
 

@@ -182,7 +182,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         public enum Pose {
             STAND(EntityPose.STANDING),
             SLEEP(EntityPose.SLEEPING),
-            RIDE(EntityPose.SITTING),
+            RIDE(EntityPose.STANDING),
             SWIM(EntityPose.SWIMMING),
             RIPTIDE(EntityPose.SPIN_ATTACK);
 
