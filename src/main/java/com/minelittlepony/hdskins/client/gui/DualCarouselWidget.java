@@ -20,7 +20,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.*;
 import net.minecraft.text.Text;
@@ -192,14 +192,14 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         prevRotationDirection = rotationDirection;
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
         enableDepthTest();
-        local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
-        remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
+        local.render(mouseX, mouseY, (int)updateCounter, partialTick, matrices);
+        remote.render(mouseX, mouseY, (int)updateCounter, partialTick, matrices);
         disableDepthTest();
 
-        chooser.renderStatus(context, local.bounds);
-        uploader.renderStatus(context, remote.bounds);
+        chooser.renderStatus(matrices, local.bounds);
+        uploader.renderStatus(matrices, remote.bounds);
     }
 
     public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {

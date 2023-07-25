@@ -5,7 +5,7 @@ import java.util.List;
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
@@ -23,12 +23,11 @@ public interface CarouselStatusLabel extends ITextContext {
         return WHITE;
     }
 
-    default void renderStatus(DrawContext context, Bounds bounds) {
+    default void renderStatus(MatrixStack matrices, Bounds bounds) {
         if (!hasStatus()) {
             return;
         }
 
-        MatrixStack matrices = context.getMatrices();
         matrices.push();
         bounds.translate(matrices);
         matrices.translate(0, 0, 300);
@@ -46,14 +45,14 @@ public interface CarouselStatusLabel extends ITextContext {
         final int right = bounds.width - margin;
         final int bottom = top + blockHeight + margin + margin;
 
-        context.fill(left + border,  top + border,    right - border, bottom - border, LABEL_BACKGROUND);
-        context.fill(left + border,  top,             right - border, top + border, LABEL_BORDER);
-        context.fill(left + border,  bottom - border, right - border, bottom, LABEL_BORDER);
-        context.fill(left,           top + border,    left + border,  bottom - border, LABEL_BORDER);
-        context.fill(right - border, top + border,    right,          bottom - border, LABEL_BORDER);
+        DrawableHelper.fill(matrices, left + border,  top + border,    right - border, bottom - border, LABEL_BACKGROUND);
+        DrawableHelper.fill(matrices, left + border,  top,             right - border, top + border, LABEL_BORDER);
+        DrawableHelper.fill(matrices, left + border,  bottom - border, right - border, bottom, LABEL_BORDER);
+        DrawableHelper.fill(matrices, left,           top + border,    left + border,  bottom - border, LABEL_BORDER);
+        DrawableHelper.fill(matrices, right - border, top + border,    right,          bottom - border, LABEL_BORDER);
 
         for (Text line : lines) {
-            drawCenteredLabel(context, line, x, y, getLabelColor(line), 0);
+            drawCenteredLabel(matrices, line, x, y, getLabelColor(line), 0);
             y += lineHeight;
         }
 

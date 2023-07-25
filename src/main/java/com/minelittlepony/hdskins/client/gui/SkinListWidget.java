@@ -19,7 +19,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -94,7 +94,7 @@ public class SkinListWidget implements Carousel.Element {
     }
 
     @Override
-    public void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY) {
+    public void render(DummyPlayer player, MatrixStack matrices, int mouseX, int mouseY) {
 
         prevScrollPosition = scrollPosition;
         if (targetScrollPosition != scrollPosition) {
@@ -128,28 +128,26 @@ public class SkinListWidget implements Carousel.Element {
             player.setSneaking(false);
         }
 
-        MatrixStack matrices = context.getMatrices();
-
         matrices.push();
 
         bounds.translate(matrices);
         matrices.translate(getScrollOffset(), 0, 0);
 
-        context.fill(0, frameWidth, bounds.width, 0, 0xA0000000);
+        DrawableHelper.fill(matrices, 0, frameWidth, bounds.width, 0, 0xA0000000);
 
         int index = (int)(mouseX - (bounds.left + getScrollOffset())) / frameWidth;
 
         boolean hovered = bounds.contains(mouseX, mouseY);
 
         if (hovered && index < skins.size()) {
-            context.fill(index * frameWidth, 0, (index + 1) * frameWidth, frameWidth, 0xA0AAAAAA);
+            DrawableHelper.fill(matrices, index * frameWidth, 0, (index + 1) * frameWidth, frameWidth, 0xA0AAAAAA);
         }
 
         try {
             for (int i = 0; i < skins.size(); i++) {
                 Skin skin = skins.get(i);
 
-                context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), frameWidth, 0xA0000000);
+                DrawableHelper.fill(matrices, (i * frameWidth), 0, ((i + 1) * frameWidth), frameWidth, 0xA0000000);
 
                 if (skin.isReady()) {
                     player.setOverrideTextures(new PreviousServerPlayerSkins(skin));
@@ -166,10 +164,10 @@ public class SkinListWidget implements Carousel.Element {
                 }
 
                 if (skin.active()) {
-                    context.fill((i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, 0xFFFFFFFF);
-                    context.fill(((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, 0xFFFFFFFF);
-                    context.fill((i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, 0xFFFFFFFF);
-                    context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), 1, 0xFFFFFFFF);
+                    DrawableHelper.fill(matrices, (i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, 0xFFFFFFFF);
+                    DrawableHelper.fill(matrices, ((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, 0xFFFFFFFF);
+                    DrawableHelper.fill(matrices, (i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, 0xFFFFFFFF);
+                    DrawableHelper.fill(matrices, (i * frameWidth), 0, ((i + 1) * frameWidth), 1, 0xFFFFFFFF);
                 }
             }
         } finally {

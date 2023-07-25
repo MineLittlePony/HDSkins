@@ -8,6 +8,7 @@ import java.util.function.BiFunction;
 
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
+import com.minelittlepony.common.util.render.ClippingSpace;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer;
@@ -18,7 +19,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -29,7 +30,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
 
-public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> implements Closeable, ITextContext {
+public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> extends DrawableHelper implements Closeable, ITextContext {
     public static final int HOR_MARGIN = 30;
     private static final int TOP = 50;
 
@@ -76,43 +77,44 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         return false;
     }
 
-    public void render(int mouseX, int mouseY, int ticks, float partialTick, DrawContext context) {
-        context.enableScissor(bounds.left, bounds.top, bounds.right(), bounds.bottom());
-        int horizon = bounds.bottom() - 50;
-        drawBackground(context, horizon);
+    public void render(int mouseX, int mouseY, int ticks, float partialTick, MatrixStack matrices) {
 
-        entity.ifPresent(player -> {
-            try {
-                DummyPlayerRenderer.wrap(() -> {
-                    renderPlayerModel(player, context,
-                            bounds.left + bounds.width / 2,
-                            bounds.top + bounds.height * 0.9F,
-                            bounds.height / 3F,
-                            mouseX,
-                            bounds.top + bounds.height / 2 - mouseY,
-                            ticks + partialTick
-                    );
+        ClippingSpace.renderClipped(bounds.left, bounds.top, bounds.width, bounds.height, () -> {
+            int horizon = bounds.bottom() - 50;
+            drawBackground(matrices, horizon);
 
-                    elements.forEach(element -> {
-                        element.render(player, context, mouseX, mouseY);
+            entity.ifPresent(player -> {
+                try {
+                    DummyPlayerRenderer.wrap(() -> {
+                        renderPlayerModel(player, matrices,
+                                bounds.left + bounds.width / 2,
+                                bounds.top + bounds.height * 0.9F,
+                                bounds.height / 3F,
+                                mouseX,
+                                bounds.top + bounds.height / 2 - mouseY,
+                                ticks + partialTick
+                        );
+
+                        elements.forEach(element -> {
+                            element.render(player, matrices, mouseX, mouseY);
+                        });
                     });
-                });
-            } catch (Exception e) {
-                HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
-            }
+                } catch (Exception e) {
+                    HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
+                }
+            });
+            MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers().draw();
         });
-        context.draw();
-        context.disableScissor();
 
-        context.getMatrices().push();
-        bounds.translate(context.getMatrices());
-        drawLabel(context, title, 5, 5, 0xffffff, 900);
-        context.getMatrices().pop();
+        matrices.push();
+        bounds.translate(matrices);
+        drawLabel(matrices, title, 5, 5, 0xffffff, 900);
+        matrices.pop();
     }
 
-    protected void drawBackground(DrawContext context, int horizon) {
-        bounds.draw(context, 0xA0000000);
-        context.fillGradient(bounds.left, horizon,  bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
+    protected void drawBackground(MatrixStack matrices, int horizon) {
+        bounds.draw(matrices, 0xA0000000);
+        fillGradient(matrices, bounds.left, horizon,  bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
     }
 
     /*
@@ -124,7 +126,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
      *     |
      *      mouseX
      */
-    protected void renderPlayerModel(DummyPlayer thePlayer, DrawContext context, float xPosition, float yPosition, float scale, float mouseX, float mouseY, float ticks) {
+    protected void renderPlayerModel(DummyPlayer thePlayer, MatrixStack matrixStack, float xPosition, float yPosition, float scale, float mouseX, float mouseY, float ticks) {
 
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
@@ -146,7 +148,6 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         modelStack.scale(1, 1, -1);
         RenderSystem.applyModelViewMatrix();
 
-        MatrixStack matrixStack = context.getMatrices();
         matrixStack.push();
         matrixStack.translate(0, 0, 1000);
         matrixStack.scale(scale, scale, scale);
@@ -236,6 +237,6 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
     }
 
     public interface Element {
-        void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY);
+        void render(DummyPlayer player, MatrixStack matrices, int mouseX, int mouseY);
     }
 }

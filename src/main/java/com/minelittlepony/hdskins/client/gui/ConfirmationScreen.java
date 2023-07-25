@@ -8,8 +8,9 @@ import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.Tooltip;
 import com.minelittlepony.common.client.gui.element.Button;
 
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class ConfirmationScreen extends GameGui {
@@ -45,22 +46,22 @@ public class ConfirmationScreen extends GameGui {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
 
-        parent.render(context, -1, -1, partialTicks);
-        context.getMatrices().push();
-        context.getMatrices().translate(0, 0, 300);
+        parent.render(matrices, -1, -1, partialTicks);
+        matrices.push();
+        matrices.translate(0, 0, 300);
 
-        context.fill(0, 0, width, height, 0xC8000000);
+        DrawableHelper.fill(matrices, 0, 0, width, height, 0xC8000000);
 
         int left = width / 2;
         int top = height / 2 - (message.size() * getFont().fontHeight);
         for (Text line : message) {
-            drawCenteredLabel(context, line, left, top += getFont().fontHeight, 0xFFFFFFFF, 0);
+            drawCenteredLabel(matrices, line, left, top += getFont().fontHeight, 0xFFFFFFFF, 0);
         }
 
-        super.render(context, mouseX, mouseY, partialTicks);
-        context.getMatrices().pop();
+        super.render(matrices, mouseX, mouseY, partialTicks);
+        matrices.pop();
     }
 
     @Override

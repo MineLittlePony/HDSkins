@@ -22,6 +22,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -328,17 +329,17 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float tickDelta) {
         RenderSystem.disableCull();
 
         if (client.world == null) {
             panorama.render(tickDelta, 1);
         } else {
-           renderBackground(context);
+           renderBackground(matrices);
         }
 
-        previewer.render(context, mouseX, mouseY, tickDelta, chooser, uploader);
-        super.render(context, mouseX, mouseY, tickDelta);
-        banner.render(context, tickDelta, width, height);
+        previewer.render(matrices, mouseX, mouseY, tickDelta, chooser, uploader);
+        super.render(matrices, mouseX, mouseY, tickDelta);
+        banner.render(matrices, tickDelta, width, height);
     }
 }
