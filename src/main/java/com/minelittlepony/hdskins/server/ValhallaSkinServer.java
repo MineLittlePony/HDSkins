@@ -75,6 +75,13 @@ public class ValhallaSkinServer implements SkinServer {
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         try {
             uploadPlayerSkin(upload);
+        } catch (HttpException e) {
+            if (e.getStatusCode() != 401) {
+                throw e;
+            }
+
+            accessToken = null;
+            uploadPlayerSkin(upload);
         } catch (IOException e) {
             if (e.getMessage().equals("Authorization failed")) {
                 accessToken = null;

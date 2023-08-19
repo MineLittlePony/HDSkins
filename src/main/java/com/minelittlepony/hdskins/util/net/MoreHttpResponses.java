@@ -1,13 +1,10 @@
 package com.minelittlepony.hdskins.util.net;
 
 import com.google.common.io.CharStreams;
-import com.google.gson.JsonObject;
-import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +12,8 @@ import java.io.InputStreamReader;
 import java.net.http.*;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -59,20 +58,16 @@ public interface MoreHttpResponses {
     }
 
     default <T> T json(Class<T> type, String errorMessage) throws IOException {
+        var json = json(type);
+        return json.getKey().orElseThrow(() -> new HttpException(errorMessage + "\n" + json.getValue(), response().statusCode(), null));
+    }
 
-        if (!contentTypeMatches(FileTypes.APPLICATION_JSON)) {
-            String text = text();
-            HDSkins.LOGGER.error(errorMessage, text);
-            throw new HttpException(text, response().statusCode(), null);
-        }
-
+    default <T> Map.Entry<Optional<T>, String> json(Class<T> type) throws IOException {
         String text = text();
-
-        T t = GSON.fromJson(text, type);
-        if (t == null) {
-            throw new HttpException(errorMessage + "\n " + text, response().statusCode(), null);
+        if (contentTypeMatches(FileTypes.APPLICATION_JSON)) {
+            return Map.entry(Optional.ofNullable(GSON.fromJson(text, type)), text);
         }
-        return t;
+        return Map.entry(Optional.empty(), text);
     }
 
     default boolean ok() {
@@ -81,12 +76,7 @@ public interface MoreHttpResponses {
 
     default MoreHttpResponses requireOk() throws IOException {
         if (!ok()) {
-            JsonObject json = json(JsonObject.class, "Server did not respond correctly. Status Code " + response().statusCode());
-            if (json.has("message")) {
-                throw new HttpException(json.get("message").getAsString(), response().statusCode(), null);
-            } else {
-                throw new HttpException(json.toString(), response().statusCode(), null);
-            }
+            throw HttpException.of(this);
         }
         return this;
     }
