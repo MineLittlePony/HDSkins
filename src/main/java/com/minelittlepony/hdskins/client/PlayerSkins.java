@@ -1,86 +1,62 @@
 package com.minelittlepony.hdskins.client;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.base.Suppliers;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
-import com.minelittlepony.hdskins.mixin.client.MixinClientPlayer;
+import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.texture.PlayerSkinProvider;
+import net.minecraft.client.util.SkinTextures;
 import net.minecraft.util.Identifier;
 
 public class PlayerSkins {
     @Nullable
     public static PlayerSkins of(AbstractClientPlayerEntity player) {
-        ClientPlayerInfo info = ((ClientPlayerInfo)((MixinClientPlayer)player).getBackingClientData());
+        ClientPlayerInfo info = ClientPlayerInfo.of(player);
         if (info == null) {
             return null;
         }
         return info.getSkins();
     }
 
-    private final ClientPlayerInfo playerInfo;
+    private final Supplier<DynamicSkinTextures> skins;
+    private final Supplier<SkinTextures> combinedSkinTextures;
 
-    private final Set<Identifier> providedSkinTypes = new HashSet<>();
-
-    private final Map<SkinType, Identifier> customTextures = new HashMap<>();
-
-    private final Map<SkinType, MinecraftProfileTexture> customProfiles = new HashMap<>();
-
-    private final Map<SkinType, MinecraftProfileTexture> vanillaProfiles = new HashMap<>();
-
-    public PlayerSkins(ClientPlayerInfo playerInfo) {
-        this.playerInfo = playerInfo;
+    public PlayerSkins(GameProfile profile, Supplier<SkinTextures> vanillaSkins) {
+        this.skins = Suppliers.memoize(() -> {
+            return DynamicSkinTextures.union(
+                    HDSkins.getInstance().getResourceManager().getSkinTextures(profile),
+                    DynamicSkinTextures.union(
+                            HDSkins.getInstance().getProfileRepository().createLoader(profile).get(),
+                            DynamicSkinTextures.of(vanillaSkins)
+                    )
+            );
+        })::get;
+        this.combinedSkinTextures = Suppliers.memoizeWithExpiration(() -> skins.get().toSkinTextures(), 1, TimeUnit.SECONDS)::get;
     }
 
     public Set<Identifier> getProvidedSkinTypes() {
-        return providedSkinTypes;
+        return skins.get().getProvidedSkinTypes();
     }
 
     @Nullable
     public Identifier getSkin(SkinType type) {
-        return HDSkins.getInstance().getResourceManager()
-                .getCustomPlayerTexture(playerInfo.getGameProfile(), type)
-                .orElseGet(() -> Optional.ofNullable(customTextures.get(type))
-                .orElseGet(() -> type.getEnum().map(playerInfo.getVanillaTextures()::get)
-                .orElse(null)));
+        return skins.get().getSkin(type).orElse(null);
     }
 
     @Nullable
     public String getModel() {
-        return HDSkins.getInstance().getResourceManager()
-                .getCustomPlayerModel(playerInfo.getGameProfile())
-                .orElseGet(() -> getModelFrom(customProfiles)
-                .orElseGet(() -> getModelFrom(vanillaProfiles)
-                .orElse(null)));
+        return skins.get().getModel(VanillaModels.DEFAULT);
     }
 
-    public void load(PlayerSkinProvider provider, GameProfile profile, boolean requireSecure) {
-        HDSkins.getInstance().getProfileRepository().fetchSkins(profile, this::onCustomTextureLoaded);
-
-        provider.loadSkin(profile, this::onVanillaTextureLoaded, requireSecure);
-    }
-
-    private void onCustomTextureLoaded(SkinType type, Identifier location, MinecraftProfileTexture profileTexture) {
-        customTextures.put(type, location);
-        customProfiles.put(type, profileTexture);
-        providedSkinTypes.add(type.getId());
-    }
-
-    private void onVanillaTextureLoaded(Type type, Identifier location, MinecraftProfileTexture profileTexture) {
-        playerInfo.getVanillaTextures().put(type, location);
-        vanillaProfiles.put(SkinType.forVanilla(type), profileTexture);
-        providedSkinTypes.add(SkinType.forVanilla(type).getId());
-    }
-
-    private Optional<String> getModelFrom(Map<SkinType, MinecraftProfileTexture> texture) {
-        return Optional.ofNullable(texture.get(SkinType.SKIN))
-                .map(t -> VanillaModels.of(t.getMetadata("model")));
+    public SkinTextures getSkinTextures() {
+        return combinedSkinTextures.get();
     }
 }

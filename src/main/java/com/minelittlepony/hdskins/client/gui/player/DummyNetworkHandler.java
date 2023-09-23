@@ -8,44 +8,32 @@ import com.google.common.base.Suppliers;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientDynamicRegistryType;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.util.telemetry.TelemetrySender;
-import net.minecraft.client.util.telemetry.WorldSession;
+import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.session.telemetry.TelemetrySender;
+import net.minecraft.client.session.telemetry.WorldSession;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.registry.*;
 import net.minecraft.resource.*;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 
-class DummyNetworkHandler extends ClientPlayNetworkHandler {
-    public static final Supplier<DummyNetworkHandler> INSTANCE = Suppliers.memoize(() -> {
-        return new DummyNetworkHandler(new GameProfile(null, "dumdum"));
-    });
-
-    private CombinedDynamicRegistries<ClientDynamicRegistryType> combinedDynamicRegistries = ClientDynamicRegistryType.createCombinedDynamicRegistries();
-
-    private DummyNetworkHandler(GameProfile profile) {
-        super(MinecraftClient.getInstance(),
-                null,
-                new ClientConnection(NetworkSide.CLIENTBOUND),
-                null,
-                profile,
-                new WorldSession(TelemetrySender.NOOP, false, null, null)
-        );
-
-
-        LifecycledResourceManagerImpl manager = new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, List.of(new VanillaDataPackProvider().getResourcePack()));
-
-        combinedDynamicRegistries = combinedDynamicRegistries.with(ClientDynamicRegistryType.REMOTE,
-                RegistryLoader.load(manager, combinedDynamicRegistries.getCombinedRegistryManager(), Stream.concat(
+class DummyNetworkHandler {
+    public static final Supplier<ClientPlayNetworkHandler> INSTANCE = Suppliers.memoize(() -> {
+        return new ClientPlayNetworkHandler(MinecraftClient.getInstance(), new ClientConnection(NetworkSide.CLIENTBOUND), new ClientConnectionState(
+                new GameProfile(null, "dumdum"),
+                new WorldSession(TelemetrySender.NOOP, false, null, null),
+                RegistryLoader.load(new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, List.of()), ClientDynamicRegistryType.createCombinedDynamicRegistries().getCombinedRegistryManager(), Stream.concat(
                         RegistryLoader.DYNAMIC_REGISTRIES.stream(),
                         RegistryLoader.DIMENSION_REGISTRIES.stream()
-                ).toList())
-        );
-    }
-
-    @Override
-    public DynamicRegistryManager getRegistryManager() {
-        return combinedDynamicRegistries.getCombinedRegistryManager();
-    }
+                ).toList()),
+                FeatureSet.empty(),
+                (String)null,
+                (ServerInfo)null,
+                (Screen)null
+        ));
+    });
 }

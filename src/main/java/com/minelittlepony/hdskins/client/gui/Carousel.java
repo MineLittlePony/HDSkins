@@ -181,7 +181,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         double offset = thePlayer.getY();
 
         if (thePlayer.hasVehicle()) {
-            offset = thePlayer.getMountedHeightOffset() - thePlayer.getHeight();
+            offset = thePlayer.getRidingOffset(thePlayer.getVehicle()) - thePlayer.getHeight();
         }
 
         float x = 0;

@@ -33,7 +33,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     private static final int MAX_MANUAL_ROTATION_SPEED = 20;
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
-    protected final GameProfile profile = minecraft.getSession().getProfile();
+    protected final GameProfile profile = minecraft.getGameProfile();
 
     public final Carousel<LocalPlayerSkins> local;
     public final Carousel<ServerPlayerSkins> remote;
@@ -127,7 +127,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     @Override
     public Identifier getDefaultSkin(SkinType type, String variant) {
         Identifier skin = getBlankSkin(type, variant);
-        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getTexture(getProfile().getId(), variant) : skin, skin, getExclusion());
+        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getSkinTextures(getProfile().getId(), variant) : skin, skin, getExclusion());
     }
 
     @Override

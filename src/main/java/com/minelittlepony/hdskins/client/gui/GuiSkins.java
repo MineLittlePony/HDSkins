@@ -84,11 +84,11 @@ public class GuiSkins extends GameGui {
     private final FileDrop dropper;
 
     private final SkinUpload.Session session = new SkinUpload.Session(
-            MinecraftClient.getInstance().getSession().getProfile(),
+            MinecraftClient.getInstance().getGameProfile(),
             MinecraftClient.getInstance().getSession().getAccessToken(),
             SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
-                client.getSessionService().joinServer(session.profile(), session.accessToken(), serverId);
+                client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
             })
     );
 
@@ -334,7 +334,7 @@ public class GuiSkins extends GameGui {
         if (client.world == null) {
             panorama.render(tickDelta, 1);
         } else {
-           renderBackground(context);
+           renderBackground(context, mouseX, mouseY, tickDelta);
         }
 
         previewer.render(context, mouseX, mouseY, tickDelta, chooser, uploader);

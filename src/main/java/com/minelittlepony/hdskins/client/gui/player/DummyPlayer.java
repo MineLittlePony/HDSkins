@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.util.SkinTextures;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
@@ -15,7 +16,6 @@ import net.minecraft.entity.attribute.DefaultAttributeRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Arm;
-import net.minecraft.util.Identifier;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -47,7 +47,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     public DummyPlayer(ClientWorld world, PlayerSkins<?> textures) {
-        super(world, MinecraftClient.getInstance().getSession().getProfile());
+        super(world, MinecraftClient.getInstance().getGameProfile());
         refreshPositionAndAngles(0.5D, 0, 0.5D, 0, 0);
 
         this.textures = textures;
@@ -80,23 +80,8 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
-    public String getModel() {
-        return getTextures().getSkinVariant();
-    }
-
-    @Override
-    public boolean canRenderElytraTexture() {
-        return getTextures().getPosture().getActiveSkinType() == SkinType.ELYTRA;
-    }
-
-    @Override
-    public boolean canRenderCapeTexture() {
-        return getTextures().getPosture().getActiveSkinType() == SkinType.CAPE;
-    }
-
-    @Override
-    public boolean hasSkinTexture() {
-        return true;
+    public SkinTextures method_52814() {
+        return getTextures().getSkinTextureBundle();
     }
 
     @Override
@@ -107,32 +92,6 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     @Override
     public boolean isCreative() {
         return true;
-    }
-
-    @Override
-    public Identifier getSkinTexture() {
-        Identifier id = getTextures().get(SkinType.SKIN).getId();
-        //return getTextures().getPosture().getActiveSkinType() == SkinType.SKIN
-        //        ? id
-        //        : NativeImageFilters.REDUCE_ALPHA.load(id, id, getTextures().getPosture().getExclusion());
-        return id;
-    }
-
-    @Nullable
-    @Override
-    public Identifier getCapeTexture() {
-        return getTextures().getPosture().getActiveSkinType() == SkinType.CAPE ? getTextures().get(SkinType.CAPE).getId() : null;
-    }
-
-    @Nullable
-    @Override
-    public Identifier getElytraTexture() {
-        return getTextures().getPosture().getActiveSkinType() == SkinType.ELYTRA ? getTextures().get(SkinType.ELYTRA).getId() : null;
-    }
-
-    @Override
-    public double getHeightOffset() {
-        return -0.35D;
     }
 
     @Override

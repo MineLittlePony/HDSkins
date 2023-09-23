@@ -8,7 +8,7 @@ import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.util.UUIDTypeAdapter;
+import com.mojang.util.UndashedUuid;
 
 import java.io.IOException;
 import java.net.URI;
@@ -64,7 +64,7 @@ public class ValhallaSkinServer implements SkinServer {
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
         Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/user/%s", getApiPrefix(), UUIDTypeAdapter.fromUUID(profile.getId()))))
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/user/%s", getApiPrefix(), UndashedUuid.toString(profile.getId()))))
                     .GET()
                     .build())
                 .requireOk()
@@ -128,11 +128,12 @@ public class ValhallaSkinServer implements SkinServer {
 
     private URI buildUserTextureUri(SkinUpload upload) {
         return URI.create(String.format("%s/user/%s/%s", getApiPrefix(),
-                UUIDTypeAdapter.fromUUID(upload.session().profile().getId()),
+                UndashedUuid.toString(upload.session().profile().getId()),
                 upload.type().getParameterizedName()
         ));
     }
 
+    @Override
     public void authorize(Session session) throws IOException, AuthenticationException {
         if (accessToken != null) {
             return;

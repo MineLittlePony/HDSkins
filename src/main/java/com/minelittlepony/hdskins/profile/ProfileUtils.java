@@ -40,9 +40,9 @@ public class ProfileUtils {
                     readCustomBlob(profile, "hd_textures", MinecraftTexturesPayload.class),
                     readCustomBlob(profile, "textures", MinecraftTexturesPayload.class)
                 )
-                    .filter(blob -> blob.getProfileId() != null)
+                    .filter(blob -> blob.profileId() != null)
                     .findFirst()
-                    .map(blob -> new GameProfile(blob.getProfileId(), blob.getProfileName()))
+                    .map(blob -> new GameProfile(blob.profileId(), blob.profileName()))
                     .orElse(profile);
         } catch (Exception e) { // Something broke server-side probably
             HDSkins.LOGGER.warn("{} had a null UUID and was unable to recreate it from texture profile.", profile.getName(), e);
@@ -66,7 +66,7 @@ public class ProfileUtils {
 
     public static <T> Stream<T> readCustomBlob(GameProfile profile, String key, Class<T> type) {
         return profile.getProperties().get(key).stream().limit(1).map(textures -> {
-            String json = new String(Base64.getDecoder().decode(textures.getValue()), StandardCharsets.UTF_8);
+            String json = new String(Base64.getDecoder().decode(textures.value()), StandardCharsets.UTF_8);
 
             try {
                 return gson.fromJson(json, type);

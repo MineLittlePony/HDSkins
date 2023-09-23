@@ -14,6 +14,8 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.client.util.SkinTextures.Model;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -49,12 +51,19 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         protected boolean isProvided(SkinType type) {
             return false;
         }
+
+        @Override
+        public String getSkinVariant() {
+            return VanillaModels.DEFAULT;
+        }
     };
 
     protected final Map<SkinType, T> textures = new HashMap<>();
 
     @Nullable
     private Set<Identifier> providedSkinTypes;
+    @Nullable
+    private SkinTextures bundle;
     private long setAt;
 
     private final Posture posture;
@@ -69,9 +78,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         return posture;
     }
 
-    public String getSkinVariant() {
-        return VanillaModels.DEFAULT;
-    }
+    public abstract String getSkinVariant();
 
     public T get(SkinType type) {
         return textures.computeIfAbsent(type, t -> createTexture(t, () -> posture.getDefaultSkin(t, getSkinVariant())));
@@ -91,6 +98,20 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     }
 
     protected abstract boolean isProvided(SkinType type);
+
+    public SkinTextures getSkinTextureBundle() {
+        if (bundle == null) {
+            bundle = new SkinTextures(
+                    get(SkinType.SKIN).getId(),
+                    null,
+                    getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getId() : null,
+                    getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getId() : null,
+                    VanillaModels.isSlim(getSkinVariant()) ? Model.SLIM : Model.WIDE,
+                    false
+            );
+        }
+        return bundle;
+    }
 
     @Override
     public void close() {
@@ -116,7 +137,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         Posture NULL = new Posture() {
             @Override
             public GameProfile getProfile() {
-                return MinecraftClient.getInstance().getSession().getProfile();
+                return MinecraftClient.getInstance().getGameProfile();
             }
 
             @Override

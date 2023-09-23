@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -25,6 +26,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager.SkinData.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
@@ -108,6 +110,25 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
         } catch (IOException ignored) {}
 
         return Optional.empty();
+    }
+
+    public DynamicSkinTextures getSkinTextures(GameProfile profile) {
+        return new DynamicSkinTextures() {
+            @Override
+            public Set<Identifier> getProvidedSkinTypes() {
+                return Set.of();
+            }
+
+            @Override
+            public Optional<Identifier> getSkin(SkinType type) {
+                return getCustomPlayerTexture(profile, type);
+            }
+
+            @Override
+            public String getModel(String fallback) {
+                return getCustomPlayerModel(profile).orElse(fallback);
+            }
+        };
     }
 
     /**

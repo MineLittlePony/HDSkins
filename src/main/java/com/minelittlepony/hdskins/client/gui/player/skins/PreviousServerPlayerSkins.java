@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.client.gui.player.skins;
 
 import java.util.function.Supplier;
 
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -24,5 +25,10 @@ public class PreviousServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.Ski
     @Override
     protected boolean isProvided(SkinType type) {
         return getPosture().getActiveSkinType() == type;
+    }
+
+    @Override
+    public String getSkinVariant() {
+        return VanillaModels.DEFAULT;
     }
 }

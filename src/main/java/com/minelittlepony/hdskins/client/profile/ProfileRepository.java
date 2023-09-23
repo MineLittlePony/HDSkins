@@ -7,12 +7,19 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Suppliers;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinCacheClearCallback;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
 import com.minelittlepony.hdskins.client.resources.TextureLoader;
 import com.minelittlepony.hdskins.profile.SkinCallback;
@@ -31,6 +38,39 @@ public class ProfileRepository {
 
     public ProfileRepository(HDSkins hd) {
         this.cache = new ProfileCache(hd);
+    }
+
+    public Supplier<DynamicSkinTextures> createLoader(GameProfile profile) {
+        return Suppliers.memoize(() -> new DynamicSkinTextures() {
+            Optional<String> model = Optional.empty();
+            final Set<Identifier> providedSkinTypes = new HashSet<>();
+            final Map<SkinType, Optional<Identifier>> skins = new HashMap<>();
+
+            {
+                fetchSkins(profile, (type, location, profileTexture) -> {
+                    skins.put(type, Optional.of(location));
+                    providedSkinTypes.add(type.getId());
+                    if (type == SkinType.SKIN) {
+                        model = Optional.of(VanillaModels.of(profileTexture.getMetadata("model")));
+                    }
+                });
+            }
+
+            @Override
+            public Set<Identifier> getProvidedSkinTypes() {
+                return providedSkinTypes;
+            }
+
+            @Override
+            public Optional<Identifier> getSkin(SkinType type) {
+                return skins.getOrDefault(type, Optional.empty());
+            }
+
+            @Override
+            public String getModel(String fallback) {
+                return model.orElse(fallback);
+            }
+        })::get;
     }
 
     public void fetchSkins(GameProfile profile, SkinCallback callback) {

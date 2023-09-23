@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
-import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -18,8 +17,8 @@ import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecurePublicKeyException;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.yggdrasil.ProfileResult;
 
 import net.minecraft.client.MinecraftClient;
 
@@ -61,30 +60,25 @@ public class YggdrasilSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
-
-        Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
-
         MinecraftClient client = MinecraftClient.getInstance();
         MinecraftSessionService session = client.getSessionService();
 
-        profile.getProperties().clear();
-        GameProfile newProfile = session.fillProfileProperties(profile, requireSecure);
+        ProfileResult result = session.fetchProfile(profile.getId(), requireSecure);
 
-        if (newProfile == profile) {
+        if (result == null) {
             throw new AuthenticationException("Mojang API error occured. You may be throttled.");
         }
-        profile = newProfile;
 
         try {
-            textures.putAll(session.getTextures(profile, requireSecure));
-        } catch (InsecurePublicKeyException e) {
-            HDSkins.LOGGER.error(e);
-        }
+            profile = result.profile();
 
-        return new TexturePayload(profile, textures.entrySet().stream().collect(Collectors.toMap(
-                entry -> SkinType.forVanilla(entry.getKey()),
-                Map.Entry::getValue
-        )));
+            return new TexturePayload(profile, session.getTextures(profile, requireSecure).entrySet().stream().collect(Collectors.toMap(
+                    entry -> SkinType.forVanilla(entry.getKey()),
+                    Map.Entry::getValue
+            )));
+        } catch (InsecurePublicKeyException e) {
+            throw new AuthenticationException(e);
+        }
     }
 
     @Override
@@ -113,8 +107,9 @@ public class YggdrasilSkinServer implements SkinServer {
             throw new IllegalArgumentException("Unsupported SkinUpload type: " + upload.getClass());
         }
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        client.getSessionProperties().clear();
+        // TODO:
+        // MinecraftClient client = MinecraftClient.getInstance();
+        // client.getSessionProperties().clear();
     }
 
     private Map<String, String> mapMetadata(Map<String, String> metadata) {
