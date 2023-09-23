@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.server;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
@@ -63,7 +62,6 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
-        Preconditions.checkNotNull(profile.getId(), "profile id required for skins");
         return MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(String.format("%s/user/%s", getApiPrefix(), UndashedUuid.toString(profile.getId()))))
                     .GET()
                     .build())

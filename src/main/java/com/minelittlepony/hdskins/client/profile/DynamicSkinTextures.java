@@ -63,24 +63,24 @@ public interface DynamicSkinTextures {
         };
     }
 
-    static DynamicSkinTextures union(DynamicSkinTextures a, DynamicSkinTextures b) {
+    static DynamicSkinTextures union(Supplier<? extends DynamicSkinTextures> a, DynamicSkinTextures b) {
         return new DynamicSkinTextures() {
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
                 return Stream.concat(
-                        a.getProvidedSkinTypes().stream(),
+                        a.get().getProvidedSkinTypes().stream(),
                         b.getProvidedSkinTypes().stream()
                 ).distinct().collect(Collectors.toSet());
             }
 
             @Override
             public Optional<Identifier> getSkin(SkinType type) {
-                return Optional.ofNullable(a.getSkin(type, b));
+                return Optional.ofNullable(a.get().getSkin(type, b));
             }
 
             @Override
             public String getModel(String fallback) {
-                return a.getModel(b.getModel(fallback));
+                return a.get().getModel(b.getModel(fallback));
             }
         };
     }

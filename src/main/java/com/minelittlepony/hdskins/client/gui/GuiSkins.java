@@ -328,16 +328,18 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        RenderSystem.disableCull();
-
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float tickDelta) {
         if (client.world == null) {
             panorama.render(tickDelta, 1);
         } else {
-           renderBackground(context, mouseX, mouseY, tickDelta);
+            renderInGameBackground(context);
         }
-
         previewer.render(context, mouseX, mouseY, tickDelta, chooser, uploader);
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
+        RenderSystem.disableCull();
         super.render(context, mouseX, mouseY, tickDelta);
         banner.render(context, tickDelta, width, height);
     }

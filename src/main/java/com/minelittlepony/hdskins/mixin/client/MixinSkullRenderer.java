@@ -24,7 +24,7 @@ abstract class MixinSkullRenderer implements BlockEntityRenderer<SkullBlockEntit
             at = @At(value = "HEAD"))
     private static void onGetSkullTexture(SkullBlock.SkullType type, @Nullable GameProfile profile, CallbackInfoReturnable<RenderLayer> info) {
         if (type == SkullBlock.Type.PLAYER && profile != null) {
-            Identifier skin = HDSkins.getInstance().getProfileRepository().getTextures(profile).get(SkinType.SKIN);
+            Identifier skin = HDSkins.getInstance().getProfileRepository().getNow(profile).skins().get(SkinType.SKIN);
 
             if (skin != null) {
                 info.setReturnValue(RenderLayer.getEntityCutoutNoCullZOffset(skin));

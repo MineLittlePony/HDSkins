@@ -100,17 +100,14 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     protected abstract boolean isProvided(SkinType type);
 
     public SkinTextures getSkinTextureBundle() {
-        if (bundle == null) {
-            bundle = new SkinTextures(
-                    get(SkinType.SKIN).getId(),
-                    null,
-                    getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getId() : null,
-                    getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getId() : null,
-                    VanillaModels.isSlim(getSkinVariant()) ? Model.SLIM : Model.WIDE,
-                    false
-            );
-        }
-        return bundle;
+        return new SkinTextures(
+                get(SkinType.SKIN).getId(),
+                null,
+                getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getId() : null,
+                getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getId() : null,
+                VanillaModels.isSlim(getSkinVariant()) ? Model.SLIM : Model.WIDE,
+                false
+        );
     }
 
     @Override
@@ -118,6 +115,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         textures.values().forEach(PlayerSkin::close);
         textures.clear();
         providedSkinTypes = null;
+        bundle = null;
     }
 
     public interface PlayerSkin extends Closeable {

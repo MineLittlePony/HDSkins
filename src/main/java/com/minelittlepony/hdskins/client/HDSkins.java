@@ -4,7 +4,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
-import com.minelittlepony.hdskins.client.profile.ProfileRepository;
+import com.minelittlepony.hdskins.client.profile.SkinLoader;
 import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
@@ -38,7 +38,7 @@ public final class HDSkins implements ClientModInitializer {
     private final SkinServerList skinServerList = new SkinServerList();
     private final EquipmentList equipmentList = new EquipmentList();
     private final SkinResourceManager resources = new SkinResourceManager();
-    private final ProfileRepository repository = new ProfileRepository(this);
+    private final SkinLoader repository = new SkinLoader();
 
     public HDSkins() {
         instance = this;
@@ -74,7 +74,7 @@ public final class HDSkins implements ClientModInitializer {
         return resources;
     }
 
-    public ProfileRepository getProfileRepository() {
+    public SkinLoader getProfileRepository() {
         return repository;
     }
 

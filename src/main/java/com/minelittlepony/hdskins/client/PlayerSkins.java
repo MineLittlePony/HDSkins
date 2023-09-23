@@ -34,7 +34,7 @@ public class PlayerSkins {
             return DynamicSkinTextures.union(
                     HDSkins.getInstance().getResourceManager().getSkinTextures(profile),
                     DynamicSkinTextures.union(
-                            HDSkins.getInstance().getProfileRepository().createLoader(profile).get(),
+                            HDSkins.getInstance().getProfileRepository().get(profile),
                             DynamicSkinTextures.of(vanillaSkins)
                     )
             );

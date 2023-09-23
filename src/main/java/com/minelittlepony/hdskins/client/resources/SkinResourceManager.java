@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -112,8 +114,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
         return Optional.empty();
     }
 
-    public DynamicSkinTextures getSkinTextures(GameProfile profile) {
-        return new DynamicSkinTextures() {
+    public Supplier<DynamicSkinTextures> getSkinTextures(GameProfile profile) {
+        return Suppliers.memoize(() -> new DynamicSkinTextures() {
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
                 return Set.of();
@@ -128,7 +130,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             public String getModel(String fallback) {
                 return getCustomPlayerModel(profile).orElse(fallback);
             }
-        };
+        })::get;
     }
 
     /**

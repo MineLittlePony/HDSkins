@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
@@ -152,6 +153,12 @@ public class SkinType implements Comparable<SkinType> {
 
     public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
         return VANILLA.computeIfAbsent(vanilla, v -> new VanillaType(vanilla, iconStack));
+    }
+
+    public static <T> Map<SkinType, T> convertMap(Map<MinecraftProfileTexture.Type, T> textures) {
+        return textures.entrySet()
+                .stream()
+                .collect(Collectors.toMap(e -> forVanilla(e.getKey()), Map.Entry::getValue));
     }
 
     private static final class VanillaType extends SkinType {

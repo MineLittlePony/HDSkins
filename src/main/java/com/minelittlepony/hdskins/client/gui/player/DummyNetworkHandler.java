@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.client.gui.player;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -23,13 +24,16 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 
 class DummyNetworkHandler {
     public static final Supplier<ClientPlayNetworkHandler> INSTANCE = Suppliers.memoize(() -> {
+        var registries = ClientDynamicRegistryType.createCombinedDynamicRegistries();
         return new ClientPlayNetworkHandler(MinecraftClient.getInstance(), new ClientConnection(NetworkSide.CLIENTBOUND), new ClientConnectionState(
-                new GameProfile(null, "dumdum"),
+                new GameProfile(UUID.randomUUID(), "dumdum"),
                 new WorldSession(TelemetrySender.NOOP, false, null, null),
-                RegistryLoader.load(new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, List.of()), ClientDynamicRegistryType.createCombinedDynamicRegistries().getCombinedRegistryManager(), Stream.concat(
-                        RegistryLoader.DYNAMIC_REGISTRIES.stream(),
-                        RegistryLoader.DIMENSION_REGISTRIES.stream()
-                ).toList()),
+                registries.with(ClientDynamicRegistryType.REMOTE, RegistryLoader.load(new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, List.of(
+                        VanillaDataPackProvider.createDefaultPack()
+                )), registries.getCombinedRegistryManager(), Stream.concat(
+                    RegistryLoader.DYNAMIC_REGISTRIES.stream(),
+                    RegistryLoader.DIMENSION_REGISTRIES.stream()
+                ).toList())).getCombinedRegistryManager(),
                 FeatureSet.empty(),
                 (String)null,
                 (ServerInfo)null,
