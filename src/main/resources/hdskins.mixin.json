@@ -6,7 +6,6 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [],
   "client": [
-    "client.MixinClientPlayer",
     "client.MixinPlayerListEntry",
     "client.MixinPlayerSkinTexture",
     "client.MixinSkullBlockEntity",

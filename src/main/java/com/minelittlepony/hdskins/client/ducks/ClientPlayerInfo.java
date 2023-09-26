@@ -1,9 +1,11 @@
 package com.minelittlepony.hdskins.client.ducks;
 
-import com.minelittlepony.hdskins.client.PlayerSkins;
-import com.minelittlepony.hdskins.mixin.client.MixinClientPlayer;
+import java.util.Optional;
 
+import com.minelittlepony.hdskins.client.PlayerSkins;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 
 public interface ClientPlayerInfo {
     /**
@@ -11,7 +13,8 @@ public interface ClientPlayerInfo {
      */
     PlayerSkins getSkins();
 
-    static ClientPlayerInfo of(AbstractClientPlayerEntity player) {
-        return (ClientPlayerInfo)((MixinClientPlayer)player).getBackingClientData();
+    static Optional<ClientPlayerInfo> of(AbstractClientPlayerEntity player) {
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        return networkHandler == null ? Optional.empty() : Optional.ofNullable((ClientPlayerInfo)networkHandler.getPlayerListEntry(player.getUuid()));
     }
 }

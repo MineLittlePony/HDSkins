@@ -40,7 +40,7 @@ public final class HDSkins implements ClientModInitializer {
     private final SkinResourceManager resources = new SkinResourceManager();
     private final SkinLoader repository = new SkinLoader();
 
-    private final PrioritySorter<PlayerSkins, PlayerSkins.Layer> skinPrioritySorter = new PrioritySorter<>();
+    private final PrioritySorter skinPrioritySorter = new PrioritySorter();
 
     public HDSkins() {
         instance = this;
@@ -88,7 +88,7 @@ public final class HDSkins implements ClientModInitializer {
         return equipmentList;
     }
 
-    public PrioritySorter<PlayerSkins, PlayerSkins.Layer> getSkinPrioritySorter() {
+    public PrioritySorter getSkinPrioritySorter() {
         return skinPrioritySorter;
     }
 }

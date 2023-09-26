@@ -4,8 +4,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.google.common.base.Suppliers;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
@@ -21,13 +19,8 @@ public record PlayerSkins (
         Layer hd,
         Layer combined
 ) {
-    @Nullable
-    public static PlayerSkins of(AbstractClientPlayerEntity player) {
-        ClientPlayerInfo info = ClientPlayerInfo.of(player);
-        if (info == null) {
-            return null;
-        }
-        return info.getSkins();
+    public static Optional<PlayerSkins> of(AbstractClientPlayerEntity player) {
+        return ClientPlayerInfo.of(player).map(ClientPlayerInfo::getSkins);
     }
 
     public static PlayerSkins of(GameProfile profile, Supplier<SkinTextures> vanillaSkins) {
