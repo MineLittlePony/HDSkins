@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.mojang.authlib.GameProfile;
@@ -34,6 +35,6 @@ abstract class MixinPlayerListEntry implements ClientPlayerInfo {
 
     @Inject(method = "getSkinTextures", at = @At("HEAD"), cancellable = true)
     private void onGetSkinTextures(CallbackInfoReturnable<SkinTextures> info) {
-        info.setReturnValue(getSkins().combined().getSkinTextures());
+        info.setReturnValue(HDSkins.getInstance().getSkinPrioritySorter().selectBest(getSkins(), getSkins().combined()).getSkinTextures());
     }
 }
