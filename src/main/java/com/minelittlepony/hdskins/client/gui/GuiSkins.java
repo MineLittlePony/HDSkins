@@ -181,7 +181,7 @@ public class GuiSkins extends GameGui {
                             .setIcon(equipment.getStack())
                             .setTooltip(equipment.getTooltip(), 0, 10))
                         .toArray(Style[]::new))
-                .setValue(equipments.indexOf(previewer.getEquipment()))
+                .setValue(Math.max(0, equipments.indexOf(previewer.getEquipment())))
                 .onChange(i -> {
                     previewer.setEquipment(equipments.get(i % equipments.size()));
                     GameGui.playSound(previewer.getEquipment().getSound());
@@ -197,7 +197,7 @@ public class GuiSkins extends GameGui {
                             .setTooltip(createFeatureTooltip(Tooltip.of(variant.tooltip()), () -> uploader.getFeatures().contains(Feature.MODEL_VARIANTS)))
                             .setTooltipOffset(0, 10))
                     .toArray(Style[]::new))
-            .setValue(previewer.getSkinVariant().map(variants::indexOf).orElse(0))
+            .setValue(Math.max(0, previewer.getSkinVariant().map(variants::indexOf).orElse(0)))
             .onChange(i -> {
                 playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
                 SkinVariant variant = variants.get(i % variants.size());
@@ -272,7 +272,7 @@ public class GuiSkins extends GameGui {
             List<SkinType> types = uploader.getSupportedSkinTypes().toList();
             btnSkinType
                 .setStyles(types.stream().map(SkinType::getStyle).toArray(Style[]::new))
-                .setValue(types.indexOf(previewer.getActiveSkinType()));
+                .setValue(Math.max(0, types.indexOf(previewer.getActiveSkinType())));
         }
     }
 
