@@ -16,7 +16,11 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.util.Identifier;
 
-public class PlayerSkins {
+public record PlayerSkins (
+        Layer vanilla,
+        Layer hd,
+        Layer combined
+) {
     @Nullable
     public static PlayerSkins of(AbstractClientPlayerEntity player) {
         ClientPlayerInfo info = ClientPlayerInfo.of(player);
@@ -26,37 +30,35 @@ public class PlayerSkins {
         return info.getSkins();
     }
 
-    private final Supplier<DynamicSkinTextures> skins;
-    private final Supplier<SkinTextures> combinedSkinTextures;
-
-    public PlayerSkins(GameProfile profile, Supplier<SkinTextures> vanillaSkins) {
-        this.skins = Suppliers.memoize(() -> {
-            return DynamicSkinTextures.union(
-                    HDSkins.getInstance().getResourceManager().getSkinTextures(profile),
-                    DynamicSkinTextures.union(
-                            HDSkins.getInstance().getProfileRepository().get(profile),
-                            DynamicSkinTextures.of(vanillaSkins)
-                    )
-            );
-        })::get;
-        this.combinedSkinTextures = Suppliers.memoizeWithExpiration(() -> skins.get().toSkinTextures(), 1, TimeUnit.SECONDS)::get;
+    public static PlayerSkins of(GameProfile profile, Supplier<SkinTextures> vanillaSkins) {
+        var vanilla = new Layer(DynamicSkinTextures.of(vanillaSkins), vanillaSkins);
+        var hd = new Layer(Suppliers.memoize(() -> DynamicSkinTextures.union(
+                HDSkins.getInstance().getResourceManager().getSkinTextures(profile),
+                HDSkins.getInstance().getProfileRepository().get(profile)
+        ))::get);
+        var combined = new Layer(Suppliers.memoize(() -> DynamicSkinTextures.union(hd.dynamic(), vanilla.dynamic()))::get);
+        return new PlayerSkins(vanilla, hd, combined);
     }
 
-    public Set<Identifier> getProvidedSkinTypes() {
-        return skins.get().getProvidedSkinTypes();
-    }
+    public record Layer (Supplier<DynamicSkinTextures> dynamic, Supplier<SkinTextures> resolved) {
+        public Layer(Supplier<DynamicSkinTextures> dynamic) {
+            this(dynamic, Suppliers.memoizeWithExpiration(() -> dynamic.get().toSkinTextures(), 1, TimeUnit.SECONDS)::get);
+        }
 
-    @Nullable
-    public Identifier getSkin(SkinType type) {
-        return skins.get().getSkin(type).orElse(null);
-    }
+        public Set<Identifier> getProvidedSkinTypes() {
+            return dynamic().get().getProvidedSkinTypes();
+        }
 
-    @Nullable
-    public String getModel() {
-        return skins.get().getModel(VanillaModels.DEFAULT);
-    }
+        public Optional<Identifier> getSkin(SkinType type) {
+            return dynamic().get().getSkin(type);
+        }
 
-    public SkinTextures getSkinTextures() {
-        return combinedSkinTextures.get();
+        public String getModel() {
+            return Objects.requireNonNullElse(dynamic().get().getModel(VanillaModels.DEFAULT), VanillaModels.DEFAULT);
+        }
+
+        public SkinTextures getSkinTextures() {
+            return resolved().get();
+        }
     }
 }

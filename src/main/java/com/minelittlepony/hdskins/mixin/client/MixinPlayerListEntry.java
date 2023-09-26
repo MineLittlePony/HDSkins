@@ -27,13 +27,13 @@ abstract class MixinPlayerListEntry implements ClientPlayerInfo {
     @Override
     public PlayerSkins getSkins() {
         if (hdskinsPlayerSkins == null) {
-            hdskinsPlayerSkins = new PlayerSkins(profile, texturesSupplier);
+            hdskinsPlayerSkins = PlayerSkins.of(profile, texturesSupplier);
         }
         return hdskinsPlayerSkins;
     }
 
     @Inject(method = "getSkinTextures", at = @At("HEAD"), cancellable = true)
     private void onGetSkinTextures(CallbackInfoReturnable<SkinTextures> info) {
-        info.setReturnValue(getSkins().getSkinTextures());
+        info.setReturnValue(getSkins().combined().getSkinTextures());
     }
 }

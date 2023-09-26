@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Suppliers;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -44,8 +45,8 @@ public interface DynamicSkinTextures {
             );
     }
 
-    static DynamicSkinTextures of(Supplier<SkinTextures> supplier) {
-        return new DynamicSkinTextures() {
+    static Supplier<DynamicSkinTextures> of(Supplier<SkinTextures> supplier) {
+        return Suppliers.memoize(() -> new DynamicSkinTextures() {
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
                 return TEXTURE_LOOKUP.keySet().stream().filter(type -> getSkin(type).isEmpty()).map(SkinType::getId).collect(Collectors.toSet());
@@ -60,27 +61,27 @@ public interface DynamicSkinTextures {
             public String getModel(String fallback) {
                 return supplier.get().model().getName();
             }
-        };
+        })::get;
     }
 
-    static DynamicSkinTextures union(Supplier<? extends DynamicSkinTextures> a, DynamicSkinTextures b) {
+    static DynamicSkinTextures union(Supplier<? extends DynamicSkinTextures> a, Supplier<? extends DynamicSkinTextures> b) {
         return new DynamicSkinTextures() {
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
                 return Stream.concat(
                         a.get().getProvidedSkinTypes().stream(),
-                        b.getProvidedSkinTypes().stream()
+                        b.get().getProvidedSkinTypes().stream()
                 ).distinct().collect(Collectors.toSet());
             }
 
             @Override
             public Optional<Identifier> getSkin(SkinType type) {
-                return Optional.ofNullable(a.get().getSkin(type, b));
+                return Optional.ofNullable(a.get().getSkin(type, b.get()));
             }
 
             @Override
             public String getModel(String fallback) {
-                return a.get().getModel(b.getModel(fallback));
+                return a.get().getModel(b.get().getModel(fallback));
             }
         };
     }
