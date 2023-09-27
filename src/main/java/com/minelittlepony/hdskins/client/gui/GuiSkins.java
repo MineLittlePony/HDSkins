@@ -127,7 +127,6 @@ public class GuiSkins extends GameGui {
 
     @Override
     public void init() {
-        dropper.subscribe();
         previewer.init();
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
@@ -277,8 +276,8 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void removed() {
-        super.removed();
+    public void close() {
+        super.close();
 
         try {
             uploader.close();
@@ -287,8 +286,16 @@ public class GuiSkins extends GameGui {
         }
 
         HDSkins.getInstance().getProfileRepository().clear();
+    }
 
+    @Override
+    public void removed() {
         dropper.cancel();
+    }
+
+    @Override
+    public void onDisplayed() {
+        dropper.subscribe();
     }
 
     protected boolean canTakeEvents() {
