@@ -46,7 +46,11 @@ public class SkinLoader {
     }
 
     public ProvidedSkins getNow(GameProfile profile) {
-        return cache.getUnchecked(profile).getNow(ProvidedSkins.EMPTY);
+        return load(profile).getNow(ProvidedSkins.EMPTY);
+    }
+
+    public CompletableFuture<ProvidedSkins> load(GameProfile profile) {
+        return cache.getUnchecked(profile);
     }
 
     private Map<SkinType, MinecraftProfileTexture> loadProfileTextures(GameProfile profile) {
