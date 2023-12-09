@@ -70,7 +70,7 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
         return textureManager
                 .flatMap(manager -> manager.getTextureMetadata(SkinType.SKIN))
                 .map(metadata -> metadata.getMetadata("model"))
-                .orElseGet(() -> DefaultSkinHelper.getTexture(getPosture().getProfile().getId()).model().getName());
+                .orElseGet(() -> DefaultSkinHelper.getSkinTextures(getPosture().getProfile().getId()).model().getName());
     }
 
     @Override

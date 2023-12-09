@@ -5,10 +5,9 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
+import com.minelittlepony.hdskins.profile.ProfileUtils;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -71,11 +70,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
         try {
             profile = result.profile();
-
-            return new TexturePayload(profile, session.getTextures(profile, requireSecure).entrySet().stream().collect(Collectors.toMap(
-                    entry -> SkinType.forVanilla(entry.getKey()),
-                    Map.Entry::getValue
-            )));
+            return new TexturePayload(profile, ProfileUtils.readVanillaTexturesBlob(profile).findFirst().orElseGet(HashMap::new));
         } catch (InsecurePublicKeyException e) {
             throw new AuthenticationException(e);
         }

@@ -7,11 +7,13 @@ import com.google.gson.annotations.SerializedName;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.util.UUIDTypeAdapter;
 
 import net.minecraft.client.MinecraftClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -31,9 +33,21 @@ public class ProfileUtils {
     }
 
     public static Stream<Map<SkinType, MinecraftProfileTexture>> readVanillaTexturesBlob(GameProfile profile) {
-        return Stream.of(MinecraftClient.getInstance().getSessionService().getTextures(profile, false))
-                .filter(m -> !m.isEmpty())
-                .map(SkinType::convertMap);
+        return Stream.of(unpackTextures(MinecraftClient.getInstance().getSessionService().getTextures(profile))).filter(m -> !m.isEmpty());
+    }
+
+    private static Map<SkinType, MinecraftProfileTexture> unpackTextures(MinecraftProfileTextures textures) {
+        Map<SkinType, MinecraftProfileTexture> result = new HashMap<>();
+        if (textures.skin() != null) {
+            result.put(SkinType.SKIN, textures.skin());
+        }
+        if (textures.elytra() != null) {
+            result.put(SkinType.ELYTRA, textures.elytra());
+        }
+        if (textures.cape() != null) {
+            result.put(SkinType.CAPE, textures.cape());
+        }
+        return result;
     }
 
     public static <T> Stream<T> readCustomBlob(GameProfile profile, String key, Class<T> type) {

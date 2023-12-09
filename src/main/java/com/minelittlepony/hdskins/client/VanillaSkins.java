@@ -35,7 +35,7 @@ public class VanillaSkins {
     }
 
     public static Identifier getSkinTextures(UUID profileId, String variant) {
-        return TEXTURE_CONVERSION.computeIfAbsent(DefaultSkinHelper.getTexture(profileId), skin -> {
+        return TEXTURE_CONVERSION.computeIfAbsent(DefaultSkinHelper.getSkinTextures(profileId), skin -> {
             boolean slimArms = VanillaModels.isSlim(variant);
             return skin.texture().withPath(path -> path.replace(slimArms ? "/wide/" : "/slim/", slimArms ? "/slim/" : "/wide/"));
         });

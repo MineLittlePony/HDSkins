@@ -80,7 +80,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
-    public SkinTextures method_52814() {
+    public SkinTextures getSkinTextures() {
         return getTextures().getSkinTextureBundle();
     }
 
