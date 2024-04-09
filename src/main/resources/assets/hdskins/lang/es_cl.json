@@ -1,4 +1,4 @@
- {
+{
   "hdskins.choose": "Elige un Archivo",
   "hdskins.manager": "Gestor de Skins",
   "hdskins.error.unreadable": "el Archivo no puede ser leido",
@@ -18,6 +18,7 @@
   "hdskins.status.busy": "Trabajando...",
   "hdskins.open.title": "Elige una Skin",
   "hdskins.directory.up": "Directorio Anterior",
+  "hdskins.directory.go": "->",
   "hdskins.directory.save": "Guardar",
   "hdskins.filetype.directory": "Directorio",
   "hdskins.filetype.file": "%s Archivo",
@@ -54,7 +55,9 @@
   "hdskins.equipment.diamond": "Armadura de Diamante",
   "hdskins.equipment.netherite": "Armadura de Netherita",
   "hdskins.equipment.turtle": "Casco de Tortuga",
+  "hdskins.options.chevy": ">>",
   "hdskins.options.chevy.title": "Subir Skin",
+  "hdskins.options.download": "<<",
   "hdskins.options.download.title": "Guardar Skin",
   "hdskins.options.close": "Cerrar",
   "hdskins.options.clear": "Limpiar",
