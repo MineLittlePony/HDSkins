@@ -6,7 +6,7 @@
   "hdskins.error.open": "Error al abrir archivo de skin",
   "hdskins.error.invalid.too_large": "El Archivo debe tener un tamaño menor a 1024px",
   "hdskins.error.invalid.shape": "Dimensiones incorrectas",
-  "hdskins.error.invalid.power_of_two": "Dimensiones incorrectas",
+  "hdskins.error.invalid.power_of_two": "Sin poder de 2",
   "hdskins.error.invalid": "No es un archivo de skin válido",
   "hdskins.error.select": "Porfavor eliga una skin primero",
   "hdskins.error.mojang": "Error del API de Mojang",
