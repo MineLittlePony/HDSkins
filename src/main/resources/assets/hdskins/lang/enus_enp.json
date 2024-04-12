@@ -59,13 +59,13 @@
   "hdskins.options.chevy.title": "Upload Hide",
   "hdskins.options.download": "<<",
   "hdskins.options.download.title": "Nere Hide",
-  "hdskins.options.close": "Close",
-  "hdskins.options.clear": "Clear",
-  "hdskins.options.clear_all": "Clear All",
+  "hdskins.options.close": "Shut",
+  "hdskins.options.clear": "Empty",
+  "hdskins.options.clear_all": "Empty All",
   "hdskins.options.browse": "Browse",
-  "hdskins.options.skindrops": "Experimental Skin Drop",
-  "hdskins.options.cache": "Clear Skin Cache",
-  "hdskins.warning.experimental": "§6WARNING: This feature is §4experimental§6, meaning things may break or derp or even slurp. Enabling this means you accept responsibility for what may happen to your chickens.",
+  "hdskins.options.skindrops": "Fandly Hide Drop",
+  "hdskins.options.cache": "Empty Hide Hoard",
+  "hdskins.warning.experimental": "§6WARNING: This mark is §fandly§6, meaning things may break or derp or even slurp. Leing this way you ontake responsibility for what may happen to your chickens.",
   "hdskins.warning.disabled.title": "§c%s %s",
-  "hdskins.warning.disabled.description": "§4(DISABLED)\n§7This feature is not supported by your current skin server.\n§7Please choose a different one to proceed."
+  "hdskins.warning.disabled.description": "§4(OFF)\n§7This mark will not work by your onward hide outreckoner.\n§Kindly choose another one to go forward."
 }
