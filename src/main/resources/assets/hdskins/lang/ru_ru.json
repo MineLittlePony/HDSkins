@@ -6,7 +6,7 @@
   "hdskins.error.open": "Ошибка при открытии файла скина",
   "hdskins.error.invalid.too_large": "Скин должен быть размером максимум 1024 пикселя",
   "hdskins.error.invalid.shape": "Неверный формат",
-  "hdskins.error.invalid.power_of_two": "Неверные размеры",
+  "hdskins.error.invalid.power_of_two": "Not Power of 2",
   "hdskins.error.invalid": "Неверный файл скина",
   "hdskins.error.select": "Пожалуйста, сначала выберите скин",
   "hdskins.error.mojang": "Ошибка Mojang API",
