@@ -7,7 +7,7 @@
   "hdskins.error.invalid.too_large": "File must be smaller than 1024px in length",
   "hdskins.error.invalid.shape": "錯誤的維度",
   "hdskins.error.invalid.power_of_two": "Not Power of 2",
-  "hdskins.error.invalid": "Invalid skin file",
+  "hdskins.error.invalid": "無法識別的皮膚檔案",
   "hdskins.error.select": "Please select a skin first",
   "hdskins.error.mojang": "Mojang API Error",
   "hdskins.error.mojang.wait": "請等待%d分鐘",
