@@ -12,12 +12,11 @@ public class HDConfig extends Config {
             .addComment("When enable, will always use the native dialogue for opening and saving files");
     public final Setting<Boolean> enableSandboxingCheck = value("filesystem", "enableSandboxingCheck", true)
             .addComment("When enabled, will use the native dialogue for opening and saving files only when running inside a sandboxed environment (flatpaks)");
-    public final Setting<VisibilityMode> pantsButtonVisibility = value("gui", "pantsButtonVisibility", VisibilityMode.AUTO)
+    public final Setting<VisibilityMode> pantsButtonVisibility = value("gui", "mainMenuButton", VisibilityMode.ON)
             .addComment("Whether to show the hd skins uploader button on the main menu")
-            .addComment("AUTO (default) - only show when Mod Menu is not installed")
-            .addComment("ON - always show")
+            .addComment("AUTO - only show when Mod Menu is not installed")
+            .addComment("ON (default) - always show")
             .addComment("OFF - never show");
-
 
     public final Setting<Boolean> useBatchLoading = value("experiments", "useBatchLoading", false)
             .addComment("When enabled, player skins will be requested from the server in batches (experimental)");
