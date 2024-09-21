@@ -1,7 +1,6 @@
 package com.minelittlepony.hdskins.client.gui.player;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -9,6 +8,8 @@ import java.util.stream.Stream;
 import com.google.common.base.Suppliers;
 import com.mojang.authlib.GameProfile;
 
+import net.fabricmc.fabric.impl.resource.loader.ModResourcePackUtil;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientConnectionState;
@@ -22,10 +23,14 @@ import net.minecraft.network.NetworkSide;
 import net.minecraft.registry.*;
 import net.minecraft.resource.*;
 import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.server.SaveLoading;
 import net.minecraft.server.ServerLinks;
 
 interface DummyNetworkHandler {
-    Supplier<ClientPlayNetworkHandler> INSTANCE = Suppliers.memoize(() -> new ClientPlayNetworkHandler(MinecraftClient.getInstance(), new ClientConnection(NetworkSide.CLIENTBOUND), createConnectionState()));
+    Supplier<ClientPlayNetworkHandler> INSTANCE = Suppliers.memoize(() -> new ClientPlayNetworkHandler(
+            MinecraftClient.getInstance(),
+            new ClientConnection(NetworkSide.CLIENTBOUND), createConnectionState()
+    ));
 
     private static ClientConnectionState createConnectionState() {
         return new ClientConnectionState(
@@ -41,9 +46,11 @@ interface DummyNetworkHandler {
 
     private static DynamicRegistryManager.Immutable createRegistries() {
         var registries = ClientDynamicRegistryType.createCombinedDynamicRegistries();
-        return registries.with(ClientDynamicRegistryType.REMOTE, RegistryLoader.loadFromResource(new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA,
-                List.of(VanillaDataPackProvider.createDefaultPack())), registries.getCombinedRegistryManager(),
-                Stream.concat(RegistryLoader.DYNAMIC_REGISTRIES.stream(), RegistryLoader.DIMENSION_REGISTRIES.stream()).toList()
-        )).getCombinedRegistryManager();
+        var packManager = VanillaDataPackProvider.createManager(FabricLoader.getInstance().getGameDir().resolve("datapacks"), MinecraftClient.getInstance().getSymlinkFinder());
+        var manager = new SaveLoading.DataPacks(packManager, ModResourcePackUtil.createDefaultDataConfiguration(), true, true).load().getSecond();
+        var registriesToLoad = Stream.concat(RegistryLoader.DYNAMIC_REGISTRIES.stream(), RegistryLoader.DIMENSION_REGISTRIES.stream()).toList();
+        return registries
+                .with(ClientDynamicRegistryType.REMOTE, RegistryLoader.loadFromResource(manager, registries.getCombinedRegistryManager(), registriesToLoad))
+                .getCombinedRegistryManager();
     }
 }
