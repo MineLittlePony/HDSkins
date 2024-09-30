@@ -43,7 +43,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     private Pose pose = Pose.STAND;
     private SkinType activeSkinType = SkinType.SKIN;
 
-    private Optional<SkinVariant> variant = Optional.empty();
+    private Optional<SkinVariant> variant = Optional.of(PlayerSkins.Posture.SkinVariant.DEFAULT);
     private List<SkinVariant> skinVariants = new ArrayList<>(PlayerSkins.Posture.SkinVariant.VALUES);
 
     private EquipmentSet activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
