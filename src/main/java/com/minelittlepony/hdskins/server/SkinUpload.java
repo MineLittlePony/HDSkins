@@ -72,10 +72,10 @@ public sealed interface SkinUpload permits SkinUpload.FileUpload, SkinUpload.Uri
             return new Delete(session, type);
         }
         if ("file".equals(skin.getScheme())) {
-            return new FileUpload(session, type, Paths.get(skin), metadata);
+            return new FileUpload(session, type, Paths.get(skin), Map.copyOf(metadata));
         }
         if (Set.of("http", "https").contains(skin.getScheme())) {
-            return new UriUpload(session, type, skin, metadata);
+            return new UriUpload(session, type, skin, Map.copyOf(metadata));
         }
         throw new IllegalArgumentException("URI scheme not supported for skin upload: " + skin.getScheme());
     }
