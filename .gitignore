@@ -13,3 +13,8 @@ logs/
 *.iml
 classes/
 out/
+
+# docs build and cache
+.cache
+site/
+

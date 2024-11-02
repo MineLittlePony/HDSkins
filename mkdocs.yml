@@ -1,0 +1,18 @@
+site_name: HDSkins
+site_url: https://minelittlepony-mod.com/hdskins/
+
+repo_url: https://github.com/MineLittlePony/HDSkins
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - social
+  - mike:
+
+extra:
+  versioning:
+    provider: mike

@@ -1,0 +1,5 @@
+# FAQ
+
+## issues
+
+## common problems
