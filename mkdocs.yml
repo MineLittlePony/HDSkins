@@ -1,5 +1,5 @@
 site_name: HDSkins
-site_url: https://minelittlepony-mod.com/hdskins/
+site_url: https://minelittlepony-mod.com/HDSkins/
 
 repo_url: https://github.com/MineLittlePony/HDSkins
 
@@ -14,5 +14,5 @@ plugins:
   - mike:
 
 extra:
-  versioning:
+  version:
     provider: mike
