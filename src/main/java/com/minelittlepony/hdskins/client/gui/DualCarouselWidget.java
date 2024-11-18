@@ -103,7 +103,6 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     public void setSkinVariant(SkinVariant variant) {
         this.variant = Optional.of(variant);
-        local.getSkins().close();
     }
 
     public List<SkinVariant> getSkinVariants() {

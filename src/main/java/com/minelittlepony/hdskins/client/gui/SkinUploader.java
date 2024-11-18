@@ -206,7 +206,6 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     }
 
     public void setMetadataField(String field, String value) {
-        previewer.getLocal().getSkins().close();
         skinMetadata.put(field, value);
     }
 
