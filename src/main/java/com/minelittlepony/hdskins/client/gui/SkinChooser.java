@@ -4,6 +4,7 @@ import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileSystemUtil;
 import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
+import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -48,10 +49,6 @@ public class SkinChooser implements CarouselStatusLabel {
     public static final Text ERR_INVALID = Text.translatable("hdskins.error.invalid");
 
     public static final Text MSG_CHOOSE = Text.translatable("hdskins.choose");
-
-    private static boolean isPowerOfTwo(int number) {
-        return number != 0 && (number & number - 1) == 0;
-    }
 
     private boolean pickingInProgress;
     private final DualCarouselWidget previewer;
@@ -212,15 +209,15 @@ public class SkinChooser implements CarouselStatusLabel {
         int h = img.getHeight();
 
         if (previewer.getActiveSkinType().isVanilla()) {
-            if (!isPowerOfTwo(w)) {
+            if (!HDPlayerSkinTexture.isPowerOfTwo(w)) {
                 return ERR_INVALID_POWER_OF_TWO;
             }
-            if (!(w == h || w == h * 2)) {
+            if (!HDPlayerSkinTexture.isValidShape(w, h)) {
                 return ERR_INVALID_SHAPE;
             }
         }
 
-        if (w > MAX_SKIN_DIMENSION) {
+        if (w > MAX_SKIN_DIMENSION || h > MAX_SKIN_DIMENSION) {
             return ERR_INVALID_TOO_LARGE;
         }
 

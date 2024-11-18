@@ -1,8 +1,10 @@
 package com.minelittlepony.hdskins.client.resources;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.client.texture.NativeImage;
 
 @FunctionalInterface
 public interface ImageFilter {
-    NativeImage filterImage(NativeImage image);
+    @Nullable NativeImage filterImage(@Nullable NativeImage image);
 }
