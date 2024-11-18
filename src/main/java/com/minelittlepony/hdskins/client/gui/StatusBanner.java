@@ -58,7 +58,12 @@ public class StatusBanner implements ITextContext {
             context.fill(0, 0, width, height, opacity);
 
             if (showBanner || msgFadeOpacity >= 1) {
-                int maxWidth = Math.min(width - 10, getFont().getWidth(lastShownMessage));
+                boolean showTitle = lastShownMessage != HD_SKINS_UPLOAD && lastShownMessage != HD_SKINS_REQUEST;
+                int messageWidth = getFont().getWidth(lastShownMessage);
+
+                int maxWidth = Math.min(width - 10,
+                        showTitle ? Math.max(getFont().getWidth(HD_SKINS_FAILED), messageWidth) : messageWidth
+                );
                 int messageHeight = getFont().getWrappedLinesHeight(lastShownMessage.getString(), maxWidth) + getFont().fontHeight + 10;
                 int blockY = (height - messageHeight) / 2;
                 int blockX = (width - maxWidth) / 2;
@@ -67,9 +72,9 @@ public class StatusBanner implements ITextContext {
                 drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
                 matrices.translate(0, 0, 400);
 
-                if (lastShownMessage != HD_SKINS_UPLOAD && lastShownMessage != HD_SKINS_REQUEST) {
+                if (showTitle) {
                     drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
-                    drawTextBlock(context, lastShownMessage, blockX, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
                 } else {
                     uploader.tryClearStatus();
                     drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, 0xffffff, 0);
