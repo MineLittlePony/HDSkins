@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.http.*;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.channels.UnresolvedAddressException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +36,7 @@ public interface MoreHttpResponses {
         try {
             HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());
             return () -> response;
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | UnresolvedAddressException e) {
             throw new IOException(e);
         }
     }

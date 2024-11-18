@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.server;
 
 import java.io.IOException;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -22,6 +23,7 @@ import net.minecraft.text.Text;
 
 public class Gateway {
     public static final Text ERR_SESSION = Text.translatable("hdskins.error.session");
+    public static final Text ERR_DNS = Text.translatable("hdskins.error.dns");
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -145,6 +147,9 @@ public class Gateway {
             LOGGER.error("Unexpected error whilst contacting server at " + server.toString(), throwable);
 
             if (throwable instanceof AuthenticationUnavailableException) {
+                setOffline(true);
+            } else if (throwable instanceof UnresolvedAddressException) {
+                errorCallback.accept(ERR_DNS);
                 setOffline(true);
             } else if (throwable instanceof InvalidCredentialsException) {
                 errorCallback.accept(ERR_SESSION);
