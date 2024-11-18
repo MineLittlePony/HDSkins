@@ -7,6 +7,7 @@ import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
+import com.minelittlepony.common.client.gui.element.Selector;
 import com.minelittlepony.common.client.gui.sprite.ItemStackSprite;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
@@ -74,9 +75,6 @@ public class GuiSkins extends GameGui {
         return () -> !isEnabled.getAsBoolean() ? disabledTooltip.getLines() : originalTooltip.getLines();
     }
 
-    @Nullable
-    private Cycler btnSkinType;
-
     private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
 
     protected final DualCarouselWidget previewer;
@@ -91,9 +89,12 @@ public class GuiSkins extends GameGui {
             MinecraftClient.getInstance().getSession().getAccessToken(),
             SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
-                client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
+                //client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
             })
     );
+
+    @Nullable
+    private Selector<SkinType> typeSelector;
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(HD_SKINS_TITLE, parent);
@@ -109,7 +110,9 @@ public class GuiSkins extends GameGui {
         });
         uploader.addSkinLoadedEventListener((type, location, profileTexture) -> {
             playSound(SoundEvents.ENTITY_VILLAGER_YES);
-            setupSkinToggler();
+            if (typeSelector != null) {
+                typeSelector.setValue(previewer.getActiveSkinType());
+            }
         });
     }
 
@@ -133,18 +136,35 @@ public class GuiSkins extends GameGui {
         previewer.init();
 
         addButton(new Label(width / 2, 5)).setCentered().getStyle().setText("hdskins.manager").setColor(0xffffff);
-
         int typeSelectorWidth = Math.max(previewer.local.bounds.width, 200);
-        addButton(btnSkinType = new Cycler((width - typeSelectorWidth) / 2, previewer.local.bounds.top - 25, typeSelectorWidth, 20))
-                .onChange(i -> {
+        addButton(new Selector<>((width - typeSelectorWidth) / 2, previewer.local.bounds.top - 25, typeSelectorWidth, 20, SkinType.SKIN, type -> {
+            if (type.isUnsupported()) {
+                return new Style()
+                        .setIcon(new TextureSprite()
+                                .setTexture(SkinType.UNKNOWN.icon())
+                                .setPosition(2, 2)
+                                .setSize(16, 16)
+                                .setTextureSize(16, 16))
+                        .setText(Text.translatable("skin_type.hdskins.unknown", type.getId().toString()))
+                        .setTooltip(type.getId().toString(), 0, 10);
+            }
+
+            return new Style()
+                    .setIcon(MinecraftClient.getInstance().getResourceManager().getResource(type.icon()).isEmpty()
+                            ? new ItemStackSprite().setStack(type.iconStack())
+                            : new TextureSprite().setTexture(type.icon()).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
+                    .setText(Text.translatable("hdskins.skin_type", Text.translatable(Util.createTranslationKey("skin_type", type.getId()))))
+                    .setTooltip(type.getId().toString(), 0, 10);
+        })).setValue(previewer.getActiveSkinType())
+                .onChange(type -> {
                     List<SkinType> types = uploader.getSupportedSkinTypes().toList();
-                    i %= types.size();
-                    uploader.setSkinType(types.get(i));
+                    int index = types.indexOf(type);
+                    type = index < 0 ? SkinType.SKIN : types.get((index + 1) % types.size());
+                    uploader.setSkinType(type);
                     uploader.scheduleReload();
-                    return i;
+                    return type;
                 })
                 .onUpdate(sender -> sender.setEnabled(uploader.getFeatures().contains(Feature.MODEL_TYPES)));
-        setupSkinToggler();
 
         addButton(new Button(width / 2 - 10, height / 2 - 20, 20, 40))
             .onUpdate(sender -> {
@@ -177,36 +197,34 @@ public class GuiSkins extends GameGui {
             .styled(s -> s.setText("hdskins.options.browse"))
             .getBounds();
 
-        List<EquipmentSet> equipments = HDSkins.getInstance().getDummyPlayerEquipmentList().getValues().toList();
-        area = addButton(new Cycler(area.right() + 5, area.top, 20, 20))
-                .setStyles(equipments.stream()
-                        .map(equipment -> new Style()
-                            .setIcon(equipment.getStack())
-                            .setTooltip(equipment.getTooltip(), 0, 10))
-                        .toArray(Style[]::new))
-                .setValue(Math.max(0, equipments.indexOf(previewer.getEquipment())))
-                .onChange(i -> {
-                    previewer.setEquipment(equipments.get(i % equipments.size()));
-                    GameGui.playSound(previewer.getEquipment().getSound());
-                    return i;
+        area = addButton(new Selector<>(area.right() + 5, area.top, 20, 20, HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault(), equipment -> new Style()
+                    .setIcon(equipment.getStack())
+                    .setTooltip(equipment.getTooltip(), 0, 10)))
+                .setValue(previewer.getEquipment())
+                .onChange(value -> {
+                    List<EquipmentSet> equipments = HDSkins.getInstance().getDummyPlayerEquipmentList().getValues().toList();
+                    int index = equipments.indexOf(value);
+                    value = index < 0 ? value : equipments.get((index + 1) % equipments.size());
+
+                    previewer.setEquipment(value);
+                    GameGui.playSound(value.getSound());
+                    return value;
                 })
                 .getBounds();
 
-        List<SkinVariant> variants = previewer.getSkinVariants();
-        area = addButton(new Cycler(area.right() + 5, area.top, 20, 20))
-            .setStyles(variants.stream()
-                    .map(variant -> new Style()
-                            .setIcon(variant.icon())
-                            .setTooltip(createFeatureTooltip(Tooltip.of(variant.tooltip()), () -> uploader.getFeatures().contains(Feature.MODEL_VARIANTS)))
-                            .setTooltipOffset(0, 10))
-                    .toArray(Style[]::new))
-            .setValue(Math.max(0, previewer.getSkinVariant().map(variants::indexOf).orElse(0)))
-            .onChange(i -> {
+        area = addButton(new Selector<>(area.right() + 5, area.top, 20, 20, SkinVariant.DEFAULT, variant -> new Style()
+                .setIcon(variant.icon())
+                .setTooltip(createFeatureTooltip(Tooltip.of(variant.tooltip()), () -> uploader.getFeatures().contains(Feature.MODEL_VARIANTS)))
+                .setTooltipOffset(0, 10)))
+            .setValue(previewer.getSkinVariant().orElse(SkinVariant.DEFAULT))
+            .onChange(variant -> {
+                List<SkinVariant> variants = previewer.getSkinVariants();
+                int index = variants.indexOf(variant);
+                variant = index < 0 ? variant : variants.get((index + 1) % variants.size());
                 playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
-                SkinVariant variant = variants.get(i % variants.size());
                 uploader.setMetadataField("model", variant.name());
                 previewer.setSkinVariant(variant);
-                return i;
+                return variant;
             })
             .onUpdate(sender -> sender.setEnabled(uploader.getFeatures().contains(Feature.MODEL_VARIANTS)))
             .getBounds();
@@ -266,33 +284,6 @@ public class GuiSkins extends GameGui {
                     .setIcon(createIcon(0, 0))
                     .setTooltip(createFeatureTooltip(Tooltip.of("hdskins.options.download.title"), () -> uploader.getFeatures().contains(Feature.DOWNLOAD_USER_SKIN)));
 
-    }
-
-    private void setupSkinToggler() {
-        if (btnSkinType != null) {
-            List<SkinType> types = uploader.getSupportedSkinTypes().toList();
-            btnSkinType
-                .setStyles(types.stream().map(type -> {
-                    if (type.isUnsupported()) {
-                        return new Style()
-                                .setIcon(new TextureSprite()
-                                        .setTexture(SkinType.UNKNOWN.icon())
-                                        .setPosition(2, 2)
-                                        .setSize(16, 16)
-                                        .setTextureSize(16, 16))
-                                .setText(Text.translatable("skin_type.hdskins.unknown", type.getId().toString()))
-                                .setTooltip(type.getId().toString(), 0, 10);
-                    }
-
-                    return new Style()
-                            .setIcon(MinecraftClient.getInstance().getResourceManager().getResource(type.icon()).isEmpty()
-                                    ? new ItemStackSprite().setStack(type.iconStack())
-                                    : new TextureSprite().setTexture(type.icon()).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
-                            .setText(Text.translatable("hdskins.skin_type", Text.translatable(Util.createTranslationKey("skin_type", type.getId()))))
-                            .setTooltip(type.getId().toString(), 0, 10);
-                }).toArray(Style[]::new))
-                .setValue(Math.max(0, types.indexOf(previewer.getActiveSkinType())));
-        }
     }
 
     @Override

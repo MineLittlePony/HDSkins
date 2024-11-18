@@ -95,7 +95,6 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadSkins(Session session) throws IOException, AuthenticationException {
-        authorize(session);
         return doAuthorizedRequest(session, (accessToken) -> new TexturePayload(
                 session.profile(),
                 MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
