@@ -1,6 +1,7 @@
 {
   "item": "minecraft:netherite_helmet",
   "sound": "item.armor.equip_netherite",
+  "tooltip": "hdskins.equipment.netherite",
   "equipment": {
     "head": "minecraft:netherite_helmet",
     "chest": "minecraft:netherite_chestplate",

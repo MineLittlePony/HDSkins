@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -16,7 +15,7 @@ import com.google.common.cache.LoadingCache;
 import net.minecraft.util.Util;
 
 public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
-    private final ExecutorService executor = Util.getIoWorkerExecutor();
+    private final Executor executor = Util.getIoWorkerExecutor();
     private final Executor delayedExecutor = CompletableFuture.delayedExecutor(1, TimeUnit.MILLISECONDS, executor);
 
     private final AtomicReference<Function<K, CompletableFuture<V>>> activeBatch = new AtomicReference<>(null);

@@ -174,7 +174,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         boolean left = client.options.leftKey.isPressed();
         boolean right = client.options.rightKey.isPressed();
 
-        int rotationDirection = left ? -1 : right ? 1 : 0;
+        int rotationDirection = left ? 1 : right ? -1 : 0;
 
         if (!(left && right) && !screen.isDragging()) {
             if (rotationDirection == 0) {
@@ -216,7 +216,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
         if (screen.isDragging()) {
-            updateCounter += changeX;
+            updateCounter -= changeX;
         }
         return true;
     }

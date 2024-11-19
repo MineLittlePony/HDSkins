@@ -89,9 +89,7 @@ public class StatusBanner implements ITextContext {
         return msgFadeOpacity > 0;
     }
 
-    @SuppressWarnings("deprecation")
     static void drawTooltipDecorations(DrawContext context, int x, int y, int width, int height) {
-        context.draw(() -> TooltipBackgroundRenderer.render(context, x, y, width, height, 400));
+        context.draw(vertices -> TooltipBackgroundRenderer.render(context, x, y, width, height, 400, null));
     }
-
 }

@@ -19,9 +19,11 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.item.Items;
 import net.minecraft.stat.StatHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
@@ -95,6 +97,8 @@ public class DummyPlayerRenderer {
 
         public void render(Entity entity, MatrixStack stack, VertexConsumerProvider renderContext) {
             stack.push();
+            stack.scale(1, 1, -1);
+            stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
             stack.translate(-0.5, 0, 0);
 
             World world = entity.getEntityWorld();
@@ -116,16 +120,17 @@ public class DummyPlayerRenderer {
 
     public static class MrBoaty extends BoatEntity {
         public MrBoaty(World world) {
-            super(EntityType.BOAT, world);
+            super(EntityType.OAK_BOAT, world, () -> Items.OAK_BOAT);
         }
 
+        @SuppressWarnings({"unchecked", "rawtypes"})
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
             stack.push();
 
-            EntityRenderer<? super MrBoaty> renderer = MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this);
+            EntityRenderer<? super MrBoaty, ?> renderer = MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this);
 
             if (renderer != null) {
-                renderer.render(this, 0, 0, stack, renderContext, 0xF000F0);
+                ((EntityRenderer)renderer).render(renderer.getAndUpdateRenderState(this, 1), stack, renderContext, 0xF000F0);
             }
 
             stack.pop();

@@ -75,14 +75,13 @@ public class DummyWorld extends ClientWorld {
         super(net,
                 new ClientWorld.Properties(Difficulty.NORMAL, false, true),
                 World.OVERWORLD,
-                net.getRegistryManager().get(RegistryKeys.DIMENSION_TYPE).entryOf(DimensionTypes.OVERWORLD),
+                net.getRegistryManager().getOrThrow(RegistryKeys.DIMENSION_TYPE).getEntry(DimensionTypes.OVERWORLD.getValue()).get(),
                 0,
                 0,
-                MinecraftClient.getInstance()::getProfiler,
                 worldRenderer,
                 true,
-                0);
-        chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().get(RegistryKeys.BIOME).entryOf(BiomeKeys.PLAINS));
+                0, 0);
+        chunk = new EmptyChunk(this, new ChunkPos(0, 0), getRegistryManager().getOrThrow(RegistryKeys.BIOME).getEntry(BiomeKeys.PLAINS.getValue()).get());
     }
 
     @Override

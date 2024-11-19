@@ -10,6 +10,7 @@ import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.resources.TextureLoader;
 import com.minelittlepony.hdskins.client.resources.TextureLoader.Exclusion;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.resources.NativeImageFilters;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
@@ -100,8 +101,9 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     protected abstract boolean isProvided(SkinType type);
 
     public SkinTextures getSkinTextureBundle() {
+        Identifier skinId = get(SkinType.SKIN).getId();
         return new SkinTextures(
-                get(SkinType.SKIN).getId(),
+                getPosture().getActiveSkinType() == SkinType.SKIN ? skinId : NativeImageFilters.REDUCE_ALPHA.load(skinId, skinId, getPosture().getExclusion()),
                 null,
                 getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getId() : null,
                 getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getId() : null,

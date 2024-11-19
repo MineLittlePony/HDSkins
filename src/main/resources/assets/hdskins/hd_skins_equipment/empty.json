@@ -1,5 +1,6 @@
 {
   "item": "minecraft:player_head",
+  "tooltip": "hdskins.equipment.empty",
   "equipment": {
     "head": "minecraft:air",
     "chest": "minecraft:air",

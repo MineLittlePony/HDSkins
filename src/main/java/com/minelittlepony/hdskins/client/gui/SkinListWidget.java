@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.client.gui;
 import java.util.List;
 import java.util.Optional;
 
-import org.joml.Matrix4fStack;
 import org.lwjgl.glfw.GLFW;
 
 import com.minelittlepony.common.client.gui.GameGui;
@@ -15,12 +14,12 @@ import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PreviousServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
@@ -166,7 +165,7 @@ public class SkinListWidget implements Carousel.Element {
                     }
 
                     if (skin.getType().isUnsupported()) {
-                        context.drawTexture(skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
+                        context.drawTexture(RenderLayer::getGuiTextured, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
                     } else {
                         matrices.push();
                         matrices.translate(0, 0, -400);
@@ -242,17 +241,11 @@ public class SkinListWidget implements Carousel.Element {
         float swingProgress = thePlayer.handSwingProgress;
         thePlayer.handSwingProgress = 0;
 
-        Matrix4fStack modelStack = RenderSystem.getModelViewStack();
-        modelStack.pushMatrix();
-        modelStack.translate(xPosition, yPosition, 1050);
-        modelStack.scale(1, 1, -1);
-        RenderSystem.applyModelViewMatrix();
-
         matrixStack.push();
-        matrixStack.translate(0, 0, 1000);
+        matrixStack.translate(xPosition, yPosition, 1000);
         matrixStack.scale(scale, scale, scale);
 
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-15));
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
 
@@ -262,11 +255,7 @@ public class SkinListWidget implements Carousel.Element {
 
         renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
 
-        immediate.draw();
-
         matrixStack.pop();
-        modelStack.popMatrix();
-        RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();
 
         thePlayer.handSwingProgress = swingProgress;
@@ -285,11 +274,10 @@ public class SkinListWidget implements Carousel.Element {
         Entity camera = client.getCameraEntity();
         client.setCameraEntity(thePlayer);
         float y = thePlayer.isSneaking() ? -0.125F : 0;
-        dispatcher.render(thePlayer, 0, y, 0, 0, 1, matrixStack, renderContext, 0xF000F0);
+        dispatcher.render(thePlayer, 0, y, 0, 1, matrixStack, renderContext, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
         client.setCameraEntity(camera);
 
         matrixStack.pop();
     }
-
 }

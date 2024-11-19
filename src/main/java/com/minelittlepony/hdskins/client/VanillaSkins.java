@@ -18,7 +18,7 @@ public class VanillaSkins {
     public static final Map<SkinType, Identifier> NO_TEXTURES = Map.of(
         SkinType.SKIN, NO_SKIN_STEVE,
         SkinType.CAPE, NO_SKIN_CAPE,
-        SkinType.ELYTRA, Identifier.ofVanilla("textures/entity/elytra.png")
+        SkinType.ELYTRA, Identifier.ofVanilla("textures/entity/equipment/wings/elytra.png")
     );
 
     public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Map.of(

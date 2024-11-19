@@ -8,7 +8,6 @@ import org.joml.Matrix4f;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -16,9 +15,8 @@ import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
@@ -42,13 +40,14 @@ final class DummyWorldRenderer extends WorldRenderer {
     }
     @Override
     public void render(
-            RenderTickCounter tickDelta,
+            ObjectAllocator allocator,
+            RenderTickCounter tickCounter,
             boolean renderBlockOutline,
             Camera camera,
             GameRenderer gameRenderer,
             LightmapTextureManager lightmapTextureManager,
-            Matrix4f matrix4f,
-            Matrix4f matrix4f2
+            Matrix4f positionMatrix,
+            Matrix4f projectionMatrix
         ) {
         // noop
     }
@@ -61,10 +60,6 @@ final class DummyWorldRenderer extends WorldRenderer {
         // noop
     }
     @Override
-    public void reloadTransparencyPostProcessor() {
-        // noop
-    }
-    @Override
     protected boolean canDrawEntityOutlines() {
         return false;
     }
@@ -73,19 +68,7 @@ final class DummyWorldRenderer extends WorldRenderer {
         // noop
     }
     @Override
-    public void tickRainSplashing(Camera camera) {
-        // noop
-    }
-    @Override
     public void tick() {
-        // noop
-    }
-    @Override
-    public void renderSky(Matrix4f matrix4f, Matrix4f projectionMatrix, float tickDelta, Camera camera, boolean thickFog, Runnable fogCallback) {
-        // noop
-    }
-    @Override
-    public void renderClouds(MatrixStack matrices, Matrix4f matrix4f, Matrix4f matrix4f2, float tickDelta, double cameraX, double cameraY, double cameraZ) {
         // noop
     }
     @Override
@@ -101,31 +84,11 @@ final class DummyWorldRenderer extends WorldRenderer {
         // noop
     }
     @Override
-    public void scheduleBlockRenders(int x, int y, int z) {
-        // noop
-    }
-    @Override
-    public void scheduleBlockRender(int x, int y, int z) {
-        // noop
-    }
-    @Override
-    public void playJukeboxSong(RegistryEntry<JukeboxSong> song, BlockPos jukeboxPos) {
-        // noop
-    }
-    @Override
     public void addParticle(ParticleEffect parameters, boolean shouldAlwaysSpawn, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         // noop
     }
     @Override
     public void addParticle(ParticleEffect parameters, boolean shouldAlwaysSpawn, boolean important, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        // noop
-    }
-    @Override
-    public void processGlobalEvent(int eventId, BlockPos pos, int data) {
-        // noop
-    }
-    @Override
-    public void processWorldEvent(int eventId, BlockPos pos, int data) {
         // noop
     }
     @Override

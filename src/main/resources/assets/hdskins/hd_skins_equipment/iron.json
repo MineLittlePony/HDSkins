@@ -1,6 +1,7 @@
 {
   "item": "minecraft:iron_helmet",
   "sound": "item.armor.equip_iron",
+  "tooltip": "hdskins.equipment.iron",
   "equipment": {
     "head": "minecraft:iron_helmet",
     "chest": "minecraft:iron_chestplate",

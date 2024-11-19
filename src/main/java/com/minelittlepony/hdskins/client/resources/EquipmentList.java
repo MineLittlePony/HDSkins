@@ -1,13 +1,9 @@
 package com.minelittlepony.hdskins.client.resources;
 
-import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
-import com.minelittlepony.common.util.settings.ToStringAdapter;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -23,32 +19,21 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.registry.Registries;
 
-import java.util.EnumMap;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.jetbrains.annotations.Nullable;
-
-public class EquipmentList extends JsonDataLoader implements IdentifiableResourceReloadListener {
-
+public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> implements IdentifiableResourceReloadListener {
     private static final Identifier EQUIPMENT = HDSkins.id("skins/equipment");
     private static final Identifier EMPTY = HDSkins.id("empty");
 
-    private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(Identifier.class, new ToStringAdapter<>(Identifier::of))
-            .registerTypeAdapter(Item.class, RegistryTypeAdapter.of(Registries.ITEM))
-            .registerTypeAdapter(SoundEvent.class, RegistryTypeAdapter.of(Registries.SOUND_EVENT))
-            .registerTypeAdapter(EquipmentSlot.class, new ToStringAdapter<>(EquipmentSlot::getName, s -> EquipmentSlot.byName(s.toLowerCase())))
-            .create();
+    private EquipmentSet emptySet = EquipmentSet.EMPTY;
 
-    private EquipmentSet emptySet = new EquipmentSet(EMPTY);
-
-    private final List<EquipmentSet> equipmentSets = Lists.newArrayList(emptySet);
+    private Map<Identifier, EquipmentSet> equipmentSets = Map.of(EMPTY, emptySet);
 
     public EquipmentList() {
-        super(GSON, "hd_skins_equipment");
+        super(EquipmentSet.CODEC, "hd_skins_equipment");
     }
 
     @Override
@@ -56,34 +41,18 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         return EQUIPMENT;
     }
 
+
     @Override
-    protected void apply(Map<Identifier, JsonElement> resources, ResourceManager manager, Profiler profiler) {
-        emptySet = new EquipmentSet(EMPTY);
-        equipmentSets.clear();
+    protected Map<Identifier, EquipmentSet> prepare(ResourceManager resourceManager, Profiler profiler) {
+        return super.prepare(resourceManager, profiler);
+    }
 
-        HDSkins.LOGGER.info("Found {} potential player equipment sets", resources.size());
 
-        for (Entry<Identifier, JsonElement> entry : resources.entrySet()) {
-           try {
-               EquipmentSet set = GSON.fromJson(entry.getValue(), EquipmentSet.class);
-
-               if (set != null) {
-                   set.id = entry.getKey();
-                   equipmentSets.add(set);
-
-                   if ("empty".equals(entry.getKey().getPath())) {
-                       emptySet = set;
-                   }
-               }
-           } catch (IllegalArgumentException | JsonParseException e) {
-               HDSkins.LOGGER.error("Unable to read {} from resource packs", EQUIPMENT, e);
-           }
-        }
-        HDSkins.LOGGER.info("Loaded {} player equipment sets", equipmentSets.size());
-
-        if (equipmentSets.isEmpty()) {
-            equipmentSets.add(emptySet);
-        }
+    @Override
+    protected void apply(Map<Identifier, EquipmentSet> sets, ResourceManager manager, Profiler profiler) {
+        HDSkins.LOGGER.info("Found {} potential player equipment sets", sets.size());
+        equipmentSets = new HashMap<>(sets);
+        emptySet = equipmentSets.computeIfAbsent(EMPTY, k -> EquipmentSet.EMPTY);
     }
 
     public EquipmentSet getDefault() {
@@ -91,22 +60,22 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
     }
 
     public Stream<EquipmentSet> getValues() {
-        return equipmentSets.stream();
+        return equipmentSets.values().stream();
     }
 
-    public static class EquipmentSet {
-        private Map<EquipmentSlot, Item> equipment = new EnumMap<>(EquipmentSlot.class);
-
-        private Item item;
-
-        @Nullable
-        private SoundEvent sound;
-
-        private transient Identifier id;
-
-        EquipmentSet(Identifier id) {
-            this.id = id;
-        }
+    public static record EquipmentSet(
+            Map<EquipmentSlot, Item> equipment,
+            Item item,
+            Optional<SoundEvent> sound,
+            String tooltip
+        ) {
+        private static final EquipmentSet EMPTY = new EquipmentSet(Map.of(), Items.PLAYER_HEAD, null, "empty");
+        public static final Codec<EquipmentSet> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.unboundedMap(EquipmentSlot.CODEC, Registries.ITEM.getCodec()).fieldOf("equipment").forGetter(EquipmentSet::equipment),
+                Registries.ITEM.getCodec().fieldOf("item").forGetter(EquipmentSet::item),
+                Registries.SOUND_EVENT.getCodec().optionalFieldOf("sound").forGetter(EquipmentSet::sound),
+                Codec.STRING.fieldOf("tooltip").forGetter(EquipmentSet::tooltip)
+        ).apply(i, EquipmentSet::new));
 
         public void apply(LivingEntity entity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
@@ -115,7 +84,7 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
         }
 
         public SoundEvent getSound() {
-            return sound == null ? SoundEvents.ITEM_ARMOR_EQUIP_GENERIC.value() : sound;
+            return sound.orElse(SoundEvents.ITEM_ARMOR_EQUIP_GENERIC.value());
         }
 
         public ItemStack getStack(EquipmentSlot slot) {
@@ -126,12 +95,8 @@ public class EquipmentList extends JsonDataLoader implements IdentifiableResourc
             return new ItemStack(item);
         }
 
-        public Identifier getId() {
-            return id;
-        }
-
         public Text getTooltip() {
-            return Text.translatable("hdskins.equipment", Text.translatable("hdskins.equipment." + id.getPath()));
+            return Text.translatable("hdskins.equipment", Text.translatable(tooltip));
         }
     }
 }

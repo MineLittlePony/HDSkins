@@ -33,7 +33,6 @@ import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
 
 /**
  * A resource manager for players to specify their own skin overrides.
@@ -64,13 +63,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = Memoize.createAsyncLoadingCache(15, loader::loadAsync);
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender,
-            Profiler serverProfiler, Profiler clientProfiler,
-            Executor serverExecutor, Executor clientExecutor) {
+    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender, Executor serverExecutor, Executor clientExecutor) {
         return sync.whenPrepared(null).thenRunAsync(() -> {
-            clientProfiler.startTick();
-            clientProfiler.push("Reloading User's HD Skins");
-
             store.clear();
             loader.stop();
 
@@ -88,8 +82,6 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
                     });
             });
 
-            clientProfiler.pop();
-            clientProfiler.endTick();
             lastLoadTime = System.currentTimeMillis();
         }, clientExecutor);
     }

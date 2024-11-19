@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import org.joml.Matrix4fStack;
-
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.HDSkins;
@@ -16,18 +14,18 @@ import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer;
 import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer.BedHead;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
@@ -109,7 +107,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
 
         context.getMatrices().push();
         bounds.translate(context.getMatrices());
-        drawLabel(context, title, 5, 5, 0xffffff, 900);
+        context.drawText(getFont(), title, 5, 5, Colors.WHITE, false);
         context.getMatrices().pop();
     }
 
@@ -143,18 +141,12 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         thePlayer.setHeadYaw(lookX * lookFactor);
         thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20);
 
-        Matrix4fStack modelStack = RenderSystem.getModelViewStack();
-        modelStack.pushMatrix();
-        modelStack.translate(xPosition, yPosition, 1050);
-        modelStack.scale(1, 1, -1);
-        RenderSystem.applyModelViewMatrix();
-
         MatrixStack matrixStack = context.getMatrices();
         matrixStack.push();
-        matrixStack.translate(0, 0, 1000);
+        matrixStack.translate(xPosition, yPosition, 50);
         matrixStack.scale(scale, scale, scale);
 
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-15));
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rot));
 
@@ -164,11 +156,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
 
         renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
 
-        immediate.draw();
-
         matrixStack.pop();
-        modelStack.popMatrix();
-        RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();
     }
 
@@ -228,7 +216,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         Entity camera = minecraft.getCameraEntity();
         minecraft.setCameraEntity(thePlayer);
 
-        dispatcher.render(thePlayer, x, y, z, 0, 1, matrixStack, renderContext, 0xF000F0);
+        dispatcher.render(thePlayer, x, y, z, 1, matrixStack, renderContext, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
         minecraft.setCameraEntity(camera);
 

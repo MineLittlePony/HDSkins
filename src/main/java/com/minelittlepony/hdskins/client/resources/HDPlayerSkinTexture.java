@@ -15,6 +15,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.PlayerSkinTexture;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 
 public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilter {
 
@@ -101,14 +102,14 @@ public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilte
         int i;
         for (i = x1; i < x2; ++i) {
             for (j = y1; j < y2; ++j) {
-                int k = image.getColor(i, j);
+                int k = image.getColorArgb(i, j);
                 if ((k >> 24 & 0xFF) >= 128) continue;
                 return;
             }
         }
         for (i = x1; i < x2; ++i) {
             for (j = y1; j < y2; ++j) {
-                image.setColor(i, j, image.getColor(i, j) & 0xFFFFFF);
+                image.setColorArgb(i, j, image.getColorArgb(i, j) & 0xFFFFFF);
             }
         }
     }
@@ -116,7 +117,7 @@ public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilte
     private static void stripAlpha(NativeImage image, int x1, int y1, int x2, int y2) {
         for (int i = x1; i < x2; ++i) {
             for (int j = y1; j < y2; ++j) {
-                image.setColor(i, j, image.getColor(i, j) | 0xFF000000);
+                image.setColorArgb(i, j, ColorHelper.fullAlpha(image.getColorArgb(i, j)));
             }
         }
     }

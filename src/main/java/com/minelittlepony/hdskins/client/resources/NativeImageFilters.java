@@ -15,16 +15,15 @@ import net.minecraft.util.math.ColorHelper;
 
 public interface NativeImageFilters {
     NativeImageFilters GREYSCALE = create("default_player_skin", color -> {
-        int a = ColorHelper.Abgr.getAlpha(color);
-        float r = ColorHelper.Abgr.getRed(color) / 255F;
-        float g = ColorHelper.Abgr.getGreen(color) / 255F;
-        float b = ColorHelper.Abgr.getBlue(color) / 255F;
+        int a = ColorHelper.getAlpha(color);
+        float r = ColorHelper.getRed(color) / 255F;
+        float g = ColorHelper.getGreen(color) / 255F;
+        float b = ColorHelper.getBlue(color) / 255F;
         int brightness = (int)((0.2126F * r + 0.7152F * g + 0.0722F * b) * 255);
-        return ColorHelper.Abgr.getAbgr(a, brightness, brightness, brightness);
+        return ColorHelper.getArgb(a, brightness, brightness, brightness);
     });
     NativeImageFilters REDUCE_ALPHA = create("default_player_skin_half_alpha", color -> {
-        int a = Math.min(ColorHelper.Abgr.getAlpha(color), 0x30);
-        return (color & 0x00FFFFFF) | (a << 24);
+        return ColorHelper.withAlpha(Math.min(ColorHelper.getAlpha(color), 0x20), color);
     });
 
     static NativeImageFilters create(String name, Int2IntFunction pixelTransformation) {
@@ -33,12 +32,13 @@ public interface NativeImageFilters {
             for (int x = 0; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
                     if (exclusion.includes(x, y)) {
-                        copy.setColor(x, y, image.getColor(x, y));
+                        copy.setColorArgb(x, y, image.getColorArgb(x, y));
                     } else {
-                        copy.setColor(x, y, pixelTransformation.applyAsInt(image.getColor(x, y)));
+                        copy.setColorArgb(x, y, pixelTransformation.applyAsInt(image.getColorArgb(x, y)));
                     }
                 }
             }
+            image.close();
 
             return copy;
         });
@@ -47,8 +47,7 @@ public interface NativeImageFilters {
         return (id, fallback, exclusion) -> {
             try {
                 return cache.get(new Pair<>(id, exclusion)).getNow(fallback);
-            } catch (ExecutionException e) { } finally {
-            }
+            } catch (ExecutionException ignored) { } finally { }
             return fallback;
         };
     }
