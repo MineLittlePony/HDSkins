@@ -53,6 +53,7 @@ public class StatusBanner implements ITextContext {
             MatrixStack matrices = context.getMatrices();
 
             matrices.push();
+            matrices.translate(0, 0, 900);
             int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
 
             context.fill(0, 0, width, height, opacity);
