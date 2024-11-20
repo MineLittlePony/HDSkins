@@ -89,7 +89,7 @@ public class GuiSkins extends GameGui {
             MinecraftClient.getInstance().getSession().getAccessToken(),
             SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
-                //client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
+                client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
             })
     );
 
@@ -240,13 +240,18 @@ public class GuiSkins extends GameGui {
     }
 
     protected void initServerPreviewButtons(Bounds area) {
-        area = addButton(new Button(area.right() - 20, area.bottom() + 5, 20, 20))
+        area = addButton(new Button(area.right() - 16, area.bottom() + 5, 16, 20))
             .onClick(sender -> {
                 uploader.cycleGateway();
                 playSound(SoundEvents.ENTITY_VILLAGER_YES);
                 sender.getStyle().setTooltip(uploader.getGatewayText());
             })
-            .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip(uploader.getGatewayText(), 0, 10))
+            .styled(s -> s.setIcon(createIcon(81, 16)).setTooltip(Tooltip.of(uploader.getGatewayText(), 400)).setTooltipOffset(0, 10))
+            .getBounds();
+
+        area = addButton(new Button(area.left - 19, area.top, 20, 20))
+            .onClick(sender -> client.setScreen(new SettingsScreen(this, panorama)))
+            .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip("options.title", 0, 10))
             .getBounds();
 
         area = addButton(new Button(area.left - 25, area.top, 20, 20))

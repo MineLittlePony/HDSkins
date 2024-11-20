@@ -7,6 +7,12 @@ import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
+
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.ClickEvent.Action;
+import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
@@ -20,6 +26,7 @@ import java.util.function.Function;
 public class ValhallaSkinServer implements SkinServer {
 
     private static final String API_PREFIX = "/api/v1";
+    private static final String SRC = "https://github.com/MineLittlePony/ValhallaSkinServer";
 
     private static final Set<Feature> FEATURES = Sets.newHashSet(
             Feature.DOWNLOAD_USER_SKIN,
@@ -245,6 +252,19 @@ public class ValhallaSkinServer implements SkinServer {
         return new IndentedToStringStyle.Builder(this)
                 .append("address", address)
                 .toString();
+    }
+
+    @Override
+    public Map<Text, Text> getMetadata() {
+        return Map.of(
+            Text.translatable("hdskins.label.documentation"), Text.literal(address + "/docs").formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
+                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, address + "/docs"));
+            }),
+            Text.translatable("hdskins.label.source"), Text.literal(SRC).formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
+                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, SRC));
+            }),
+            Text.translatable("hdskins.label.author"), Text.literal("Killjoy")
+        );
     }
 
     private record AuthHandshake(boolean offline, String serverId, long verifyToken) {}
