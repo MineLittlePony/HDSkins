@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.base.MoreObjects;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer.MrBoaty;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Pose;
@@ -65,14 +66,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
 
     public PlayerSkins<?> getTextures() {
         // initialization order is annoying
-        if (overrideTextures != null) {
-            return overrideTextures;
-        }
-
-        if (textures == null) {
-            return PlayerSkins.EMPTY;
-        }
-        return textures;
+        return MoreObjects.firstNonNull(overrideTextures, MoreObjects.firstNonNull(textures, PlayerSkins.EMPTY));
     }
 
     public void setOverrideTextures(PlayerSkins<?> textures) {
@@ -163,8 +157,7 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
         lastHandSwingProgress = handSwingProgress;
 
         if (handSwinging) {
-            ++handSwingTicks;
-            if (handSwingTicks >= 8) {
+            if (++handSwingTicks >= 8) {
                 handSwingTicks = 0;
                 handSwinging = false;
             }
