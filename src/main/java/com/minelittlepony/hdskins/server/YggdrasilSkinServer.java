@@ -20,6 +20,11 @@ import com.mojang.authlib.minecraft.InsecurePublicKeyException;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.Text;
+import net.minecraft.text.ClickEvent.Action;
+import net.minecraft.util.Colors;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 @ServerType("mojang")
@@ -169,6 +174,16 @@ public class YggdrasilSkinServer implements SkinServer {
                 .append("address", address)
                 .append("secured", requireSecure)
                 .toString();
+    }
+
+    @Override
+    public Map<Text, Text> getMetadata() {
+        return Map.of(
+            Text.translatable("hdskins.label.website"), Text.literal("https://www.minecraft.net/en-us/login").formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
+                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, "https://www.minecraft.net/en-us/login"));
+            }),
+            Text.translatable("hdskins.label.author"), Text.literal("Mojang")
+        );
     }
 
     class ErrorResponse {

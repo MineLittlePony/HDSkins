@@ -6,6 +6,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 
+import net.minecraft.text.Text;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Stream;
@@ -15,6 +17,13 @@ public interface SkinServer {
      * Returns the set of features that this skin server supports.
      */
     Set<Feature> getFeatures();
+
+    /**
+     * Gets optional metadata that should be displayed to the user for this server.
+     */
+    default Map<Text, Text> getMetadata() {
+        return Map.of();
+    }
 
     /**
      * Determines whether this server is the source of the provided url.
