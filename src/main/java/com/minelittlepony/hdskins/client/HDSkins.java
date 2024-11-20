@@ -6,12 +6,14 @@ import com.minelittlepony.common.event.ScreenInitCallback;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
+import com.minelittlepony.hdskins.client.gui.SettingsScreen;
 import com.minelittlepony.hdskins.client.profile.SkinLoader;
 import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -45,6 +47,8 @@ public final class HDSkins implements ClientModInitializer {
 
     private final PrioritySorter skinPrioritySorter = new PrioritySorter();
 
+    private boolean configDirty;
+
     public HDSkins() {
         instance = this;
     }
@@ -63,6 +67,16 @@ public final class HDSkins implements ClientModInitializer {
         ScreenInitCallback.EVENT.register(this::onScreenInit);
 
         FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
+
+        ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
+        config.onChangedExternally(config -> configDirty = true);
+    }
+
+    private void onTick(MinecraftClient client) {
+        if (configDirty && client.currentScreen instanceof SettingsScreen screen) {
+            screen.init(client, screen.width, screen.height);
+        }
+        configDirty = false;
     }
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
