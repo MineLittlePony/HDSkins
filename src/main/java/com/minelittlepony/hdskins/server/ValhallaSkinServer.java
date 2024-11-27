@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.server;
 
 import com.google.common.collect.Sets;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -116,6 +117,7 @@ public class ValhallaSkinServer implements SkinServer {
     @Override
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         doAuthorizedRequest(upload.session(), (accessToken) -> switch (upload) {
+            // TODO: (@Killjoy) Use namespaced ids and translate old unnamespaced to namespaced
             case SkinUpload.Delete ignored -> MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("texture"))
                             .method("DELETE", FileTypes.json(Map.of("type", upload.type().getParameterizedName())))
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
@@ -171,7 +173,7 @@ public class ValhallaSkinServer implements SkinServer {
         return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendHistoryUri(session.profile().getId()))
                 .GET()
                 .build()).accept(r -> r.json(Textures.class, "Server sent invalid profile response")).map(p -> {
-                    // TODO: Remove duplicates and sort by upload time
+                    // TODO: (@Killjoy) Remove duplicates and sort by upload time
             Function<SkinType, List<Texture>> textures = Util.memoize(type -> {
                 Set<String> visited = new HashSet<>();
                 return p.textures().getOrDefault(type, List.of())
@@ -188,7 +190,7 @@ public class ValhallaSkinServer implements SkinServer {
 
                 @Override
                 public void setActive(SkinType type, Texture texture) throws IOException, AuthenticationException {
-                    // TODO: Swap active skins rather than upload a copy
+                    // TODO: (@Killjoy) Swap active skins rather than upload a copy
                     uploadSkin(new SkinUpload.UriUpload(session, type, URI.create(texture.getUri()), texture.metadata));
                 }
             };
@@ -273,12 +275,12 @@ public class ValhallaSkinServer implements SkinServer {
     private record BulkTextures(List<UUID> uuids) {}
     private record BulkTexturesResponse(List<TexturePayload> users) {}
 
-    // TODO: Response does not match the documentation
+    // TODO: (@Killjoy) Response does not match the documentation
     private record Textures (String profileId, String profilename, Map<SkinType, List<Texture>> textures) {}
     private record Texture (long startTime, String endTime, Map<String, String> metadata, String url) implements SkinServerProfile.Skin {
         @Override
         public String getModel() {
-            return metadata.get("model");
+            return VanillaModels.of(metadata.get("model"));
         }
 
         @Override
