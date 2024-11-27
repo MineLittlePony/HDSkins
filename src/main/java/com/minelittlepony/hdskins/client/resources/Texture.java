@@ -5,7 +5,6 @@ import java.net.URL;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -40,15 +39,13 @@ public interface Texture extends AutoCloseable {
 
     abstract class UriTexture extends HDPlayerSkinTexture implements Texture {
 
-        private final String model;
-
         private final String fileUrl;
 
         private final Identifier id;
 
         public static Texture.UriTexture create(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, @Nullable Runnable callback) {
             boolean[] uploaded = new boolean[1];
-            return new UriTexture(id, cacheFile, url, type, model, fallback, () -> {
+            return new UriTexture(id, cacheFile, url, type, fallback, () -> {
                 uploaded[0] = true;
                 if (callback != null) {
                     callback.run();
@@ -67,10 +64,9 @@ public interface Texture extends AutoCloseable {
             };
         }
 
-        UriTexture(Identifier id, File cacheFile, String url, SkinType type, String model, Identifier fallback, Runnable callack) {
+        UriTexture(Identifier id, File cacheFile, String url, SkinType type, Identifier fallback, Runnable callack) {
             super(cacheFile, url, type, fallback, callack);
             this.id = id;
-            this.model = VanillaModels.of(model);
             this.fileUrl = url;
         }
 
@@ -82,14 +78,6 @@ public interface Texture extends AutoCloseable {
         @SuppressWarnings("deprecation")
         public InputStream openStream() throws IOException {
             return new URL(fileUrl).openStream();
-        }
-
-        public boolean hasModel() {
-            return model != null;
-        }
-
-        public boolean usesThinArms() {
-            return VanillaModels.isSlim(model);
         }
 
         @Override
