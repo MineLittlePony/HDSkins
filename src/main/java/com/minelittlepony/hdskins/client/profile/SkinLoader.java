@@ -12,6 +12,7 @@ import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.Memoize;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.SkinCacheClearCallback;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
@@ -71,7 +72,7 @@ public class SkinLoader {
 
         return CompletableFuture.allOf(tasks.values().stream().toArray(CompletableFuture[]::new)).thenApply(nothing -> {
             return new ProvidedSkins(
-                    Optional.ofNullable(textures.get(SkinType.SKIN)).map(skin -> skin.getMetadata("model")),
+                    Optional.ofNullable(textures.get(SkinType.SKIN)).map(skin -> VanillaModels.of(skin.getMetadata("model"))),
                     tasks.keySet().stream().map(SkinType::getId).collect(Collectors.toSet()),
                     tasks.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
                         return entry.getValue().join();
