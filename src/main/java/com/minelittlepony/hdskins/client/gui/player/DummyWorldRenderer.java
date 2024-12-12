@@ -11,7 +11,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
@@ -45,7 +44,6 @@ final class DummyWorldRenderer extends WorldRenderer {
             boolean renderBlockOutline,
             Camera camera,
             GameRenderer gameRenderer,
-            LightmapTextureManager lightmapTextureManager,
             Matrix4f positionMatrix,
             Matrix4f projectionMatrix
         ) {

@@ -27,6 +27,7 @@ public class TextureLoader {
      * @param textureLocation
      * @param texture
      */
+    @Deprecated
     public static <T extends AbstractTexture> T loadTexture(final Identifier textureLocation, final T texture) {
         CLIENT.execute(() -> {
             RenderSystem.recordRenderCall(() -> {
@@ -34,6 +35,13 @@ public class TextureLoader {
             });
         });
         return texture;
+    }
+
+    public static CompletableFuture<Identifier> uploadTexture(Identifier textureId, NativeImage image) {
+        return CompletableFuture.supplyAsync(() -> {
+            CLIENT.getTextureManager().registerTexture(textureId, new NativeImageBackedTexture(image));
+            return textureId;
+        }, CLIENT);
     }
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -76,7 +84,7 @@ public class TextureLoader {
     @Nullable
     private Optional<NativeImage> getImage(Identifier res) {
 
-        AbstractTexture tex = CLIENT.getTextureManager().getOrDefault(res, (AbstractTexture)null);
+        AbstractTexture tex = CLIENT.getTextureManager().getTexture(res);
 
         if (tex instanceof NativeImageBackedTexture nat) {
             return Optional.ofNullable(nat.getImage());

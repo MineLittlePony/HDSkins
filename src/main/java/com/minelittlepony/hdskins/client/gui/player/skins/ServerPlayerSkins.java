@@ -3,8 +3,9 @@ package com.minelittlepony.hdskins.client.gui.player.skins;
 import java.util.*;
 import java.util.function.*;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.minelittlepony.hdskins.client.resources.DynamicTextures;
-import com.minelittlepony.hdskins.client.resources.Texture;
 import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
@@ -36,7 +37,7 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
 
     @Override
     protected RemoteTexture createTexture(SkinType type, Supplier<Identifier> blank) {
-        return new RemoteTexture(blank, textureManager.flatMap(tpm -> tpm.loadTexture(type, blank.get())), true);
+        return new RemoteTexture(blank, textureManager.flatMap(tpm -> tpm.loadTexture(type, blank.get())).orElse(null), true);
     }
 
     public List<PreviousServerPlayerSkins> getProfileSkins(SkinType type) {
@@ -69,23 +70,27 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
 
     public record RemoteTexture (
             Supplier<Identifier> blank,
-            Optional<Texture.UriTexture> texture,
+            @Nullable DynamicTextures.Result texture,
             boolean active
     ) implements PlayerSkins.PlayerSkin {
-
         @Override
         public Identifier getId() {
-            return texture.filter(Texture::isLoaded).map(Texture::getId).orElseGet(blank);
+            if (texture == null || texture.id().isCancelled() || texture.id().isCompletedExceptionally() || !texture.id().isDone()) {
+                return blank.get();
+            }
+            return texture.id().getNow(blank.get());
         }
 
         @Override
         public boolean isReady() {
-            return texture.filter(Texture::isLoaded).isPresent();
+            return texture != null && texture.id().isDone() && !texture.id().isCancelled();
         }
 
         @Override
         public void close() {
-            texture.ifPresent(Texture.UriTexture::close);
+            if (texture != null) {
+                texture.id().cancel(true);
+            }
         }
     }
 }

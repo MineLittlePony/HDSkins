@@ -12,13 +12,11 @@ import java.util.concurrent.CompletableFuture;
 import com.google.common.hash.Hashing;
 import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
-import com.minelittlepony.hdskins.client.resources.TextureLoader;
+import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
 class FileStore {
@@ -39,14 +37,7 @@ class FileStore {
         String hash = Hashing.sha1().hashUnencodedChars(texture.getHash()).toString();
         Identifier id = HDSkins.id(type.getPathName() + "/" + hash);
         Path path = getHDSkinsCache().resolve(type.getPathName()).resolve(hash.length() > 2 ? hash.substring(0, 2) : "xx").resolve(hash);
-        CompletableFuture<Identifier> future = new CompletableFuture<>();
-        TextureLoader.loadTexture(id, new HDPlayerSkinTexture(
-                path.toFile(),
-                texture.getUrl(),
-                type,
-                DefaultSkinHelper.getTexture(),
-                () -> future.complete(id)));
-        return future;
+        return HDPlayerSkinTextureDownloader.downloadAndRegisterTexture(id, path, texture.getUrl(), type);
     }
 
     private Path getHDSkinsCache() {

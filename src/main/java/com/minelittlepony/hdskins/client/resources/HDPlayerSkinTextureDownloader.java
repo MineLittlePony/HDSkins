@@ -4,39 +4,85 @@ import static com.minelittlepony.common.event.SkinFilterCallback.EVENT;
 import static com.minelittlepony.common.event.SkinFilterCallback.copy;
 import static com.minelittlepony.common.event.SkinFilterCallback.fill;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import com.minelittlepony.common.event.SkinFilterCallback;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.logging.LogUtils;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.PlayerSkinTexture;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.PathUtil;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 
-public class HDPlayerSkinTexture extends PlayerSkinTexture implements ImageFilter {
+public class HDPlayerSkinTextureDownloader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final SkinType skinType;
+    public static CompletableFuture<Identifier> downloadAndRegisterTexture(Identifier textureId, Path cacheFile, String uri, SkinType skinType) {
+        return CompletableFuture.supplyAsync(() -> {
+            NativeImage nativeImage;
+            try {
+                nativeImage = download(cacheFile, uri);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
 
-    public HDPlayerSkinTexture(File cacheFile, String url, SkinType skinType, Identifier id, Runnable runnable) {
-        super(cacheFile, url, id, false, runnable);
-        this.skinType = skinType;
+            return SkinType.SKIN.equals(skinType) ? remapTexture(nativeImage) : nativeImage;
+        }, Util.getDownloadWorkerExecutor().named("downloadTexture")).thenCompose(image -> TextureLoader.uploadTexture(textureId, image));
     }
 
-    @Nullable
-    @Override
-    public NativeImage filterImage(@Nullable NativeImage image) {
-        if (image == null || !SkinType.SKIN.equals(skinType)) {
-            return image;
+    private static NativeImage download(Path path, String uri) throws IOException {
+        if (Files.isRegularFile(path)) {
+            LOGGER.debug("Loading HTTP texture from local cache ({})", path);
+            try (InputStream stream = Files.newInputStream(path)) {
+                return NativeImage.read(stream);
+            }
         }
-        return filterPlayerSkins(image, TextureLoader.Exclusion.NULL);
+
+        LOGGER.debug("Downloading HTTP texture from {} to {}", uri, path);
+        URI uRI = URI.create(uri);
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection)uRI.toURL().openConnection(MinecraftClient.getInstance().getNetworkProxy());
+            connection.setDoInput(true);
+            connection.setDoOutput(false);
+            connection.connect();
+            int responseCode = connection.getResponseCode();
+            if (responseCode / 100 != 2) {
+                throw new IOException("Failed to open " + uRI + ", HTTP error code: " + responseCode);
+            }
+
+            byte[] response = connection.getInputStream().readAllBytes();
+            try {
+                PathUtil.createDirectories(path.getParent());
+                Files.write(path, response);
+            } catch (IOException var13) {
+                LOGGER.warn("Failed to cache texture {} in {}", uri, path);
+            }
+
+            return NativeImage.read(response);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
     @Nullable
-    public static NativeImage filterPlayerSkins(@Nullable NativeImage image, TextureLoader.Exclusion exclusion) {
+    public static NativeImage remapTexture(@Nullable NativeImage image) {
 
         if (image == null) {
             return image;

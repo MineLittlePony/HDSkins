@@ -4,7 +4,8 @@ import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileSystemUtil;
 import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
-import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTexture;
+import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.RemoteTexture;
+import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.MinecraftClient;
@@ -152,12 +153,13 @@ public class SkinChooser implements CarouselStatusLabel {
             pickingInProgress = false;
 
             if (success) {
-                previewer.getRemote().getSkins().get(previewer.getActiveSkinType()).texture().ifPresent(texture -> {
+                RemoteTexture texture = previewer.getRemote().getSkins().get(previewer.getActiveSkinType());
+                if (texture.isReady() && texture.texture() != null) {
                     try {
                         Files.deleteIfExists(file);
                     } catch (IOException ignored) { }
 
-                    try (InputStream response = texture.openStream()) {
+                    try (InputStream response = texture.texture().openStream()) {
                         Files.copy(response, file);
 
                         MinecraftClient.getInstance().setScreen(new ConfirmationScreen(MinecraftClient.getInstance().currentScreen, Text.translatable("hdskins.save.completed"), () -> {
@@ -166,7 +168,7 @@ public class SkinChooser implements CarouselStatusLabel {
                     } catch (IOException e) {
                         LogManager.getLogger().error("Failed to save remote skin.", e);
                     }
-                });
+                }
             }
         }).launch();
     }
@@ -209,10 +211,10 @@ public class SkinChooser implements CarouselStatusLabel {
         int h = img.getHeight();
 
         if (previewer.getActiveSkinType().isVanilla()) {
-            if (!HDPlayerSkinTexture.isPowerOfTwo(w)) {
+            if (!HDPlayerSkinTextureDownloader.isPowerOfTwo(w)) {
                 return ERR_INVALID_POWER_OF_TWO;
             }
-            if (!HDPlayerSkinTexture.isValidShape(w, h)) {
+            if (!HDPlayerSkinTextureDownloader.isValidShape(w, h)) {
                 return ERR_INVALID_SHAPE;
             }
         }

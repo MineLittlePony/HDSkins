@@ -136,13 +136,13 @@ public class SkinListWidget implements Carousel.Element {
 
         bounds.translate(matrices);
         context.fill(0, frameWidth, bounds.width, 0, 0xA0000000);
-        matrices.translate(getScrollOffset(), 0, 200);
 
         int index = (int)(mouseX - (bounds.left + getScrollOffset())) / frameWidth;
 
         boolean hovered = bounds.contains(mouseX, mouseY);
 
-        context.enableScissor(bounds.left, bounds.top, bounds.right(), bounds.bottom());
+        context.enableScissor(0, 0, bounds.width, bounds.height);
+        matrices.translate(getScrollOffset(), 0, 200);
 
         if (hovered && index < skins.size()) {
             context.fill(index * frameWidth, 0, (index + 1) * frameWidth, frameWidth, 0xA0AAAAAA);

@@ -9,8 +9,11 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -32,22 +35,36 @@ public class DynamicTextures {
         return Optional.ofNullable(payload.textures().getOrDefault(type, null));
     }
 
-    public Optional<Texture.UriTexture> loadTexture(SkinType type, Identifier def) {
+    public Optional<Result> loadTexture(SkinType type, Identifier def) {
         return getTextureMetadata(type).map(texture -> {
             Identifier id = HDSkins.id(String.format("dynamic/%s/%s", type.getId().getPath(), texture.getHash()));
-            return TextureLoader.loadTexture(id, Texture.UriTexture.create(id, createTempFile(texture.getHash()), texture.getUrl(), type, texture.getMetadata("model"), def, () -> {
-                loadCallback.onSkinAvailable(type, id, texture);
+            String uri = texture.getUrl();
+            return new Result(uri, HDPlayerSkinTextureDownloader.downloadAndRegisterTexture(id, createTempFile(texture.getHash()), uri, type).handle((u, throwable) -> {
+                if (u != null) {
+                    loadCallback.onSkinAvailable(type, u, texture);
+                }
+                return u == null ? def : u;
             }));
         });
     }
 
     @Nullable
-    public static File createTempFile(String filename) {
+    public static Path createTempFile(String filename) {
         try {
-            File f = Files.createTempFile(filename, "skin-preview").toFile();
-            f.delete();
+            Path f = Files.createTempFile(filename, "skin-preview");
+            Files.deleteIfExists(f);
             return f;
         } catch (IOException ignored) {}
         return null;
+    }
+
+    public record Result(
+            String uri,
+            CompletableFuture<Identifier> id
+    ) {
+        @SuppressWarnings("deprecation")
+        public InputStream openStream() throws IOException {
+            return new URL(uri).openStream();
+        }
     }
 }

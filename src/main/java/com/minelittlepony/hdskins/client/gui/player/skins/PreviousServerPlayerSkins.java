@@ -7,8 +7,7 @@ import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.RemoteTexture;
 import com.minelittlepony.hdskins.client.resources.DynamicTextures;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
-import com.minelittlepony.hdskins.client.resources.Texture;
-import com.minelittlepony.hdskins.client.resources.TextureLoader;
+import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.client.resources.TextureLoader.Exclusion;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
@@ -40,13 +39,16 @@ public class PreviousServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.Rem
     @Override
     protected ServerPlayerSkins.RemoteTexture createTexture(SkinType type, Supplier<Identifier> blank) {
         if (type == this.type) {
-            String model = skin.getModel();
             String uri = skin.getUri();
             String hash = String.valueOf(uri.hashCode());
-
-            Identifier id = HDSkins.id(String.format("dynamic/%s/%s", type.getId().getPath(), hash));
-
-            return new RemoteTexture(blank, Optional.of(TextureLoader.loadTexture(id, Texture.UriTexture.create(id, DynamicTextures.createTempFile(hash), uri, type, model, blank.get(), null))), skin.isActive());
+            return new RemoteTexture(blank,
+                new DynamicTextures.Result(uri, HDPlayerSkinTextureDownloader.downloadAndRegisterTexture(
+                        HDSkins.id(String.format("dynamic/%s/%s", type.getId().getPath(), hash)),
+                        DynamicTextures.createTempFile(hash),
+                        uri, type
+                )),
+                skin.isActive()
+            );
         }
         return fallback.get(type);
     }

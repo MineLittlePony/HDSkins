@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
+import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -33,7 +34,7 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
     private Map<Identifier, EquipmentSet> equipmentSets = Map.of(EMPTY, emptySet);
 
     public EquipmentList() {
-        super(EquipmentSet.CODEC, "hd_skins_equipment");
+        super(EquipmentSet.CODEC, ResourceFinder.json("hd_skins_equipment"));
     }
 
     @Override
