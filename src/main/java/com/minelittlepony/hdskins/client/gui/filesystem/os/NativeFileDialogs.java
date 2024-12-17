@@ -18,7 +18,11 @@ public final class NativeFileDialogs implements FileDialogs {
             @Override
             @Nullable
             protected String runFileDialog() {
-                return TinyFileDialogs.tinyfd_openFileDialog(title, this.currentDirectory.toString(), getFilterBuffer(this.extensionFilter), this.filterMessage, false);
+                return TinyFileDialogs.tinyfd_openFileDialog(
+                        sanitize(title),
+                        currentDirectory.toString(),
+                        getFilterBuffer(extensionFilter),
+                        sanitize(filterMessage), false);
             }
         };
     }
@@ -29,15 +33,18 @@ public final class NativeFileDialogs implements FileDialogs {
             @Override
             @Nullable
             protected String runFileDialog() {
-                if (Files.isDirectory(this.currentDirectory)) {
-                    this.currentDirectory = this.currentDirectory.resolve(filename);
-                } else {
-                    this.currentDirectory = this.currentDirectory.resolveSibling(filename);
-                }
-
-                return TinyFileDialogs.tinyfd_saveFileDialog(title, this.currentDirectory.toString(), getFilterBuffer(this.extensionFilter), this.filterMessage);
+                currentDirectory = Files.isDirectory(currentDirectory) ? currentDirectory.resolve(filename) : currentDirectory.resolveSibling(filename);
+                return TinyFileDialogs.tinyfd_saveFileDialog(
+                        sanitize(title), currentDirectory.toString(),
+                        getFilterBuffer(extensionFilter),
+                        sanitize(filterMessage)
+                );
             }
         };
+    }
+
+    private static String sanitize(String input) {
+        return input.replaceAll("[\"\']", "").replaceAll("([|&\\[\\]$()`\\\\])", "\\\\$1");
     }
 
     private static PointerBuffer getFilterBuffer(@Nullable String filter) {
