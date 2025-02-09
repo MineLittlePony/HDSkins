@@ -1,6 +1,8 @@
 package com.minelittlepony.hdskins.server;
 
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
@@ -8,6 +10,9 @@ import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import net.minecraft.util.Util;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.net.URI;
@@ -37,8 +42,16 @@ public class ValhallaSkinServer implements SkinServer {
         this.address = address;
     }
 
-    private URI buildBackendUri(String path) {
-        return URI.create(String.format("%s%s/%s", address, API_PREFIX, path));
+    private static NameValuePair param(String name, String value) {
+        return new BasicNameValuePair(name, value);
+    }
+
+    private URI buildBackendUri(String path, NameValuePair... params) {
+        try {
+            return new URIBuilder(address).setPathSegments(API_PREFIX, path).setParameters(params).build();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Failed to build URI", e);
+        }
     }
 
     private URI buildBackendUserUri(UUID uuid) {
@@ -110,27 +123,32 @@ public class ValhallaSkinServer implements SkinServer {
     @Override
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         doAuthorizedRequest(upload.session(), (accessToken) -> switch (upload) {
-            case SkinUpload.Delete ignored -> MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("texture"))
-                            .method("DELETE", FileTypes.json(Map.of("type", upload.type().getParameterizedName())))
+            // TODO: (@Killjoy) Use namespaced ids and translate old unnamespaced to namespaced
+            case SkinUpload.Delete ignored ->
+                    MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures", param("type", upload.type().getParameterizedName())))
+                            .DELETE()
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
                             .build())
                     .requireOk();
             case SkinUpload.FileUpload fileUpload ->
                     MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
-                            .PUT(FileTypes.multiPart(fileUpload.metadata())
+                            .PUT(FileTypes.multiPart()
                                     .field("type", fileUpload.type().getParameterizedName())
                                     .field("file", fileUpload.file())
+                                    .field("meta", new Gson().toJson(fileUpload.metadata()))
                                     .build())
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
                             .build())
                     .requireOk();
-            case SkinUpload.UriUpload uriUpload -> MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
-                            .POST(FileTypes.json(Util.make(new HashMap<>(uriUpload.metadata()), metadata -> {
-                                metadata.put("type", uriUpload.type().getParameterizedName());
-                                metadata.put("file", uriUpload.uri().toString());
-                            })))
+            case SkinUpload.UriUpload uriUpload ->
+                    MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
+                            .POST(FileTypes.json(Map.of(
+                                "type", uriUpload.type().getParameterizedName(),
+                                "file", uriUpload.uri().toString(),
+                                "meta", uriUpload.metadata()
+                            )))
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
