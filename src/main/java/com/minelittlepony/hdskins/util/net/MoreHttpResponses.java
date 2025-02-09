@@ -5,16 +5,19 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.http.*;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Utility class for getting different response types from a http response.
@@ -57,17 +60,24 @@ public interface MoreHttpResponses {
         }
     }
 
-    default <T> T json(Class<T> type, String errorMessage) throws IOException {
-        var json = json(type);
-        return json.getKey().orElseThrow(() -> new HttpException(errorMessage + "\n" + json.getValue(), response().statusCode(), null));
+    default <T> T json(Class<T> type, @Nullable String errorMessage) throws IOException {
+        return json((Type) type, errorMessage);
     }
 
-    default <T> Map.Entry<Optional<T>, String> json(Class<T> type) throws IOException {
+    default <T> T json(Type type, String errorMessage) throws IOException {
+        return json(type, () -> errorMessage);
+    }
+
+    default <T> T json(Class<T> type, Supplier<String> errorMessage) throws IOException {
+        return json((Type) type, errorMessage);
+    }
+
+    default <T> T json(Type type, Supplier<String> errorMessage) throws IOException {
         String text = text();
         if (contentTypeMatches(FileTypes.APPLICATION_JSON)) {
-            return Map.entry(Optional.ofNullable(GSON.fromJson(text, type)), text);
+            return GSON.fromJson(text, type);
         }
-        return Map.entry(Optional.empty(), text);
+        throw new HttpException(String.format("%s\n%s", errorMessage.get(), text), response().statusCode(), null);
     }
 
     default boolean ok() {
@@ -79,5 +89,13 @@ public interface MoreHttpResponses {
             throw HttpException.of(this);
         }
         return this;
+    }
+
+    default <T> Optional<T> accept(Untrusted<MoreHttpResponses, T> function) throws IOException {
+        return ok() ? Optional.of(function.apply(this)) : Optional.empty();
+    }
+
+    interface Untrusted<A, B> {
+        B apply(A a) throws IOException;
     }
 }

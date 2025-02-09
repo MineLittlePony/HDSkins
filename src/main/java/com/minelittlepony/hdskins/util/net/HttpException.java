@@ -30,10 +30,7 @@ public class HttpException extends IOException {
 
     static HttpException of(MoreHttpResponses response) throws IOException {
         return new HttpException(
-            response.json(JsonObject.class)
-                .getKey()
-                .map(HttpException::getMessage)
-                .orElseGet(() -> "Server did not respond correctly. Status Code " + response.response().statusCode()),
+            getMessage(response.json(JsonObject.class, () -> "Server did not respond correctly. Status Code " + response.response().statusCode())),
             response.response().statusCode(),
             null
         );

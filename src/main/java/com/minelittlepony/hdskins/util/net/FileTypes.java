@@ -15,6 +15,7 @@ import java.util.concurrent.Flow.Subscriber;
 import org.apache.commons.io.FilenameUtils;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
 
 public interface FileTypes {
     String MULTI_PART_BOUNDARY = "MULTI-PART_BOUNDARY";
@@ -121,5 +122,13 @@ public interface FileTypes {
                 }
             };
         }
+    }
+
+    static BodyPublisher json(Object object) {
+        return json(object, new Gson());
+    }
+
+    static BodyPublisher json(Object object, Gson gson) {
+        return BodyPublishers.ofString(gson.toJson(object), StandardCharsets.UTF_8);
     }
 }
