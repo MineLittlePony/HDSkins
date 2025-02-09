@@ -48,7 +48,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private URI buildBackendUri(String path, NameValuePair... params) {
         try {
-            return new URIBuilder(address).setPathSegments(API_PREFIX, path).setParameters(params).build();
+            return new URIBuilder(address + API_PREFIX + "/" + path).setParameters(params).build();
         } catch (URISyntaxException e) {
             throw new RuntimeException("Failed to build URI", e);
         }
