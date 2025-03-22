@@ -77,7 +77,7 @@ public class SkinListWidget implements Carousel.Element {
     }
 
     private float getScrollOffset() {
-        return -MathHelper.lerp(MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(false), prevScrollPosition, scrollPosition) * bounds.height;
+        return -MathHelper.lerp(MinecraftClient.getInstance().getRenderTickCounter().getTickProgress(false), prevScrollPosition, scrollPosition) * bounds.height;
     }
 
     private void updateButtons() {
@@ -249,7 +249,7 @@ public class SkinListWidget implements Carousel.Element {
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
 
-        DiffuseLighting.method_34742();
+        DiffuseLighting.enableGuiShaderLighting();
 
         VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
 

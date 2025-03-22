@@ -22,7 +22,6 @@ import com.mojang.authlib.yggdrasil.ProfileResult;
 
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Text;
-import net.minecraft.text.ClickEvent.Action;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
@@ -39,6 +38,8 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.DELETE_USER_SKIN,
             Feature.MODEL_VARIANTS,
             Feature.MODEL_TYPES);
+
+    private static final URI LOGIN_URI = URI.create("https://www.minecraft.net/en-us/login");
 
     private transient final String address = "https://api.minecraftservices.com";
     private transient final String verify = "https://authserver.mojang.com/validate";
@@ -179,8 +180,8 @@ public class YggdrasilSkinServer implements SkinServer {
     @Override
     public Map<Text, Text> getMetadata() {
         return Map.of(
-            Text.translatable("hdskins.label.website"), Text.literal("https://www.minecraft.net/en-us/login").formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, "https://www.minecraft.net/en-us/login"));
+            Text.translatable("hdskins.label.website"), Text.literal(LOGIN_URI.toString()).formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
+                return style.withClickEvent(new ClickEvent.OpenUrl(LOGIN_URI));
             }),
             Text.translatable("hdskins.label.author"), Text.literal("Mojang")
         );

@@ -18,8 +18,6 @@ import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Sk
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
@@ -36,6 +34,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
+import java.util.stream.IntStream;
 
 /**
  * The top-level interface for the skin uploader.
@@ -75,7 +74,10 @@ public class GuiSkins extends GameGui {
         return () -> !isEnabled.getAsBoolean() ? disabledTooltip.getLines() : originalTooltip.getLines();
     }
 
-    private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(new CubeMapRenderer(getBackground()));
+    private final Identifier background = getBackground();
+    private final CubeMapRenderer cubemap = new CubeMapRenderer(background);
+    private final List<Identifier> cubemapFaces = IntStream.range(0, 6).mapToObj(face -> background.withPath(background.getPath() + "_" + face + ".png")).toList();
+    private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(cubemap);
 
     protected final DualCarouselWidget previewer;
     protected final SkinUploader uploader;
@@ -113,6 +115,11 @@ public class GuiSkins extends GameGui {
             if (typeSelector != null) {
                 typeSelector.setValue(previewer.getActiveSkinType());
             }
+        });
+
+        // ensure faces are loaded
+        cubemapFaces.forEach(face -> {
+            client.getTextureManager().getTexture(face);
         });
     }
 
@@ -352,13 +359,12 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    protected void renderPanoramaBackground(DrawContext context, float delta) {
-        panorama.render(context, this.width, this.height, 1.0F, delta);
+    protected void renderPanoramaBackground(DrawContext context, float tickDelta) {
+        panorama.render(context, this.width, this.height, 1.0F, tickDelta);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        RenderSystem.disableCull();
         super.render(context, mouseX, mouseY, tickDelta);
         banner.render(context, tickDelta, width, height);
     }

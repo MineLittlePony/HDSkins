@@ -209,11 +209,6 @@ public class DummyPlayer extends AbstractClientPlayerEntity {
     }
 
     @Override
-    public Iterable<ItemStack> getArmorItems() {
-        return armour.values();
-    }
-
-    @Override
     public ItemStack getEquippedStack(EquipmentSlot slot) {
         return armour.getOrDefault(slot, ItemStack.EMPTY);
     }

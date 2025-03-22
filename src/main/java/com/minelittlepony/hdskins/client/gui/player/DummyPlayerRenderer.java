@@ -8,10 +8,11 @@ import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.recipebook.ClientRecipeBook;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.BlockRenderManager;
+import net.minecraft.client.render.block.BlockModelRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -24,7 +25,7 @@ import net.minecraft.stat.StatHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.concurrent.CompletableFuture;
@@ -78,12 +79,11 @@ public class DummyPlayerRenderer {
     }
 
     static void renderBlockState(World world, BlockState state, MatrixStack stack, VertexConsumerProvider renderContext) {
-        BlockRenderManager blockRenderer = MinecraftClient.getInstance().getBlockRenderManager();
-        blockRenderer.getModelRenderer().render(world, blockRenderer.getModel(state),
-                state, BlockPos.ORIGIN, stack,
+        BlockModelRenderer.render(
+                stack.peek(),
                 renderContext.getBuffer(RenderLayers.getMovingBlockLayer(state)),
-                false, Random.create(),
-                state.getRenderingSeed(BlockPos.ORIGIN), OverlayTexture.DEFAULT_UV);
+                MinecraftClient.getInstance().getBlockRenderManager().getModel(state), 1, 1, 1,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV);
     }
 
     public static class BedHead extends BedBlockEntity {
@@ -106,7 +106,7 @@ public class DummyPlayerRenderer {
             BlockEntityRenderer<BedHead> renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(this);
 
             if (renderer != null) {
-                renderer.render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV);
+                renderer.render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV, Vec3d.ZERO);
             } else {
                 BlockState state = getCachedState();
                 renderBlockState(world, state, stack, renderContext);

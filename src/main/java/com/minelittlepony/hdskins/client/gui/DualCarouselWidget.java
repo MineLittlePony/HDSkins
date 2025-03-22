@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import static com.mojang.blaze3d.systems.RenderSystem.*;
-
 import java.io.Closeable;
 import java.util.*;
 import java.util.function.Consumer;
@@ -18,7 +16,6 @@ import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.world.ClientWorld;
@@ -192,10 +189,8 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        enableDepthTest();
         local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
         remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
-        disableDepthTest();
 
         chooser.renderStatus(context, local.bounds);
         uploader.renderStatus(context, remote.bounds);

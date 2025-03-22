@@ -24,9 +24,10 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.PathUtil;
+
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
+import net.minecraft.util.path.PathUtil;
 
 public class HDPlayerSkinTextureDownloader {
     private static final Logger LOGGER = LogUtils.getLogger();

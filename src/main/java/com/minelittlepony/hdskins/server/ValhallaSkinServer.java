@@ -11,7 +11,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
 import net.minecraft.text.ClickEvent;
-import net.minecraft.text.ClickEvent.Action;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Formatting;
@@ -276,10 +275,10 @@ public class ValhallaSkinServer implements SkinServer {
     public Map<Text, Text> getMetadata() {
         return Map.of(
             Text.translatable("hdskins.label.documentation"), Text.literal(address + "/docs").formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, address + "/docs"));
+                return style.withClickEvent(new ClickEvent.OpenUrl(URI.create(address + "/docs")));
             }),
             Text.translatable("hdskins.label.source"), Text.literal(SRC).formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent(Action.OPEN_URL, SRC));
+                return style.withClickEvent(new ClickEvent.OpenUrl(URI.create(SRC)));
             }),
             Text.translatable("hdskins.label.author"), Text.literal("Killjoy")
         );

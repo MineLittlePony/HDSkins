@@ -150,7 +150,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rot));
 
-        DiffuseLighting.method_34742();
+        DiffuseLighting.enableGuiShaderLighting();
 
         VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
