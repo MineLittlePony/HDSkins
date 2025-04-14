@@ -4,13 +4,12 @@ import java.util.function.Supplier;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.PlayerSkinLayers;
 import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.mojang.authlib.GameProfile;
@@ -19,24 +18,19 @@ import net.minecraft.client.util.SkinTextures;
 
 @Mixin(PlayerListEntry.class)
 abstract class MixinPlayerListEntry implements ClientPlayerInfo {
-    @Shadow
-    private @Final GameProfile profile;
-    @Shadow
+    @Shadow @Mutable
     private @Final Supplier<SkinTextures> texturesSupplier;
 
-    private PlayerSkins hdskinsPlayerSkins;
+    private Supplier<PlayerSkins> hdskinsPlayerSkins;
+
+    @Inject(method = "<init>(Lcom/mojang/authlib/GameProfile;Z)V", at = @At("RETURN"))
+    private void onInit(GameProfile profile, boolean secureChatEnforced, CallbackInfo info) {
+        hdskinsPlayerSkins = PlayerSkins.create(profile, texturesSupplier);
+        texturesSupplier = () -> getSkins().sorted().getSkinTextures();
+    }
 
     @Override
     public PlayerSkins getSkins() {
-        if (hdskinsPlayerSkins == null) {
-            PlayerSkinLayers layers = PlayerSkinLayers.of(profile, texturesSupplier);
-            hdskinsPlayerSkins = new PlayerSkins(layers, new PlayerSkinLayers.Layer(HDSkins.getInstance().getSkinPrioritySorter().createDynamicTextures(layers)));
-        }
-        return hdskinsPlayerSkins;
-    }
-
-    @Inject(method = "getSkinTextures", at = @At("HEAD"), cancellable = true)
-    private void onGetSkinTextures(CallbackInfoReturnable<SkinTextures> info) {
-        info.setReturnValue(getSkins().sorted().getSkinTextures());
+        return hdskinsPlayerSkins.get();
     }
 }

@@ -126,6 +126,7 @@ public class ValhallaSkinServer implements SkinServer {
         ));
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         doAuthorizedRequest(upload.session(), (accessToken) -> switch (upload) {
