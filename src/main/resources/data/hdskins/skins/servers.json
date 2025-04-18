@@ -6,6 +6,12 @@
       "type": "valhalla",
       "address": "https://skins.minelittlepony-mod.com"
     },
-    { "type": "mojang" }
+    {
+      "type": "hdskins.de",
+      "address": "https://hdskins.de"
+    },
+    {
+      "type": "mojang"
+    }
   ]
 }

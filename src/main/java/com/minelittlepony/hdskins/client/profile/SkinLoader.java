@@ -1,12 +1,5 @@
 package com.minelittlepony.hdskins.client.profile;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
 import com.google.common.cache.LoadingCache;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.Memoize;
@@ -16,10 +9,18 @@ import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class SkinLoader {
     private final LoadingCache<GameProfile, CompletableFuture<ProvidedSkins>> cache = Memoize.createAsyncLoadingCache(15, profile -> {
@@ -90,7 +91,15 @@ public class SkinLoader {
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 
-    public record ProvidedSkins (Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, Identifier> skins) implements DynamicSkinTextures {
+    public void invalidateByUniqueId(@NotNull UUID uniqueId) {
+        for (Map.Entry<GameProfile, CompletableFuture<ProvidedSkins>> entry : this.cache.asMap().entrySet()) {
+            if (entry.getKey().getId().equals(uniqueId)) {
+                this.cache.invalidate(entry.getKey());
+            }
+        }
+    }
+
+    public record ProvidedSkins(Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, Identifier> skins) implements DynamicSkinTextures {
         public static final ProvidedSkins EMPTY = new ProvidedSkins(Optional.empty(), Set.of(), Map.of());
 
         @Override

@@ -3,14 +3,8 @@ package com.minelittlepony.hdskins.server;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import com.minelittlepony.hdskins.server.de.hdskins.HDSkinsDESkinServer;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -24,6 +18,7 @@ public class SkinServerSerializer implements JsonSerializer<SkinServer>, JsonDes
         // register default skin server types
         addSkinServerType(ValhallaSkinServer.class);
         addSkinServerType(YggdrasilSkinServer.class);
+        addSkinServerType(HDSkinsDESkinServer.class);
     }
 
     public void addSkinServerType(Class<? extends SkinServer> type) {
