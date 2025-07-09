@@ -125,9 +125,7 @@ public class FileSelectorScreen extends GameGui implements FileDialog {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        renderBackground(context, mouseX, mouseY, tickDelta);
         super.render(context, mouseX, mouseY, tickDelta);
-
         filesList.render(context, mouseX, mouseY, tickDelta);
     }
 

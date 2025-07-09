@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.VanillaModels;
-import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -42,7 +41,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     private int reloadCounter = 0;
     private int retries = 1;
 
-    private final DualCarouselWidget previewer;
+    private final DualCarouselWidget<?> previewer;
 
     private final Iterator<Gateway> gateways;
     private Optional<Gateway> gateway;
@@ -52,7 +51,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
 
     private final SkinUpload.Session session;
 
-    public SkinUploader(Iterator<Gateway> gateways, DualCarouselWidget previewer, SkinUpload.Session session) {
+    public SkinUploader(Iterator<Gateway> gateways, DualCarouselWidget<?> previewer, SkinUpload.Session session) {
         this.previewer = previewer;
         this.gateways = gateways;
         this.session = session;
@@ -265,8 +264,6 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     }
 
     public void update() {
-        previewer.apply(DummyPlayer::updateModel);
-
         if (isThrottled()) {
             reloadCounter = (reloadCounter + 1) % (200 * retries);
             if (reloadCounter == 0) {

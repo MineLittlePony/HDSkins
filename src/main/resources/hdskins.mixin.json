@@ -7,7 +7,8 @@
   "mixins": [],
   "client": [
     "client.MixinPlayerListEntry",
-    "client.MixinSkullRenderer"
+    "client.MixinSkullRenderer",
+    "client.MixinSpecialGuiElementRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

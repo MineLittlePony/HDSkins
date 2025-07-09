@@ -147,7 +147,7 @@ public class SettingsScreen extends GameGui {
 
     @Override
     protected void renderPanoramaBackground(DrawContext context, float delta) {
-        panorama.render(context, this.width, this.height, 1.0F, delta);
+        panorama.render(context, this.width, this.height, true);
     }
 
     @Override

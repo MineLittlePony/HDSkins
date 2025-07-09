@@ -22,9 +22,9 @@ public class Controls {
     private boolean jumpState = false;
     private boolean sneakState = false;
 
-    private final DualCarouselWidget previewer;
+    private final DualCarouselWidget<?> previewer;
 
-    public Controls(DualCarouselWidget previewer) {
+    public Controls(DualCarouselWidget<?> previewer) {
         this.previewer = previewer;
         addControl(previewer::setSprinting, () -> client.options.forwardKey.isPressed() || client.options.backKey.isPressed());
     }

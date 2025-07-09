@@ -52,7 +52,7 @@ public class SkinChooser implements CarouselStatusLabel {
     public static final Text MSG_CHOOSE = Text.translatable("hdskins.choose");
 
     private boolean pickingInProgress;
-    private final DualCarouselWidget previewer;
+    private final DualCarouselWidget<?> previewer;
     private Consumer<SkinType> listener = t -> {};
 
     private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
@@ -61,7 +61,7 @@ public class SkinChooser implements CarouselStatusLabel {
 
     private volatile Text status = MSG_CHOOSE;
 
-    public SkinChooser(DualCarouselWidget previewer) {
+    public SkinChooser(DualCarouselWidget<?> previewer) {
         this.previewer = previewer;
         addImageValidation(this::acceptsSkinDimensions);
     }

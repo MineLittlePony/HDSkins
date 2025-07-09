@@ -11,6 +11,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 
 public class ConfirmationScreen extends GameGui {
 
@@ -47,8 +48,6 @@ public class ConfirmationScreen extends GameGui {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         parent.render(context, -1, -1, partialTicks);
-        context.getMatrices().push();
-        context.getMatrices().translate(0, 0, 300);
 
         context.fill(0, 0, width, height, 0xC8000000);
 
@@ -57,10 +56,8 @@ public class ConfirmationScreen extends GameGui {
         int left = width / 2;
         int top = height / 2 - (message.size() * getFont().fontHeight);
         for (Text line : message) {
-            drawCenteredLabel(context, line, left, top += getFont().fontHeight, 0xFFFFFFFF, 0);
+            drawCenteredLabel(context, line, left, top += getFont().fontHeight, Colors.WHITE);
         }
-
-        context.getMatrices().pop();
     }
 
     @Override

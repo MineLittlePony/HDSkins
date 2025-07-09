@@ -22,6 +22,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.texture.CubemapTexture;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -34,7 +35,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
-import java.util.stream.IntStream;
 
 /**
  * The top-level interface for the skin uploader.
@@ -76,10 +76,9 @@ public class GuiSkins extends GameGui {
 
     private final Identifier background = getBackground();
     private final CubeMapRenderer cubemap = new CubeMapRenderer(background);
-    private final List<Identifier> cubemapFaces = IntStream.range(0, 6).mapToObj(face -> background.withPath(background.getPath() + "_" + face + ".png")).toList();
     private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(cubemap);
 
-    protected final DualCarouselWidget previewer;
+    protected final DualCarouselWidget<?> previewer;
     protected final SkinUploader uploader;
     protected final SkinChooser chooser;
 
@@ -116,15 +115,17 @@ public class GuiSkins extends GameGui {
                 typeSelector.setValue(previewer.getActiveSkinType());
             }
         });
-
         // ensure faces are loaded
-        cubemapFaces.forEach(face -> {
-            client.getTextureManager().getTexture(face);
-        });
+        client.getTextureManager().registerTexture(background, new CubemapTexture(background));
     }
 
-    protected DualCarouselWidget createPreviewer() {
-        return new DualCarouselWidget(this);
+    protected DualCarouselWidget<?> createPreviewer() {
+        return new DualCarouselWidget<>(this) {
+            @Override
+            protected DummyPlayerRenderState createEntity(PlayerSkins<?> textures) {
+                return new DummyPlayerRenderState(textures);
+            }
+        };
     }
 
     protected Identifier getBackground() {
@@ -360,7 +361,7 @@ public class GuiSkins extends GameGui {
 
     @Override
     protected void renderPanoramaBackground(DrawContext context, float tickDelta) {
-        panorama.render(context, this.width, this.height, 1.0F, tickDelta);
+        panorama.render(context, width, height, true);
     }
 
     @Override

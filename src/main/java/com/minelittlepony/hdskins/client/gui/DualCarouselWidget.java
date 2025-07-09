@@ -8,7 +8,6 @@ import org.lwjgl.glfw.GLFW;
 
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.hdskins.client.*;
-import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.skins.LocalPlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
@@ -18,24 +17,23 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.*;
 import net.minecraft.text.Text;
 
 /**
  * Handles the display of the dummy players in the GUI.
  */
-public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, ITextContext {
+public abstract class DualCarouselWidget<S extends DummyPlayerRenderState> implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int PASSIVE_ROTATION_SPEED = 1;
     private static final int MAX_MANUAL_ROTATION_SPEED = 20;
 
     protected final MinecraftClient minecraft = MinecraftClient.getInstance();
     protected final GameProfile profile = minecraft.getGameProfile();
 
-    public final Carousel<LocalPlayerSkins> local;
-    public final Carousel<ServerPlayerSkins> remote;
+    public final Carousel<LocalPlayerSkins, S> local;
+    public final Carousel<ServerPlayerSkins, S> remote;
 
-    private final SkinListWidget skinList;
+    private final SkinListWidget<S> skinList;
 
     private Pose pose = Pose.STAND;
     private SkinType activeSkinType = SkinType.SKIN;
@@ -47,7 +45,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     protected final Controls controls;
 
-    private float updateCounter = 72;
+    private float rotationAngle = 72;
     private float rotationSpeed;
     private int prevRotationDirection;
 
@@ -57,20 +55,18 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         this.screen = screen;
         local = new Carousel<>(Text.translatable("hdskins.local"), new LocalPlayerSkins(this), this::createEntity);
         remote = new Carousel<>(Text.translatable("hdskins.server"), new ServerPlayerSkins(this), this::createEntity);
-        skinList = new SkinListWidget(this, remote.bounds);
+        skinList = new SkinListWidget<>(this, remote.bounds);
         controls = new Controls(this);
         remote.addElement(skinList);
     }
 
-    protected DummyPlayer createEntity(ClientWorld world, PlayerSkins<?> textures) {
-        return new DummyPlayer(world, textures);
-    }
+    protected abstract S createEntity(PlayerSkins<?> textures);
 
-    public Carousel<ServerPlayerSkins> getRemote() {
+    public Carousel<ServerPlayerSkins, S> getRemote() {
         return remote;
     }
 
-    public Carousel<LocalPlayerSkins> getLocal() {
+    public Carousel<LocalPlayerSkins, S> getLocal() {
         return local;
     }
 
@@ -136,20 +132,20 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     }
 
     public void setJumping(boolean jumping) {
-        apply(p -> p.setJumping(jumping));
+        apply(p -> p.jumping = jumping);
     }
 
     public void setSneaking(boolean sneaking) {
-        apply(p -> p.setSneaking(sneaking));
+        apply(p -> p.isInSneakingPose = sneaking);
     }
 
-    public void setSprinting(boolean walking) {
-        apply(p -> p.setSprinting(walking));
+    public void setSprinting(boolean sprinting) {
+        apply(p -> p.sprinting = sprinting);
     }
 
-    public void apply(Consumer<DummyPlayer> action) {
-        getLocal().getEntity().ifPresent(action);
-        getRemote().getEntity().ifPresent(action);
+    public void apply(Consumer<DummyPlayerRenderState> action) {
+        action.accept(getLocal().getEntity().playerState);
+        action.accept(getRemote().getEntity().playerState);
     }
 
     public void init() {
@@ -165,6 +161,8 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     public void update() {
         controls.update();
+        local.update();
+        remote.update();
 
         MinecraftClient client = MinecraftClient.getInstance();
 
@@ -176,24 +174,24 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         if (!(left && right) && !screen.isDragging()) {
             if (rotationDirection == 0) {
                 rotationSpeed = (int)Math.max(PASSIVE_ROTATION_SPEED, rotationSpeed * 0.6F);
-                updateCounter += rotationSpeed;
+                rotationAngle += rotationSpeed;
             } else {
                 if (prevRotationDirection != rotationDirection) {
                     rotationSpeed = PASSIVE_ROTATION_SPEED;
                 }
                 rotationSpeed = Math.min(MAX_MANUAL_ROTATION_SPEED, rotationSpeed + PASSIVE_ROTATION_SPEED);
-                updateCounter -= rotationSpeed * rotationDirection;
+                rotationAngle -= rotationSpeed * rotationDirection;
             }
         }
         prevRotationDirection = rotationDirection;
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
-        remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
+        local.render(mouseX, mouseY, (int)rotationAngle, partialTick, context);
+        remote.render(mouseX, mouseY, (int)rotationAngle, partialTick, context);
 
-        chooser.renderStatus(context, local.bounds);
         uploader.renderStatus(context, remote.bounds);
+        chooser.renderStatus(context, local.bounds);
     }
 
     public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
@@ -211,7 +209,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
         if (screen.isDragging()) {
-            updateCounter -= changeX;
+            rotationAngle += changeX * 2;
         }
         return true;
     }

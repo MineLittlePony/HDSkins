@@ -26,6 +26,7 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.*;
 
+@Deprecated
 public class DummyWorld extends ClientWorld {
     public static final Supplier<CompletableFuture<DummyWorld>> FUTURE_INSTANCE = Suppliers.memoize(() -> {
         return DummyWorldRenderer.FUTURE_INSTANCE.get()

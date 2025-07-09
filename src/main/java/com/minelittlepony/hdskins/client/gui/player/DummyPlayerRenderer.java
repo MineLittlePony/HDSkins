@@ -22,6 +22,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.Items;
 import net.minecraft.stat.StatHandler;
+import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.RotationAxis;
@@ -34,6 +35,7 @@ import java.util.function.Supplier;
 import com.google.common.base.Suppliers;
 import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 
+@Deprecated
 public class DummyPlayerRenderer {
 
     private static final Supplier<CompletableFuture<ClientPlayerEntity>> FUTURE_NULL_PLAYER = Suppliers.memoize(() -> {
@@ -43,7 +45,7 @@ public class DummyPlayerRenderer {
                     w,
                     DummyNetworkHandler.INSTANCE.get(),
                     new StatHandler(),
-                    new ClientRecipeBook(), false, false
+                    new ClientRecipeBook(), PlayerInput.DEFAULT, false
             );
         }, MinecraftClient.getInstance());
     });
@@ -101,7 +103,7 @@ public class DummyPlayerRenderer {
             stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
             stack.translate(-0.5, 0, 0);
 
-            World world = entity.getEntityWorld();
+            World world = entity.getWorld();
 
             BlockEntityRenderer<BedHead> renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(this);
 

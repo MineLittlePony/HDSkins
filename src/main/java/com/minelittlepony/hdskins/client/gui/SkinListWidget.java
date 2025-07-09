@@ -3,37 +3,30 @@ package com.minelittlepony.hdskins.client.gui;
 import java.util.List;
 import java.util.Optional;
 
+import org.joml.Matrix3x2fStack;
+import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
 
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
-import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
-import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
-import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PreviousServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
-import net.minecraft.block.Blocks;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Colors;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
 
 /**
  * Displays a list of previous skins the user has had in the past.
  */
-public class SkinListWidget implements Carousel.Element {
-
-    private final DualCarouselWidget previewer;
+public class SkinListWidget<S extends DummyPlayerRenderState> implements Carousel.Element<S> {
+    private final DualCarouselWidget<S> previewer;
 
     private final MinecraftClient client = MinecraftClient.getInstance();
 
@@ -47,7 +40,9 @@ public class SkinListWidget implements Carousel.Element {
     private Button scrollLeft;
     private Button scrollRight;
 
-    public SkinListWidget(DualCarouselWidget previewer, Bounds bounds) {
+    private final Int2ObjectMap<PlayerBodyWidget<S>> modelStates = new Int2ObjectOpenHashMap<>();
+
+    public SkinListWidget(DualCarouselWidget<S> previewer, Bounds bounds) {
         this.previewer = previewer;
         this.containerBounds = bounds;
     }
@@ -96,8 +91,18 @@ public class SkinListWidget implements Carousel.Element {
     }
 
     @Override
-    public void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY) {
+    public void tick() {
+        List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
+        if (skins.isEmpty()) {
+            modelStates.clear();
+            return;
+        }
+        modelStates.int2ObjectEntrySet().removeIf(e -> e.getIntKey() >= skins.size());
+        modelStates.values().forEach(Carousel.Element::tick);
+    }
 
+    @Override
+    public void updateState(float xPosition, float yPosition, float mouseX, float mouseY, float tickDelta) {
         prevScrollPosition = scrollPosition;
         if (targetScrollPosition != scrollPosition) {
             if (scrollPosition > targetScrollPosition) {
@@ -119,20 +124,36 @@ public class SkinListWidget implements Carousel.Element {
         updateButtons();
 
         List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
+
+        int frameWidth = bounds.height;
+        int index = (int)(mouseX - (bounds.left + getScrollOffset())) / frameWidth;
+        boolean hovered = bounds.contains(mouseX, mouseY);
+
+        for (int i = 0; i < skins.size(); i++) {
+            if (!skins.get(i).getType().isUnsupported()) {
+                PlayerBodyWidget<S> player = getOrCreateStateAt(i, skins.get(i));
+                player.updateState(xPosition, yPosition, mouseX, mouseY, tickDelta);
+                player.playerState.limbSwingAnimationProgress = 0;
+                if (hovered && i == index) {
+                    player.playerState.limbSwingAnimationProgress = 0.5F;
+                    player.position.y -= 3;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void render(DrawContext context, Bounds outerFrameBounds, int mouseX, int mouseY, Quaternionf rotation) {
+        List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
         if (skins.isEmpty()) {
             return;
         }
 
         int frameWidth = bounds.height;
 
-        boolean sneaking = player.isSneaking();
-        if (sneaking) {
-            player.setSneaking(false);
-        }
+        Matrix3x2fStack matrices = context.getMatrices();
 
-        MatrixStack matrices = context.getMatrices();
-
-        matrices.push();
+        matrices.pushMatrix();
 
         bounds.translate(matrices);
         context.fill(0, frameWidth, bounds.width, 0, 0xA0000000);
@@ -141,58 +162,49 @@ public class SkinListWidget implements Carousel.Element {
 
         boolean hovered = bounds.contains(mouseX, mouseY);
 
-        context.enableScissor(0, 0, bounds.width, bounds.height);
-        matrices.translate(getScrollOffset(), 0, 200);
+        matrices.translate(getScrollOffset(), 0);
 
         if (hovered && index < skins.size()) {
             context.fill(index * frameWidth, 0, (index + 1) * frameWidth, frameWidth, 0xA0AAAAAA);
         }
 
-        try {
-            for (int i = 0; i < skins.size(); i++) {
-                PreviousServerPlayerSkins skin = skins.get(i);
+        for (int i = 0; i < skins.size(); i++) {
+            PreviousServerPlayerSkins skin = skins.get(i);
 
-                context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), frameWidth, 0xA0000000);
+            context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), frameWidth, 0xA0000000);
 
-                if (previewer.getActiveSkinType() == skin.getType()) {
-                    player.setOverrideTextures(skin);
-
-                    float limbD = player.limbAnimator.getSpeed();
-                    int y = frameWidth;
-                    if (hovered && i == index) {
-                        y -= 3;
-                        player.limbAnimator.setSpeed(1);
-                    }
-
-                    if (skin.getType().isUnsupported()) {
-                        context.drawTexture(RenderLayer::getGuiTextured, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
-                    } else {
-                        matrices.push();
-                        matrices.translate(0, 0, -400);
-                        renderPlayerModel(matrices, player, (i * frameWidth) + frameWidth / 2, y, 13);
-                        matrices.pop();
-                    }
-                    player.limbAnimator.setSpeed(limbD);
-                }
-
-                if (skin.getSkin().isActive()) {
-                    context.fill((i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, 0xFFFFFFFF);
-                    context.fill(((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, 0xFFFFFFFF);
-                    context.fill((i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, 0xFFFFFFFF);
-                    context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), 1, 0xFFFFFFFF);
+            if (previewer.getActiveSkinType() == skin.getType()) {
+                if (skin.getType().isUnsupported()) {
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
+                } else {
+                    this.bounds.left = outerFrameBounds.left + 10 + (int)getScrollOffset() + (i * frameWidth);
+                    this.bounds.width = frameWidth;
+                    getOrCreateStateAt(i, skin).render(context, this.bounds, mouseX, mouseY, rotation);
                 }
             }
-        } finally {
-            player.setOverrideTextures(PlayerSkins.EMPTY);
 
-            if (sneaking) {
-                player.setSneaking(true);
+            if (skin.getSkin().isActive()) {
+                context.fill((i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, Colors.WHITE);
+                context.fill(((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, Colors.WHITE);
+                context.fill((i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, Colors.WHITE);
+                context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), 1, Colors.WHITE);
             }
         }
 
-        context.disableScissor();
+        this.bounds.left = outerFrameBounds.left + 10;
+        this.bounds.width = outerFrameBounds.width - 20;
 
-        matrices.pop();
+        matrices.popMatrix();
+    }
+
+    private PlayerBodyWidget<S> getOrCreateStateAt(int index, PreviousServerPlayerSkins skin) {
+        return modelStates.compute(index, (i, state) -> {
+            if (state == null) {
+                state = new PlayerBodyWidget<>(previewer.createEntity(skin));
+            }
+            state.playerState.skins = skin;
+            return state;
+        });
     }
 
     public boolean mouseClicked(SkinUploader uploader, double mouseX, double mouseY, int button) {
@@ -226,58 +238,5 @@ public class SkinListWidget implements Carousel.Element {
                 return false;
             }).isPresent();
         }).isPresent();
-    }
-
-    private void renderPlayerModel(MatrixStack matrixStack, DummyPlayer thePlayer, float xPosition, float yPosition, float scale) {
-        EntityRenderDispatcher dispatcher = client.getEntityRenderDispatcher();
-
-        if (dispatcher.getRenderer(thePlayer) == null) {
-            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
-            return;
-        }
-
-        thePlayer.setHeadYaw(0);
-        thePlayer.setPitch(0);
-        float swingProgress = thePlayer.handSwingProgress;
-        thePlayer.handSwingProgress = 0;
-
-        matrixStack.push();
-        matrixStack.translate(xPosition, yPosition, 1000);
-        matrixStack.scale(scale, scale, scale);
-
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-15));
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
-
-        DiffuseLighting.enableGuiShaderLighting();
-
-        VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
-
-        renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
-
-        matrixStack.pop();
-        DiffuseLighting.enableGuiDepthLighting();
-
-        thePlayer.handSwingProgress = swingProgress;
-    }
-
-    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
-        matrixStack.push();
-        matrixStack.translate(0.001, 0, 0.001);
-
-        DummyWorld.fillWith(Blocks.AIR.getDefaultState());
-
-        if (thePlayer.getVelocity().x >= 100) {
-            thePlayer.addVelocity(-100, 0, 0);
-        }
-
-        Entity camera = client.getCameraEntity();
-        client.setCameraEntity(thePlayer);
-        float y = thePlayer.isSneaking() ? -0.125F : 0;
-        dispatcher.render(thePlayer, 0, y, 0, 1, matrixStack, renderContext, LightmapTextureManager.MAX_LIGHT_COORDINATE);
-
-        client.setCameraEntity(camera);
-
-        matrixStack.pop();
     }
 }

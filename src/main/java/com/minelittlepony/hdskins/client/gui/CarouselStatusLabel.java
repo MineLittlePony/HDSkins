@@ -2,18 +2,20 @@ package com.minelittlepony.hdskins.client.gui;
 
 import java.util.List;
 
+import org.joml.Matrix3x2fStack;
+
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 
 public interface CarouselStatusLabel extends ITextContext {
     int LABEL_BACKGROUND = 0xB0000000;
     int LABEL_BORDER = 0xB0221111;
-    int WHITE = 0xffffff;
-    int RED = 0xff5555;
+    int WHITE = Colors.WHITE;
+    int RED = 0xffff5555;
 
     boolean hasStatus();
 
@@ -28,10 +30,9 @@ public interface CarouselStatusLabel extends ITextContext {
             return;
         }
 
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
+        Matrix3x2fStack matrices = context.getMatrices();
+        matrices.pushMatrix();
         bounds.translate(matrices);
-        matrices.translate(0, 0, 300);
 
         final int lineHeight = getFont().fontHeight;
         final int margin = 10;
@@ -52,11 +53,16 @@ public interface CarouselStatusLabel extends ITextContext {
         context.fill(left,           top + border,    left + border,  bottom - border, LABEL_BORDER);
         context.fill(right - border, top + border,    right,          bottom - border, LABEL_BORDER);
 
+
+        for (int i = 0; i < 9000; i++) {
+            context.state.goUpLayer();
+        }
+
         for (Text line : lines) {
-            drawCenteredLabel(context, line, x, y, getLabelColor(line), 0);
+            drawCenteredLabel(context, line, x, y, getLabelColor(line));
             y += lineHeight;
         }
 
-        matrices.pop();
+        matrices.popMatrix();
     }
 }

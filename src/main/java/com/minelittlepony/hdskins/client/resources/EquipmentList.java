@@ -5,8 +5,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.client.render.entity.state.BipedEntityRenderState;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -78,10 +78,11 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
                 Codec.STRING.fieldOf("tooltip").forGetter(EquipmentSet::tooltip)
         ).apply(i, EquipmentSet::new));
 
-        public void apply(LivingEntity entity) {
-            for (EquipmentSlot slot : EquipmentSlot.values()) {
-                entity.equipStack(slot, getStack(slot));
-            }
+        public void apply(BipedEntityRenderState state) {
+            state.equippedHeadStack = getStack(EquipmentSlot.HEAD);
+            state.equippedChestStack = getStack(EquipmentSlot.CHEST);
+            state.equippedLegsStack = getStack(EquipmentSlot.LEGS);
+            state.equippedFeetStack = getStack(EquipmentSlot.FEET);
         }
 
         public SoundEvent getSound() {

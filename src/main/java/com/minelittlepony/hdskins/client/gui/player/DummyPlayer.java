@@ -30,6 +30,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 /**
  * A dummy player that appears on the skins gui when previewing a skin.
  */
+@Deprecated
 @SuppressWarnings("EntityConstructor")
 public class DummyPlayer extends AbstractClientPlayerEntity {
     private final Map<EquipmentSlot, ItemStack> armour = new EnumMap<>(EquipmentSlot.class);

@@ -1,16 +1,16 @@
 package com.minelittlepony.hdskins.client.gui.player;
 
-import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
+
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
@@ -20,8 +20,8 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
 
+@Deprecated
 final class DummyWorldRenderer extends WorldRenderer {
-
     public static final Supplier<CompletableFuture<DummyWorldRenderer>> FUTURE_INSTANCE = () -> {
         return CompletableFuture.supplyAsync(DummyWorldRenderer::new, MinecraftClient.getInstance());
     };
@@ -43,9 +43,11 @@ final class DummyWorldRenderer extends WorldRenderer {
             RenderTickCounter tickCounter,
             boolean renderBlockOutline,
             Camera camera,
-            GameRenderer gameRenderer,
             Matrix4f positionMatrix,
-            Matrix4f projectionMatrix
+            Matrix4f projectionMatrix,
+            GpuBufferSlice fog,
+            Vector4f fogColor,
+            boolean shouldRenderSky
         ) {
         // noop
     }
@@ -91,10 +93,6 @@ final class DummyWorldRenderer extends WorldRenderer {
     }
     @Override
     public void setBlockBreakingInfo(int entityId, BlockPos pos, int stage) {
-        // noop
-    }
-    @Override
-    public void updateNoCullingBlockEntities(Collection<BlockEntity> removed, Collection<BlockEntity> added) {
         // noop
     }
     @Override

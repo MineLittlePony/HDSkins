@@ -28,6 +28,7 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.server.SaveLoading;
 import net.minecraft.server.ServerLinks;
 
+@Deprecated
 interface DummyNetworkHandler {
     Supplier<ClientPlayNetworkHandler> INSTANCE = Suppliers.memoize(() -> new ClientPlayNetworkHandler(
             MinecraftClient.getInstance(),
