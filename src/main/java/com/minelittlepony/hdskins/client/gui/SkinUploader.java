@@ -98,7 +98,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     }
 
     public Set<Feature> getFeatures() {
-        return gateway.map(Gateway::getServer).map(SkinServer::getFeatures).orElse(Set.of());
+        return gateway.map(Gateway::getServer).map(server -> server.getFeatures(previewer.getActiveSkinType())).orElse(Set.of());
     }
 
     public Stream<SkinType> getSupportedSkinTypes() {
