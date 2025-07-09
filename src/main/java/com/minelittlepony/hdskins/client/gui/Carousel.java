@@ -49,7 +49,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
 
     public boolean mouseClicked(int width, int height, double mouseX, double mouseY, int button) {
         if (bounds.contains(mouseX, mouseY)) {
-            entity.playerState.activeHand = button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND;
+            entity.playerState.swingArm(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
             return true;
         }
         return false;

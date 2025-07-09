@@ -1,11 +1,11 @@
 package com.minelittlepony.hdskins.client.resources;
 
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.gui.DummyPlayerRenderState;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.client.render.entity.state.BipedEntityRenderState;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -16,6 +16,7 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.registry.Registries;
@@ -78,11 +79,13 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
                 Codec.STRING.fieldOf("tooltip").forGetter(EquipmentSet::tooltip)
         ).apply(i, EquipmentSet::new));
 
-        public void apply(BipedEntityRenderState state) {
+        public void apply(DummyPlayerRenderState state) {
             state.equippedHeadStack = getStack(EquipmentSlot.HEAD);
             state.equippedChestStack = getStack(EquipmentSlot.CHEST);
             state.equippedLegsStack = getStack(EquipmentSlot.LEGS);
             state.equippedFeetStack = getStack(EquipmentSlot.FEET);
+            state.setHandStack(Hand.MAIN_HAND, getStack(EquipmentSlot.MAINHAND));
+            state.setHandStack(Hand.OFF_HAND, getStack(EquipmentSlot.OFFHAND));
         }
 
         public SoundEvent getSound() {

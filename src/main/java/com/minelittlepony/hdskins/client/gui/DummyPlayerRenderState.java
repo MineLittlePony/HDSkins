@@ -1,17 +1,25 @@
 package com.minelittlepony.hdskins.client.gui;
 
+import java.util.Map;
+
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.render.item.ItemRenderState;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LimbAnimator;
+import net.minecraft.item.ItemDisplayContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.Arm;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -31,13 +39,37 @@ public class DummyPlayerRenderState extends PlayerEntityRenderState {
     public final LimbAnimator limbAnimator = new LimbAnimator();
     public final ElytraState elytraState = new ElytraState();
 
+    private final Map<Arm, ItemRenderState> handItemStates = Map.of(
+            Arm.LEFT, leftHandItemState,
+            Arm.RIGHT, rightHandItemState
+    );
+
     public DummyPlayerRenderState(PlayerSkins<?> skins) {
         this.skins = skins;
         this.entityType = EntityType.PLAYER;
+        this.mainArm = MinecraftClient.getInstance().options.getMainArm().getValue();
     }
 
     public void setPose(EntityPose pose) {
-        this.pose = pose == EntityPose.STANDING && this.isInSneakingPose ? EntityPose.CROUCHING : pose;
+        this.pose = pose == EntityPose.STANDING && isInSneakingPose ? EntityPose.CROUCHING : pose;
+    }
+
+    public void swingArm(Hand hand) {
+        handSwinging = true;
+        activeHand = hand;
+        preferredArm = hand == Hand.MAIN_HAND ? mainArm : mainArm.getOpposite();
+    }
+
+    public void setHandStack(Hand hand, ItemStack stack) {
+        Arm arm = hand == Hand.MAIN_HAND ? mainArm : mainArm.getOpposite();
+        MinecraftClient.getInstance().getItemModelManager().update(
+                handItemStates.get(arm),
+                stack,
+                arm == Arm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                null,
+                null,
+                0
+        );
     }
 
     public void tickAnimations() {
@@ -63,27 +95,24 @@ public class DummyPlayerRenderState extends PlayerEntityRenderState {
         pose = skins.getPosture().getPose().getPose();
         hasVehicle = pose == EntityPose.SITTING;
 
-
-
-        limbAnimator.updateLimbs(sprinting ? (isInPose(EntityPose.CROUCHING) ? 0.1F : 1) : (isInPose(EntityPose.SWIMMING) ? 1 : 0), 0.1F, 1);
-
         nextHandSwingProgress = handSwingTicks / 8F;
 
-        upwardSpeed *= 0.98;
+        upwardSpeed -= 0.1F;
         if (Math.abs(upwardSpeed) < 0.003) {
             upwardSpeed = 0;
         }
 
-        if (y == 0 && jumping && !isInPose(EntityPose.SLEEPING) && !hasVehicle && !isSwimming && !usingRiptide) {
+        if (y == 0 && jumping && upwardSpeed <= 0 && !isInPose(EntityPose.SLEEPING) && !hasVehicle && !isSwimming && !usingRiptide) {
             upwardSpeed = velocity.y;
         }
 
         if (jumping) {
-            upwardSpeed += 10;
+            jumping = false;
+            upwardSpeed += 4;
         }
 
-        upwardSpeed -= 0.08D;
-        upwardSpeed *= 0.9800000190734863D;
+        upwardSpeed *= 0.988;
+        upwardSpeed -= 0.58D;
 
         y += upwardSpeed;
 
@@ -94,11 +123,12 @@ public class DummyPlayerRenderState extends PlayerEntityRenderState {
         isSwimming = isInPose(EntityPose.SWIMMING);
         usingRiptide = isInPose(EntityPose.SPIN_ATTACK);
 
+        limbAnimator.updateLimbs(sprinting ? (isInSneakingPose ? 0.1F : 1) : (isSwimming ? 1 : 0), 0.1F, 1);
         elytraState.update();
 
         age++;
 
-        offset.set(0, -1.25, 0);
+        offset.set(0, -1.25 + y / 16F, 0);
 
         if (isInSneakingPose) {
             offset.y += 0.125D;
@@ -116,6 +146,7 @@ public class DummyPlayerRenderState extends PlayerEntityRenderState {
 
             offset.y += 0.5F;
         } else if (usingRiptide) {
+            leaningPitch = 0;
             offset.y += 1;
             offset.z -= 0.5F;
         } else {
@@ -137,17 +168,13 @@ public class DummyPlayerRenderState extends PlayerEntityRenderState {
         leftWingYaw = elytraState.leftWingYaw(tickDelta);
         leftWingRoll = elytraState.leftWingRoll(tickDelta);
         handSwingProgress = MathHelper.lerp(tickDelta, lastHandSwingProgress, nextHandSwingProgress);
-        limbAmplitudeInverse = 1.0F;
+        limbAmplitudeInverse = 1;
         if (!hasVehicle) {
             limbSwingAnimationProgress = limbAnimator.getAnimationProgress(tickDelta);
             limbSwingAmplitude = limbAnimator.getAmplitude(tickDelta);
         } else {
             limbSwingAnimationProgress = 0;
             limbSwingAmplitude = 0;
-        }
-
-        if (limbAmplitudeInverse < 1) {
-            limbAmplitudeInverse = 1;
         }
     }
 
