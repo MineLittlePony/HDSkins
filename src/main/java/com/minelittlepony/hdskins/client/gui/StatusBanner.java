@@ -7,6 +7,7 @@ import com.minelittlepony.common.client.gui.ITextContext;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.math.MathHelper;
 
 public class StatusBanner implements ITextContext {
@@ -73,11 +74,11 @@ public class StatusBanner implements ITextContext {
                 drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
 
                 if (showTitle) {
-                    drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xffff55);
-                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+                    drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xFFFFFF55);
+                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().fontHeight + 10, maxWidth, 0xFFFF5555);
                 } else {
                     uploader.tryClearStatus();
-                    drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, 0xffffff);
+                    drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, Colors.WHITE);
                 }
             }
 
