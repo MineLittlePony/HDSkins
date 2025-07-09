@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.util.net;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.nio.ByteBuffer;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Flow.Subscriber;
+import java.util.function.Function;
 
 import com.google.gson.Gson;
 import org.apache.commons.io.FilenameUtils;
@@ -18,15 +20,16 @@ import org.apache.commons.io.FilenameUtils;
 import com.google.common.base.Strings;
 
 public interface FileTypes {
-    String MULTI_PART_BOUNDARY = "MULTI-PART_BOUNDARY";
-
     String HEADER_ACCEPT = "Accept";
     String HEADER_CONTENT_TYPE = "Content-Type";
     String HEADER_AUTHORIZATION = "Authorization";
 
     String APPLICATION_JSON = "application/json";
     String APPLICATION_OCTET_STREAM = "application/octet-stream";
-    String MULTI_PART_FORM_DATA = "multipart/form-data; boundary=\"" + MULTI_PART_BOUNDARY + "\"";
+
+    static String newMultipartBoundary() {
+        return "-----------" + String.valueOf(System.currentTimeMillis());
+    }
 
     static String getMimeType(Path path) {
         try {
@@ -45,7 +48,7 @@ public interface FileTypes {
     }
 
     static MultiPartBuilder multiPart() {
-        return new MultiPartBuilder();
+        return new MultiPartBuilder(newMultipartBoundary());
     }
 
     static MultiPartBuilder multiPart(Map<String, ?> fields) {
@@ -55,15 +58,24 @@ public interface FileTypes {
     }
 
     class MultiPartBuilder {
-        private static final byte[] HEAD = ("--" + MULTI_PART_BOUNDARY + "\r\n").getBytes(StandardCharsets.UTF_8);
         private static final byte[] NEWLINE = "\r\n".getBytes(StandardCharsets.UTF_8);
-        private static final byte[] TAIL = ("--" + MULTI_PART_BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8);
 
         private final List<byte[]> buffer = new ArrayList<>();
         private long length = 0;
 
+        private final byte[] head;
+        private final byte[] tail;
+
+        private final String boundary;
+
+        MultiPartBuilder(String boundary) {
+            this.boundary = boundary;
+            head = ("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8);
+            tail = ("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8);
+        }
+
         public MultiPartBuilder field(String name, Object value) {
-            append(HEAD);
+            append(head);
             append("Content-Disposition: form-data; name=\"" + name + "\"\r\n");
             append("Content-Type: text/plain; charset=UTF-8\r\n");
             append(NEWLINE);
@@ -79,7 +91,7 @@ public interface FileTypes {
         }
 
         public MultiPartBuilder field(String name, Path file) throws IOException {
-            append(HEAD);
+            append(head);
             append("Content-Disposition: form-data;"
                     + " name=\"" + name + "\";"
                     + " filename=\"" + file.getFileName().toString() + "\"\r\n");
@@ -101,13 +113,19 @@ public interface FileTypes {
             return this;
         }
 
-        public BodyPublisher build() {
-            append(TAIL);
+        public HttpRequest.Builder build(Function<BodyPublisher, HttpRequest.Builder> builder) {
+            return builder.apply(build())
+                .header(FileTypes.HEADER_CONTENT_TYPE, "multipart/form-data; boundary=\"" + boundary + "\"");
+        }
 
-            StringBuilder builder = new StringBuilder();
+        public BodyPublisher build() {
+            append(tail);
+
+            /*StringBuilder builder = new StringBuilder();
             for (byte[] chunk : buffer) {
                 builder.append(new String(chunk, StandardCharsets.UTF_8));
             }
+            System.out.println(builder.toString());*/
 
             BodyPublisher publisher = BodyPublishers.ofByteArrays(buffer);
             return new BodyPublisher() {

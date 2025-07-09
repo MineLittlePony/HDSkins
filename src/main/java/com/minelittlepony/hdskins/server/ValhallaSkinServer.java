@@ -138,13 +138,11 @@ public class ValhallaSkinServer implements SkinServer {
                             .build())
                     .requireOk();
             case SkinUpload.FileUpload fileUpload ->
-                    MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
-                            .PUT(FileTypes.multiPart()
-                                    .field("type", fileUpload.type().getParameterizedName())
-                                    .field("file", fileUpload.file())
-                                    .field("meta", new Gson().toJson(fileUpload.metadata()))
-                                    .build())
-                            .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                    MoreHttpResponses.execute(FileTypes.multiPart()
+                            .field("type", fileUpload.type().getParameterizedName())
+                            .field("file", fileUpload.file())
+                            .field("meta", new Gson().toJson(fileUpload.metadata()))
+                            .build(HttpRequest.newBuilder(buildBackendUri("textures"))::PUT)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
                             .build())
@@ -242,26 +240,20 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthHandshake authHandshake(String name) throws IOException {
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("auth/minecraft"))
-                .POST(FileTypes.multiPart()
-                        .field("name", name)
-                        .build())
-                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .build())
+        return MoreHttpResponses.execute(FileTypes.multiPart()
+                    .field("name", name)
+                .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft"))::POST)
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
                 .requireOk()
                 .json(AuthHandshake.class, "Invalid handshake response");
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("auth/minecraft/callback"))
-                .POST(FileTypes.multiPart()
-                        .field("name", name)
-                        .field("verifyToken", verifyToken)
-                        .build())
-                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .build())
+        return MoreHttpResponses.execute(FileTypes.multiPart()
+                    .field("name", name)
+                    .field("verifyToken", verifyToken)
+                .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft/callback"))::POST)
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
                 .requireOk()
                 .json(AuthResponse.class, "Invalid auth response");
     }
