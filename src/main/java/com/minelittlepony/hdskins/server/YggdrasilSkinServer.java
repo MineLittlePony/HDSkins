@@ -38,6 +38,12 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.DELETE_USER_SKIN,
             Feature.MODEL_VARIANTS,
             Feature.MODEL_TYPES);
+    private static final Set<Feature> READ_ONLY_FEATURES = Sets.newHashSet(
+            Feature.SYNTHETIC,
+            Feature.DOWNLOAD_USER_SKIN,
+            Feature.DELETE_USER_SKIN,
+            Feature.MODEL_VARIANTS,
+            Feature.MODEL_TYPES);
 
     private static final URI LOGIN_URI = URI.create("https://www.minecraft.net/en-us/login");
 
@@ -61,8 +67,13 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public Set<Feature> getFeatures(SkinType skinType) {
+        return skinType != SkinType.SKIN ? READ_ONLY_FEATURES : FEATURES;
+    }
+
+    @Override
     public boolean supportsSkinType(SkinType skinType) {
-        return skinType.isVanilla() && skinType != SkinType.CAPE;
+        return skinType.isVanilla();
     }
 
     @Override
