@@ -107,6 +107,7 @@ public class YggdrasilSkinServer implements SkinServer {
             });
             profile.capes.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
                 textures.put(SkinType.CAPE, new MinecraftProfileTexture(skin.url, Map.of()));
+                textures.put(SkinType.ELYTRA, new MinecraftProfileTexture(skin.url, Map.of()));
             });
             return new TexturePayload(session.profile(), textures);
         }).orElse(null);
