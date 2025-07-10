@@ -140,7 +140,7 @@ public class ValhallaSkinServer implements SkinServer {
                     MoreHttpResponses.execute(FileTypes.multiPart()
                             .field("type", fileUpload.type().getParameterizedName())
                             .field("file", fileUpload.file())
-                            .field("meta", new Gson().toJson(fileUpload.metadata()))
+                            .field("meta", new Gson().toJson(addChecksum(fileUpload.metadata(), fileUpload.file().toUri())))
                             .build(HttpRequest.newBuilder(buildBackendUri("textures"))::PUT)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
@@ -151,7 +151,7 @@ public class ValhallaSkinServer implements SkinServer {
                             .POST(FileTypes.json(Map.of(
                                 "type", uriUpload.type().getParameterizedName(),
                                 "file", uriUpload.uri().toString(),
-                                "meta", uriUpload.metadata()
+                                "meta", addChecksum(uriUpload.metadata(), uriUpload.uri())
                             )))
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
@@ -159,6 +159,15 @@ public class ValhallaSkinServer implements SkinServer {
                             .build())
                     .requireOk();
         });
+    }
+
+    private Map<String, String> addChecksum(Map<String, String> metadata, URI uri) throws IOException {
+        if (metadata.containsKey("checksum")) {
+            return metadata;
+        }
+        metadata = new HashMap<>(metadata);
+        metadata.put("checksum", URIUtil.getChecksum(uri));
+        return Map.copyOf(metadata);
     }
 
     @Override
@@ -192,8 +201,9 @@ public class ValhallaSkinServer implements SkinServer {
                 Set<String> visited = new HashSet<>();
                 return p.textures().getOrDefault(type, List.of())
                         .stream()
-                        .filter(texture -> visited.add(texture.url + texture.getModel()))
+                        .filter(texture -> texture.metadata().containsKey("checksum"))
                         .sorted(Comparator.comparing(t -> -t.startTime))
+                        .filter(texture -> visited.add(texture.metadata().get("checksum") + texture.getModel()))
                         .toList();
             });
             return new SkinServerProfile<Texture>() {
