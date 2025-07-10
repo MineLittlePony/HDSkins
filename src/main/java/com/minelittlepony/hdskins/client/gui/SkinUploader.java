@@ -246,9 +246,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
                 .thenAcceptAsync(textures -> {
                     ServerPlayerSkins skins = previewer.getRemote().getSkins();
                     skins.loadTextures(textures, loadListener);
-                    gateway.getProfile(session).thenAccept(serverProfile -> {
-                        skins.loadProfile(serverProfile);
-                    });
+                    gateway.getProfile(session).thenAccept(skins::loadProfile);
                 }, MinecraftClient.getInstance())
                 .handleAsync((a, throwable) -> {
                     if (throwable == null) {
