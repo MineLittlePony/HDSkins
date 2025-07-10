@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.util.*;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.collect.Sets;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.profile.ProfileUtils;
@@ -15,6 +18,7 @@ import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecurePublicKeyException;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 
@@ -79,6 +83,7 @@ public class YggdrasilSkinServer implements SkinServer {
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
         MinecraftSessionService service = HDSkinsServer.getInstance().getSessionService();
 
+        @Nullable
         ProfileResult result = service.fetchProfile(profile.getId(), requireSecure);
 
         if (result == null) {
@@ -91,6 +96,25 @@ public class YggdrasilSkinServer implements SkinServer {
         } catch (InsecurePublicKeyException e) {
             throw new AuthenticationException(e);
         }
+    }
+
+    @Override
+    public TexturePayload loadSkins(Session session) throws IOException, AuthenticationException {
+        @Nullable
+        TexturePayload payload = loadProfile(session).map(profile -> {
+            Map<SkinType, MinecraftProfileTexture> textures = new HashMap<>();
+            profile.skins.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
+                textures.put(SkinType.SKIN, new MinecraftProfileTexture(skin.url, Map.of("model", skin.variant)));
+            });
+            profile.capes.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
+                textures.put(SkinType.CAPE, new MinecraftProfileTexture(skin.url, Map.of()));
+            });
+            return new TexturePayload(session.profile(), textures);
+        }).orElse(null);
+        if (payload == null) {
+            return loadSkins(session.profile());
+        }
+        return payload;
     }
 
     @Override
@@ -152,7 +176,7 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
+    public Optional<ProfileResponse> loadProfile(Session session) throws IOException, AuthenticationException {
         MoreHttpResponses response = MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(profileAddress))
                 .GET()
                 .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + session.accessToken())

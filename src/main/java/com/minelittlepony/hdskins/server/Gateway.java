@@ -29,7 +29,7 @@ public class Gateway {
 
     private final SkinServer server;
 
-    private final LoadingCache<Session, CompletableFuture<Optional<SkinServer.SkinServerProfile<?>>>> profiles;
+    private final LoadingCache<Session, CompletableFuture<Optional<? extends SkinServer.SkinServerProfile<?>>>> profiles;
 
     private boolean offline;
     private boolean throttled;
@@ -80,7 +80,7 @@ public class Gateway {
         return SkinType.REGISTRY.stream().filter(server::supportsSkinType).distinct();
     }
 
-    public CompletableFuture<Optional<SkinServerProfile<?>>> getProfile(Session session) {
+    public CompletableFuture<Optional<? extends SkinServerProfile<?>>> getProfile(Session session) {
         return profiles.getUnchecked(session);
     }
 

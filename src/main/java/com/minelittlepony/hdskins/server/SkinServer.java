@@ -103,7 +103,7 @@ public interface SkinServer {
      * @throws IOException
      * @throws AuthenticationException
      */
-    default Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
+    default Optional<? extends SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
         return Optional.empty();
     }
 
