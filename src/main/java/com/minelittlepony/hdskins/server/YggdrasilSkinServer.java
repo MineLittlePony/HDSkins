@@ -104,7 +104,7 @@ public class YggdrasilSkinServer implements SkinServer {
         } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
             execute(FileTypes.multiPart(mapMetadata(fileUpload.metadata()))
                         .field("file", fileUpload.file())
-                    .build(HttpRequest.newBuilder(URI.create(skinUploadAddress))::PUT)
+                    .build(HttpRequest.newBuilder(URI.create(skinUploadAddress))::POST)
                         .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                         .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken()));
         } else if (upload instanceof SkinUpload.UriUpload uriUpload) {
