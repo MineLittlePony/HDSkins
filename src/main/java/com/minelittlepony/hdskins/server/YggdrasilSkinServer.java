@@ -103,7 +103,7 @@ public class YggdrasilSkinServer implements SkinServer {
         TexturePayload payload = loadProfile(session).map(profile -> {
             Map<SkinType, MinecraftProfileTexture> textures = new HashMap<>();
             profile.skins.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
-                textures.put(SkinType.SKIN, new MinecraftProfileTexture(skin.url, Map.of("model", skin.variant)));
+                textures.put(SkinType.SKIN, new MinecraftProfileTexture(skin.url, Map.of("model", "classic".equalsIgnoreCase(skin.variant) ? "default" : skin.variant.toLowerCase(Locale.ROOT))));
             });
             profile.capes.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
                 textures.put(SkinType.CAPE, new MinecraftProfileTexture(skin.url, Map.of()));
