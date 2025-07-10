@@ -11,6 +11,7 @@ import com.google.common.cache.LoadingCache;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.Memoize;
 import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.PlayerSkinLayers;
 import com.minelittlepony.hdskins.client.SkinCacheClearCallback;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -48,8 +49,8 @@ public class SkinLoader {
             }
 
             @Override
-            public String getModel(String fallback) {
-                return value.get().getModel(fallback);
+            public Optional<String> getModel() {
+                return value.get().getModel();
             }
 
             @Override
@@ -85,6 +86,7 @@ public class SkinLoader {
         HDSkins.LOGGER.info("Clearing local player skin cache");
         cache.invalidateAll();
         HDSkinsServer.getInstance().getServers().invalidateProfiles();
+        PlayerSkinLayers.invalidateCaches();
 
         fileStore.clear();
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
@@ -104,8 +106,8 @@ public class SkinLoader {
         }
 
         @Override
-        public String getModel(String fallback) {
-            return model.orElse(fallback);
+        public Optional<String> getModel() {
+            return model;
         }
 
         @Override

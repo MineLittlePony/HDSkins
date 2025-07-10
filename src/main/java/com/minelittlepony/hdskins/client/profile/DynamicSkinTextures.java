@@ -31,7 +31,7 @@ public interface DynamicSkinTextures {
         return getSkin(type).orElseGet(() -> fallback.getSkin(type).orElse(null));
     }
 
-    String getModel(String fallback);
+    Optional<String> getModel();
 
     boolean hasChanged();
 
@@ -41,7 +41,7 @@ public interface DynamicSkinTextures {
             null,
             dynamic.getSkin(SkinType.CAPE).orElse(null),
             dynamic.getSkin(SkinType.ELYTRA).orElse(null),
-            VanillaModels.isSlim(dynamic.getModel(VanillaModels.DEFAULT)) ? Model.SLIM : Model.WIDE,
+            VanillaModels.isSlim(dynamic.getModel().orElse(VanillaModels.DEFAULT)) ? Model.SLIM : Model.WIDE,
             false
         );
     }
@@ -59,8 +59,8 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public String getModel(String fallback) {
-                return supplier.get().model().getName();
+            public Optional<String> getModel() {
+                return getSkin(SkinType.SKIN).isPresent() ? Optional.ofNullable(supplier.get().model().getName()) : Optional.empty();
             }
 
             @Override
@@ -87,8 +87,8 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public String getModel(String fallback) {
-                return a.getModel(b.getModel(fallback));
+            public Optional<String> getModel() {
+                return b.getModel().or(a::getModel);
             }
 
             @Override
