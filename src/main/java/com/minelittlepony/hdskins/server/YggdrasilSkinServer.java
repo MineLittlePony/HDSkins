@@ -122,7 +122,7 @@ public class YggdrasilSkinServer implements SkinServer {
         authorize(upload.session());
 
         if (upload instanceof SkinUpload.Delete) {
-            execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
+            execute(HttpRequest.newBuilder(URI.create(upload.type() == SkinType.SKIN ? activeSkinAddress : activeCapeAddress))
                     .DELETE()
                     .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken()));
         } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
