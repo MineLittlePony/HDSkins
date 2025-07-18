@@ -1,7 +1,7 @@
 package com.minelittlepony.hdskins.client.resources;
 
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.gui.DummyPlayerRenderState;
+import com.minelittlepony.hdskins.client.gui.PlayerBodyWidget;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -79,11 +79,11 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
                 Codec.STRING.fieldOf("tooltip").forGetter(EquipmentSet::tooltip)
         ).apply(i, EquipmentSet::new));
 
-        public void apply(DummyPlayerRenderState state) {
-            state.equippedHeadStack = getStack(EquipmentSlot.HEAD);
-            state.equippedChestStack = getStack(EquipmentSlot.CHEST);
-            state.equippedLegsStack = getStack(EquipmentSlot.LEGS);
-            state.equippedFeetStack = getStack(EquipmentSlot.FEET);
+        public void apply(PlayerBodyWidget<?> state) {
+            state.playerState.equippedHeadStack = getStack(EquipmentSlot.HEAD);
+            state.playerState.equippedChestStack = getStack(EquipmentSlot.CHEST);
+            state.playerState.equippedLegsStack = getStack(EquipmentSlot.LEGS);
+            state.playerState.equippedFeetStack = getStack(EquipmentSlot.FEET);
             state.setHandStack(Hand.MAIN_HAND, getStack(EquipmentSlot.MAINHAND));
             state.setHandStack(Hand.OFF_HAND, getStack(EquipmentSlot.OFFHAND));
         }

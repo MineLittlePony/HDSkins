@@ -17,13 +17,14 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.util.*;
 import net.minecraft.text.Text;
 
 /**
  * Handles the display of the dummy players in the GUI.
  */
-public abstract class DualCarouselWidget<S extends DummyPlayerRenderState> implements Closeable, PlayerSkins.Posture, ITextContext {
+public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int PASSIVE_ROTATION_SPEED = 1;
     private static final int MAX_MANUAL_ROTATION_SPEED = 20;
 
@@ -60,7 +61,7 @@ public abstract class DualCarouselWidget<S extends DummyPlayerRenderState> imple
         remote.addElement(skinList);
     }
 
-    protected abstract S createEntity(PlayerSkins<?> textures);
+    protected abstract PlayerBodyWidget<S> createEntity(PlayerSkins<?> skins);
 
     public Carousel<ServerPlayerSkins, S> getRemote() {
         return remote;
@@ -136,16 +137,16 @@ public abstract class DualCarouselWidget<S extends DummyPlayerRenderState> imple
     }
 
     public void setSneaking(boolean sneaking) {
-        apply(p -> p.isInSneakingPose = sneaking);
+        apply(p -> p.playerState.isInSneakingPose = sneaking);
     }
 
     public void setSprinting(boolean sprinting) {
         apply(p -> p.sprinting = sprinting);
     }
 
-    public void apply(Consumer<DummyPlayerRenderState> action) {
-        action.accept(getLocal().getEntity().playerState);
-        action.accept(getRemote().getEntity().playerState);
+    public void apply(Consumer<PlayerBodyWidget<?>> action) {
+        action.accept(getLocal().getEntity());
+        action.accept(getRemote().getEntity());
     }
 
     public void init() {

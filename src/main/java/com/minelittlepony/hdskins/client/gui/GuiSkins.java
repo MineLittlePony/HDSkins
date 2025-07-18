@@ -21,6 +21,7 @@ import com.minelittlepony.hdskins.server.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.texture.CubemapTexture;
 import net.minecraft.sound.SoundEvents;
@@ -122,8 +123,8 @@ public class GuiSkins extends GameGui {
     protected DualCarouselWidget<?> createPreviewer() {
         return new DualCarouselWidget<>(this) {
             @Override
-            protected DummyPlayerRenderState createEntity(PlayerSkins<?> textures) {
-                return new DummyPlayerRenderState(textures);
+            protected PlayerBodyWidget<PlayerEntityRenderState> createEntity(PlayerSkins<?> skins) {
+                return new PlayerBodyWidget<>(skins, new PlayerEntityRenderState());
             }
         };
     }

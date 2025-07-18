@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Colors;
 import net.minecraft.util.math.MathHelper;
@@ -25,7 +26,7 @@ import net.minecraft.util.math.MathHelper;
 /**
  * Displays a list of previous skins the user has had in the past.
  */
-public class SkinListWidget<S extends DummyPlayerRenderState> implements Carousel.Element<S> {
+public class SkinListWidget<S extends PlayerEntityRenderState> implements Carousel.Element {
     private final DualCarouselWidget<S> previewer;
 
     private final MinecraftClient client = MinecraftClient.getInstance();
@@ -200,9 +201,9 @@ public class SkinListWidget<S extends DummyPlayerRenderState> implements Carouse
     private PlayerBodyWidget<S> getOrCreateStateAt(int index, PreviousServerPlayerSkins skin) {
         return modelStates.compute(index, (i, state) -> {
             if (state == null) {
-                state = new PlayerBodyWidget<>(previewer.createEntity(skin));
+                state = previewer.createEntity(skin);
             }
-            state.playerState.skins = skin;
+            state.skins = skin;
             return state;
         });
     }

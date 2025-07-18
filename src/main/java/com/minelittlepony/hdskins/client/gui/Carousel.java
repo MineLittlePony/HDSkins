@@ -4,18 +4,18 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
 import org.joml.Quaternionf;
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 
-public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S extends DummyPlayerRenderState> implements Closeable, ITextContext {
+public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S extends PlayerEntityRenderState> implements Closeable, ITextContext {
     public static final int HOR_MARGIN = 30;
     private static final int TOP = 50;
 
@@ -26,16 +26,16 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
 
     public final Bounds bounds = new Bounds(TOP, HOR_MARGIN, 0, 0);
 
-    private final List<Element<S>> elements = new ArrayList<>();
+    private final List<Element> elements = new ArrayList<>();
 
-    public Carousel(Text title, T skins, Function<PlayerSkins<?>, S> playerFactory) {
+    public Carousel(Text title, T skins, Function<PlayerSkins<?>, PlayerBodyWidget<S>> playerFactory) {
         this.title = title;
         this.skins = skins;
-        this.entity = new PlayerBodyWidget<>(playerFactory.apply(skins));
+        this.entity = playerFactory.apply(skins);
         addElement(entity);
     }
 
-    public void addElement(Element<S> element) {
+    public void addElement(Element element) {
         elements.add(element);
     }
 
@@ -49,7 +49,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
 
     public boolean mouseClicked(int width, int height, double mouseX, double mouseY, int button) {
         if (bounds.contains(mouseX, mouseY)) {
-            entity.playerState.swingArm(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+            entity.swingArm(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
             return true;
         }
         return false;
@@ -94,7 +94,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
         skins.close();
     }
 
-    public interface Element<S extends DummyPlayerRenderState> {
+    public interface Element {
         void tick();
 
         void updateState(float xPosition, float yPosition, float mouseX, float mouseY, float tickDelta);
