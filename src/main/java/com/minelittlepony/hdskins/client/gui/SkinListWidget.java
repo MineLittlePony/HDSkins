@@ -1,10 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.lwjgl.glfw.GLFW;
-
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -14,12 +9,14 @@ import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PreviousServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
@@ -27,6 +24,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Displays a list of previous skins the user has had in the past.
@@ -58,11 +56,11 @@ public class SkinListWidget implements Carousel.Element {
         bounds.top = containerBounds.top + containerBounds.height - bounds.height;
 
         screen.addButton(scrollLeft = new Button(bounds.left - 10, bounds.top, 10, bounds.height))
-            .onClick(sender -> scrollBy(-1))
-            .getStyle().setText("<");
+                .onClick(sender -> scrollBy(-1))
+                .getStyle().setText("<");
         screen.addButton(scrollRight = new Button(bounds.left + bounds.width, bounds.top, 10, bounds.height))
-            .onClick(sender -> scrollBy(1))
-            .getStyle().setText(">");
+                .onClick(sender -> scrollBy(1))
+                .getStyle().setText(">");
 
         updateButtons();
     }
@@ -77,11 +75,13 @@ public class SkinListWidget implements Carousel.Element {
     }
 
     private float getScrollOffset() {
-        return -MathHelper.lerp(MinecraftClient.getInstance().getRenderTickCounter().getTickProgress(false), prevScrollPosition, scrollPosition) * bounds.height;
+        return -MathHelper.lerp(MinecraftClient.getInstance().getRenderTickCounter().getTickProgress(false),
+                prevScrollPosition, scrollPosition) * bounds.height;
     }
 
     private void updateButtons() {
-        List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
+        List<PreviousServerPlayerSkins> skins =
+                previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
 
         boolean hasContent = !skins.isEmpty();
         int pageSize = bounds.width / bounds.height;
@@ -97,7 +97,6 @@ public class SkinListWidget implements Carousel.Element {
 
     @Override
     public void render(DummyPlayer player, DrawContext context, int mouseX, int mouseY) {
-
         prevScrollPosition = scrollPosition;
         if (targetScrollPosition != scrollPosition) {
             if (scrollPosition > targetScrollPosition) {
@@ -118,7 +117,8 @@ public class SkinListWidget implements Carousel.Element {
 
         updateButtons();
 
-        List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
+        List<PreviousServerPlayerSkins> skins =
+                previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
         if (skins.isEmpty()) {
             return;
         }
@@ -130,14 +130,14 @@ public class SkinListWidget implements Carousel.Element {
             player.setSneaking(false);
         }
 
-        MatrixStack matrices = context.getMatrices();
+        MatrixStack matrices = new MatrixStack();
 
         matrices.push();
 
         bounds.translate(matrices);
         context.fill(0, frameWidth, bounds.width, 0, 0xA0000000);
 
-        int index = (int)(mouseX - (bounds.left + getScrollOffset())) / frameWidth;
+        int index = (int) (mouseX - (bounds.left + getScrollOffset())) / frameWidth;
 
         boolean hovered = bounds.contains(mouseX, mouseY);
 
@@ -165,7 +165,21 @@ public class SkinListWidget implements Carousel.Element {
                     }
 
                     if (skin.getType().isUnsupported()) {
-                        context.drawTexture(RenderLayer::getGuiTextured, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
+                        // Example: Use getTextBackground() for a simple GUI texture layer
+                        // Draw the skin texture directly
+                        // Draw the skin texture using a valid RenderPipeline and matching parameters
+                        context.drawTexture(
+                                RenderPipelines.GUI_TEXTURED, // or another appropriate pipeline
+                                skin.get(skin.getType()).getId(),
+                                i * frameWidth, // x
+                                0,              // y
+                                0f,             // u
+                                0f,             // v
+                                frameWidth,     // width
+                                frameWidth,     // height
+                                64,             // textureWidth
+                                64              // textureHeight
+                        );
                     } else {
                         matrices.push();
                         matrices.translate(0, 0, -400);
@@ -207,7 +221,7 @@ public class SkinListWidget implements Carousel.Element {
             return false;
         }
 
-        int index = (int)((mouseX - (bounds.left + getScrollOffset())) / frameWidth);
+        int index = (int) ((mouseX - (bounds.left + getScrollOffset())) / frameWidth);
 
         if (index >= previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType()).size()) {
             return false;
@@ -228,11 +242,13 @@ public class SkinListWidget implements Carousel.Element {
         }).isPresent();
     }
 
-    private void renderPlayerModel(MatrixStack matrixStack, DummyPlayer thePlayer, float xPosition, float yPosition, float scale) {
+    private void renderPlayerModel(MatrixStack matrixStack, DummyPlayer thePlayer, float xPosition, float yPosition,
+                                   float scale) {
         EntityRenderDispatcher dispatcher = client.getEntityRenderDispatcher();
 
         if (dispatcher.getRenderer(thePlayer) == null) {
-            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
+            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource " +
+                    "loading fail?");
             return;
         }
 
@@ -249,19 +265,20 @@ public class SkinListWidget implements Carousel.Element {
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(220));
 
-        DiffuseLighting.enableGuiShaderLighting();
+        DiffuseLighting lighting = new DiffuseLighting();
+        lighting.setShaderLights(DiffuseLighting.Type.ENTITY_IN_UI);
 
         VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
 
         renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
 
         matrixStack.pop();
-        DiffuseLighting.enableGuiDepthLighting();
 
         thePlayer.handSwingProgress = swingProgress;
     }
 
-    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
+    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer,
+                                      VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
         matrixStack.push();
         matrixStack.translate(0.001, 0, 0.001);
 
@@ -274,7 +291,8 @@ public class SkinListWidget implements Carousel.Element {
         Entity camera = client.getCameraEntity();
         client.setCameraEntity(thePlayer);
         float y = thePlayer.isSneaking() ? -0.125F : 0;
-        dispatcher.render(thePlayer, 0, y, 0, 1, matrixStack, renderContext, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+        dispatcher.render(thePlayer, 0, y, 0, 1, matrixStack, renderContext,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
         client.setCameraEntity(camera);
 

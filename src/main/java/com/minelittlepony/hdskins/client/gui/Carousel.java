@@ -1,19 +1,18 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
-
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer;
-import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayerRenderer.BedHead;
+import com.minelittlepony.hdskins.client.gui.player.DummyWorld;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -29,6 +28,7 @@ import net.minecraft.util.Colors;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix3x2fStack;
 
 public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> implements Closeable, ITextContext {
     public static final int HOR_MARGIN = 30;
@@ -102,18 +102,19 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
                 HDSkins.LOGGER.error("Exception whilst rendering player preview.", e);
             }
         });
-        context.draw();
+
         context.disableScissor();
 
-        context.getMatrices().push();
-        bounds.translate(context.getMatrices());
-        context.drawText(getFont(), title, 5, 5, Colors.WHITE, false);
-        context.getMatrices().pop();
+        Matrix3x2fStack matrices = context.getMatrices();
+        matrices.pushMatrix();
+        // bounds.translate(matrices); // Removed due to type mismatch
+        context.drawText(getFont(), title, bounds.left + 5, bounds.top + 5, Colors.WHITE, false);
+        matrices.popMatrix();
     }
 
     protected void drawBackground(DrawContext context, int horizon) {
         bounds.draw(context, 0xA0000000);
-        context.fillGradient(bounds.left, horizon,  bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
+        context.fillGradient(bounds.left, horizon, bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
     }
 
     /*
@@ -125,23 +126,24 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
      *     |
      *      mouseX
      */
-    protected void renderPlayerModel(DummyPlayer thePlayer, DrawContext context, float xPosition, float yPosition, float scale, float mouseX, float mouseY, float ticks) {
-
+    protected void renderPlayerModel(DummyPlayer thePlayer, DrawContext context, float xPosition, float yPosition,
+                                     float scale, float mouseX, float mouseY, float ticks) {
         EntityRenderDispatcher dispatcher = minecraft.getEntityRenderDispatcher();
 
         if (dispatcher.getRenderer(thePlayer) == null) {
-            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource loading fail?");
+            HDSkins.LOGGER.warn("Entity " + thePlayer.toString() + " does not have a valid renderer. Did resource " +
+                    "loading fail?");
             return;
         }
 
         float rot = (ticks * 2.5F) % 360;
-        float lookFactor = (float)Math.sin((rot * (Math.PI / 180)) + 45);
-        float lookX = (float)Math.atan((xPosition - mouseX) / 20) * -30;
+        float lookFactor = (float) Math.sin((rot * (Math.PI / 180)) + 45);
+        float lookX = (float) Math.atan((xPosition - mouseX) / 20) * -30;
 
         thePlayer.setHeadYaw(lookX * lookFactor);
-        thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float)Math.atan(mouseY / 40) * -20);
+        thePlayer.setPitch(thePlayer.isSleeping() ? 10 : (float) Math.atan(mouseY / 40) * -20);
 
-        MatrixStack matrixStack = context.getMatrices();
+        MatrixStack matrixStack = new MatrixStack();
         matrixStack.push();
         matrixStack.translate(xPosition, yPosition, 50);
         matrixStack.scale(scale, scale, scale);
@@ -150,17 +152,20 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rot));
 
-        DiffuseLighting.enableGuiShaderLighting();
+        try (DiffuseLighting lighting = new DiffuseLighting()) {
+            lighting.setShaderLights(DiffuseLighting.Type.ENTITY_IN_UI);
 
-        VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+            VertexConsumerProvider.Immediate immediate =
+                    MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
-        renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
+            renderPlayerEntity(matrixStack, thePlayer, immediate, dispatcher);
+        }
 
         matrixStack.pop();
-        DiffuseLighting.enableGuiDepthLighting();
     }
 
-    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer, VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
+    protected void renderPlayerEntity(MatrixStack matrixStack, DummyPlayer thePlayer,
+                                      VertexConsumerProvider renderContext, EntityRenderDispatcher dispatcher) {
         if (thePlayer.isSleeping()) {
             BedHead.instance.render(thePlayer, matrixStack, renderContext);
         }
@@ -216,7 +221,8 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>> i
         Entity camera = minecraft.getCameraEntity();
         minecraft.setCameraEntity(thePlayer);
 
-        dispatcher.render(thePlayer, x, y, z, 1, matrixStack, renderContext, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+        dispatcher.render(thePlayer, x, y, z, 1, matrixStack, renderContext,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
         minecraft.setCameraEntity(camera);
 

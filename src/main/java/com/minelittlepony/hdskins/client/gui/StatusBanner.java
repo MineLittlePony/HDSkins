@@ -1,10 +1,8 @@
 package com.minelittlepony.hdskins.client.gui;
 
 import com.minelittlepony.common.client.gui.ITextContext;
-
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
@@ -24,7 +22,6 @@ public class StatusBanner implements ITextContext {
     }
 
     public void render(DrawContext context, float deltaTime, int width, int height) {
-
         boolean showBanner = uploader.hasBannerMessage();
 
         if (showBanner != showing) {
@@ -50,12 +47,7 @@ public class StatusBanner implements ITextContext {
         msgFadeOpacity = MathHelper.clamp(msgFadeOpacity, 0, 1);
 
         if (msgFadeOpacity > 0) {
-            MatrixStack matrices = context.getMatrices();
-
-            matrices.push();
-            matrices.translate(0, 0, 900);
-            int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
-
+            int opacity = (Math.min(180, (int) (msgFadeOpacity * 180)) & 255) << 24;
             context.fill(0, 0, width, height, opacity);
 
             if (showBanner || msgFadeOpacity >= 1) {
@@ -65,24 +57,24 @@ public class StatusBanner implements ITextContext {
                 int maxWidth = Math.min(width - 10,
                         showTitle ? Math.max(getFont().getWidth(HD_SKINS_FAILED), messageWidth) : messageWidth
                 );
-                int messageHeight = getFont().getWrappedLinesHeight(lastShownMessage.getString(), maxWidth) + getFont().fontHeight + 10;
+                int messageHeight =
+                        getFont().getWrappedLinesHeight(lastShownMessage.getString(), maxWidth) + getFont().fontHeight + 10;
                 int blockY = (height - messageHeight) / 2;
                 int blockX = (width - maxWidth) / 2;
                 int padding = 6;
 
-                drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2, messageHeight + padding * 2);
-                matrices.translate(0, 0, 400);
+                drawTooltipDecorations(context, blockX - padding, blockY - padding, maxWidth + padding * 2,
+                        messageHeight + padding * 2);
 
                 if (showTitle) {
                     drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xffff55, 0);
-                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
+                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2,
+                            blockY + getFont().fontHeight + 10, maxWidth, 0xff5555);
                 } else {
                     uploader.tryClearStatus();
                     drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, 0xffffff, 0);
                 }
             }
-
-            matrices.pop();
         }
     }
 
@@ -91,6 +83,6 @@ public class StatusBanner implements ITextContext {
     }
 
     static void drawTooltipDecorations(DrawContext context, int x, int y, int width, int height) {
-        context.draw(vertices -> TooltipBackgroundRenderer.render(context, x, y, width, height, 400, null));
+        TooltipBackgroundRenderer.render(context, x, y, width, height, null);
     }
 }

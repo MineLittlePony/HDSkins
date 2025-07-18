@@ -360,7 +360,7 @@ public class GuiSkins extends GameGui {
 
     @Override
     protected void renderPanoramaBackground(DrawContext context, float tickDelta) {
-        panorama.render(context, this.width, this.height, 1.0F, tickDelta);
+        panorama.render(context, this.width, this.height, true);
     }
 
     @Override

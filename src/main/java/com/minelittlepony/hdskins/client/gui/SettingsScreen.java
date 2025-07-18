@@ -1,14 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.ScrollContainer;
 import com.minelittlepony.common.client.gui.Tooltip;
@@ -21,13 +12,19 @@ import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.server.Gateway;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.RotatingCubeMapRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import org.jetbrains.annotations.Nullable;
 
 public class SettingsScreen extends GameGui {
 
@@ -61,54 +58,59 @@ public class SettingsScreen extends GameGui {
 
         addButton(new Label(width / 2, 5).setCentered()).getStyle().setText(getTitle());
         addButton(new Button(width / 2 - 100, height - 25))
-            .onClick(sender -> finish())
-            .getStyle()
+                .onClick(sender -> finish())
+                .getStyle()
                 .setText("gui.done");
 
         content.addButton(new EnumSlider<>(LEFT, row += 20, config.pantsButtonVisibility))
-            .onChange(config.pantsButtonVisibility)
-            .setTextFormat(slider -> Text.translatable("hdskins.settings.main_screen_button", slider.getValue().name()))
-            .getStyle().setText(Text.translatable("hdskins.settings.main_screen_button", config.pantsButtonVisibility.get().name()));
+                .onChange(config.pantsButtonVisibility)
+                .setTextFormat(slider -> Text.translatable("hdskins.settings.main_screen_button",
+                        slider.getValue().name()))
+                .getStyle().setText(Text.translatable("hdskins.settings.main_screen_button",
+                        config.pantsButtonVisibility.get().name()));
 
         content.addButton(new Button(LEFT, row += 25, 200, 20))
-            .onClick(sender -> {
-                try {
-                    Path path = GamePaths.getAssetsDirectory().resolve("hd");
-                    Files.createDirectories(path);
-                    Util.getOperatingSystem().open(path);
-                } catch (IOException e) {
-                    HDSkins.LOGGER.error("Could not create cache folder", e);
-                }
-            })
-            .getStyle()
+                .onClick(sender -> {
+                    try {
+                        Path path = GamePaths.getAssetsDirectory().resolve("hd");
+                        Files.createDirectories(path);
+                        Util.getOperatingSystem().open(path);
+                    } catch (IOException e) {
+                        HDSkins.LOGGER.error("Could not create cache folder", e);
+                    }
+                })
+                .getStyle()
                 .setText("hdskins.options.open_cache_folder");
 
-        content.addButton(new Label(width / 2, row += 40).setCentered()).getStyle().setText("hdskins.settings.category.compatibility");
+        content.addButton(new Label(width / 2, row += 40).setCentered()).getStyle().setText("hdskins.settings" +
+                ".category.compatibility");
 
         content.addButton(new Toggle(LEFT, row += 20, config.useNativeFileChooser))
-            .onChange(config.useNativeFileChooser)
-            .getStyle().setText("hdskins.compatibility.native_file_picker");
+                .onChange(config.useNativeFileChooser)
+                .getStyle().setText("hdskins.compatibility.native_file_picker");
         content.addButton(new Toggle(LEFT, row += 20, config.enableSandboxingCheck))
-        .onChange(config.enableSandboxingCheck)
-        .getStyle().setText("hdskins.compatibility.sandboxing");
+                .onChange(config.enableSandboxingCheck)
+                .getStyle().setText("hdskins.compatibility.sandboxing");
 
-        content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings.category.experiments");
+        content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings" +
+                ".category.experiments");
 
         content.addButton(new Toggle(LEFT, row += 20, config.useBatchLoading))
-            .onChange(config.useBatchLoading)
-            .getStyle().setText("hdskins.experiments.batches");
+                .onChange(config.useBatchLoading)
+                .getStyle().setText("hdskins.experiments.batches");
 
-        content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings.category.servers");
+        content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings" +
+                ".category.servers");
         row += 10;
         int index = 1;
         for (Gateway gateway : HDSkinsServer.getInstance().getServers().getGateways()) {
             content.addButton(new Label(LEFT, row += getFont().fontHeight))
-                .getStyle()
-                .setText("#" + (index++));
+                    .getStyle()
+                    .setText("#" + (index++));
             for (Text line : Tooltip.of(Text.literal(gateway.getServer().toString()), 300).getLines()) {
                 content.addButton(new Label(LEFT, row += getFont().fontHeight))
-                    .getStyle()
-                    .setText(line);
+                        .getStyle()
+                        .setText(line);
             }
             Set<Map.Entry<Text, Text>> buttons = new HashSet<>();
 
@@ -117,10 +119,11 @@ public class SettingsScreen extends GameGui {
                 if (metadata.getValue().getStyle().getClickEvent() != null) {
                     buttons.add(metadata);
                 } else {
-                    for (Text line : Tooltip.of(metadata.getKey().copy().formatted(Formatting.YELLOW).append(": ").append(metadata.getValue()), 300).getLines()) {
+                    for (Text line :
+                            Tooltip.of(metadata.getKey().copy().formatted(Formatting.YELLOW).append(": ").append(metadata.getValue()), 300).getLines()) {
                         content.addButton(new Label(LEFT + 7, row += getFont().fontHeight))
-                            .getStyle()
-                            .setText(line);
+                                .getStyle()
+                                .setText(line);
                     }
                 }
             }
@@ -130,8 +133,8 @@ public class SettingsScreen extends GameGui {
             for (var metadata : buttons) {
                 int width = getFont().getWidth(metadata.getKey()) + 10;
                 content.addButton(new Button(left, row, width, 20))
-                    .onClick(sender -> handleTextClick(metadata.getValue().getStyle()))
-                    .getStyle().setText(metadata.getKey());
+                        .onClick(sender -> handleTextClick(metadata.getValue().getStyle()))
+                        .getStyle().setText(metadata.getKey());
                 left += width + 2;
             }
 
@@ -147,7 +150,7 @@ public class SettingsScreen extends GameGui {
 
     @Override
     protected void renderPanoramaBackground(DrawContext context, float delta) {
-        panorama.render(context, this.width, this.height, 1.0F, delta);
+        panorama.render(context, this.width, this.height, true);
     }
 
     @Override

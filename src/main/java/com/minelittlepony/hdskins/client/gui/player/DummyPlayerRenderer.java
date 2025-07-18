@@ -1,5 +1,9 @@
 package com.minelittlepony.hdskins.client.gui.player;
 
+import com.google.common.base.Suppliers;
+import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -22,17 +26,12 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.Items;
 import net.minecraft.stat.StatHandler;
+import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import com.google.common.base.Suppliers;
-import com.minelittlepony.common.client.gui.OutsideWorldRenderer;
 
 public class DummyPlayerRenderer {
 
@@ -43,7 +42,9 @@ public class DummyPlayerRenderer {
                     w,
                     DummyNetworkHandler.INSTANCE.get(),
                     new StatHandler(),
-                    new ClientRecipeBook(), false, false
+                    new ClientRecipeBook(),
+                    new PlayerInput(false, false, false, false, false, false, false), // Correct argument
+                    false
             );
         }, MinecraftClient.getInstance());
     });
@@ -61,7 +62,7 @@ public class DummyPlayerRenderer {
                 }
 
                 client.player = player;
-                client.world = (ClientWorld)player.getWorld();
+                client.world = (ClientWorld) player.getWorld();
                 OutsideWorldRenderer.configure(client.world);
             }
 
@@ -78,7 +79,8 @@ public class DummyPlayerRenderer {
         }
     }
 
-    static void renderBlockState(World world, BlockState state, MatrixStack stack, VertexConsumerProvider renderContext) {
+    static void renderBlockState(World world, BlockState state, MatrixStack stack,
+                                 VertexConsumerProvider renderContext) {
         BlockModelRenderer.render(
                 stack.peek(),
                 renderContext.getBuffer(RenderLayers.getMovingBlockLayer(state)),
@@ -101,9 +103,10 @@ public class DummyPlayerRenderer {
             stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
             stack.translate(-0.5, 0, 0);
 
-            World world = entity.getEntityWorld();
+            World world = entity.getWorld(); // Fixed method
 
-            BlockEntityRenderer<BedHead> renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(this);
+            BlockEntityRenderer<BedHead> renderer =
+                    MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(this);
 
             if (renderer != null) {
                 renderer.render(this, 1, stack, renderContext, 0xF000F0, OverlayTexture.DEFAULT_UV, Vec3d.ZERO);
@@ -127,10 +130,12 @@ public class DummyPlayerRenderer {
         public void render(MatrixStack stack, VertexConsumerProvider renderContext) {
             stack.push();
 
-            EntityRenderer<? super MrBoaty, ?> renderer = MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this);
+            EntityRenderer<? super MrBoaty, ?> renderer =
+                    MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(this);
 
             if (renderer != null) {
-                ((EntityRenderer)renderer).render(renderer.getAndUpdateRenderState(this, 1), stack, renderContext, 0xF000F0);
+                ((EntityRenderer) renderer).render(renderer.getAndUpdateRenderState(this, 1), stack, renderContext,
+                        0xF000F0);
             }
 
             stack.pop();

@@ -1,16 +1,13 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.Tooltip;
 import com.minelittlepony.common.client.gui.element.Button;
-
+import java.util.List;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 public class ConfirmationScreen extends GameGui {
 
@@ -30,25 +27,26 @@ public class ConfirmationScreen extends GameGui {
 
         message = Tooltip.of(getTitle(), width - 30).getLines();
 
-        addButton(new Button(width/2 - 110, height/2 + 20, 100, 20))
-            .onClick(p -> {
-                finish();
-                action.run();
-            })
-            .getStyle()
+        addButton(new Button(width / 2 - 110, height / 2 + 20, 100, 20))
+                .onClick(p -> {
+                    finish();
+                    action.run();
+                })
+                .getStyle()
                 .setText("gui.yes");
 
-        addButton(new Button(width/2 + 10, height/2 + 20, 100, 20))
-            .onClick(p -> finish())
-            .getStyle()
+        addButton(new Button(width / 2 + 10, height / 2 + 20, 100, 20))
+                .onClick(p -> finish())
+                .getStyle()
                 .setText("gui.no");
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float partialTicks) {
         parent.render(context, -1, -1, partialTicks);
-        context.getMatrices().push();
-        context.getMatrices().translate(0, 0, 300);
+
+        // Remove push/pop and use 2D translation if needed
+        // context.getMatrices().translate(0, 0); // Only if you need to offset
 
         context.fill(0, 0, width, height, 0xC8000000);
 
@@ -59,8 +57,6 @@ public class ConfirmationScreen extends GameGui {
         for (Text line : message) {
             drawCenteredLabel(context, line, left, top += getFont().fontHeight, 0xFFFFFFFF, 0);
         }
-
-        context.getMatrices().pop();
     }
 
     @Override

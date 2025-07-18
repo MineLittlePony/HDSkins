@@ -1,26 +1,29 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.io.Closeable;
-import java.util.*;
-import java.util.function.Consumer;
-
-import org.lwjgl.glfw.GLFW;
-
 import com.minelittlepony.common.client.gui.ITextContext;
-import com.minelittlepony.hdskins.client.*;
+import com.minelittlepony.hdskins.client.HDSkins;
+import com.minelittlepony.hdskins.client.VanillaSkins;
 import com.minelittlepony.hdskins.client.gui.player.DummyPlayer;
 import com.minelittlepony.hdskins.client.gui.player.skins.LocalPlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
-import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
+import com.minelittlepony.hdskins.client.resources.NativeImageFilters;
+import com.minelittlepony.hdskins.client.resources.TextureLoader;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.*;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Handles the display of the dummy players in the GUI.
@@ -41,7 +44,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     private SkinType activeSkinType = SkinType.SKIN;
 
     private Optional<SkinVariant> variant = Optional.of(PlayerSkins.Posture.SkinVariant.DEFAULT);
-    private List<SkinVariant> skinVariants = new ArrayList<>(PlayerSkins.Posture.SkinVariant.VALUES);
+    private final List<SkinVariant> skinVariants = new ArrayList<>(PlayerSkins.Posture.SkinVariant.VALUES);
 
     private EquipmentSet activeEquipmentSet = HDSkins.getInstance().getDummyPlayerEquipmentList().getDefault();
 
@@ -123,7 +126,8 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
     @Override
     public Identifier getDefaultSkin(SkinType type, String variant) {
         Identifier skin = getBlankSkin(type, variant);
-        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getSkinTextures(getProfile().getId(), variant) : skin, skin, getExclusion());
+        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ?
+                VanillaSkins.getSkinTextures(getProfile().getId(), variant) : skin, skin, getExclusion());
     }
 
     @Override
@@ -175,7 +179,7 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
 
         if (!(left && right) && !screen.isDragging()) {
             if (rotationDirection == 0) {
-                rotationSpeed = (int)Math.max(PASSIVE_ROTATION_SPEED, rotationSpeed * 0.6F);
+                rotationSpeed = (int) Math.max(PASSIVE_ROTATION_SPEED, rotationSpeed * 0.6F);
                 updateCounter += rotationSpeed;
             } else {
                 if (prevRotationDirection != rotationDirection) {
@@ -188,19 +192,22 @@ public class DualCarouselWidget implements Closeable, PlayerSkins.Posture, IText
         prevRotationDirection = rotationDirection;
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        local.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
-        remote.render(mouseX, mouseY, (int)updateCounter, partialTick, context);
+    public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser,
+                       SkinUploader uploader) {
+        local.render(mouseX, mouseY, (int) updateCounter, partialTick, context);
+        remote.render(mouseX, mouseY, (int) updateCounter, partialTick, context);
 
-        chooser.renderStatus(context, local.bounds);
-        uploader.renderStatus(context, remote.bounds);
+        MatrixStack matrices = new MatrixStack(); // Create a new MatrixStack
+        chooser.renderStatus(context, local.bounds, matrices);
+        uploader.renderStatus(context, remote.bounds, matrices);
     }
 
-    public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY,
+                                int button) {
         boolean listHit = skinList.mouseClicked(uploader, mouseX, mouseY, button);
         boolean playerHit =
-                   local.mouseClicked(width, height, mouseX, mouseY, button)
-                || remote.mouseClicked(width, height, mouseX, mouseY, button);
+                local.mouseClicked(width, height, mouseX, mouseY, button)
+                        || remote.mouseClicked(width, height, mouseX, mouseY, button);
 
         if (playerHit && !listHit && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             screen.setDragging(true);
