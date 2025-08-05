@@ -115,8 +115,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             }
 
             @Override
-            public String getModel(String fallback) {
-                return getCustomPlayerModel(profile).orElse(fallback);
+            public Optional<String> getModel() {
+                return getCustomPlayerModel(profile);
             }
 
             @Override

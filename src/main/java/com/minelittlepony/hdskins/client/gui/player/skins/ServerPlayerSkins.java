@@ -17,14 +17,14 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
 
     private Optional<DynamicTextures> textureManager = Optional.empty();
 
-    private Optional<SkinServer.SkinServerProfile<?>> profile = Optional.empty();
+    private Optional<? extends SkinServer.SkinServerProfile<?>> profile = Optional.empty();
     private final Map<SkinType, List<PreviousServerPlayerSkins>> skinLists = new HashMap<>();
 
     public ServerPlayerSkins(Posture posture) {
         super(posture);
     }
 
-    public void loadProfile(Optional<SkinServer.SkinServerProfile<?>> profile) {
+    public void loadProfile(Optional<? extends SkinServer.SkinServerProfile<?>> profile) {
         this.profile = profile;
         skinLists.clear();
     }

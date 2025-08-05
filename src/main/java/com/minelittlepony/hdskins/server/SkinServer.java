@@ -19,6 +19,13 @@ public interface SkinServer {
     Set<Feature> getFeatures();
 
     /**
+     * Returns the set of features that this skin server supports for the given skin type.
+     */
+    default Set<Feature> getFeatures(SkinType skinType) {
+        return getFeatures();
+    }
+
+    /**
      * Gets optional metadata that should be displayed to the user for this server.
      */
     default Map<Text, Text> getMetadata() {
@@ -96,7 +103,7 @@ public interface SkinServer {
      * @throws IOException
      * @throws AuthenticationException
      */
-    default Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
+    default Optional<? extends SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
         return Optional.empty();
     }
 

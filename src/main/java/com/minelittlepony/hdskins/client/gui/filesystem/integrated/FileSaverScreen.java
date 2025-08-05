@@ -94,14 +94,6 @@ public class FileSaverScreen extends FileSelectorScreen {
         if (parent != null && name != null && !Files.isWritable(parent)) {
             client.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
                 onDirectorySelected(GamePaths.getGameDirectory().resolve(name));
-                /*
-                FileDialogs.NATIVE.save("Save File", name.toString()).startIn(parent).andThen((p, success) -> {
-                    if (success) {
-                        super.onFileSelected(p);
-                    } else {
-                        finish();
-                    }
-                }).launch();*/
             }));
             return;
         }
