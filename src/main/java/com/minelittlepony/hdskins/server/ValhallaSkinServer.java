@@ -137,13 +137,11 @@ public class ValhallaSkinServer implements SkinServer {
                             .build())
                     .requireOk();
             case SkinUpload.FileUpload fileUpload ->
-                    MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
-                            .PUT(FileTypes.multiPart()
-                                    .field("type", fileUpload.type().getParameterizedName())
-                                    .field("file", fileUpload.file())
-                                    .field("meta", new Gson().toJson(fileUpload.metadata()))
-                                    .build())
-                            .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+                    MoreHttpResponses.execute(FileTypes.multiPart()
+                            .field("type", fileUpload.type().getParameterizedName())
+                            .field("file", fileUpload.file())
+                            .field("meta", new Gson().toJson(addChecksum(fileUpload.metadata(), fileUpload.file().toUri())))
+                            .build(HttpRequest.newBuilder(buildBackendUri("textures"))::PUT)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
                             .build())
@@ -153,7 +151,7 @@ public class ValhallaSkinServer implements SkinServer {
                             .POST(FileTypes.json(Map.of(
                                 "type", uriUpload.type().getParameterizedName(),
                                 "file", uriUpload.uri().toString(),
-                                "meta", uriUpload.metadata()
+                                "meta", addChecksum(uriUpload.metadata(), uriUpload.uri())
                             )))
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
@@ -161,6 +159,15 @@ public class ValhallaSkinServer implements SkinServer {
                             .build())
                     .requireOk();
         });
+    }
+
+    private Map<String, String> addChecksum(Map<String, String> metadata, URI uri) throws IOException {
+        if (metadata.containsKey("checksum")) {
+            return metadata;
+        }
+        metadata = new HashMap<>(metadata);
+        metadata.put("checksum", URIUtil.getChecksum(uri));
+        return Map.copyOf(metadata);
     }
 
     @Override
@@ -194,8 +201,9 @@ public class ValhallaSkinServer implements SkinServer {
                 Set<String> visited = new HashSet<>();
                 return p.textures().getOrDefault(type, List.of())
                         .stream()
-                        .filter(texture -> visited.add(texture.url + texture.getModel()))
+                        .filter(texture -> texture.metadata().containsKey("checksum"))
                         .sorted(Comparator.comparing(t -> -t.startTime))
+                        .filter(texture -> visited.add(texture.metadata().get("checksum") + texture.getModel()))
                         .toList();
             });
             return new SkinServerProfile<Texture>() {
@@ -241,26 +249,20 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private AuthHandshake authHandshake(String name) throws IOException {
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("auth/minecraft"))
-                .POST(FileTypes.multiPart()
-                        .field("name", name)
-                        .build())
-                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .build())
+        return MoreHttpResponses.execute(FileTypes.multiPart()
+                    .field("name", name)
+                .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft"))::POST)
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
                 .requireOk()
                 .json(AuthHandshake.class, "Invalid handshake response");
     }
 
     private AuthResponse authResponse(String name, long verifyToken) throws IOException {
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("auth/minecraft/callback"))
-                .POST(FileTypes.multiPart()
-                        .field("name", name)
-                        .field("verifyToken", verifyToken)
-                        .build())
-                .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .build())
+        return MoreHttpResponses.execute(FileTypes.multiPart()
+                    .field("name", name)
+                    .field("verifyToken", verifyToken)
+                .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft/callback"))::POST)
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
                 .requireOk()
                 .json(AuthResponse.class, "Invalid auth response");
     }

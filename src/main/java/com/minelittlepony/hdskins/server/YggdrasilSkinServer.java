@@ -3,10 +3,11 @@ package com.minelittlepony.hdskins.server;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
 import java.util.*;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.collect.Sets;
-import com.google.gson.JsonObject;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.profile.ProfileUtils;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -17,6 +18,7 @@ import com.minelittlepony.hdskins.util.net.MoreHttpResponses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecurePublicKeyException;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 
@@ -38,12 +40,19 @@ public class YggdrasilSkinServer implements SkinServer {
             Feature.DELETE_USER_SKIN,
             Feature.MODEL_VARIANTS,
             Feature.MODEL_TYPES);
+    private static final Set<Feature> READ_ONLY_FEATURES = Sets.newHashSet(
+            Feature.SYNTHETIC,
+            Feature.DOWNLOAD_USER_SKIN,
+            Feature.DELETE_USER_SKIN,
+            Feature.MODEL_VARIANTS,
+            Feature.MODEL_TYPES);
 
     private static final URI LOGIN_URI = URI.create("https://www.minecraft.net/en-us/login");
 
     private transient final String address = "https://api.minecraftservices.com";
-    private transient final String verify = "https://authserver.mojang.com/validate";
+    //private transient final String verify = "https://authserver.mojang.com/validate";
 
+    private transient final String profileAddress = address + "/minecraft/profile";
     private transient final String skinUploadAddress = address + "/minecraft/profile/skins";
     private transient final String activeSkinAddress = skinUploadAddress + "/active";
     private transient final String activeCapeAddress = address + "/minecraft/profile/capes/active";
@@ -61,14 +70,20 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public Set<Feature> getFeatures(SkinType skinType) {
+        return skinType != SkinType.SKIN ? READ_ONLY_FEATURES : FEATURES;
+    }
+
+    @Override
     public boolean supportsSkinType(SkinType skinType) {
-        return skinType.isVanilla() && skinType != SkinType.CAPE;
+        return skinType.isVanilla();
     }
 
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
         MinecraftSessionService service = HDSkinsServer.getInstance().getSessionService();
 
+        @Nullable
         ProfileResult result = service.fetchProfile(profile.getId(), requireSecure);
 
         if (result == null) {
@@ -84,40 +99,49 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
+    public TexturePayload loadSkins(Session session) throws IOException, AuthenticationException {
+        @Nullable
+        TexturePayload payload = loadProfile(session).map(profile -> {
+            Map<SkinType, MinecraftProfileTexture> textures = new HashMap<>();
+            profile.skins.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
+                textures.put(SkinType.SKIN, new MinecraftProfileTexture(skin.url, Map.of("model", "classic".equalsIgnoreCase(skin.variant) ? "default" : skin.variant.toLowerCase(Locale.ROOT))));
+            });
+            profile.capes.stream().filter(i -> i.isActive()).findFirst().ifPresent(skin -> {
+                textures.put(SkinType.CAPE, new MinecraftProfileTexture(skin.url, Map.of()));
+                textures.put(SkinType.ELYTRA, new MinecraftProfileTexture(skin.url, Map.of()));
+            });
+            return new TexturePayload(session.profile(), textures);
+        }).orElse(null);
+        if (payload == null) {
+            return loadSkins(session.profile());
+        }
+        return payload;
+    }
+
+    @Override
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         authorize(upload.session());
 
         if (upload instanceof SkinUpload.Delete) {
-            execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
+            execute(HttpRequest.newBuilder(URI.create(upload.type() == SkinType.SKIN ? activeSkinAddress : activeCapeAddress))
                     .DELETE()
-                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken())
-                    .build());
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken()));
         } else if (upload instanceof SkinUpload.FileUpload fileUpload) {
-            execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
-                    .PUT(FileTypes.multiPart(mapMetadata(fileUpload.metadata()))
-                            .field("file", fileUpload.file())
-                            .build())
-                    .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
-                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken())
-                    .build());
+            execute(FileTypes.multiPart(mapMetadata(fileUpload.metadata()))
+                        .field("file", fileUpload.file())
+                    .build(HttpRequest.newBuilder(URI.create(skinUploadAddress))::POST)
+                        .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken()));
         } else if (upload instanceof SkinUpload.UriUpload uriUpload) {
             // https://wiki.vg/Mojang_API#Change_Skin
-            execute(HttpRequest.newBuilder(URI.create(skinUploadAddress))
-                    .POST(FileTypes.json(mapMetadata(Util.make(uriUpload.metadata(), metadata -> {
-                        metadata.put("url", uriUpload.uri().toString());
-                    }))))
-                    .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.MULTI_PART_FORM_DATA)
+            execute(FileTypes.multiPart(mapMetadata(Util.make(uriUpload.metadata(), metadata -> {
+                metadata.put("url", uriUpload.uri().toString());
+            }))).build(HttpRequest.newBuilder(URI.create(skinUploadAddress))::POST)
                     .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken())
-                    .build());
+                    .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + upload.session().accessToken()));
         } else {
             throw new IllegalArgumentException("Unsupported SkinUpload type: " + upload.getClass());
         }
-
-        // TODO:
-        // MinecraftClient client = MinecraftClient.getInstance();
-        // client.getSessionProperties().clear();
     }
 
     private Map<String, String> mapMetadata(Map<String, String> metadata) {
@@ -129,16 +153,16 @@ public class YggdrasilSkinServer implements SkinServer {
 
     @Override
     public void authorize(Session session) throws IOException {
-        JsonObject json = new JsonObject();
+        /*JsonObject json = new JsonObject();
         json.addProperty("accessToken", session.accessToken());
         execute(HttpRequest.newBuilder(URI.create(verify))
                 .POST(BodyPublishers.ofString(json.toString()))
                 .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                 .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .build());
+                .build());*/
     }
 
-    private void execute(HttpRequest request) throws IOException {
+    private void execute(HttpRequest.Builder request) throws IOException {
         MoreHttpResponses response = MoreHttpResponses.execute(request);
         if (!response.ok()) {
             throw new IOException(response.json(ErrorResponse.class, "Server did not respond correctly. Status Code " + response.response().statusCode()).toString());
@@ -149,12 +173,12 @@ public class YggdrasilSkinServer implements SkinServer {
         authorize(session);
         execute(HttpRequest.newBuilder(URI.create(activeCapeAddress))
                 .PUT(FileTypes.json(Map.of("capeId", capeId)))
-                .build());
+                .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + session.accessToken()));
     }
 
     @Override
-    public Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
-        MoreHttpResponses response = MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(activeSkinAddress))
+    public Optional<ProfileResponse> loadProfile(Session session) throws IOException, AuthenticationException {
+        MoreHttpResponses response = MoreHttpResponses.execute(HttpRequest.newBuilder(URI.create(profileAddress))
                 .GET()
                 .header(FileTypes.HEADER_AUTHORIZATION, "Bearer " + session.accessToken())
                 .build());
