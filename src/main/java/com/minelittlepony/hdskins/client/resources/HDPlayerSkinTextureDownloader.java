@@ -7,7 +7,6 @@ import static com.minelittlepony.common.event.SkinFilterCallback.fill;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,9 +18,9 @@ import org.slf4j.Logger;
 import com.minelittlepony.common.event.SkinFilterCallback;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.minelittlepony.hdskins.util.net.URIUtil;
 import com.mojang.logging.LogUtils;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PathUtil;
@@ -53,32 +52,15 @@ public class HDPlayerSkinTextureDownloader {
         }
 
         LOGGER.debug("Downloading HTTP texture from {} to {}", uri, path);
-        URI uRI = URI.create(uri);
-        HttpURLConnection connection = null;
+        byte[] response = URIUtil.getBytes(URI.create(uri));
         try {
-            connection = (HttpURLConnection)uRI.toURL().openConnection(MinecraftClient.getInstance().getNetworkProxy());
-            connection.setDoInput(true);
-            connection.setDoOutput(false);
-            connection.connect();
-            int responseCode = connection.getResponseCode();
-            if (responseCode / 100 != 2) {
-                throw new IOException("Failed to open " + uRI + ", HTTP error code: " + responseCode);
-            }
-
-            byte[] response = connection.getInputStream().readAllBytes();
-            try {
-                PathUtil.createDirectories(path.getParent());
-                Files.write(path, response);
-            } catch (IOException var13) {
-                LOGGER.warn("Failed to cache texture {} in {}", uri, path);
-            }
-
-            return NativeImage.read(response);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            PathUtil.createDirectories(path.getParent());
+            Files.write(path, response);
+        } catch (IOException var13) {
+            LOGGER.warn("Failed to cache texture {} in {}", uri, path);
         }
+
+        return NativeImage.read(response);
     }
 
     @Nullable

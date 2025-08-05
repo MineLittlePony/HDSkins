@@ -32,6 +32,10 @@ public interface MoreHttpResponses {
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
+    static MoreHttpResponses execute(HttpRequest.Builder request) throws IOException {
+        return execute(request.build());
+    }
+
     static MoreHttpResponses execute(HttpRequest request) throws IOException {
         try {
             HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());

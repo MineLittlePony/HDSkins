@@ -294,12 +294,16 @@ public class GuiSkins extends GameGui {
     @Override
     public void removed() {
         dropper.cancel();
+    }
+
+    @Override
+    public void close() {
+        super.close();
         try {
             uploader.close();
         } catch (IOException e) {
             HDSkins.LOGGER.error("Could not dispose of the uploader", e);
         }
-
         HDSkins.getInstance().getProfileRepository().clear();
     }
 

@@ -62,11 +62,11 @@ public class PrioritySorter {
             }
 
             @Override
-            public String getModel(String fallback) {
+            public Optional<String> getModel() {
                 if (selectors.isEmpty()) {
-                    return playerSkins.combined().dynamic().getModel(fallback);
+                    return playerSkins.combined().dynamic().getModel();
                 }
-                return selectBest(SkinType.SKIN, playerSkins).dynamic().getModel(fallback);
+                return selectBest(SkinType.SKIN, playerSkins).dynamic().getModel();
             }
 
             @Override
