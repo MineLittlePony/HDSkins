@@ -7,8 +7,7 @@
   "mixins": [],
   "client": [
     "client.MixinPlayerSkinCacheEntry",
-    "client.MixinPlayerSkinProvider",
-    "client.MixinSpecialGuiElementRenderer"
+    "client.MixinPlayerSkinProvider"
   ],
   "injectors": {
     "defaultRequire": 1
