@@ -21,16 +21,18 @@ import com.minelittlepony.hdskins.server.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.texture.CubemapTexture;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.util.List;
@@ -91,7 +93,7 @@ public class GuiSkins extends GameGui {
             MinecraftClient.getInstance().getSession().getAccessToken(),
             SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
-                client.getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
+                client.getApiServices().sessionService().joinServer(session.profile().id(), session.accessToken(), serverId);
             })
     );
 
@@ -327,35 +329,34 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         return canTakeEvents()
-                && !super.mouseClicked(mouseX, mouseY, button)
-                && previewer.mouseClicked(uploader, width, height, mouseX, mouseY, button);
+                && !super.mouseClicked(click, doubled)
+                && previewer.mouseClicked(uploader, width, height, click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
+    public boolean mouseDragged(Click click, double changeX, double changeY) {
         return canTakeEvents()
-                && previewer.mouseDragged(mouseX, mouseY, button, changeX, changeY)
-                && super.mouseDragged(mouseX, mouseY, button, changeX, changeY);
+                && previewer.mouseDragged(click, changeX, changeY)
+                && super.mouseDragged(click, changeX, changeY);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (modifiers == (GLFW.GLFW_MOD_ALT | GLFW.GLFW_MOD_CONTROL) && keyCode == GLFW.GLFW_KEY_R) {
+    public boolean keyPressed(KeyInput input) {
+        if (input.hasAlt() && input.hasCtrl() && input.getKeycode() == InputUtil.GLFW_KEY_R) {
             client.reloadResources();
             return true;
         }
-        return keyCode != GLFW.GLFW_KEY_SPACE
-                && super.keyPressed(keyCode, scanCode, modifiers);
+        return !input.isEnterOrSpace() && super.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(char keyChar, int keyCode) {
+    public boolean charTyped(CharInput input) {
         return canTakeEvents()
                 && !chooser.pickingInProgress()
                 && !uploader.isBusy()
-                && super.charTyped(keyChar, keyCode);
+                && super.charTyped(input);
     }
 
     @Override

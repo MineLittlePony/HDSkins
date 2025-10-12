@@ -5,7 +5,6 @@ import com.minelittlepony.hdskins.client.gui.PlayerBodyWidget;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -13,6 +12,7 @@ import net.minecraft.item.Items;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceReloader;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> implements IdentifiableResourceReloadListener {
-    private static final Identifier EQUIPMENT = HDSkins.id("skins/equipment");
+public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> implements ResourceReloader {
+    public static final Identifier EQUIPMENT = HDSkins.id("skins/equipment");
     private static final Identifier EMPTY = HDSkins.id("empty");
 
     private EquipmentSet emptySet = EquipmentSet.EMPTY;
@@ -39,16 +39,9 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
     }
 
     @Override
-    public Identifier getFabricId() {
-        return EQUIPMENT;
-    }
-
-
-    @Override
     protected Map<Identifier, EquipmentSet> prepare(ResourceManager resourceManager, Profiler profiler) {
         return super.prepare(resourceManager, profiler);
     }
-
 
     @Override
     protected void apply(Map<Identifier, EquipmentSet> sets, ResourceManager manager, Profiler profiler) {

@@ -8,8 +8,11 @@ import org.joml.Quaternionf;
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
+
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Hand;
@@ -47,9 +50,9 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
         return skins;
     }
 
-    public boolean mouseClicked(int width, int height, double mouseX, double mouseY, int button) {
-        if (bounds.contains(mouseX, mouseY)) {
-            entity.swingArm(button == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND);
+    public boolean mouseClicked(int width, int height, Click click) {
+        if (bounds.contains(click.x(), click.y())) {
+            entity.swingArm(click.button() == InputUtil.GLFW_MOUSE_BUTTON_LEFT ? Hand.MAIN_HAND : Hand.OFF_HAND);
             return true;
         }
         return false;

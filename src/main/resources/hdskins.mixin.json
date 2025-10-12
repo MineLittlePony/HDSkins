@@ -6,9 +6,8 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [],
   "client": [
-    "client.MixinPlayerListEntry",
-    "client.MixinPlayerHeadModelRenderer",
-    "client.MixinSkullRenderer",
+    "client.MixinPlayerSkinCacheEntry",
+    "client.MixinPlayerSkinProvider",
     "client.MixinSpecialGuiElementRenderer"
   ],
   "injectors": {

@@ -8,7 +8,7 @@ import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.SkinTextures;
 
 public record PlayerSkins(PlayerSkinLayers layers, PlayerSkinLayers.Layer sorted) {
 

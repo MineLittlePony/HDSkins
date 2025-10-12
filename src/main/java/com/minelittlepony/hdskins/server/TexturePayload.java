@@ -15,7 +15,7 @@ public record TexturePayload (
     Textures textures
 ) {
     public TexturePayload(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textures) {
-        this(System.currentTimeMillis(), profile.getId(), profile.getName(), true, new Textures(textures));
+        this(System.currentTimeMillis(), profile.id(), profile.name(), true, new Textures(textures));
     }
 
     public static class Textures extends HashMap<SkinType, MinecraftProfileTexture> {

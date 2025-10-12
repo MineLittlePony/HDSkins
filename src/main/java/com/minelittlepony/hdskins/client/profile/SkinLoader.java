@@ -19,6 +19,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.AssetInfo.TextureAsset;
+import net.minecraft.util.AssetInfo.TextureAssetInfo;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
@@ -44,7 +46,7 @@ public class SkinLoader {
             }
 
             @Override
-            public Optional<Identifier> getSkin(SkinType type) {
+            public Optional<TextureAsset> getSkin(SkinType type) {
                 return value.get().getSkin(type);
             }
 
@@ -66,9 +68,9 @@ public class SkinLoader {
     }
 
     private CompletableFuture<ProvidedSkins> fetchTextures(Map<SkinType, MinecraftProfileTexture> textures) {
-        Map<SkinType, CompletableFuture<Identifier>> tasks = textures.entrySet().stream().collect(Collectors.toMap(
+        Map<SkinType, CompletableFuture<TextureAsset>> tasks = textures.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,
-                entry -> fileStore.get(entry.getKey(), entry.getValue())
+                entry -> fileStore.get(entry.getKey(), entry.getValue()).thenApply(id -> new TextureAssetInfo(id, id))
         ));
 
         return CompletableFuture.allOf(tasks.values().stream().toArray(CompletableFuture[]::new)).thenApply(nothing -> {
@@ -92,7 +94,7 @@ public class SkinLoader {
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 
-    public record ProvidedSkins (Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, Identifier> skins) implements DynamicSkinTextures {
+    public record ProvidedSkins (Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, TextureAsset> skins) implements DynamicSkinTextures {
         public static final ProvidedSkins EMPTY = new ProvidedSkins(Optional.empty(), Set.of(), Map.of());
 
         @Override
@@ -101,7 +103,7 @@ public class SkinLoader {
         }
 
         @Override
-        public Optional<Identifier> getSkin(SkinType type) {
+        public Optional<TextureAsset> getSkin(SkinType type) {
             return Optional.ofNullable(skins.get(type));
         }
 

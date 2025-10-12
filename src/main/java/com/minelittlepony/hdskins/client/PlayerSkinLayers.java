@@ -9,7 +9,8 @@ import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.util.AssetInfo.TextureAsset;
 import net.minecraft.util.Identifier;
 
 public record PlayerSkinLayers (
@@ -46,7 +47,7 @@ public record PlayerSkinLayers (
             return dynamic().getProvidedSkinTypes();
         }
 
-        public Optional<Identifier> getSkin(SkinType type) {
+        public Optional<TextureAsset> getSkin(SkinType type) {
             return dynamic().getSkin(type);
         }
 

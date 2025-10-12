@@ -10,7 +10,6 @@ import com.minelittlepony.hdskins.util.ResourceUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.SynchronousResourceReloader;
@@ -36,9 +35,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SkinServerList implements SynchronousResourceReloader, IdentifiableResourceReloadListener {
+public class SkinServerList implements SynchronousResourceReloader {
 
-    private static final Identifier SKIN_SERVERS = HDSkinsServer.id("skins/servers.json");
+    public static final Identifier SKIN_SERVERS = HDSkinsServer.id("skins/servers.json");
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder()
@@ -48,11 +47,6 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
     private List<Gateway> skinServers = new LinkedList<>();
 
     private long timestamp = System.currentTimeMillis();
-
-    @Override
-    public Identifier getFabricId() {
-        return SKIN_SERVERS;
-    }
 
     @Override
     public void reload(ResourceManager mgr) {
@@ -77,9 +71,9 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
             return getEmbeddedTextures(profile).findFirst().filter(textures -> {
                 result.put(profile, new PartialTextures(Set.of(), textures));
                 return true;
-            }).isEmpty() && profile.getId() != null;
+            }).isEmpty() && profile.id() != null;
         }).collect(Collectors.toList());
-        Map<UUID, GameProfile> profileLookup = profiles.stream().collect(Collectors.toUnmodifiableMap(GameProfile::getId, Function.identity()));
+        Map<UUID, GameProfile> profileLookup = profiles.stream().collect(Collectors.toUnmodifiableMap(GameProfile::id, Function.identity()));
         Set<SkinType> requestedSkinTypes = SkinType.REGISTRY.stream().filter(SkinType::isKnown).collect(Collectors.toSet());
 
         for (Gateway gateway : skinServers) {

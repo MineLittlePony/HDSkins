@@ -29,9 +29,10 @@ import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager.SkinData.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceReloader;
+import net.minecraft.util.AssetInfo.TextureAsset;
+import net.minecraft.util.AssetInfo.TextureAssetInfo;
 import net.minecraft.util.Identifier;
 
 /**
@@ -45,9 +46,9 @@ import net.minecraft.util.Identifier;
  * }
  *
  */
-public class SkinResourceManager implements IdentifiableResourceReloadListener {
+public class SkinResourceManager implements ResourceReloader {
 
-    private static final Identifier ID = HDSkins.id("skins");
+    public static final Identifier ID = HDSkins.id("skins");
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -63,32 +64,27 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = Memoize.createAsyncLoadingCache(15, loader::loadAsync);
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender, Executor serverExecutor, Executor clientExecutor) {
+    public CompletableFuture<Void> reload(ResourceReloader.Store store, Executor prepareExecutor, ResourceReloader.Synchronizer sync, Executor applyExecutor) {
         return sync.whenPrepared(null).thenRunAsync(() -> {
-            store.clear();
+            this.store.clear();
             loader.stop();
 
             textures.invalidateAll();
 
-            sender.getAllNamespaces().stream().map(domain -> Identifier.of(domain, "textures/skins/skins.json")).forEach(identifier -> {
-                sender.getAllResources(identifier).stream()
+            store.getResourceManager().getAllNamespaces().stream().map(domain -> Identifier.of(domain, "textures/skins/skins.json")).forEach(identifier -> {
+                store.getResourceManager().getAllResources(identifier).stream()
                     .map(this::loadSkinData)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(data -> {
                         data.skins.forEach(s -> {
-                            store.computeIfAbsent(s.getType(), SkinStore::new).addSkin(s);
+                            this.store.computeIfAbsent(s.getType(), SkinStore::new).addSkin(s);
                         });
                     });
             });
 
             lastLoadTime = System.currentTimeMillis();
-        }, clientExecutor);
-    }
-
-    @Override
-    public Identifier getFabricId() {
-        return ID;
+        }, applyExecutor);
     }
 
     private Optional<SkinData> loadSkinData(Resource res) {
@@ -110,8 +106,8 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
             }
 
             @Override
-            public Optional<Identifier> getSkin(SkinType type) {
-                return getCustomPlayerTexture(profile, type);
+            public Optional<TextureAsset> getSkin(SkinType type) {
+                return getCustomPlayerTexture(profile, type).map(id -> new TextureAssetInfo(id, id));
             }
 
             @Override
@@ -188,13 +184,13 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
 
         @Nullable
         public Optional<Skin> getSkin(GameProfile profile) {
-            Skin skin = uuids.get(profile.getId());
+            Skin skin = uuids.get(profile.id());
 
             if (skin == null) {
-                skin = names.get(profile.getName());
+                skin = names.get(profile.name());
 
                 if (skin == null) {
-                    return predicates.stream().filter(f -> f.getPredicate().test(profile.getName())).findFirst();
+                    return predicates.stream().filter(f -> f.getPredicate().test(profile.name())).findFirst();
                 }
             }
 

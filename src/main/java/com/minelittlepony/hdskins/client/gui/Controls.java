@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+import com.minelittlepony.common.client.gui.GameGui;
+
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 
 public class Controls {
 
@@ -17,7 +19,7 @@ public class Controls {
 
     private final Edge jumpKey = addControl(this::jumpToggled, () -> client.options.jumpKey.isPressed());
     private final Edge sneakKey = addControl(this::sneakToggled, () -> client.options.sneakKey.isPressed());
-    private final Edge ctrlKey = addControl(this::ctrlToggled, Screen::hasControlDown);
+    private final Edge ctrlKey = addControl(this::ctrlToggled, () -> GameGui.isKeyDown(InputUtil.GLFW_KEY_LEFT_CONTROL) || GameGui.isKeyDown(InputUtil.GLFW_KEY_RIGHT_CONTROL));
 
     private boolean jumpState = false;
     private boolean sneakState = false;

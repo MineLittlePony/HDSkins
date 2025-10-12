@@ -84,7 +84,7 @@ public class YggdrasilSkinServer implements SkinServer {
         MinecraftSessionService service = HDSkinsServer.getInstance().getSessionService();
 
         @Nullable
-        ProfileResult result = service.fetchProfile(profile.getId(), requireSecure);
+        ProfileResult result = service.fetchProfile(profile.id(), requireSecure);
 
         if (result == null) {
             throw new AuthenticationException("Mojang API error occured. You may be throttled.");

@@ -5,8 +5,6 @@ import java.util.Optional;
 
 import org.joml.Matrix3x2fStack;
 import org.joml.Quaternionf;
-import org.lwjgl.glfw.GLFW;
-
 import com.minelittlepony.common.client.gui.GameGui;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
@@ -17,8 +15,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Colors;
 import net.minecraft.util.math.MathHelper;
@@ -208,19 +208,19 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
         });
     }
 
-    public boolean mouseClicked(SkinUploader uploader, double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(SkinUploader uploader, Click click) {
 
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (click.button() != InputUtil.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
 
         int frameWidth = bounds.height;
 
-        if (!bounds.contains(mouseX, mouseY)) {
+        if (!bounds.contains(click.x(), click.y())) {
             return false;
         }
 
-        int index = (int)((mouseX - (bounds.left + getScrollOffset())) / frameWidth);
+        int index = (int)((click.x() - (bounds.left + getScrollOffset())) / frameWidth);
 
         if (index >= previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType()).size()) {
             return false;

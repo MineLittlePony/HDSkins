@@ -15,10 +15,13 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.SkinTextures;
-import net.minecraft.client.util.SkinTextures.Model;
+
 import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.player.PlayerSkinType;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.text.Text;
+import net.minecraft.util.AssetInfo.TextureAsset;
+import net.minecraft.util.AssetInfo.TextureAssetInfo;
 import net.minecraft.util.Identifier;
 
 import java.io.Closeable;
@@ -101,15 +104,21 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     protected abstract boolean isProvided(SkinType type);
 
     public SkinTextures getSkinTextureBundle() {
-        Identifier skinId = get(SkinType.SKIN).getId();
-        return new SkinTextures(
-                getPosture().getActiveSkinType() == SkinType.SKIN ? skinId : NativeImageFilters.REDUCE_ALPHA.load(skinId, skinId, getPosture().getExclusion()),
-                null,
-                getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getId() : null,
-                getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getId() : null,
-                VanillaModels.isSlim(getSkinVariant()) ? Model.SLIM : Model.WIDE,
-                false
+        TextureAsset skinId = get(SkinType.SKIN).getAsset();
+        return SkinTextures.create(
+                getPosture().getActiveSkinType() == SkinType.SKIN ? skinId : getGreyScaleSkin(skinId),
+                getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getAsset() : null,
+                getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getAsset() : null,
+                VanillaModels.isSlim(getSkinVariant()) ? PlayerSkinType.SLIM : PlayerSkinType.WIDE
         );
+    }
+
+    private TextureAsset getGreyScaleSkin(TextureAsset asset) {
+        Identifier newPath = NativeImageFilters.REDUCE_ALPHA.load(asset.texturePath(), asset.texturePath(), getPosture().getExclusion());
+        if (newPath.equals(asset.texturePath())) {
+            return asset;
+        }
+        return new TextureAssetInfo(asset.id().withSuffixedPath("_greyscaled"), newPath);
     }
 
     @Override
@@ -122,6 +131,11 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
     public interface PlayerSkin extends Closeable {
         Identifier getId();
+
+        default TextureAsset getAsset() {
+            Identifier id = getId();
+            return new TextureAssetInfo(id, id);
+        }
 
         @Override
         void close();

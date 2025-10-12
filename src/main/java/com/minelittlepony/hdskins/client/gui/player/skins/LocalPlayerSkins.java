@@ -44,7 +44,7 @@ public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture>
 
         public LocalTexture(SkinType type, Supplier<Identifier> blank) {
             this.type = type;
-            id = HDSkins.id("generated_preview/" + getPosture().getProfile().getId().toString() + "/" + type.getPathName());
+            id = HDSkins.id("generated_preview/" + getPosture().getProfile().id().toString() + "/" + type.getPathName());
             defaultTexture = blank;
         }
 

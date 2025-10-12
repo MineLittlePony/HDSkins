@@ -7,7 +7,7 @@ import java.util.UUID;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.Identifier;
 
 public class VanillaSkins {
@@ -37,7 +37,7 @@ public class VanillaSkins {
     public static Identifier getSkinTextures(UUID profileId, String variant) {
         return TEXTURE_CONVERSION.computeIfAbsent(DefaultSkinHelper.getSkinTextures(profileId), skin -> {
             boolean slimArms = VanillaModels.isSlim(variant);
-            return skin.texture().withPath(path -> path.replace(slimArms ? "/wide/" : "/slim/", slimArms ? "/slim/" : "/wide/"));
+            return skin.body().texturePath().withPath(path -> path.replace(slimArms ? "/wide/" : "/slim/", slimArms ? "/slim/" : "/wide/"));
         });
     }
 }

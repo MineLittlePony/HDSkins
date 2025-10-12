@@ -1,9 +1,12 @@
 package com.minelittlepony.hdskins;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Suppliers;
@@ -14,6 +17,26 @@ import com.google.common.cache.LoadingCache;
 public interface Memoize<T> extends Supplier<T> {
 
     default void expireNow() {}
+
+    static <T> Memoize<T> basic(Supplier<T> supplier) {
+        return new Memoize<>() {
+            @Nullable
+            private Optional<T> value;
+
+            @Nullable
+            @Override
+            public T get() {
+                if (value == null) {
+                    value = Optional.ofNullable(supplier.get());
+                }
+                return value.orElse(null);
+            }
+
+            public void expireNow() {
+                value = null;
+            }
+        };
+    }
 
     static <T> Memoize<T> nonExpiring(Supplier<T> supplier) {
         return supplier::get;

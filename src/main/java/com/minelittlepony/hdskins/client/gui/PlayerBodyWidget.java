@@ -13,6 +13,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.entity.state.BoatEntityRenderState;
 import net.minecraft.client.render.entity.state.FallingBlockEntityRenderState;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
@@ -32,16 +33,19 @@ import net.minecraft.util.math.Vec3d;
 public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Carousel.Element {
     private static final BoatEntityRenderState BOAT_STATE = new BoatEntityRenderState() {{
         entityType = EntityType.OAK_BOAT;
+        light = LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE;
     }};
     private static final FallingBlockEntityRenderState BED_HEAD_STATE = new FallingBlockEntityRenderState() {{
         entityType = EntityType.FALLING_BLOCK;
-        this.blockState = Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.HEAD).with(BedBlock.FACING, Direction.SOUTH);
+        light = LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE;
+        movingBlockRenderState.blockState = Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.HEAD).with(BedBlock.FACING, Direction.SOUTH);
     }};
     private static final FallingBlockEntityRenderState BED_FOOT_STATE = new FallingBlockEntityRenderState() {{
         entityType = EntityType.FALLING_BLOCK;
-        this.blockState = Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.FOOT).with(BedBlock.FACING, Direction.SOUTH);
-        this.currentPos = this.currentPos.offset(Direction.SOUTH);
-        this.fallingBlockPos = this.currentPos;
+        light = LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE;
+        movingBlockRenderState.blockState = Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.FOOT).with(BedBlock.FACING, Direction.SOUTH);
+        movingBlockRenderState.entityBlockPos = movingBlockRenderState.entityBlockPos.offset(Direction.SOUTH);
+        movingBlockRenderState.fallingBlockPos = movingBlockRenderState.entityBlockPos;
     }};
 
     protected final Vector3f position = new Vector3f();
@@ -74,7 +78,7 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
     }
 
     public void swingArm(Hand hand) {
-        playerState.handSwinging = true;
+        playerState.isUsingItem = true;
         playerState.activeHand = hand;
         playerState.preferredArm = hand == Hand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
     }
@@ -93,7 +97,6 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
 
     @Override
     public void tick() {
-
         SkinType type = skins.getPosture().getActiveSkinType();
 
         playerState.skinTextures = skins.getSkinTextureBundle();
@@ -104,10 +107,10 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
 
         lastHandSwingProgress = playerState.handSwingProgress;
 
-        if (playerState.handSwinging) {
+        if (playerState.isUsingItem) {
             if (++handSwingTicks >= 8) {
                 handSwingTicks = 0;
-                playerState.handSwinging = false;
+                playerState.isUsingItem = false;
             }
         } else {
             handSwingTicks = 0;
@@ -177,8 +180,9 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
             }
         }
 
+        playerState.age += 0.5F;
         playerState.positionOffset = new Vec3d(offset.x, offset.y, offset.z);
-
+        playerState.light = LightmapTextureManager.pack(0, Math.min((int)playerState.age, 15));
     }
 
     @Override

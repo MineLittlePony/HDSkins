@@ -4,8 +4,6 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.Consumer;
 
-import org.lwjgl.glfw.GLFW;
-
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.hdskins.client.*;
 import com.minelittlepony.hdskins.client.gui.player.skins.LocalPlayerSkins;
@@ -16,8 +14,10 @@ import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.*;
 import net.minecraft.text.Text;
 
@@ -120,7 +120,7 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
     @Override
     public Identifier getDefaultSkin(SkinType type, String variant) {
         Identifier skin = getBlankSkin(type, variant);
-        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getSkinTextures(getProfile().getId(), variant) : skin, skin, getExclusion());
+        return NativeImageFilters.GREYSCALE.load(type == SkinType.SKIN ? VanillaSkins.getSkinTextures(getProfile().id(), variant) : skin, skin, getExclusion());
     }
 
     @Override
@@ -195,20 +195,20 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
         chooser.renderStatus(context, local.bounds);
     }
 
-    public boolean mouseClicked(SkinUploader uploader, int width, int height, double mouseX, double mouseY, int button) {
-        boolean listHit = skinList.mouseClicked(uploader, mouseX, mouseY, button);
+    public boolean mouseClicked(SkinUploader uploader, int width, int height, Click click) {
+        boolean listHit = skinList.mouseClicked(uploader, click);
         boolean playerHit =
-                   local.mouseClicked(width, height, mouseX, mouseY, button)
-                || remote.mouseClicked(width, height, mouseX, mouseY, button);
+                   local.mouseClicked(width, height, click)
+                || remote.mouseClicked(width, height, click);
 
-        if (playerHit && !listHit && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (playerHit && !listHit && click.button() == InputUtil.GLFW_MOUSE_BUTTON_LEFT) {
             screen.setDragging(true);
         }
 
         return listHit || playerHit;
     }
 
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double changeX, double changeY) {
+    public boolean mouseDragged(Click click, double changeX, double changeY) {
         if (screen.isDragging()) {
             rotationAngle += changeX * 2;
         }

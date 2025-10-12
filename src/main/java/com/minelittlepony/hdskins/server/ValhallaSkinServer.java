@@ -92,7 +92,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException {
-        var path = buildBackendUserUri(profile.getId());
+        var path = buildBackendUserUri(profile.id());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(path)
                     .GET()
                     .build())
@@ -102,7 +102,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public List<TexturePayload> loadSkins(Collection<GameProfile> profiles) throws IOException {
-        var data = new BulkTextures(profiles.stream().map(GameProfile::getId).toList());
+        var data = new BulkTextures(profiles.stream().map(GameProfile::id).toList());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("bulk_textures"))
                         .POST(FileTypes.json(data))
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
@@ -176,7 +176,7 @@ public class ValhallaSkinServer implements SkinServer {
             return;
         }
         GameProfile profile = session.profile();
-        AuthHandshake handshake = authHandshake(profile.getName());
+        AuthHandshake handshake = authHandshake(profile.name());
 
         if (handshake.offline) {
             return;
@@ -184,8 +184,8 @@ public class ValhallaSkinServer implements SkinServer {
 
         session.validate(handshake.serverId);
 
-        AuthResponse response = authResponse(profile.getName(), handshake.verifyToken);
-        if (!response.userId.equals(profile.getId())) {
+        AuthResponse response = authResponse(profile.name(), handshake.verifyToken);
+        if (!response.userId.equals(profile.id())) {
             throw new IOException("UUID mismatch!"); // probably won't ever throw
         }
         accessToken = response.accessToken;
@@ -193,7 +193,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     @Override
     public Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
-        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendHistoryUri(session.profile().getId()))
+        return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendHistoryUri(session.profile().id()))
                 .GET()
                 .build()).accept(r -> r.json(Textures.class, "Server sent invalid profile response")).map(p -> {
                     // TODO: (@Killjoy) Remove duplicates and sort by upload time
