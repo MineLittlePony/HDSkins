@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.minelittlepony.hdskins.client.PlayerSkins;
+import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.minelittlepony.hdskins.client.profile.HDSkinCacheEntry;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -23,7 +24,7 @@ import net.minecraft.client.texture.PlayerSkinCache;
 import net.minecraft.entity.player.SkinTextures;
 
 @Mixin(PlayerSkinCache.Entry.class)
-abstract class MixinPlayerSkinCacheEntry {
+abstract class MixinPlayerSkinCacheEntry implements ClientPlayerInfo {
     @Shadow
     private @Final GameProfile profile;
     @Shadow
@@ -34,6 +35,11 @@ abstract class MixinPlayerSkinCacheEntry {
 
     @Unique
     private HDSkinCacheEntry hdSkinsCacheEntry;
+
+    @Override
+    public PlayerSkins getSkins() {
+        return hdSkinsCacheEntry.getSkins();
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(PlayerSkinCache $0$this, final GameProfile profile, final SkinTextures textures, final SkinTextures.SkinOverride skinOverride, CallbackInfo info) {

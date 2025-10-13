@@ -16,7 +16,6 @@ import net.minecraft.entity.player.SkinTextures;
 abstract class MixinPlayerSkinProvider {
     @ModifyReturnValue(method = "supplySkinTextures", at = @At("RETURN"))
     private Supplier<SkinTextures> injectSkinTextures(Supplier<SkinTextures> supplier, GameProfile profile, boolean requireSecure) {
-        Supplier<PlayerSkins> skins = PlayerSkins.create(profile, supplier);
-        return () -> skins.get().sorted().getSkinTextures();
+        return PlayerSkins.create(profile, supplier).getSkins();
     }
 }

@@ -2,15 +2,17 @@ package com.minelittlepony.hdskins.client.ducks;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.PlayerSkins;
+import com.mojang.authlib.GameProfile;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.util.DefaultSkinHelper;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.entity.PlayerLikeEntity;
+import net.minecraft.entity.player.PlayerEntity;
 
 public interface ClientPlayerInfo {
     /**
@@ -19,18 +21,26 @@ public interface ClientPlayerInfo {
     PlayerSkins getSkins();
 
     static Optional<ClientPlayerInfo> of(@Nullable AbstractClientPlayerEntity player) {
-        return player == null ? Optional.empty() : of(player.getUuid());
+        return player == null ? Optional.empty() : of(player.getGameProfile());
     }
 
-    static Optional<ClientPlayerInfo> of(UUID playerId) {
+    static Optional<ClientPlayerInfo> of(@Nullable PlayerLikeEntity player) {
+        if (player instanceof PlayerEntity p) {
+            return of(p.getGameProfile());
+        }
+        return of(player.get(DataComponentTypes.PROFILE));
+    }
+
+    static Optional<ClientPlayerInfo> of(@Nullable GameProfile profile) {
+        return profile == null ? Optional.empty() : of(ProfileComponent.ofStatic(profile));
+    }
+
+    static Optional<ClientPlayerInfo> of(@Nullable ProfileComponent profile) {
         MinecraftClient client = MinecraftClient.getInstance();
-        ClientPlayNetworkHandler networkHandler = client.getNetworkHandler();
-        return networkHandler == null ? Optional.empty() : Optional.ofNullable(networkHandler.getPlayerListEntry(playerId)).map(entry -> {
-            var defaultSkins = DefaultSkinHelper.getSkinTextures(entry.getProfile());
-            var skinsFuture = client.getSkinProvider().fetchSkinTextures(entry.getProfile());
-            return PlayerSkins.create(entry.getProfile(), () -> {
-                return skinsFuture.getNow(Optional.empty()).orElse(defaultSkins);
-            })::get;
-        });
+        return profile == null ? Optional.empty() : Optional.of((ClientPlayerInfo)(Object)client.getPlayerSkinCache().get(profile));
+    }
+
+    static Optional<ClientPlayerInfo> of(@Nullable UUID playerId) {
+        return playerId == null ? Optional.empty() : of(ProfileComponent.ofDynamic(playerId));
     }
 }
