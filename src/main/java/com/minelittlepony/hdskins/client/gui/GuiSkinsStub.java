@@ -1,7 +1,5 @@
 package com.minelittlepony.hdskins.client.gui;
 
-import java.util.concurrent.CompletableFuture;
-
 import com.minelittlepony.hdskins.HDSkinsServer;
 
 import net.minecraft.client.MinecraftClient;
@@ -29,10 +27,8 @@ public class GuiSkinsStub extends Screen {
     }
 
     @Override
-    public void onDisplayed() {
-        CompletableFuture.runAsync(() -> {
-            MinecraftClient.getInstance().setScreen(child);
-        }, MinecraftClient.getInstance());
+    public void tick() {
+        MinecraftClient.getInstance().setScreen(child);
     }
 
 }
