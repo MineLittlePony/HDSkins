@@ -2,7 +2,7 @@ package com.minelittlepony.hdskins.client.gui;
 
 import java.util.concurrent.CompletableFuture;
 
-import com.minelittlepony.hdskins.HDSkinsServer;
+import com.minelittlepony.hdskins.client.HDSkins;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,7 +20,7 @@ public class GuiSkinsStub extends Screen {
 
     public GuiSkinsStub(Screen parent) {
         super(Text.empty());
-        this.child = GuiSkins.create(parent, HDSkinsServer.getInstance().getServers());
+        this.child = GuiSkins.create(parent, HDSkins.getInstance().getSkinServerList());
     }
 
     @Override
