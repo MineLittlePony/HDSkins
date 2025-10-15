@@ -44,11 +44,20 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
     public int handSwingTicks;
     public float upwardSpeed;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public PlayerBodyWidget(PlayerSkins<?> skins, S playerState) {
         this.skins = skins;
         this.playerState = playerState;
         this.playerState.entityType = EntityType.PLAYER;
         this.playerState.mainArm = MinecraftClient.getInstance().options.getMainArm().getValue();
+
+        if (MinecraftClient.getInstance().player != null) {
+            try {
+                ((EntityRenderer)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerState))
+                    .updateRenderState(MinecraftClient.getInstance().player, playerState, 1);
+            } catch (Throwable ignored) {}
+        }
+        this.playerState.y = 14;
     }
 
     public void setPose(EntityPose pose) {
@@ -108,7 +117,7 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
             upwardSpeed = velocity.y;
         }
 
-        if (jumping) {
+        if (jumping && playerState.y <= 0) {
             jumping = false;
             upwardSpeed += 4;
         }
