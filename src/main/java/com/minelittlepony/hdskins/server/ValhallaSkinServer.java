@@ -1,6 +1,5 @@
 package com.minelittlepony.hdskins.server;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.minelittlepony.hdskins.profile.SkinType;
@@ -9,7 +8,6 @@ import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Util;
 import org.apache.http.NameValuePair;
@@ -150,6 +148,7 @@ public class ValhallaSkinServer implements SkinServer {
         });
     }
 
+    @Override
     public void authorize(Session session) throws IOException, AuthenticationException {
         if (accessToken != null) {
             return;
@@ -198,7 +197,7 @@ public class ValhallaSkinServer implements SkinServer {
                                 MinecraftClient.getInstance().getSession().getAccessToken(),
                                 SkinUpload.Session.validator((session, serverId) -> {
                                     // join the session server
-                                    MinecraftClient.getInstance().getSessionService().joinServer(session.profile().getId(), session.accessToken(), serverId);
+                                    MinecraftClient.getInstance().getSessionService().joinServer(session.profile(), session.accessToken(), serverId);
                                 })
                         ), type, URI.create(texture.getUri()), texture.metadata));
                     } catch (IOException | AuthenticationException e) {
@@ -275,9 +274,6 @@ public class ValhallaSkinServer implements SkinServer {
 
     private record AuthHandshake(boolean offline, String serverId, long verifyToken) {}
     private record AuthResponse(String accessToken, UUID userId) {}
-
-    private record BulkTextures(List<UUID> uuids) {}
-    private record BulkTexturesResponse(List<TexturePayload> users) {}
 
     // TODO: Response does not match the documentation
     private record Textures (String profileId, String profilename, Map<SkinType, List<Texture>> textures) {}
