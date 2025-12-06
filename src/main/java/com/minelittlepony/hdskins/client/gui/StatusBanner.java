@@ -66,7 +66,7 @@ public class StatusBanner implements ITextContext {
                 int maxWidth = Math.min(width - 10,
                         showTitle ? Math.max(getFont().getWidth(HD_SKINS_FAILED), messageWidth) : messageWidth
                 );
-                int messageHeight = getFont().getWrappedLinesHeight(lastShownMessage.getString(), maxWidth) + getFont().fontHeight + 10;
+                int messageHeight = getFont().getWrappedLinesHeight(lastShownMessage, maxWidth) + getFont().fontHeight + 10;
                 int blockY = (height - messageHeight) / 2;
                 int blockX = (width - maxWidth) / 2;
                 int padding = 6;

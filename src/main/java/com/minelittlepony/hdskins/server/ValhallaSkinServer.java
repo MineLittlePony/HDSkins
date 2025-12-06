@@ -7,6 +7,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
 import com.minelittlepony.hdskins.util.net.*;
+import com.minelittlepony.hdskins.util.net.URIUtil.NameValuePair;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
@@ -15,10 +16,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.message.BasicNameValuePair;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,12 +46,13 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     private static NameValuePair param(String name, String value) {
-        return new BasicNameValuePair(name, value);
+        return new NameValuePair(name, value);
     }
 
+    @SafeVarargs
     private URI buildBackendUri(String path, NameValuePair... params) {
         try {
-            return new URIBuilder(address + API_PREFIX + "/" + path).setParameters(params).build();
+            return URIUtil.buildURI(address + API_PREFIX + "/" + path, params);
         } catch (URISyntaxException e) {
             throw new RuntimeException("Failed to build URI", e);
         }

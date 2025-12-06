@@ -102,7 +102,6 @@ public class GuiSkins extends GameGui {
 
     public GuiSkins(Screen parent, SkinServerList servers) {
         super(HD_SKINS_TITLE, parent);
-        client = MinecraftClient.getInstance();
         previewer = createPreviewer();
         chooser = new SkinChooser(previewer);
         uploader = new SkinUploader(servers.getCycler(), previewer, session);

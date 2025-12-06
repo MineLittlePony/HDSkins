@@ -130,7 +130,7 @@ public class SettingsScreen extends GameGui {
             for (var metadata : buttons) {
                 int width = getFont().getWidth(metadata.getKey()) + 10;
                 content.addButton(new Button(left, row, width, 20))
-                    .onClick(sender -> handleTextClick(metadata.getValue().getStyle()))
+                    .onClick(sender -> handleClickEvent(metadata.getValue().getStyle().getClickEvent(), client, this))
                     .getStyle().setText(metadata.getKey());
                 left += width + 2;
             }

@@ -27,7 +27,7 @@ public class ConfirmationScreen extends GameGui {
 
     @Override
     public void init() {
-        parent.init(client, width, height);
+        parent.init(width, height);
 
         message = Tooltip.of(getTitle(), width - 30).getLines();
 

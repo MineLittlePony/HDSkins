@@ -79,7 +79,7 @@ public final class HDSkins implements ClientModInitializer {
 
     private void onTick(MinecraftClient client) {
         if (configDirty && client.currentScreen instanceof SettingsScreen screen) {
-            screen.init(client, screen.width, screen.height);
+            screen.init(screen.width, screen.height);
         }
         configDirty = false;
     }
