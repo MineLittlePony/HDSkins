@@ -3,7 +3,8 @@ package com.minelittlepony.hdskins.client.gui.filesystem.os;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -23,7 +24,7 @@ abstract class AbstractNativeFileDialog implements FileDialog {
     @Nullable
     protected String filterMessage;
 
-    private Callback callback = (file, done) -> {};
+    private Callback callback = (_, _) -> {};
 
     @Override
     public FileDialog startIn(Path currentDirectory) {
@@ -57,7 +58,7 @@ abstract class AbstractNativeFileDialog implements FileDialog {
             return Paths.get(file);
         }, EXECUTOR).thenAcceptAsync(result -> {
             callback.onDialogClosed(result, true);
-        }, MinecraftClient.getInstance());
+        }, Minecraft.getInstance());
         return this;
     }
 }

@@ -19,8 +19,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
 
 public class HDSkinsServer implements ModInitializer {
     public static final String DEFAULT_NAMESPACE = "hdskins";
@@ -37,7 +37,7 @@ public class HDSkinsServer implements ModInitializer {
     }
 
     public static Identifier id(String name) {
-        return Identifier.of(DEFAULT_NAMESPACE, name);
+        return Identifier.fromNamespaceAndPath(DEFAULT_NAMESPACE, name);
     }
 
     private Supplier<MinecraftSessionService> sessionServiceSupplier = () -> null;
@@ -68,10 +68,10 @@ public class HDSkinsServer implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ResourceLoader.get(ResourceType.SERVER_DATA).registerReloader(SkinServerList.SKIN_SERVERS, servers);
+        ResourceLoader.get(PackType.SERVER_DATA).registerReloadListener(SkinServerList.SKIN_SERVERS, servers);
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-                setSessionService(() -> server.getApiServices().sessionService());
+                setSessionService(() -> server.services().sessionService());
             });
         }
     }

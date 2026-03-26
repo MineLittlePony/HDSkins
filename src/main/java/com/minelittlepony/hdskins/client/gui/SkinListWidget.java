@@ -10,26 +10,26 @@ import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.hdskins.client.gui.player.skins.PreviousServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Colors;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
 
 /**
  * Displays a list of previous skins the user has had in the past.
  */
-public class SkinListWidget<S extends PlayerEntityRenderState> implements Carousel.Element {
+public class SkinListWidget<S extends AvatarRenderState> implements Carousel.Element {
     private final DualCarouselWidget<S> previewer;
 
-    private final MinecraftClient client = MinecraftClient.getInstance();
+    private final Minecraft client = Minecraft.getInstance();
 
     private final Bounds containerBounds;
     private final Bounds bounds = new Bounds(0, 0, 0, 32);
@@ -54,10 +54,10 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
         bounds.top = containerBounds.top + containerBounds.height - bounds.height;
 
         screen.addButton(scrollLeft = new Button(bounds.left - 10, bounds.top, 10, bounds.height))
-            .onClick(sender -> scrollBy(-1))
+            .onClick(_ -> scrollBy(-1))
             .getStyle().setText("<");
         screen.addButton(scrollRight = new Button(bounds.left + bounds.width, bounds.top, 10, bounds.height))
-            .onClick(sender -> scrollBy(1))
+            .onClick(_ -> scrollBy(1))
             .getStyle().setText(">");
 
         updateButtons();
@@ -69,11 +69,11 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
 
         int pageSize = bounds.width / bounds.height;
 
-        targetScrollPosition = skins < pageSize ? 0 : MathHelper.clamp(targetScrollPosition, 0, skins);
+        targetScrollPosition = skins < pageSize ? 0 : Mth.clamp(targetScrollPosition, 0, skins);
     }
 
     private float getScrollOffset() {
-        return -MathHelper.lerp(MinecraftClient.getInstance().getRenderTickCounter().getTickProgress(false), prevScrollPosition, scrollPosition) * bounds.height;
+        return -Mth.lerp(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false), prevScrollPosition, scrollPosition) * bounds.height;
     }
 
     private void updateButtons() {
@@ -134,9 +134,9 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
             if (!skins.get(i).getType().isUnsupported()) {
                 PlayerBodyWidget<S> player = getOrCreateStateAt(i, skins.get(i));
                 player.updateState(xPosition, yPosition, mouseX, mouseY, tickDelta);
-                player.playerState.limbSwingAnimationProgress = 0;
+                player.playerState.walkAnimationPos = 0;
                 if (hovered && i == index) {
-                    player.playerState.limbSwingAnimationProgress = 0.5F;
+                    player.playerState.walkAnimationPos = 0.5F;
                     player.position.y -= 3;
                 }
             }
@@ -144,7 +144,7 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
     }
 
     @Override
-    public void render(DrawContext context, Bounds outerFrameBounds, int mouseX, int mouseY, Quaternionf rotation) {
+    public void extractRenderState(GuiGraphicsExtractor context, Bounds outerFrameBounds, int mouseX, int mouseY, Quaternionf rotation) {
         List<PreviousServerPlayerSkins> skins = previewer.getRemote().getSkins().getProfileSkins(previewer.getActiveSkinType());
         if (skins.isEmpty()) {
             return;
@@ -152,7 +152,7 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
 
         int frameWidth = bounds.height;
 
-        Matrix3x2fStack matrices = context.getMatrices();
+        Matrix3x2fStack matrices = context.pose();
 
         matrices.pushMatrix();
 
@@ -176,19 +176,19 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
 
             if (previewer.getActiveSkinType() == skin.getType()) {
                 if (skin.getType().isUnsupported()) {
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
+                    context.blit(RenderPipelines.GUI_TEXTURED, skin.get(skin.getType()).getId(), (i * frameWidth), 0, 0, 0, frameWidth, frameWidth, 64, 64);
                 } else {
                     this.bounds.left = outerFrameBounds.left + 10 + (int)getScrollOffset() + (i * frameWidth);
                     this.bounds.width = frameWidth;
-                    getOrCreateStateAt(i, skin).render(context, this.bounds, mouseX, mouseY, rotation);
+                    getOrCreateStateAt(i, skin).extractRenderState(context, this.bounds, mouseX, mouseY, rotation);
                 }
             }
 
             if (skin.getSkin().isActive()) {
-                context.fill((i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, Colors.WHITE);
-                context.fill(((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, Colors.WHITE);
-                context.fill((i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, Colors.WHITE);
-                context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), 1, Colors.WHITE);
+                context.fill((i * frameWidth), 1, (i * frameWidth) + 1, frameWidth, CommonColors.WHITE);
+                context.fill(((i + 1) * frameWidth), 1, ((i + 1) * frameWidth) - 1, frameWidth, CommonColors.WHITE);
+                context.fill((i * frameWidth), frameWidth - 1, ((i + 1) * frameWidth), frameWidth, CommonColors.WHITE);
+                context.fill((i * frameWidth), 0, ((i + 1) * frameWidth), 1, CommonColors.WHITE);
             }
         }
 
@@ -199,7 +199,7 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
     }
 
     private PlayerBodyWidget<S> getOrCreateStateAt(int index, PreviousServerPlayerSkins skin) {
-        return modelStates.compute(index, (i, state) -> {
+        return modelStates.compute(index, (_, state) -> {
             if (state == null) {
                 state = previewer.createEntity(skin);
             }
@@ -208,9 +208,9 @@ public class SkinListWidget<S extends PlayerEntityRenderState> implements Carous
         });
     }
 
-    public boolean mouseClicked(SkinUploader uploader, Click click) {
+    public boolean mouseClicked(SkinUploader uploader, MouseButtonEvent click) {
 
-        if (click.button() != InputUtil.GLFW_MOUSE_BUTTON_LEFT) {
+        if (click.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
 

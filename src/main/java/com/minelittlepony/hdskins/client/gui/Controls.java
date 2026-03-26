@@ -5,21 +5,21 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 
 import com.minelittlepony.common.client.gui.GameGui;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 
 public class Controls {
 
-    private final MinecraftClient client = MinecraftClient.getInstance();
+    private final Minecraft client = Minecraft.getInstance();
 
     private final List<Edge> controls = new ArrayList<>();
 
-    private final Edge jumpKey = addControl(this::jumpToggled, () -> client.options.jumpKey.isPressed());
-    private final Edge sneakKey = addControl(this::sneakToggled, () -> client.options.sneakKey.isPressed());
-    private final Edge ctrlKey = addControl(this::ctrlToggled, () -> GameGui.isKeyDown(InputUtil.GLFW_KEY_LEFT_CONTROL) || GameGui.isKeyDown(InputUtil.GLFW_KEY_RIGHT_CONTROL));
+    private final Edge jumpKey = addControl(this::jumpToggled, () -> client.options.keyJump.isDown());
+    private final Edge sneakKey = addControl(this::sneakToggled, () -> client.options.keyShift.isDown());
+    private final Edge ctrlKey = addControl(this::ctrlToggled, () -> GameGui.isKeyDown(InputConstants.KEY_LCONTROL) || GameGui.isKeyDown(InputConstants.KEY_RCONTROL));
 
     private boolean jumpState = false;
     private boolean sneakState = false;
@@ -28,7 +28,7 @@ public class Controls {
 
     public Controls(DualCarouselWidget<?> previewer) {
         this.previewer = previewer;
-        addControl(previewer::setSprinting, () -> client.options.forwardKey.isPressed() || client.options.backKey.isPressed());
+        addControl(previewer::setSprinting, () -> client.options.keyUp.isDown() || client.options.keyDown.isDown());
     }
 
     protected Edge addControl(BooleanConsumer callback, BooleanSupplier nextState) {
@@ -38,7 +38,7 @@ public class Controls {
     }
 
     public void update() {
-        KeyBinding.updatePressedStates();
+        KeyMapping.setAll();
         controls.forEach(Edge::update);
     }
 

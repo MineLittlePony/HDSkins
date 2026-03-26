@@ -10,10 +10,11 @@ import com.minelittlepony.hdskins.util.ResourceUtil;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.SynchronousResourceReloader;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,7 +36,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SkinServerList implements SynchronousResourceReloader {
+public class SkinServerList implements ResourceManagerReloadListener {
 
     public static final Identifier SKIN_SERVERS = HDSkinsServer.id("skins/servers.json");
 
@@ -49,20 +50,20 @@ public class SkinServerList implements SynchronousResourceReloader {
     private long timestamp = System.currentTimeMillis();
 
     @Override
-    public void reload(ResourceManager mgr) {
+    public void onResourceManagerReload(ResourceManager mgr) {
         LOGGER.info("Loading skin servers");
-        skinServers = ImmutableList.copyOf(ResourceUtil.streamAllResources(mgr, ResourceType.SERVER_DATA, SKIN_SERVERS).map(res -> {
-            LOGGER.info("Found {} in {}", SKIN_SERVERS, res.getPackId());
-            try (var reader = res.getReader()) {
+        skinServers = ImmutableList.copyOf(ResourceUtil.streamAllResources(mgr, PackType.SERVER_DATA, SKIN_SERVERS).map(res -> {
+            LOGGER.info("Found {} in {}", SKIN_SERVERS, res.sourcePackId());
+            try (var reader = res.openAsReader()) {
                 return GSON.fromJson(reader, SkinServerJson.class);
             } catch (IOException | JsonParseException e) {
-                LOGGER.warn("Unable to load resource '{}' from '{}'", SKIN_SERVERS, res.getPackId(), e);
+                LOGGER.warn("Unable to load resource '{}' from '{}'", SKIN_SERVERS, res.sourcePackId(), e);
             }
             return null;
         }).filter(Objects::nonNull).reduce(new LinkedList<Gateway>(), (gateways, res) -> {
             res.apply(gateways);
             return gateways;
-        }, (a, b) -> b));
+        }, (_, b) -> b));
     }
 
     public Map<GameProfile, Map<SkinType, MinecraftProfileTexture>> fillProfiles(Collection<GameProfile> profiles) {
@@ -85,7 +86,7 @@ public class SkinServerList implements SynchronousResourceReloader {
                             LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway.toString(), textures.profileId());
                         } else {
                             if (result.computeIfAbsent(profile,
-                                    p -> new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>()))
+                                    _ -> new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>()))
                                     .appendTextures(textures.textures())) {
                                 profileList.remove(profile);
                                 writeEmbeddedTextures(profile, result.get(profile).textures());

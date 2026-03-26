@@ -9,13 +9,13 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.client.texture.PlayerSkinProvider;
-import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.client.resources.SkinManager;
+import net.minecraft.world.entity.player.PlayerSkin;
 
-@Mixin(PlayerSkinProvider.class)
+@Mixin(SkinManager.class)
 abstract class MixinPlayerSkinProvider {
-    @ModifyReturnValue(method = "supplySkinTextures", at = @At("RETURN"))
-    private Supplier<SkinTextures> injectSkinTextures(Supplier<SkinTextures> supplier, GameProfile profile, boolean requireSecure) {
+    @ModifyReturnValue(method = "createLookup", at = @At("RETURN"))
+    private Supplier<PlayerSkin> injectSkinTextures(Supplier<PlayerSkin> supplier, GameProfile profile, boolean requireSecure) {
         return PlayerSkins.create(profile, supplier).getSkins();
     }
 }

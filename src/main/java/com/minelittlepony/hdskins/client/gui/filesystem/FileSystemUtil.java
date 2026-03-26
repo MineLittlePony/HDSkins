@@ -9,10 +9,10 @@ import org.spongepowered.include.com.google.common.base.Strings;
 import com.minelittlepony.hdskins.client.HDSkins;
 
 import net.minecraft.util.Util;
-import net.minecraft.util.Util.OperatingSystem;
+import net.minecraft.util.Util.OS;
 
 public interface FileSystemUtil {
-    boolean IS_LINUX = Util.getOperatingSystem() == OperatingSystem.LINUX;
+    boolean IS_LINUX = Util.getPlatform() == OS.LINUX;
     boolean IS_SANDBOXED = isSandboxed();
 
     String CONTENT_TYPE_DOWNLOAD = "Download";

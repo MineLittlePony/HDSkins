@@ -14,15 +14,11 @@ import com.minelittlepony.hdskins.client.resources.NativeImageFilters;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.client.MinecraftClient;
-
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.player.PlayerSkinType;
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.text.Text;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.AssetInfo.TextureAssetInfo;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerModelType;
 
 import java.io.Closeable;
 import java.util.*;
@@ -67,7 +63,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     @Nullable
     private Set<Identifier> providedSkinTypes;
     @Nullable
-    private SkinTextures bundle;
+    private net.minecraft.world.entity.player.PlayerSkin bundle;
     private long setAt;
 
     private final Posture posture;
@@ -103,22 +99,22 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
     protected abstract boolean isProvided(SkinType type);
 
-    public SkinTextures getSkinTextureBundle() {
-        TextureAsset skinId = get(SkinType.SKIN).getAsset();
-        return SkinTextures.create(
+    public net.minecraft.world.entity.player.PlayerSkin getSkinTextureBundle() {
+        ClientAsset.Texture skinId = get(SkinType.SKIN).getAsset();
+        return net.minecraft.world.entity.player.PlayerSkin.insecure(
                 getPosture().getActiveSkinType() == SkinType.SKIN ? skinId : getGreyScaleSkin(skinId),
                 getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getAsset() : null,
                 getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getAsset() : null,
-                VanillaModels.isSlim(getSkinVariant()) ? PlayerSkinType.SLIM : PlayerSkinType.WIDE
+                VanillaModels.isSlim(getSkinVariant()) ? PlayerModelType.SLIM : PlayerModelType.WIDE
         );
     }
 
-    private TextureAsset getGreyScaleSkin(TextureAsset asset) {
+    private ClientAsset.Texture getGreyScaleSkin(ClientAsset.Texture asset) {
         Identifier newPath = NativeImageFilters.REDUCE_ALPHA.load(asset.texturePath(), asset.texturePath(), getPosture().getExclusion());
         if (newPath.equals(asset.texturePath())) {
             return asset;
         }
-        return new TextureAssetInfo(asset.id().withSuffixedPath("_greyscaled"), newPath);
+        return new ClientAsset.ResourceTexture(asset.id().withSuffix("_greyscaled"), newPath);
     }
 
     @Override
@@ -132,9 +128,9 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     public interface PlayerSkin extends Closeable {
         Identifier getId();
 
-        default TextureAsset getAsset() {
+        default ClientAsset.Texture getAsset() {
             Identifier id = getId();
-            return new TextureAssetInfo(id, id);
+            return new ClientAsset.ResourceTexture(id, id);
         }
 
         @Override
@@ -151,7 +147,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         Posture NULL = new Posture() {
             @Override
             public GameProfile getProfile() {
-                return MinecraftClient.getInstance().getGameProfile();
+                return Minecraft.getInstance().getGameProfile();
             }
 
             @Override
@@ -199,14 +195,14 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
 
         TextureLoader.Exclusion getExclusion();
 
-        public record SkinVariant (Text tooltip, ISprite icon, String name) {
+        public record SkinVariant (Component tooltip, ISprite icon, String name) {
             public static final Set<SkinVariant> VALUES = new HashSet<>();
             public static final SkinVariant DEFAULT = new SkinVariant(HDSkins.id(VanillaModels.DEFAULT));
             public static final SkinVariant SLIM = new SkinVariant(HDSkins.id(VanillaModels.SLIM));
 
             public SkinVariant(Identifier id) {
                 this(
-                        Text.translatable("hdskins.arm_style", Text.translatable(id.getNamespace() + ".arm_style." + id.getPath())),
+                        Component.translatable("hdskins.arm_style", Component.translatable(id.getNamespace() + ".arm_style." + id.getPath())),
                         GuiSkins.createIcon(32, 16 * VALUES.size()),
                         id.getPath()
                 );
@@ -215,11 +211,11 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
         }
 
         public enum Pose {
-            STAND(EntityPose.STANDING),
-            SLEEP(EntityPose.SLEEPING),
-            RIDE(EntityPose.SITTING),
-            SWIM(EntityPose.SWIMMING),
-            RIPTIDE(EntityPose.SPIN_ATTACK);
+            STAND(net.minecraft.world.entity.Pose.STANDING),
+            SLEEP(net.minecraft.world.entity.Pose.SLEEPING),
+            RIDE(net.minecraft.world.entity.Pose.SITTING),
+            SWIM(net.minecraft.world.entity.Pose.SWIMMING),
+            RIPTIDE(net.minecraft.world.entity.Pose.SPIN_ATTACK);
 
             public static final Pose[] VALUES = values();
             public static final Style[] STYLES = Arrays.stream(VALUES).map(Pose::getStyle).toArray(Style[]::new);
@@ -230,11 +226,11 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
                             .setPosition(2, 2)
                             .setSize(16, 16)
                             .setTextureOffset(96, 16 * ordinal()))
-                        .setTooltip(Text.translatable("hdskins.mode", Text.translatable("hdskins.mode." + name().toLowerCase(Locale.ROOT))), 0, 10);
+                        .setTooltip(Component.translatable("hdskins.mode", Component.translatable("hdskins.mode." + name().toLowerCase(Locale.ROOT))), 0, 10);
 
-            private final EntityPose pose;
+            private final net.minecraft.world.entity.Pose pose;
 
-            Pose(EntityPose pose) {
+            Pose(net.minecraft.world.entity.Pose pose) {
                 this.pose = pose;
             }
 
@@ -242,7 +238,7 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
                 return style;
             }
 
-            public EntityPose getPose() {
+            public net.minecraft.world.entity.Pose getPose() {
                 return pose;
             }
         }

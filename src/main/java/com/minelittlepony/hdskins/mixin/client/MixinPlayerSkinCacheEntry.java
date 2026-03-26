@@ -18,17 +18,17 @@ import com.minelittlepony.hdskins.client.profile.HDSkinCacheEntry;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.textures.GpuTextureView;
 
-import net.minecraft.client.font.TextRenderLayerSet;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.texture.PlayerSkinCache;
-import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.client.gui.font.GlyphRenderTypes;
+import net.minecraft.client.renderer.PlayerSkinRenderCache;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.world.entity.player.PlayerSkin;
 
-@Mixin(PlayerSkinCache.Entry.class)
+@Mixin(PlayerSkinRenderCache.RenderInfo.class)
 abstract class MixinPlayerSkinCacheEntry implements ClientPlayerInfo {
     @Shadow
     private @Final GameProfile profile;
     @Shadow
-    private @Final SkinTextures textures;
+    private @Final PlayerSkin textures;
 
     @Nullable
     private Supplier<PlayerSkins> dynamicSkins;
@@ -42,27 +42,27 @@ abstract class MixinPlayerSkinCacheEntry implements ClientPlayerInfo {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(PlayerSkinCache $0$this, final GameProfile profile, final SkinTextures textures, final SkinTextures.SkinOverride skinOverride, CallbackInfo info) {
-        hdSkinsCacheEntry = new HDSkinCacheEntry((PlayerSkinCache.Entry)(Object)this, profile, textures, skinOverride);
+    private void onInit(PlayerSkinRenderCache $0$this, final GameProfile profile, final PlayerSkin textures, final PlayerSkin.Patch patch, CallbackInfo info) {
+        hdSkinsCacheEntry = new HDSkinCacheEntry((PlayerSkinRenderCache.RenderInfo)(Object)this, profile, textures, patch);
     }
 
-    @ModifyReturnValue(method = "getTextures", at = @At("RETURN"))
-    private SkinTextures modifyTextures(SkinTextures textures) {
-        return hdSkinsCacheEntry.getTextures(textures);
+    @ModifyReturnValue(method = "playerSkin", at = @At("RETURN"))
+    private PlayerSkin modifySkin(PlayerSkin textures) {
+        return hdSkinsCacheEntry.playerSkin(textures);
     }
 
-    @ModifyReturnValue(method = "getRenderLayer", at = @At("RETURN"))
-    private RenderLayer modifyRenderLayer(RenderLayer layer) {
-        return hdSkinsCacheEntry.getRenderLayer(layer);
+    @ModifyReturnValue(method = "renderType", at = @At("RETURN"))
+    private RenderType modifyRenderType(RenderType layer) {
+        return hdSkinsCacheEntry.renderType(layer);
     }
 
-    @ModifyReturnValue(method = "getTextureView", at = @At("RETURN"))
+    @ModifyReturnValue(method = "textureView", at = @At("RETURN"))
     private GpuTextureView modifyTextureView(GpuTextureView view) {
-        return hdSkinsCacheEntry.getTextureView(view);
+        return hdSkinsCacheEntry.textureView(view);
     }
 
-    @ModifyReturnValue(method = "getTextRenderLayers", at = @At("RETURN"))
-    private TextRenderLayerSet modifyTextRenderLayers(TextRenderLayerSet layers) {
-        return hdSkinsCacheEntry.getTextRenderLayers(layers);
+    @ModifyReturnValue(method = "glyphRenderTypes", at = @At("RETURN"))
+    private GlyphRenderTypes modifyGlyphRenderTypes(GlyphRenderTypes layers) {
+        return hdSkinsCacheEntry.glyphRenderTypes(layers);
     }
 }

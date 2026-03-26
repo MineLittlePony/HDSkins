@@ -8,31 +8,31 @@ import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.textures.GpuTextureView;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderLayerSet;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.block.entity.SkullBlockEntityRenderer;
-import net.minecraft.client.texture.PlayerSkinCache;
-import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.font.GlyphRenderTypes;
+import net.minecraft.client.renderer.PlayerSkinRenderCache;
+import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.world.entity.player.PlayerSkin;
 
 public final class HDSkinCacheEntry implements ClientPlayerInfo {
-    private final PlayerSkinCache.Entry owner;
+    private final PlayerSkinRenderCache.RenderInfo owner;
     private final ClientPlayerInfo dynamicSkins;
-    private final SkinTextures.SkinOverride override;
+    private final PlayerSkin.Patch patch;
 
-    private SkinTextures vanillaTextures;
+    private PlayerSkin vanillaTextures;
     @Nullable
-    private SkinTextures cachedTextures;
+    private PlayerSkin cachedTextures;
     @Nullable
-    private SkinTextures textures;
-    private final Memoize<RenderLayer> renderLayer = Memoize.basic(() -> SkullBlockEntityRenderer.getTranslucentRenderLayer(textures.body().texturePath()));
-    private final Memoize<GpuTextureView> textureView = Memoize.basic(() -> MinecraftClient.getInstance().getTextureManager().getTexture(textures.body().texturePath()).getGlTextureView());
-    private final Memoize<TextRenderLayerSet> textRenderLayers = Memoize.basic(() -> TextRenderLayerSet.of(this.textures.body().texturePath()));
+    private PlayerSkin textures;
+    private final Memoize<RenderType> renderType = Memoize.basic(() -> SkullBlockRenderer.getPlayerSkinRenderType(textures.body().texturePath()));
+    private final Memoize<GpuTextureView> textureView = Memoize.basic(() -> Minecraft.getInstance().getTextureManager().getTexture(textures.body().texturePath()).getTextureView());
+    private final Memoize<GlyphRenderTypes> glyphRenderTypes = Memoize.basic(() -> GlyphRenderTypes.createForColorTexture(this.textures.body().texturePath()));
 
-    public HDSkinCacheEntry(PlayerSkinCache.Entry owner, GameProfile profile, SkinTextures textures, SkinTextures.SkinOverride override) {
+    public HDSkinCacheEntry(PlayerSkinRenderCache.RenderInfo owner, GameProfile profile, PlayerSkin textures, PlayerSkin.Patch patch) {
         this.owner = owner;
-        this.override = override;
-        this.vanillaTextures = textures.withOverride(override);
+        this.patch = patch;
+        this.vanillaTextures = textures.with(patch);
         dynamicSkins = PlayerSkins.create(profile, () -> vanillaTextures);
     }
 
@@ -41,33 +41,33 @@ public final class HDSkinCacheEntry implements ClientPlayerInfo {
         return dynamicSkins.getSkins();
     }
 
-    public SkinTextures getTextures(SkinTextures vanillaTextures) {
+    public PlayerSkin playerSkin(PlayerSkin vanillaTextures) {
         if (!this.vanillaTextures.equals(vanillaTextures)) {
             this.vanillaTextures = vanillaTextures;
         }
         if (cachedTextures == null || getSkins().layers().hasChanged()) {
             cachedTextures = getSkins().sorted().getSkinTextures();
-            this.textures = cachedTextures.withOverride(override);
-            renderLayer.expireNow();
+            this.textures = cachedTextures.with(patch);
+            renderType.expireNow();
             textureView.expireNow();
-            textRenderLayers.expireNow();
+            glyphRenderTypes.expireNow();
         }
         return this.textures;
     }
 
     private boolean checkState() {
-        return owner.getTextures().equals(cachedTextures) && cachedTextures != null;
+        return owner.playerSkin().equals(cachedTextures) && cachedTextures != null;
     }
 
-    public RenderLayer getRenderLayer(RenderLayer layer) {
-        return checkState() ? renderLayer.get() : layer;
+    public RenderType renderType(RenderType layer) {
+        return checkState() ? renderType.get() : layer;
     }
 
-    public GpuTextureView getTextureView(GpuTextureView view) {
+    public GpuTextureView textureView(GpuTextureView view) {
         return checkState() ? textureView.get() : view;
     }
 
-    public TextRenderLayerSet getTextRenderLayers(TextRenderLayerSet layers) {
-        return checkState() ? textRenderLayers.get() : layers;
+    public GlyphRenderTypes glyphRenderTypes(GlyphRenderTypes layers) {
+        return checkState() ? glyphRenderTypes.get() : layers;
     }
 }

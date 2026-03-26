@@ -8,8 +8,8 @@ import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.profile.SkinType;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
 
 public class PrioritySorter {
 
@@ -55,7 +55,7 @@ public class PrioritySorter {
             }
 
             @Override
-            public Optional<TextureAsset> getSkin(SkinType type) {
+            public Optional<ClientAsset.Texture> getSkin(SkinType type) {
                 if (selectors.isEmpty()) {
                     return playerSkins.combined().dynamic().getSkin(type);
                 }

@@ -6,7 +6,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 import java.util.*;
@@ -28,7 +28,7 @@ public interface SkinServer {
     /**
      * Gets optional metadata that should be displayed to the user for this server.
      */
-    default Map<Text, Text> getMetadata() {
+    default Map<Component, Component> getMetadata() {
         return Map.of();
     }
 

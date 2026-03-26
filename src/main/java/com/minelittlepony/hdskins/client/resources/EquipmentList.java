@@ -5,28 +5,27 @@ import com.minelittlepony.hdskins.client.gui.PlayerBodyWidget;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.resource.JsonDataLoader;
-import net.minecraft.resource.ResourceFinder;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceReloader;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.FileToIdConverter;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> implements ResourceReloader {
+public class EquipmentList extends SimpleJsonResourceReloadListener<EquipmentList.EquipmentSet> {
     public static final Identifier EQUIPMENT = HDSkins.id("skins/equipment");
     private static final Identifier EMPTY = HDSkins.id("empty");
 
@@ -35,19 +34,19 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
     private Map<Identifier, EquipmentSet> equipmentSets = Map.of(EMPTY, emptySet);
 
     public EquipmentList() {
-        super(EquipmentSet.CODEC, ResourceFinder.json("hd_skins_equipment"));
+        super(EquipmentSet.CODEC, FileToIdConverter.json("hd_skins_equipment"));
     }
 
     @Override
-    protected Map<Identifier, EquipmentSet> prepare(ResourceManager resourceManager, Profiler profiler) {
+    protected Map<Identifier, EquipmentSet> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
         return super.prepare(resourceManager, profiler);
     }
 
     @Override
-    protected void apply(Map<Identifier, EquipmentSet> sets, ResourceManager manager, Profiler profiler) {
+    protected void apply(Map<Identifier, EquipmentSet> sets, ResourceManager manager, ProfilerFiller profiler) {
         HDSkins.LOGGER.info("Found {} potential player equipment sets", sets.size());
         equipmentSets = new HashMap<>(sets);
-        emptySet = equipmentSets.computeIfAbsent(EMPTY, k -> EquipmentSet.EMPTY);
+        emptySet = equipmentSets.computeIfAbsent(EMPTY, _ -> EquipmentSet.EMPTY);
     }
 
     public EquipmentSet getDefault() {
@@ -66,35 +65,35 @@ public class EquipmentList extends JsonDataLoader<EquipmentList.EquipmentSet> im
         ) {
         private static final EquipmentSet EMPTY = new EquipmentSet(Map.of(), Items.PLAYER_HEAD, null, "empty");
         public static final Codec<EquipmentSet> CODEC = RecordCodecBuilder.create(i -> i.group(
-                Codec.unboundedMap(EquipmentSlot.CODEC, Registries.ITEM.getCodec()).fieldOf("equipment").forGetter(EquipmentSet::equipment),
-                Registries.ITEM.getCodec().fieldOf("item").forGetter(EquipmentSet::item),
-                Registries.SOUND_EVENT.getCodec().optionalFieldOf("sound").forGetter(EquipmentSet::sound),
+                Codec.unboundedMap(EquipmentSlot.CODEC, BuiltInRegistries.ITEM.byNameCodec()).fieldOf("equipment").forGetter(EquipmentSet::equipment),
+                BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(EquipmentSet::item),
+                BuiltInRegistries.SOUND_EVENT.byNameCodec().optionalFieldOf("sound").forGetter(EquipmentSet::sound),
                 Codec.STRING.fieldOf("tooltip").forGetter(EquipmentSet::tooltip)
         ).apply(i, EquipmentSet::new));
 
         public void apply(PlayerBodyWidget<?> state) {
-            state.playerState.equippedHeadStack = getStack(EquipmentSlot.HEAD);
-            state.playerState.equippedChestStack = getStack(EquipmentSlot.CHEST);
-            state.playerState.equippedLegsStack = getStack(EquipmentSlot.LEGS);
-            state.playerState.equippedFeetStack = getStack(EquipmentSlot.FEET);
-            state.setHandStack(Hand.MAIN_HAND, getStack(EquipmentSlot.MAINHAND));
-            state.setHandStack(Hand.OFF_HAND, getStack(EquipmentSlot.OFFHAND));
+            state.playerState.headEquipment = getStack(EquipmentSlot.HEAD).create();
+            state.playerState.chestEquipment = getStack(EquipmentSlot.CHEST).create();
+            state.playerState.legsEquipment = getStack(EquipmentSlot.LEGS).create();
+            state.playerState.feetEquipment = getStack(EquipmentSlot.FEET).create();
+            state.setHandStack(InteractionHand.MAIN_HAND, getStack(EquipmentSlot.MAINHAND));
+            state.setHandStack(InteractionHand.OFF_HAND, getStack(EquipmentSlot.OFFHAND));
         }
 
         public SoundEvent getSound() {
-            return sound.orElse(SoundEvents.ITEM_ARMOR_EQUIP_GENERIC.value());
+            return sound.orElse(SoundEvents.ARMOR_EQUIP_GENERIC.value());
         }
 
-        public ItemStack getStack(EquipmentSlot slot) {
-            return equipment.getOrDefault(slot, Items.AIR).getDefaultStack();
+        public ItemStackTemplate getStack(EquipmentSlot slot) {
+            return new ItemStackTemplate(equipment.getOrDefault(slot, Items.AIR));
         }
 
-        public ItemStack getStack() {
-            return new ItemStack(item);
+        public ItemStackTemplate getStack() {
+            return new ItemStackTemplate(item);
         }
 
-        public Text getTooltip() {
-            return Text.translatable("hdskins.equipment", Text.translatable(tooltip));
+        public Component getTooltip() {
+            return Component.translatable("hdskins.equipment", Component.translatable(tooltip));
         }
     }
 }

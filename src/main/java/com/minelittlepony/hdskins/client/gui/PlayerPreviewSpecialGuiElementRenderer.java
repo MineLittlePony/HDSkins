@@ -6,121 +6,122 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.gui.render.SpecialGuiElementRenderer;
-import net.minecraft.client.gui.render.state.special.SpecialGuiElementRenderState;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
-import net.minecraft.client.render.block.entity.state.BedBlockEntityRenderState;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.command.RenderDispatcher;
-import net.minecraft.client.render.entity.EntityRenderManager;
-import net.minecraft.client.render.entity.state.BoatEntityRenderState;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.render.state.CameraRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.Direction;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-public class PlayerPreviewSpecialGuiElementRenderer extends SpecialGuiElementRenderer<PlayerPreviewSpecialGuiElementRenderer.Element> {
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.state.BedRenderState;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.entity.state.BoatRenderState;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.core.Direction;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.properties.BedPart;
+
+public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRenderer<PlayerPreviewSpecialGuiElementRenderer.Element> {
     public static final Logger LOGGER = LogManager.getLogger();
-    private static final BoatEntityRenderState BOAT_STATE = new BoatEntityRenderState() {{
+    private static final BoatRenderState BOAT_STATE = new BoatRenderState() {{
         entityType = EntityType.OAK_BOAT;
-        light = LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE;
+        lightCoords = LightCoordsUtil.FULL_BRIGHT;
     }};
-    private static final BedBlockEntityRenderState BED_STATE = new BedBlockEntityRenderState() {{
-        type = BlockEntityType.BED;
-        dyeColor = DyeColor.RED;
-        blockState = Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.FOOT).with(BedBlock.FACING, Direction.SOUTH);
+    private static final BedRenderState BED_STATE = new BedRenderState() {{
+        blockEntityType = BlockEntityType.BED;
+        color = DyeColor.RED;
+        blockState = Blocks.RED_BED.defaultBlockState().setValue(BedBlock.PART, BedPart.FOOT).setValue(BedBlock.FACING, Direction.SOUTH);
         facing = Direction.WEST;
     }};
 
-    public PlayerPreviewSpecialGuiElementRenderer(SpecialGuiElementRegistry.Context context) {
-        super(context.vertexConsumers());
+    public PlayerPreviewSpecialGuiElementRenderer(PictureInPictureRendererRegistry.Context context) {
+        super(context.bufferSource());
     }
 
     @Override
-    protected String getName() {
+    protected String getTextureLabel() {
         return "hdskins_player_preview";
     }
 
     @Override
-    public Class<Element> getElementClass() {
+    public Class<Element> getRenderStateClass() {
         return Element.class;
     }
 
     @Override
-    protected void render(Element state, MatrixStack stack) {
-        MinecraftClient.getInstance().gameRenderer.getDiffuseLighting().setShaderLights(DiffuseLighting.Type.ENTITY_IN_UI);
-        RenderDispatcher renderDispatcher = MinecraftClient.getInstance().gameRenderer.getEntityRenderDispatcher();
+    protected void renderToTexture(Element state, PoseStack stack) {
+        Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ENTITY_IN_UI);
+        FeatureRenderDispatcher renderDispatcher = Minecraft.getInstance().gameRenderer.getFeatureRenderDispatcher();
         CameraRenderState camera = new CameraRenderState();
-        BlockEntityRenderManager blocks = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
-        EntityRenderManager entities = MinecraftClient.getInstance().getEntityRenderDispatcher();
-        OrderedRenderCommandQueue queue = renderDispatcher.getQueue();
+        BlockEntityRenderDispatcher blocks = Minecraft.getInstance().getBlockEntityRenderDispatcher();
+        EntityRenderDispatcher entities = Minecraft.getInstance().getEntityRenderDispatcher();
+        SubmitNodeStorage queue = renderDispatcher.getSubmitNodeStorage();
 
         Vector3f pos = state.translation();
 
-        MatrixStack matrices = new MatrixStack();
-        matrices.peek().copy(stack.peek());
+        PoseStack matrices = new PoseStack();
+        matrices.last().set(stack.last());
         try {
-            matrices.push();
+            matrices.pushPose();
             matrices.translate(pos.x, pos.y, pos.z);
-            matrices.multiply(state.rotation());
+            matrices.mulPose(state.rotation());
 
-            if (state.state.isInPose(EntityPose.SLEEPING)) {
-                matrices.push();
+            if (state.state.hasPose(Pose.SLEEPING)) {
+                matrices.pushPose();
                 matrices.translate(0, -1.22, -0.5);
-                BED_STATE.headPart = false;
-                BED_STATE.lightmapCoordinates = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-                BED_STATE.dyeColor = DyeColor.RED;
+                BED_STATE.part = BedPart.FOOT;
+                BED_STATE.lightCoords = LightCoordsUtil.FULL_BRIGHT;
+                BED_STATE.color = DyeColor.RED;
 
                 try {
-                    blocks.render(BED_STATE, matrices, queue, camera);
+                    blocks.submit(BED_STATE, matrices, queue, camera);
                 } catch (Throwable t) {
                     handleError("bed 1", t);
                 }
 
-                BED_STATE.headPart = true;
+                BED_STATE.part = BedPart.HEAD;
                 matrices.translate(-1, 0, 0);
 
                 try {
-                    blocks.render(BED_STATE, matrices, queue, camera);
+                    blocks.submit(BED_STATE, matrices, queue, camera);
                 } catch (Throwable t) {
                     handleError("bed 2", t);
                 }
 
-                matrices.pop();
+                matrices.popPose();
             }
 
             try {
-                entities.render(state.state(), camera, 0, 0, 0, matrices, queue);
+                entities.submit(state.state(), camera, 0, 0, 0, matrices, queue);
             } catch (Throwable t) {
                 handleError("player model", t);
             }
 
-            if (state.state.hasVehicle) {
-                matrices.push();
+            if (state.state.isPassenger) {
+                matrices.pushPose();
                 matrices.translate(0, -1, 0);
                 try {
-                    entities.render(BOAT_STATE, camera, 0, 0, 0, matrices, queue);
+                    entities.submit(BOAT_STATE, camera, 0, 0, 0, matrices, queue);
                 } catch (Throwable t) {
                     handleError("boat", t);
                 }
-                matrices.pop();
+                matrices.popPose();
             }
 
-            matrices.pop();
+            matrices.popPose();
 
-            renderDispatcher.render();
+            renderDispatcher.renderAllFeatures();
         } catch (Throwable t) {
             handleError("root", t);
         }
@@ -131,16 +132,16 @@ public class PlayerPreviewSpecialGuiElementRenderer extends SpecialGuiElementRen
     }
 
     @Override
-    protected float getYOffset(int height, int windowScaleFactor) {
+    protected float getTranslateY(int height, int windowScaleFactor) {
         return height * 0.5F;
     }
 
     public record Element(
-            PlayerEntityRenderState state, Vector3f translation, Quaternionf rotation,
-            ScreenRect bounds, int x1, int x2, int y1, int y2, float scale, @Nullable ScreenRect scissorArea
-    ) implements SpecialGuiElementRenderState {
-        public Element(PlayerEntityRenderState state, Vector3f translation, Quaternionf rotation, int x1, int x2, int y1, int y2, float scale, @Nullable ScreenRect scissorArea) {
-            this(state, translation, rotation, SpecialGuiElementRenderState.createBounds(x1, y1, x2, y2, scissorArea), x1, x2, y1, y2, scale, scissorArea);
+            AvatarRenderState state, Vector3f translation, Quaternionf rotation,
+            ScreenRectangle bounds, int x0, int x1, int y0, int y1, float scale, @Nullable ScreenRectangle scissorArea
+    ) implements PictureInPictureRenderState {
+        public Element(AvatarRenderState state, Vector3f translation, Quaternionf rotation, int x1, int x2, int y1, int y2, float scale, @Nullable ScreenRectangle scissorArea) {
+            this(state, translation, rotation, PictureInPictureRenderState.getBounds(x1, y1, x2, y2, scissorArea), x1, x2, y1, y2, scale, scissorArea);
         }
 
         public Element {

@@ -13,22 +13,23 @@ import com.minelittlepony.hdskins.client.resources.*;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.*;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.platform.InputConstants;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 /**
  * Handles the display of the dummy players in the GUI.
  */
-public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> implements Closeable, PlayerSkins.Posture, ITextContext {
+public abstract class DualCarouselWidget<S extends AvatarRenderState> implements Closeable, PlayerSkins.Posture, ITextContext {
     private static final int PASSIVE_ROTATION_SPEED = 1;
     private static final int MAX_MANUAL_ROTATION_SPEED = 20;
 
-    protected final MinecraftClient minecraft = MinecraftClient.getInstance();
+    protected final Minecraft minecraft = Minecraft.getInstance();
     protected final GameProfile profile = minecraft.getGameProfile();
 
     public final Carousel<LocalPlayerSkins, S> local;
@@ -54,8 +55,8 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
 
     public DualCarouselWidget(GuiSkins screen) {
         this.screen = screen;
-        local = new Carousel<>(Text.translatable("hdskins.local"), new LocalPlayerSkins(this), this::createEntity);
-        remote = new Carousel<>(Text.translatable("hdskins.server"), new ServerPlayerSkins(this), this::createEntity);
+        local = new Carousel<>(Component.translatable("hdskins.local"), new LocalPlayerSkins(this), this::createEntity);
+        remote = new Carousel<>(Component.translatable("hdskins.server"), new ServerPlayerSkins(this), this::createEntity);
         skinList = new SkinListWidget<>(this, remote.bounds);
         controls = new Controls(this);
         remote.addElement(skinList);
@@ -137,7 +138,7 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
     }
 
     public void setSneaking(boolean sneaking) {
-        apply(p -> p.playerState.isInSneakingPose = sneaking);
+        apply(p -> p.playerState.isCrouching = sneaking);
     }
 
     public void setSprinting(boolean sprinting) {
@@ -165,10 +166,10 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
         local.update();
         remote.update();
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
-        boolean left = client.options.leftKey.isPressed();
-        boolean right = client.options.rightKey.isPressed();
+        boolean left = client.options.keyLeft.isDown();
+        boolean right = client.options.keyRight.isDown();
 
         int rotationDirection = left ? 1 : right ? -1 : 0;
 
@@ -187,28 +188,28 @@ public abstract class DualCarouselWidget<S extends PlayerEntityRenderState> impl
         prevRotationDirection = rotationDirection;
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
-        local.render(mouseX, mouseY, (int)rotationAngle, partialTick, context);
-        remote.render(mouseX, mouseY, (int)rotationAngle, partialTick, context);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick, SkinChooser chooser, SkinUploader uploader) {
+        local.extractRenderState(mouseX, mouseY, (int)rotationAngle, partialTick, context);
+        remote.extractRenderState(mouseX, mouseY, (int)rotationAngle, partialTick, context);
 
-        uploader.renderStatus(context, remote.bounds);
-        chooser.renderStatus(context, local.bounds);
+        uploader.extractStatus(context, remote.bounds);
+        chooser.extractStatus(context, local.bounds);
     }
 
-    public boolean mouseClicked(SkinUploader uploader, int width, int height, Click click) {
+    public boolean mouseClicked(SkinUploader uploader, int width, int height, MouseButtonEvent click) {
         boolean listHit = skinList.mouseClicked(uploader, click);
         boolean playerHit =
                    local.mouseClicked(width, height, click)
                 || remote.mouseClicked(width, height, click);
 
-        if (playerHit && !listHit && click.button() == InputUtil.GLFW_MOUSE_BUTTON_LEFT) {
+        if (playerHit && !listHit && click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             screen.setDragging(true);
         }
 
         return listHit || playerHit;
     }
 
-    public boolean mouseDragged(Click click, double changeX, double changeY) {
+    public boolean mouseDragged(MouseButtonEvent click, double changeX, double changeY) {
         if (screen.isDragging()) {
             rotationAngle += changeX * 2;
         }

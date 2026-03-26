@@ -1,8 +1,8 @@
 package com.minelittlepony.hdskins.util;
 
-import static net.minecraft.util.Formatting.ITALIC;
-import static net.minecraft.util.Formatting.RESET;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.ITALIC;
+import static net.minecraft.ChatFormatting.RESET;
+import static net.minecraft.ChatFormatting.YELLOW;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;

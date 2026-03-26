@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.hash.Hashing;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public interface URIUtil {
 
@@ -46,7 +46,7 @@ public interface URIUtil {
         }
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection)uri.toURL().openConnection(MinecraftClient.getInstance().getNetworkProxy());
+            connection = (HttpURLConnection)uri.toURL().openConnection(Minecraft.getInstance().getProxy());
             connection.setDoInput(true);
             connection.setDoOutput(false);
             connection.connect();

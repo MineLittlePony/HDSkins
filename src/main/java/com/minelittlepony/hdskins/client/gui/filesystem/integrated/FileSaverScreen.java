@@ -11,11 +11,11 @@ import com.minelittlepony.hdskins.client.gui.ConfirmationScreen;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
 import com.minelittlepony.hdskins.util.net.FileTypes;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public class FileSaverScreen extends FileSelectorScreen {
-    public static final Text SAVE_OVERWRITE = Text.translatable("hdskins.save.overwrite");
-    public static final Text SAVE_READONLY = Text.translatable("hdskins.save.readonly");
+    public static final Component SAVE_OVERWRITE = Component.translatable("hdskins.save.overwrite");
+    public static final Component SAVE_READONLY = Component.translatable("hdskins.save.readonly");
 
     private Button saveBtn;
 
@@ -38,12 +38,12 @@ public class FileSaverScreen extends FileSelectorScreen {
         super.init();
 
         addButton(saveBtn = new Button(width/2 - 50, height - 25, 100, 20))
-            .onClick(p -> {
+            .onClick(_ -> {
                 try {
-                    currentDirectory = Paths.get(textInput.getText());
+                    currentDirectory = Paths.get(textInput.getValue());
 
                     if (Files.exists(currentDirectory)) {
-                        client.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
+                        minecraft.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
                             navigateTo(currentDirectory);
                         }));
                     } else {
@@ -54,8 +54,8 @@ public class FileSaverScreen extends FileSelectorScreen {
             .getStyle()
                 .setText("hdskins.directory.save");
 
-        textInput.setChangedListener(this::updateButtonStates);
-        updateButtonStates(textInput.getText());
+        textInput.setResponder(this::updateButtonStates);
+        updateButtonStates(textInput.getValue());
     }
 
     @Override
@@ -82,7 +82,7 @@ public class FileSaverScreen extends FileSelectorScreen {
 
             setInitialFocus(sender);
             saveBtn.setEnabled(true);
-            textInput.setText(sender.path.toString());
+            textInput.setValue(sender.path.toString());
         }
     }
 
@@ -92,7 +92,7 @@ public class FileSaverScreen extends FileSelectorScreen {
         Path name = fileLocation.getFileName();
 
         if (parent != null && name != null && !Files.isWritable(parent)) {
-            client.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
+            minecraft.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
                 onDirectorySelected(GamePaths.getGameDirectory().resolve(name));
             }));
             return;
@@ -103,7 +103,7 @@ public class FileSaverScreen extends FileSelectorScreen {
 
     @Override
     public void navigateTo(Path path) {
-        Path userInput = Paths.get(textInput.getText());
+        Path userInput = Paths.get(textInput.getValue());
         String fileName = "";
 
         if (userInput != null) {

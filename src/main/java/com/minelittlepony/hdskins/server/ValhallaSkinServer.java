@@ -11,10 +11,9 @@ import com.minelittlepony.hdskins.util.net.URIUtil.NameValuePair;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 import java.io.IOException;
 import java.net.URI;
@@ -128,7 +127,7 @@ public class ValhallaSkinServer implements SkinServer {
     public void uploadSkin(SkinUpload upload) throws IOException, AuthenticationException {
         doAuthorizedRequest(upload.session(), (accessToken) -> switch (upload) {
             // TODO: (@Killjoy) Use namespaced ids and translate old unnamespaced to namespaced
-            case SkinUpload.Delete ignored ->
+            case SkinUpload.Delete _ ->
                     MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures", param("type", upload.type().getParameterizedName())))
                             .DELETE()
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
@@ -273,15 +272,15 @@ public class ValhallaSkinServer implements SkinServer {
     }
 
     @Override
-    public Map<Text, Text> getMetadata() {
+    public Map<Component, Component> getMetadata() {
         return Map.of(
-            Text.translatable("hdskins.label.documentation"), Text.literal(address + "/docs").formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent.OpenUrl(URI.create(address + "/docs")));
+            Component.translatable("hdskins.label.documentation"), Component.literal(address + "/docs").withStyle(style -> {
+                return style.withUnderlined(true).withColor(CommonColors.BLUE).withClickEvent(new ClickEvent.OpenUrl(URI.create(address + "/docs")));
             }),
-            Text.translatable("hdskins.label.source"), Text.literal(SRC).formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent.OpenUrl(URI.create(SRC)));
+            Component.translatable("hdskins.label.source"), Component.literal(SRC).withStyle(style -> {
+                return style.withUnderlined(true).withColor(CommonColors.BLUE).withClickEvent(new ClickEvent.OpenUrl(URI.create(SRC)));
             }),
-            Text.translatable("hdskins.label.author"), Text.literal("Killjoy")
+            Component.translatable("hdskins.label.author"), Component.literal("Killjoy")
         );
     }
 

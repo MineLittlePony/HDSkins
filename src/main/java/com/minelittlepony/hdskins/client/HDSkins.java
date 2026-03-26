@@ -15,16 +15,16 @@ import com.minelittlepony.hdskins.server.SkinServerList;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,22 +63,22 @@ public final class HDSkins implements ClientModInitializer {
     public void onInitializeClient() {
         config.load();
 
-        SpecialGuiElementRegistry.register(PlayerPreviewSpecialGuiElementRenderer::new);
+        PictureInPictureRendererRegistry.register(PlayerPreviewSpecialGuiElementRenderer::new);
 
-        HDSkinsServer.getInstance().setSessionService(() -> MinecraftClient.getInstance().getApiServices().sessionService());
-        ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(SkinResourceManager.ID, resources);
-        ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(SkinServerList.SKIN_SERVERS, HDSkinsServer.getInstance().getServers());
-        ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(EquipmentList.EQUIPMENT, equipmentList);
+        HDSkinsServer.getInstance().setSessionService(() -> Minecraft.getInstance().services().sessionService());
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(SkinResourceManager.ID, resources);
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(SkinServerList.SKIN_SERVERS, HDSkinsServer.getInstance().getServers());
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(EquipmentList.EQUIPMENT, equipmentList);
         ScreenInitCallback.EVENT.register(this::onScreenInit);
 
         FabricLoader.getInstance().getEntrypoints("hdskins", ClientModInitializer.class).forEach(ClientModInitializer::onInitializeClient);
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
-        config.onChangedExternally(config -> configDirty = true);
+        config.onChangedExternally(_ -> configDirty = true);
     }
 
-    private void onTick(MinecraftClient client) {
-        if (configDirty && client.currentScreen instanceof SettingsScreen screen) {
+    private void onTick(Minecraft client) {
+        if (configDirty && client.screen instanceof SettingsScreen screen) {
             screen.init(screen.width, screen.height);
         }
         configDirty = false;
@@ -93,9 +93,9 @@ public final class HDSkins implements ClientModInitializer {
             return;
         }
         Button button = buttons.addButton(new Button(screen.width - 50, screen.height - 50, 20, 20))
-            .onClick(sender -> MinecraftClient.getInstance().setScreen(GuiSkins.create(screen, HDSkinsServer.getInstance().getServers())));
+            .onClick(_ -> Minecraft.getInstance().setScreen(GuiSkins.create(screen, HDSkinsServer.getInstance().getServers())));
         button.getStyle()
-                .setIcon(new ItemStack(Items.LEATHER_LEGGINGS), 0x3c5dcb)
+                .setIcon(new ItemStackTemplate(Items.LEATHER_LEGGINGS), 0x3c5dcb)
                 .setTooltip("hdskins.manager", 0, 10);
         button.setY(screen.height - 50); // ModMenu;
     }

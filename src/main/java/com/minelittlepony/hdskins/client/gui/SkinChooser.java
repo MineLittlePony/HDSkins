@@ -7,10 +7,10 @@ import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.RemoteTexture;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.blaze3d.platform.NativeImage;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 
 import org.apache.commons.io.FilenameUtils;
@@ -41,25 +41,25 @@ public class SkinChooser implements CarouselStatusLabel {
 
     public static final String[] EXTENSIONS = new String[]{"png", "PNG"};
 
-    public static final Text ERR_UNREADABLE = Text.translatable("hdskins.error.unreadable");
-    public static final Text ERR_EXT = Text.translatable("hdskins.error.ext");
-    public static final Text ERR_OPEN = Text.translatable("hdskins.error.open");
-    public static final Text ERR_INVALID_TOO_LARGE = Text.translatable("hdskins.error.invalid.too_large");
-    public static final Text ERR_INVALID_SHAPE = Text.translatable("hdskins.error.invalid.shape");
-    public static final Text ERR_INVALID_POWER_OF_TWO = Text.translatable("hdskins.error.invalid.power_of_two");
-    public static final Text ERR_INVALID = Text.translatable("hdskins.error.invalid");
+    public static final Component ERR_UNREADABLE = Component.translatable("hdskins.error.unreadable");
+    public static final Component ERR_EXT = Component.translatable("hdskins.error.ext");
+    public static final Component ERR_OPEN = Component.translatable("hdskins.error.open");
+    public static final Component ERR_INVALID_TOO_LARGE = Component.translatable("hdskins.error.invalid.too_large");
+    public static final Component ERR_INVALID_SHAPE = Component.translatable("hdskins.error.invalid.shape");
+    public static final Component ERR_INVALID_POWER_OF_TWO = Component.translatable("hdskins.error.invalid.power_of_two");
+    public static final Component ERR_INVALID = Component.translatable("hdskins.error.invalid");
 
-    public static final Text MSG_CHOOSE = Text.translatable("hdskins.choose");
+    public static final Component MSG_CHOOSE = Component.translatable("hdskins.choose");
 
     private boolean pickingInProgress;
     private final DualCarouselWidget<?> previewer;
-    private Consumer<SkinType> listener = t -> {};
+    private Consumer<SkinType> listener = _ -> {};
 
-    private final List<Function<NativeImage, Text>> validators = new ArrayList<>();
+    private final List<Function<NativeImage, Component>> validators = new ArrayList<>();
 
     private final WatchedFile localSkin = new WatchedFile(this::fileChanged, this::fileRemoved);
 
-    private volatile Text status = MSG_CHOOSE;
+    private volatile Component status = MSG_CHOOSE;
 
     public SkinChooser(DualCarouselWidget<?> previewer) {
         this.previewer = previewer;
@@ -79,12 +79,12 @@ public class SkinChooser implements CarouselStatusLabel {
         return FileDialogs.INTEGRATED;
     }
 
-    public void addImageValidation(Function<NativeImage, Text> validator) {
+    public void addImageValidation(Function<NativeImage, Component> validator) {
         validators.add(validator);
     }
 
     private void fileRemoved() {
-        MinecraftClient.getInstance().execute(previewer.getLocal().getSkins()::close);
+        Minecraft.getInstance().execute(previewer.getLocal().getSkins()::close);
     }
 
     private void fileChanged(Path path) {
@@ -102,16 +102,16 @@ public class SkinChooser implements CarouselStatusLabel {
         return pickingInProgress;
     }
 
-    public Text getStatus() {
+    public Component getStatus() {
         return status;
     }
 
     @Override
-    public List<Text> getStatusLines() {
+    public List<Component> getStatusLines() {
         return List.of(getStatus());
     }
 
-    public int getStatusColor(Text status) {
+    public int getStatusColor(Component status) {
         return status == MSG_CHOOSE ? WHITE : RED;
     }
 
@@ -162,8 +162,8 @@ public class SkinChooser implements CarouselStatusLabel {
                     try (InputStream response = texture.texture().openStream()) {
                         Files.copy(response, file);
 
-                        MinecraftClient.getInstance().setScreen(new ConfirmationScreen(MinecraftClient.getInstance().currentScreen, Text.translatable("hdskins.save.completed"), () -> {
-                            Util.getOperatingSystem().open(file.toUri());
+                        Minecraft.getInstance().setScreen(new ConfirmationScreen(Minecraft.getInstance().screen, Component.translatable("hdskins.save.completed"), () -> {
+                            Util.getPlatform().openPath(file);
                         }));
                     } catch (IOException e) {
                         LogManager.getLogger().error("Failed to save remote skin.", e);
@@ -177,7 +177,7 @@ public class SkinChooser implements CarouselStatusLabel {
         status = evaluateAndSelect(skinFile);
     }
 
-    private Text evaluateAndSelect(Path skinFile) {
+    private Component evaluateAndSelect(Path skinFile) {
         if (!Files.exists(skinFile)) {
             return ERR_UNREADABLE;
         }
@@ -206,7 +206,7 @@ public class SkinChooser implements CarouselStatusLabel {
     }
 
     @Nullable
-    protected Text acceptsSkinDimensions(NativeImage img) {
+    protected Component acceptsSkinDimensions(NativeImage img) {
         int w = img.getWidth();
         int h = img.getHeight();
 

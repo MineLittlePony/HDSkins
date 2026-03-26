@@ -11,8 +11,8 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
 import com.minelittlepony.hdskins.server.TexturePayload;
 
-import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.resources.Identifier;
 
 public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTexture> {
 
@@ -60,7 +60,7 @@ public class ServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTextu
         return textureManager
                 .flatMap(manager -> manager.getTextureMetadata(SkinType.SKIN))
                 .map(metadata -> metadata.getMetadata("model"))
-                .orElseGet(() -> DefaultSkinHelper.getSkinTextures(getPosture().getProfile().id()).model().name());
+                .orElseGet(() -> DefaultPlayerSkin.get(getPosture().getProfile().id()).model().name());
     }
 
     @Override

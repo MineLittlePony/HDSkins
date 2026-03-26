@@ -1,16 +1,17 @@
 package com.minelittlepony.hdskins.profile;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import net.minecraft.util.Identifier;
+
+import net.minecraft.resources.Identifier;
 
 public interface SkinCallback {
 
-    SkinCallback NOOP = (t, i, tex) -> {};
+    SkinCallback NOOP = (_, _, _) -> {};
 
     void onSkinAvailable(SkinType type, Identifier id, MinecraftProfileTexture texture);
 
     default SkinCallback andThen(Runnable second) {
-        return andThen((t, i, tex) -> second.run());
+        return andThen((_, _, _) -> second.run());
     }
 
     default SkinCallback andThen(SkinCallback second) {

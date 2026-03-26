@@ -7,12 +7,12 @@ import org.jetbrains.annotations.Nullable;
 import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ProfileComponent;
-import net.minecraft.entity.PlayerLikeEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.component.ResolvableProfile;
 
 public interface ClientPlayerInfo {
     /**
@@ -20,27 +20,27 @@ public interface ClientPlayerInfo {
      */
     PlayerSkins getSkins();
 
-    static Optional<ClientPlayerInfo> of(@Nullable AbstractClientPlayerEntity player) {
+    static Optional<ClientPlayerInfo> of(@Nullable AbstractClientPlayer player) {
         return player == null ? Optional.empty() : of(player.getGameProfile());
     }
 
-    static Optional<ClientPlayerInfo> of(@Nullable PlayerLikeEntity player) {
-        if (player instanceof PlayerEntity p) {
+    static Optional<ClientPlayerInfo> of(@Nullable Avatar player) {
+        if (player instanceof Player p) {
             return of(p.getGameProfile());
         }
-        return of(player.get(DataComponentTypes.PROFILE));
+        return of(player.get(DataComponents.PROFILE));
     }
 
     static Optional<ClientPlayerInfo> of(@Nullable GameProfile profile) {
-        return profile == null ? Optional.empty() : of(ProfileComponent.ofStatic(profile));
+        return profile == null ? Optional.empty() : of(ResolvableProfile.createResolved(profile));
     }
 
-    static Optional<ClientPlayerInfo> of(@Nullable ProfileComponent profile) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        return profile == null ? Optional.empty() : Optional.of((ClientPlayerInfo)(Object)client.getPlayerSkinCache().get(profile));
+    static Optional<ClientPlayerInfo> of(@Nullable ResolvableProfile profile) {
+        Minecraft client = Minecraft.getInstance();
+        return profile == null ? Optional.empty() : Optional.of((ClientPlayerInfo)(Object)client.playerSkinRenderCache().getOrDefault(profile));
     }
 
     static Optional<ClientPlayerInfo> of(@Nullable UUID playerId) {
-        return playerId == null ? Optional.empty() : of(ProfileComponent.ofDynamic(playerId));
+        return playerId == null ? Optional.empty() : of(ResolvableProfile.createUnresolved(playerId));
     }
 }

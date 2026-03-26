@@ -18,18 +18,22 @@ import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Sk
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.platform.InputConstants;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.texture.CubemapTexture;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.CubeMap;
+import net.minecraft.client.renderer.Panorama;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.texture.CubeMapTexture;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 
 import org.jetbrains.annotations.Nullable;
@@ -45,8 +49,8 @@ import java.util.function.BooleanSupplier;
 public class GuiSkins extends GameGui {
     public static final Identifier WIDGETS_TEXTURE = HDSkins.id("textures/gui/widgets.png");
     public static final Identifier PANORAMA_TEXTURE = HDSkins.id("textures/cubemaps/panorama");
-    public static final Text HD_SKINS_TITLE = Text.translatable("hdskins.gui.title");
-    public static final Text HD_SKINS_OPTION_DISABLED_DESC = Text.translatable("hdskins.warning.disabled.description");
+    public static final Component HD_SKINS_TITLE = Component.translatable("hdskins.gui.title");
+    public static final Component HD_SKINS_OPTION_DISABLED_DESC = Component.translatable("hdskins.warning.disabled.description");
 
     private static BiFunction<Screen, SkinServerList, GuiSkins> skinsGuiFunc = GuiSkins::new;
 
@@ -69,7 +73,7 @@ public class GuiSkins extends GameGui {
 
     public static Tooltip createFeatureTooltip(Tooltip originalTooltip, BooleanSupplier isEnabled) {
         Tooltip disabledTooltip = Tooltip.of(
-                Text.translatable("hdskins.warning.disabled.title",
+                Component.translatable("hdskins.warning.disabled.title",
                         originalTooltip.getString(),
                         GuiSkins.HD_SKINS_OPTION_DISABLED_DESC
                 )
@@ -78,8 +82,8 @@ public class GuiSkins extends GameGui {
     }
 
     private final Identifier background = getBackground();
-    private final CubeMapRenderer cubemap = new CubeMapRenderer(background);
-    private final RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(cubemap);
+    private final CubeMap cubemap = new CubeMap(background);
+    private final Panorama panorama = new Panorama();
 
     protected final DualCarouselWidget<?> previewer;
     protected final SkinUploader uploader;
@@ -89,11 +93,11 @@ public class GuiSkins extends GameGui {
     private final FileDrop dropper;
 
     private final SkinUpload.Session session = new SkinUpload.Session(
-            MinecraftClient.getInstance().getGameProfile(),
-            MinecraftClient.getInstance().getSession().getAccessToken(),
+            Minecraft.getInstance().getGameProfile(),
+            Minecraft.getInstance().getUser().getAccessToken(),
             SkinUpload.Session.validator((session, serverId) -> {
                 // join the session server
-                client.getApiServices().sessionService().joinServer(session.profile().id(), session.accessToken(), serverId);
+                minecraft.services().sessionService().joinServer(session.profile().id(), session.accessToken(), serverId);
             })
     );
 
@@ -108,24 +112,24 @@ public class GuiSkins extends GameGui {
         banner = new StatusBanner(uploader);
         dropper = FileDrop.newDropEvent(paths -> paths.stream().findFirst().ifPresent(chooser::selectFile));
 
-        uploader.addSkinTypeChangedEventListener(type -> {
-            playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+        uploader.addSkinTypeChangedEventListener(_ -> {
+            playSound(SoundEvents.BREWING_STAND_BREW);
         });
-        uploader.addSkinLoadedEventListener((type, location, profileTexture) -> {
-            playSound(SoundEvents.ENTITY_VILLAGER_YES);
+        uploader.addSkinLoadedEventListener((_, _, _) -> {
+            playSound(SoundEvents.VILLAGER_YES);
             if (typeSelector != null) {
                 typeSelector.setValue(previewer.getActiveSkinType());
             }
         });
         // ensure faces are loaded
-        client.getTextureManager().registerTexture(background, new CubemapTexture(background));
+        minecraft.getTextureManager().register(background, new CubeMapTexture(background));
     }
 
     protected DualCarouselWidget<?> createPreviewer() {
         return new DualCarouselWidget<>(this) {
             @Override
-            protected PlayerBodyWidget<PlayerEntityRenderState> createEntity(PlayerSkins<?> skins) {
-                return new PlayerBodyWidget<>(skins, new PlayerEntityRenderState());
+            protected PlayerBodyWidget<AvatarRenderState> createEntity(PlayerSkins<?> skins) {
+                return new PlayerBodyWidget<>(skins, new AvatarRenderState());
             }
         };
     }
@@ -155,15 +159,15 @@ public class GuiSkins extends GameGui {
                                 .setPosition(2, 2)
                                 .setSize(16, 16)
                                 .setTextureSize(16, 16))
-                        .setText(Text.translatable("skin_type.hdskins.unknown", type.getId().toString()))
+                        .setText(Component.translatable("skin_type.hdskins.unknown", type.getId().toString()))
                         .setTooltip(type.getId().toString(), 0, 10);
             }
 
             return new Style()
-                    .setIcon(MinecraftClient.getInstance().getResourceManager().getResource(type.icon()).isEmpty()
-                            ? new ItemStackSprite().setStack(type.iconStack())
+                    .setIcon(Minecraft.getInstance().getResourceManager().getResource(type.icon()).isEmpty()
+                            ? new ItemStackSprite().setStack(type.iconStack().orElseThrow()) // TODO:
                             : new TextureSprite().setTexture(type.icon()).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
-                    .setText(Text.translatable("hdskins.skin_type", Text.translatable(Util.createTranslationKey("skin_type", type.getId()))))
+                    .setText(Component.translatable("hdskins.skin_type", Component.translatable(Util.makeDescriptionId("skin_type", type.getId()))))
                     .setTooltip(type.getId().toString(), 0, 10);
         })).setValue(previewer.getActiveSkinType())
                 .onChange(type -> {
@@ -181,7 +185,7 @@ public class GuiSkins extends GameGui {
                 sender.setEnabled(uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection());
             })
             .setEnabled(uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection())
-            .onClick(sender -> {
+            .onClick(_ -> {
                 if (uploader.canUpload(previewer.getActiveSkinType()) && chooser.hasSelection()) {
                     uploader.uploadSkin(StatusBanner.HD_SKINS_UPLOAD, SkinUpload.create(chooser.getSelection(), previewer.getActiveSkinType(), uploader.getMetadata(), session));
                 }
@@ -196,14 +200,14 @@ public class GuiSkins extends GameGui {
         initServerPreviewButtons(previewer.remote.bounds);
 
         addButton(new Button(width / 2 - 25, previewer.remote.bounds.bottom() + 10, 50, 20))
-            .onClick(sender -> finish())
+            .onClick(_ -> finish())
             .getStyle().setText("hdskins.options.close");
     }
 
     protected void initLocalPreviewButtons(Bounds area) {
         area = addButton(new Button(area.left, area.bottom() + 5, 50, 20))
             .onUpdate(sender -> sender.setEnabled(!chooser.pickingInProgress()))
-            .onClick(sender -> chooser.openBrowsePNG(I18n.translate("hdskins.open.title")))
+            .onClick(_ -> chooser.openBrowsePNG(I18n.get("hdskins.open.title")))
             .styled(s -> s.setText("hdskins.options.browse"))
             .getBounds();
 
@@ -231,7 +235,7 @@ public class GuiSkins extends GameGui {
                 List<SkinVariant> variants = previewer.getSkinVariants();
                 int index = variants.indexOf(variant);
                 variant = index < 0 ? variant : variants.get((index + 1) % variants.size());
-                playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+                playSound(SoundEvents.BREWING_STAND_BREW);
                 uploader.setMetadataField("model", variant.name());
                 previewer.setSkinVariant(variant);
                 return variant;
@@ -243,7 +247,7 @@ public class GuiSkins extends GameGui {
             .setStyles(PlayerSkins.Posture.Pose.STYLES)
             .setValue(previewer.getPose().ordinal())
             .onChange(i -> {
-                playSound(SoundEvents.BLOCK_BREWING_STAND_BREW);
+                playSound(SoundEvents.BREWING_STAND_BREW);
                 previewer.setPose(PlayerSkins.Posture.Pose.VALUES[i % PlayerSkins.Posture.Pose.VALUES.length]);
                 return i;
             });
@@ -253,20 +257,20 @@ public class GuiSkins extends GameGui {
         area = addButton(new Button(area.right() - 16, area.bottom() + 5, 16, 20))
             .onClick(sender -> {
                 uploader.cycleGateway();
-                playSound(SoundEvents.ENTITY_VILLAGER_YES);
+                playSound(SoundEvents.VILLAGER_YES);
                 sender.getStyle().setTooltip(uploader.getGatewayText());
             })
             .styled(s -> s.setIcon(createIcon(81, 16)).setTooltip(Tooltip.of(uploader.getGatewayText(), 400)).setTooltipOffset(0, 10))
             .getBounds();
 
         area = addButton(new Button(area.left - 19, area.top, 20, 20))
-            .onClick(sender -> client.setScreen(new SettingsScreen(this, panorama)))
+            .onClick(_ -> minecraft.setScreen(new SettingsScreen(this, panorama)))
             .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip("options.title", 0, 10))
             .getBounds();
 
         area = addButton(new Button(area.left - 25, area.top, 20, 20))
             .onUpdate(sender -> sender.setEnabled(uploader.canClearAny()))
-            .onClick(sender -> {
+            .onClick(_ -> {
                 SkinType.REGISTRY.forEach(type -> {
                     uploader.uploadSkin(StatusBanner.HD_SKINS_REQUEST, SkinUpload.delete(previewer.getActiveSkinType(), session));
                 });
@@ -278,7 +282,7 @@ public class GuiSkins extends GameGui {
 
         area = addButton(new Button(area.left - 25, area.top, 20, 20))
                 .onUpdate(sender -> sender.setEnabled(uploader.canClear(previewer.getActiveSkinType())))
-                .onClick(sender -> {
+                .onClick(_ -> {
                     if (uploader.canClear(previewer.getActiveSkinType())) {
                         uploader.uploadSkin(StatusBanner.HD_SKINS_REQUEST, SkinUpload.delete(previewer.getActiveSkinType(), session));
                     }
@@ -290,9 +294,9 @@ public class GuiSkins extends GameGui {
 
         addButton(new Button(area.left - 25, area.top, 20, 20))
                 .onUpdate(sender -> sender.setEnabled(uploader.getFeatures().contains(Feature.DOWNLOAD_USER_SKIN) && uploader.hasUploaded(previewer.getActiveSkinType()) && !chooser.pickingInProgress()))
-                .onClick(sender -> {
+                .onClick(_ -> {
                     if (uploader.hasUploaded(previewer.getActiveSkinType())) {
-                        chooser.openSavePNG(uploader, I18n.translate("hdskins.save.title"), client.getSession().getUsername());
+                        chooser.openSavePNG(uploader, I18n.get("hdskins.save.title"), minecraft.getUser().getName());
                     }
                 })
                 .getStyle()
@@ -307,8 +311,8 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         try {
             uploader.close();
         } catch (IOException e) {
@@ -318,7 +322,7 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void onDisplayed() {
+    public void added() {
         dropper.subscribe();
         uploader.scheduleReload();
     }
@@ -328,30 +332,30 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         return canTakeEvents()
                 && !super.mouseClicked(click, doubled)
                 && previewer.mouseClicked(uploader, width, height, click);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double changeX, double changeY) {
+    public boolean mouseDragged(MouseButtonEvent click, double changeX, double changeY) {
         return canTakeEvents()
                 && previewer.mouseDragged(click, changeX, changeY)
                 && super.mouseDragged(click, changeX, changeY);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.hasAlt() && input.hasCtrl() && input.getKeycode() == InputUtil.GLFW_KEY_R) {
-            client.reloadResources();
+    public boolean keyPressed(KeyEvent input) {
+        if (input.hasAltDown() && input.hasControlDown() && input.key() == InputConstants.KEY_R) {
+            minecraft.reloadResourcePacks();
             return true;
         }
-        return !input.isEnterOrSpace() && super.keyPressed(input);
+        return !input.isConfirmation() && super.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
+    public boolean charTyped(CharacterEvent input) {
         return canTakeEvents()
                 && !chooser.pickingInProgress()
                 && !uploader.isBusy()
@@ -359,19 +363,19 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        super.renderBackground(context, mouseX, mouseY, tickDelta);
-        previewer.render(context, mouseX, mouseY, tickDelta, chooser, uploader);
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float tickDelta) {
+        super.extractBackground(context, mouseX, mouseY, tickDelta);
+        previewer.extractRenderState(context, mouseX, mouseY, tickDelta, chooser, uploader);
     }
 
     @Override
-    protected void renderPanoramaBackground(DrawContext context, float tickDelta) {
-        panorama.render(context, width, height, true);
+    protected void extractPanorama(GuiGraphicsExtractor context, float tickDelta) {
+        panorama.extractRenderState(context, width, height, panoramaShouldSpin());
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        super.render(context, mouseX, mouseY, tickDelta);
-        banner.render(context, tickDelta, width, height);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float tickDelta) {
+        super.extractRenderState(context, mouseX, mouseY, tickDelta);
+        banner.extractRenderState(context, tickDelta, width, height);
     }
 }

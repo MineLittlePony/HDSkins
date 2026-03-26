@@ -13,26 +13,27 @@ import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinCallback;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 
 /**
  * Uploader contains form data and server communication logic.
  */
 public class SkinUploader implements Closeable, CarouselStatusLabel {
-    public static final Text STATUS_OK = ScreenTexts.EMPTY;
-    public static final Text STATUS_NO_SERVER = Text.translatable("hdskins.error.noserver");
-    public static final Text STATUS_OFFLINE = Text.translatable("hdskins.error.offline");
-    public static final Text STATUS_SESSION = Text.translatable("hdskins.error.session.short");
+    public static final Component STATUS_OK = CommonComponents.EMPTY;
+    public static final Component STATUS_NO_SERVER = Component.translatable("hdskins.error.noserver");
+    public static final Component STATUS_OFFLINE = Component.translatable("hdskins.error.offline");
+    public static final Component STATUS_SESSION = Component.translatable("hdskins.error.session.short");
 
-    public static final Text STATUS_MOJANG = Text.translatable("hdskins.error.mojang");
-    public static final Text STATUS_BUSY = Text.translatable("hdskins.status.busy");
+    public static final Component STATUS_MOJANG = Component.translatable("hdskins.error.mojang");
+    public static final Component STATUS_BUSY = Component.translatable("hdskins.status.busy");
     public static final String ERR_MOJANG_WAIT = "hdskins.error.mojang.wait";
 
-    public static final Text STATUS_FETCH = Text.translatable("hdskins.fetch");
+    public static final Component STATUS_FETCH = Component.translatable("hdskins.fetch");
 
-    private Text bannerMessage = STATUS_OK;
+    private Component bannerMessage = STATUS_OK;
 
     private Map<String, String> skinMetadata = new HashMap<>();
 
@@ -47,7 +48,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     private Optional<Gateway> gateway;
 
     private SkinCallback loadListener = SkinCallback.NOOP;
-    private Consumer<SkinType> skinTypeChangedListener = t -> {};
+    private Consumer<SkinType> skinTypeChangedListener = _ -> {};
 
     private final SkinUpload.Session session;
 
@@ -153,11 +154,11 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
         return bannerMessage != STATUS_OK;
     }
 
-    public Text getBannerMessage() {
+    public Component getBannerMessage() {
         return bannerMessage;
     }
 
-    public void setBannerMessage(Text er) {
+    public void setBannerMessage(Component er) {
         bannerMessage = er;
     }
 
@@ -166,7 +167,7 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
         return getStatus() != STATUS_OK;
     }
 
-    private Text getStatus() {
+    private Component getStatus() {
         if (isBusy()) {
             return STATUS_BUSY;
         }
@@ -191,16 +192,16 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
     }
 
     @Override
-    public List<Text> getStatusLines() {
-        Text status = getStatus();
+    public List<Component> getStatusLines() {
+        Component status = getStatus();
         if (status == STATUS_MOJANG) {
-            return List.of(status, Text.translatable(ERR_MOJANG_WAIT, getRetries()));
+            return List.of(status, Component.translatable(ERR_MOJANG_WAIT, getRetries()));
         }
         return List.of(status);
     }
 
     @Override
-    public int getLabelColor(Text status) {
+    public int getLabelColor(Component status) {
         return isThrottled() || status == STATUS_SESSION || status == STATUS_OFFLINE ? RED : WHITE;
     }
 
@@ -221,12 +222,12 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
         return false;
     }
 
-    public CompletableFuture<Void> uploadSkin(Text statusMsg, SkinUpload payload) {
+    public CompletableFuture<Void> uploadSkin(Component statusMsg, SkinUpload payload) {
         setBannerMessage(statusMsg);
         return gateway
                 .map(g -> g.uploadSkin(payload, this::setBannerMessage))
-                .map(future -> future.thenRunAsync(this::scheduleReload, MinecraftClient.getInstance()))
-                .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway"))).whenComplete((o, t) -> {
+                .map(future -> future.thenRunAsync(this::scheduleReload, Minecraft.getInstance()))
+                .orElseGet(() -> CompletableFuture.failedFuture(new IOException("No gateway"))).whenComplete((_, t) -> {
                     if (t != null) {
                         HDSkins.LOGGER.fatal("Exception caught whilst uploading skin", t);
                     }
@@ -246,13 +247,13 @@ public class SkinUploader implements Closeable, CarouselStatusLabel {
                     ServerPlayerSkins skins = previewer.getRemote().getSkins();
                     skins.loadTextures(textures, loadListener);
                     gateway.getProfile(session).thenAccept(skins::loadProfile);
-                }, MinecraftClient.getInstance())
+                }, Minecraft.getInstance())
                 .handleAsync((a, throwable) -> {
                     if (throwable == null) {
                         retries = 1;
                     }
                     return a;
-                }, MinecraftClient.getInstance());
+                }, Minecraft.getInstance());
         });
     }
 

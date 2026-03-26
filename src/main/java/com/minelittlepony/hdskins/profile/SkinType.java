@@ -13,13 +13,13 @@ import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.common.util.registry.Registries;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
 
 public class SkinType implements Comparable<SkinType> {
-    public static final SkinType UNKNOWN = new SkinType(HDSkins.id("unknown"), ItemStack.EMPTY, false);
+    public static final SkinType UNKNOWN = new SkinType(HDSkins.id("unknown"), Optional.empty(), false);
     public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(HDSkins.id("skin_type"), SkinType::getId, UNKNOWN);
 
     private static final TypeAdapter<SkinType> ADAPTER = RegistryTypeAdapter.of(REGISTRY, (ls, registry) -> {
@@ -27,17 +27,17 @@ public class SkinType implements Comparable<SkinType> {
     });
     private static final Map<MinecraftProfileTexture.Type, SkinType> VANILLA = new EnumMap<>(MinecraftProfileTexture.Type.class);
 
-    public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN, new ItemStack(Items.LEATHER_CHESTPLATE));
-    public static final SkinType CAPE = forVanilla(MinecraftProfileTexture.Type.CAPE, new ItemStack(Items.BARRIER));
-    public static final SkinType ELYTRA = forVanilla(MinecraftProfileTexture.Type.ELYTRA, new ItemStack(Items.ELYTRA));
+    public static final SkinType SKIN = forVanilla(MinecraftProfileTexture.Type.SKIN, new ItemStackTemplate(Items.LEATHER_CHESTPLATE));
+    public static final SkinType CAPE = forVanilla(MinecraftProfileTexture.Type.CAPE, new ItemStackTemplate(Items.BARRIER));
+    public static final SkinType ELYTRA = forVanilla(MinecraftProfileTexture.Type.ELYTRA, new ItemStackTemplate(Items.ELYTRA));
 
     private final Identifier id;
-    private final ItemStack iconStack;
+    private final Optional<ItemStackTemplate> iconStack;
     private final Identifier icon;
 
     private final boolean unsupported;
 
-    protected SkinType(Identifier id, ItemStack iconStack, boolean unsupported) {
+    protected SkinType(Identifier id, Optional<ItemStackTemplate> iconStack, boolean unsupported) {
         this.id = id;
         this.icon = getId().withPath(p -> "textures/gui/skin_type/" + p + ".png");
         this.iconStack = iconStack;
@@ -48,7 +48,7 @@ public class SkinType implements Comparable<SkinType> {
         return icon;
     }
 
-    public ItemStack iconStack() {
+    public Optional<ItemStackTemplate> iconStack() {
         return iconStack;
     }
 
@@ -70,7 +70,7 @@ public class SkinType implements Comparable<SkinType> {
     }
 
     public final int ordinal() {
-        return REGISTRY.getRawId(this);
+        return REGISTRY.getId(this);
     }
 
     public boolean isKnown() {
@@ -119,25 +119,25 @@ public class SkinType implements Comparable<SkinType> {
 
     private static SkinType createUnsupported(String parameterizedName) {
         Identifier id = deParameterize(parameterizedName);
-        return Registry.register(REGISTRY, id, new SkinType(id, Items.BARRIER.getDefaultStack(), true));
+        return Registry.register(REGISTRY, id, new SkinType(id, Optional.of(new ItemStackTemplate(Items.BARRIER)), true));
     }
 
     private static Identifier deParameterize(String parameterizedName) {
         String[] parts = parameterizedName.split("_", 2);
         parts[1] = parts[1].replace('_', '/');
-        return Identifier.of(parts[0], parts[1]);
+        return Identifier.fromNamespaceAndPath(parts[0], parts[1]);
     }
 
-    public static SkinType register(Identifier id, ItemStack iconStack) {
-        return Registry.register(REGISTRY, id, new SkinType(id, iconStack, false));
+    public static SkinType register(Identifier id, ItemStackTemplate iconStack) {
+        return Registry.register(REGISTRY, id, new SkinType(id, Optional.of(iconStack), false));
     }
 
     public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla) {
         return VANILLA.getOrDefault(vanilla, UNKNOWN);
     }
 
-    public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
-        return VANILLA.computeIfAbsent(vanilla, v -> new VanillaType(vanilla, iconStack));
+    public static SkinType forVanilla(MinecraftProfileTexture.Type vanilla, ItemStackTemplate iconStack) {
+        return VANILLA.computeIfAbsent(vanilla, _ -> new VanillaType(vanilla, iconStack));
     }
 
     public static <T> Map<SkinType, T> convertMap(Map<MinecraftProfileTexture.Type, T> textures) {
@@ -149,8 +149,8 @@ public class SkinType implements Comparable<SkinType> {
     private static final class VanillaType extends SkinType {
         private final Optional<MinecraftProfileTexture.Type> vanilla;
 
-        VanillaType(MinecraftProfileTexture.Type vanilla, ItemStack iconStack) {
-            super(Identifier.ofVanilla(vanilla.name().toLowerCase(Locale.US)), iconStack, false);
+        VanillaType(MinecraftProfileTexture.Type vanilla, ItemStackTemplate iconStack) {
+            super(Identifier.withDefaultNamespace(vanilla.name().toLowerCase(Locale.US)), Optional.of(iconStack), false);
             this.vanilla = Optional.of(vanilla);
             Registry.register(REGISTRY, getId(), this);
         }

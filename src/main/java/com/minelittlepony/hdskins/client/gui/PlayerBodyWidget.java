@@ -8,29 +8,29 @@ import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LimbAnimator;
-import net.minecraft.item.ItemDisplayContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Arm;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.WalkAnimationState;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
-public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Carousel.Element {
+public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.Element {
     protected final Vector3f position = new Vector3f();
 
     private final Vector3d offset = new Vector3d();
     private final Vector3f velocity = new Vector3f();
-    private final LimbAnimator limbAnimator = new LimbAnimator();
+    private final WalkAnimationState limbAnimator = new WalkAnimationState();
     private final ElytraState elytraState = new ElytraState();
 
     public boolean sprinting;
@@ -49,33 +49,33 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
         this.skins = skins;
         this.playerState = playerState;
         this.playerState.entityType = EntityType.PLAYER;
-        this.playerState.mainArm = MinecraftClient.getInstance().options.getMainArm().getValue();
+        this.playerState.mainArm = Minecraft.getInstance().options.mainHand().get();
 
-        if (MinecraftClient.getInstance().player != null) {
+        if (Minecraft.getInstance().player != null) {
             try {
-                ((EntityRenderer)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerState))
-                    .updateRenderState(MinecraftClient.getInstance().player, playerState, 1);
+                ((EntityRenderer)Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(playerState))
+                    .extractRenderState(Minecraft.getInstance().player, playerState, 1);
             } catch (Throwable ignored) {}
         }
         this.playerState.y = 14;
     }
 
-    public void setPose(EntityPose pose) {
-        playerState.pose = pose == EntityPose.STANDING && playerState.isInSneakingPose ? EntityPose.CROUCHING : pose;
+    public void setPose(Pose pose) {
+        playerState.pose = pose == Pose.STANDING && playerState.isCrouching ? Pose.CROUCHING : pose;
     }
 
-    public void swingArm(Hand hand) {
+    public void swingArm(InteractionHand hand) {
         playerState.isUsingItem = true;
-        playerState.activeHand = hand;
-        playerState.preferredArm = hand == Hand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
+        playerState.useItemHand = hand;
+        playerState.attackArm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
     }
 
-    public void setHandStack(Hand hand, ItemStack stack) {
-        Arm arm = hand == Hand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
-        MinecraftClient.getInstance().getItemModelManager().clearAndUpdate(
-                arm == Arm.LEFT ? playerState.leftHandItemState : playerState.rightHandItemState,
-                stack,
-                arm == Arm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+    public void setHandStack(InteractionHand hand, ItemStackTemplate stack) {
+        HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
+        Minecraft.getInstance().getItemModelResolver().appendItemLayers(
+                arm == HumanoidArm.LEFT ? playerState.leftHandItemState : playerState.rightHandItemState,
+                stack.create(),
+                arm == HumanoidArm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
                 null,
                 null,
                 0
@@ -86,13 +86,13 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
     public void tick() {
         SkinType type = skins.getPosture().getActiveSkinType();
 
-        playerState.skinTextures = skins.getSkinTextureBundle();
+        playerState.skin = skins.getSkinTextureBundle();
 
-        if ((type == SkinType.ELYTRA) != (playerState.equippedChestStack.getItem() == Items.ELYTRA)) {
-            playerState.equippedChestStack = (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultStack() : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST));
+        if ((type == SkinType.ELYTRA) != (playerState.headEquipment.getItem() == Items.ELYTRA)) {
+            playerState.headEquipment = (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultInstance() : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST).create());
         }
 
-        lastHandSwingProgress = playerState.handSwingProgress;
+        lastHandSwingProgress = playerState.ticksUsingItem;
 
         if (playerState.isUsingItem) {
             if (++handSwingTicks >= 8) {
@@ -104,7 +104,7 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
         }
 
         playerState.pose = skins.getPosture().getPose().getPose();
-        playerState.hasVehicle = playerState.pose == EntityPose.SITTING;
+        playerState.isPassenger = playerState.pose == Pose.SITTING;
 
         nextHandSwingProgress = handSwingTicks / 8F;
 
@@ -113,7 +113,7 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
             upwardSpeed = 0;
         }
 
-        if (playerState.y == 0 && jumping && upwardSpeed <= 0 && !playerState.isInPose(EntityPose.SLEEPING) && !playerState.hasVehicle && !playerState.isSwimming && !playerState.usingRiptide) {
+        if (playerState.y == 0 && jumping && upwardSpeed <= 0 && !playerState.hasPose(Pose.SLEEPING) && !playerState.isPassenger && !playerState.isVisuallySwimming && !playerState.isAutoSpinAttack) {
             upwardSpeed = velocity.y;
         }
 
@@ -131,76 +131,76 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
             playerState.y = 0;
         }
 
-        playerState.isSwimming = playerState.isInPose(EntityPose.SWIMMING);
-        playerState.usingRiptide = playerState.isInPose(EntityPose.SPIN_ATTACK);
+        playerState.isVisuallySwimming = playerState.hasPose(Pose.SWIMMING);
+        playerState.isAutoSpinAttack = playerState.hasPose(Pose.SPIN_ATTACK);
 
-        limbAnimator.updateLimbs(sprinting ? (playerState.isInSneakingPose ? 0.1F : 1) : (playerState.isSwimming ? 1 : 0), 0.1F, 1);
+        limbAnimator.update(sprinting ? (playerState.isCrouching ? 0.1F : 1) : (playerState.isVisuallySwimming ? 1 : 0), 0.1F, 1);
         elytraState.update(playerState);
 
-        playerState.age++;
+        playerState.ageInTicks++;
 
         offset.set(0, -1.25 + playerState.y / 16F, 0);
 
-        if (playerState.isInSneakingPose) {
+        if (playerState.isCrouching) {
             offset.y += 0.125D;
         }
 
-        if (playerState.isInPose(EntityPose.SLEEPING)) {
+        if (playerState.hasPose(Pose.SLEEPING)) {
             offset.y += 0.7F;
             offset.x++;
         }
-        if (playerState.isSwimming) {
-            playerState.leaningPitch = 0.7F;
+        if (playerState.isVisuallySwimming) {
+            playerState.flyingYRot = 0.7F;
             if (velocity.x < 100) {
                 velocity.x += 100;
             }
 
             offset.y += 0.5F;
-        } else if (playerState.usingRiptide) {
-            playerState.leaningPitch = 0;
+        } else if (playerState.isAutoSpinAttack) {
+            playerState.flyingYRot = 0;
             offset.y += 1;
             offset.z -= 0.5F;
         } else {
-            playerState.leaningPitch = 0;
+            playerState.flyingYRot = 0;
             if (velocity.x >= 100) {
                 velocity.x -= 100;
             }
         }
 
-        playerState.age += 0.5F;
-        playerState.positionOffset = new Vec3d(offset.x, offset.y, offset.z);
-        playerState.light = LightmapTextureManager.pack(0, Math.min((int)playerState.age, 15));
+        playerState.ageInTicks += 0.5F;
+        playerState.passengerOffset = new Vec3(offset.x, offset.y, offset.z);
+        playerState.lightCoords = LightCoordsUtil.pack(0, Math.min((int)playerState.ageInTicks, 15));
     }
 
     @Override
     public void updateState(float xPosition, float yPosition, float mouseX, float mouseY, float tickDelta) {
-        playerState.bodyYaw = 0;
-        playerState.relativeHeadYaw = MathHelper.wrapDegrees(playerState.bodyYaw - ((float)Math.atan((xPosition - mouseX) / 20) * -30) * ((float)Math.sin((playerState.bodyYaw * (Math.PI / 180)) + 45)));
+        playerState.bodyRot = 0;
+        playerState.yRot = Mth.wrapDegrees(playerState.bodyRot - ((float)Math.atan((xPosition - mouseX) / 20) * -30) * ((float)Math.sin((playerState.bodyRot * (Math.PI / 180)) + 45)));
 
-        playerState.pitch = playerState.isInPose(EntityPose.SLEEPING) ? 10 : (float)Math.atan(mouseY / 40) * -20;
-        playerState.leftWingPitch = elytraState.leftWingPitch(tickDelta);
-        playerState.leftWingYaw = elytraState.leftWingYaw(tickDelta);
-        playerState.leftWingRoll = elytraState.leftWingRoll(tickDelta);
-        playerState.handSwingProgress = MathHelper.lerp(tickDelta, lastHandSwingProgress, nextHandSwingProgress);
-        playerState.limbAmplitudeInverse = 1;
-        if (!playerState.hasVehicle) {
-            playerState.limbSwingAnimationProgress = limbAnimator.getAnimationProgress(tickDelta);
-            playerState.limbSwingAmplitude = limbAnimator.getAmplitude(tickDelta);
+        playerState.xRot = playerState.hasPose(Pose.SLEEPING) ? 10 : (float)Math.atan(mouseY / 40) * -20;
+        playerState.elytraRotX = elytraState.leftWingPitch(tickDelta);
+        playerState.elytraRotY = elytraState.leftWingYaw(tickDelta);
+        playerState.elytraRotZ = elytraState.leftWingRoll(tickDelta);
+        playerState.walkAnimationPos = Mth.lerp(tickDelta, lastHandSwingProgress, nextHandSwingProgress);
+        playerState.walkAnimationSpeed = 1;
+        if (!playerState.isPassenger) {
+            playerState.walkAnimationPos = limbAnimator.position(tickDelta);
+            playerState.walkAnimationSpeed = limbAnimator.speed(tickDelta);
         } else {
-            playerState.limbSwingAnimationProgress = 0;
-            playerState.limbSwingAmplitude = 0;
+            playerState.walkAnimationPos = 0;
+            playerState.walkAnimationSpeed = 0;
         }
     }
 
     @Override
-    public void render(DrawContext context, Bounds bounds, int mouseX, int mouseY, Quaternionf rotation) {
-        context.state.addSpecialElement(new PlayerPreviewSpecialGuiElementRenderer.Element(
+    public void extractRenderState(GuiGraphicsExtractor context, Bounds bounds, int mouseX, int mouseY, Quaternionf rotation) {
+        context.guiRenderState.addPicturesInPictureState(new PlayerPreviewSpecialGuiElementRenderer.Element(
                 playerState,
                 position,
                 rotation,
                 bounds.left, bounds.right(), bounds.top, bounds.bottom(),
                 bounds.height / 3F,
-                context.scissorStack.peekLast()
+                context.scissorStack.peek()
         ));
     }
 
@@ -214,13 +214,13 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
         private float lastLeftWingYaw;
         private float lastLeftWingRoll;
 
-        public void update(PlayerEntityRenderState state) {
+        public void update(AvatarRenderState state) {
             lastLeftWingPitch = leftWingPitch;
             lastLeftWingYaw = leftWingYaw;
             lastLeftWingRoll = leftWingRoll;
-            float g = state.isInSneakingPose ? MathHelper.TAU / 9F : STANDING_PITCH;
-            float h = state.isInSneakingPose ? -MathHelper.PI / 4F : STANDING_ROLL;
-            float i = state.isInSneakingPose ? 0.08726646F : 0;
+            float g = state.isCrouching ? Mth.HALF_PI / 9F : STANDING_PITCH;
+            float h = state.isCrouching ? -Mth.PI / 4F : STANDING_ROLL;
+            float i = state.isCrouching ? 0.08726646F : 0;
 
             leftWingPitch += (g - leftWingPitch) * 0.3F;
             leftWingYaw += (i - leftWingYaw) * 0.3F;
@@ -228,15 +228,15 @@ public class PlayerBodyWidget<S extends PlayerEntityRenderState> implements Caro
         }
 
         public float leftWingPitch(float tickProgress) {
-            return MathHelper.lerp(tickProgress, lastLeftWingPitch, leftWingPitch);
+            return Mth.lerp(tickProgress, lastLeftWingPitch, leftWingPitch);
         }
 
         public float leftWingYaw(float tickProgress) {
-            return MathHelper.lerp(tickProgress, lastLeftWingYaw, leftWingYaw);
+            return Mth.lerp(tickProgress, lastLeftWingYaw, leftWingYaw);
         }
 
         public float leftWingRoll(float tickProgress) {
-            return MathHelper.lerp(tickProgress, lastLeftWingRoll, leftWingRoll);
+            return Mth.lerp(tickProgress, lastLeftWingRoll, leftWingRoll);
         }
     }
 }

@@ -6,9 +6,10 @@ import java.util.UUID;
 
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
+
 
 public class VanillaSkins {
     public static final Identifier NO_SKIN_STEVE = HDSkins.id("textures/mob/noskin.png");
@@ -18,14 +19,14 @@ public class VanillaSkins {
     public static final Map<SkinType, Identifier> NO_TEXTURES = Map.of(
         SkinType.SKIN, NO_SKIN_STEVE,
         SkinType.CAPE, NO_SKIN_CAPE,
-        SkinType.ELYTRA, Identifier.ofVanilla("textures/entity/equipment/wings/elytra.png")
+        SkinType.ELYTRA, Identifier.withDefaultNamespace("textures/entity/equipment/wings/elytra.png")
     );
 
     public static final Map<SkinType, Identifier> NO_TEXTURES_ALEX = Map.of(
         SkinType.SKIN, NO_SKIN_ALEX
     );
 
-    private static final Map<SkinTextures, Identifier> TEXTURE_CONVERSION = new HashMap<>();
+    private static final Map<PlayerSkin, Identifier> TEXTURE_CONVERSION = new HashMap<>();
 
     public static Identifier getDefaultTexture(SkinType type, String variant) {
         if (VanillaModels.isSlim(variant) && NO_TEXTURES_ALEX.containsKey(type)) {
@@ -35,7 +36,7 @@ public class VanillaSkins {
     }
 
     public static Identifier getSkinTextures(UUID profileId, String variant) {
-        return TEXTURE_CONVERSION.computeIfAbsent(DefaultSkinHelper.getSkinTextures(profileId), skin -> {
+        return TEXTURE_CONVERSION.computeIfAbsent(DefaultPlayerSkin.get(profileId), skin -> {
             boolean slimArms = VanillaModels.isSlim(variant);
             return skin.body().texturePath().withPath(path -> path.replace(slimArms ? "/wide/" : "/slim/", slimArms ? "/slim/" : "/wide/"));
         });

@@ -9,9 +9,9 @@ import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
 
 public record PlayerSkinLayers (
         Layer vanilla,
@@ -28,7 +28,7 @@ public record PlayerSkinLayers (
         return vanilla.dynamic().hasChanged() || hd.dynamic().hasChanged() || combined.dynamic().hasChanged();
     }
 
-    public static PlayerSkinLayers of(GameProfile profile, Supplier<SkinTextures> vanillaSkins) {
+    public static PlayerSkinLayers of(GameProfile profile, Supplier<PlayerSkin> vanillaSkins) {
         var vanilla = new Layer(DynamicSkinTextures.of(vanillaSkins), Memoize.withForcedExpiration(vanillaSkins, TIMESTAMP));
         var hd = new Layer(
                 HDSkins.getInstance().getResourceManager().getSkinTextures(profile)
@@ -38,7 +38,7 @@ public record PlayerSkinLayers (
         return new PlayerSkinLayers(vanilla, hd, combined);
     }
 
-    public record Layer (DynamicSkinTextures dynamic, Memoize<SkinTextures> resolved) {
+    public record Layer (DynamicSkinTextures dynamic, Memoize<PlayerSkin> resolved) {
         public Layer(DynamicSkinTextures dynamic) {
             this(dynamic, Memoize.withExpiration(() -> DynamicSkinTextures.toSkinTextures(dynamic)));
         }
@@ -47,7 +47,7 @@ public record PlayerSkinLayers (
             return dynamic().getProvidedSkinTypes();
         }
 
-        public Optional<TextureAsset> getSkin(SkinType type) {
+        public Optional<ClientAsset.Texture> getSkin(SkinType type) {
             return dynamic().getSkin(type);
         }
 
@@ -55,7 +55,7 @@ public record PlayerSkinLayers (
             return dynamic().getModel();
         }
 
-        public SkinTextures getSkinTextures() {
+        public PlayerSkin getSkinTextures() {
             if (dynamic().hasChanged()) {
                 resolved.expireNow();
             }

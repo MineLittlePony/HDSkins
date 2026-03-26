@@ -7,16 +7,16 @@ import com.google.common.base.Suppliers;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.entity.PlayerLikeEntity;
-import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.player.PlayerSkin;
 
-public record PlayerSkins(PlayerSkinLayers layers, PlayerSkinLayers.Layer sorted) implements Supplier<SkinTextures> {
+public record PlayerSkins(PlayerSkinLayers layers, PlayerSkinLayers.Layer sorted) implements Supplier<PlayerSkin> {
     @Override
-    public SkinTextures get() {
+    public PlayerSkin get() {
         return sorted().getSkinTextures();
     }
 
-    public static ClientPlayerInfo create(GameProfile profile, Supplier<SkinTextures> texturesSupplier) {
+    public static ClientPlayerInfo create(GameProfile profile, Supplier<PlayerSkin> texturesSupplier) {
         PlayerSkinLayers layers = PlayerSkinLayers.of(profile, texturesSupplier);
         return Suppliers.memoize(() -> new PlayerSkins(
                 layers,
@@ -24,7 +24,7 @@ public record PlayerSkins(PlayerSkinLayers layers, PlayerSkinLayers.Layer sorted
         ))::get;
     }
 
-    public static Optional<PlayerSkins> of(PlayerLikeEntity player) {
+    public static Optional<PlayerSkins> of(Avatar player) {
         return ClientPlayerInfo.of(player).map(ClientPlayerInfo::getSkins);
     }
 }

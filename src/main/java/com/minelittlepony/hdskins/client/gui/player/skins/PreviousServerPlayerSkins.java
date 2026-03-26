@@ -13,7 +13,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServer;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class PreviousServerPlayerSkins extends PlayerSkins<ServerPlayerSkins.RemoteTexture> {
 

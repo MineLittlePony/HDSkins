@@ -4,28 +4,29 @@ import org.joml.Matrix3x2fStack;
 
 import com.minelittlepony.common.client.gui.ITextContext;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.TooltipBackgroundRenderer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
 
 public class StatusBanner implements ITextContext {
-    public static final Text HD_SKINS_UPLOAD = Text.translatable("hdskins.upload");
-    public static final Text HD_SKINS_REQUEST = Text.translatable("hdskins.request");
-    public static final Text HD_SKINS_FAILED = Text.translatable("hdskins.failed");
+    public static final Component HD_SKINS_UPLOAD = Component.translatable("hdskins.upload");
+    public static final Component HD_SKINS_REQUEST = Component.translatable("hdskins.request");
+    public static final Component HD_SKINS_FAILED = Component.translatable("hdskins.failed");
 
     private final SkinUploader uploader;
 
     private boolean showing;
     private float msgFadeOpacity = 0;
-    private Text lastShownMessage = Text.empty();
+    private Component lastShownMessage = CommonComponents.EMPTY;
 
     public StatusBanner(SkinUploader uploader) {
         this.uploader = uploader;
     }
 
-    public void render(DrawContext context, float deltaTime, int width, int height) {
+    public void extractRenderState(GuiGraphicsExtractor context, float deltaTime, int width, int height) {
 
         boolean showBanner = uploader.hasBannerMessage();
 
@@ -36,7 +37,7 @@ public class StatusBanner implements ITextContext {
             }
         } else {
             if (showBanner) {
-                Text updatedMessage = uploader.getBannerMessage();
+                Component updatedMessage = uploader.getBannerMessage();
                 if (updatedMessage != lastShownMessage) {
                     lastShownMessage = updatedMessage;
                 }
@@ -49,10 +50,10 @@ public class StatusBanner implements ITextContext {
             msgFadeOpacity -= deltaTime / 6;
         }
 
-        msgFadeOpacity = MathHelper.clamp(msgFadeOpacity, 0, 1);
+        msgFadeOpacity = Mth.clamp(msgFadeOpacity, 0, 1);
 
         if (msgFadeOpacity > 0) {
-            Matrix3x2fStack matrices = context.getMatrices();
+            Matrix3x2fStack matrices = context.pose();
 
             matrices.pushMatrix();
             int opacity = (Math.min(180, (int)(msgFadeOpacity * 180)) & 255) << 24;
@@ -61,12 +62,12 @@ public class StatusBanner implements ITextContext {
 
             if (showBanner || msgFadeOpacity >= 1) {
                 boolean showTitle = lastShownMessage != HD_SKINS_UPLOAD && lastShownMessage != HD_SKINS_REQUEST;
-                int messageWidth = getFont().getWidth(lastShownMessage);
+                int messageWidth = getFont().width(lastShownMessage);
 
                 int maxWidth = Math.min(width - 10,
-                        showTitle ? Math.max(getFont().getWidth(HD_SKINS_FAILED), messageWidth) : messageWidth
+                        showTitle ? Math.max(getFont().width(HD_SKINS_FAILED), messageWidth) : messageWidth
                 );
-                int messageHeight = getFont().getWrappedLinesHeight(lastShownMessage, maxWidth) + getFont().fontHeight + 10;
+                int messageHeight = getFont().wordWrapHeight(lastShownMessage, maxWidth) + getFont().lineHeight + 10;
                 int blockY = (height - messageHeight) / 2;
                 int blockX = (width - maxWidth) / 2;
                 int padding = 6;
@@ -75,10 +76,10 @@ public class StatusBanner implements ITextContext {
 
                 if (showTitle) {
                     drawCenteredLabel(context, HD_SKINS_FAILED, width / 2, blockY, 0xFFFFFF55);
-                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().fontHeight + 10, maxWidth, 0xFFFF5555);
+                    drawTextBlock(context, lastShownMessage, (width - messageWidth) / 2, blockY + getFont().lineHeight + 10, maxWidth, 0xFFFF5555);
                 } else {
                     uploader.tryClearStatus();
-                    drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, Colors.WHITE);
+                    drawCenteredLabel(context, lastShownMessage, width / 2, height / 2, CommonColors.WHITE);
                 }
             }
 
@@ -90,7 +91,7 @@ public class StatusBanner implements ITextContext {
         return msgFadeOpacity > 0;
     }
 
-    static void drawTooltipDecorations(DrawContext context, int x, int y, int width, int height) {
-        TooltipBackgroundRenderer.render(context, x, y, width, height, null);
+    static void drawTooltipDecorations(GuiGraphicsExtractor context, int x, int y, int width, int height) {
+        TooltipRenderUtil.extractTooltipBackground(context, x, y, width, height, null);
     }
 }

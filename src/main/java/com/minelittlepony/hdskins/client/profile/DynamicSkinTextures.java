@@ -11,24 +11,25 @@ import java.util.stream.Stream;
 import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.entity.player.PlayerSkinType;
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
+
 
 public interface DynamicSkinTextures {
-    Function<SkinTextures, TextureAsset> NIL = t -> null;
-    Map<SkinType, Function<SkinTextures, TextureAsset>> TEXTURE_LOOKUP = Map.of(
-            SkinType.SKIN, SkinTextures::body,
-            SkinType.CAPE, SkinTextures::cape,
-            SkinType.ELYTRA, SkinTextures::elytra
+    Function<PlayerSkin, ClientAsset.Texture> NIL = _ -> null;
+    Map<SkinType, Function<PlayerSkin, ClientAsset.Texture>> TEXTURE_LOOKUP = Map.of(
+            SkinType.SKIN, PlayerSkin::body,
+            SkinType.CAPE, PlayerSkin::cape,
+            SkinType.ELYTRA, PlayerSkin::elytra
     );
 
     Set<Identifier> getProvidedSkinTypes();
 
-    Optional<TextureAsset> getSkin(SkinType type);
+    Optional<ClientAsset.Texture> getSkin(SkinType type);
 
-    default TextureAsset getSkin(SkinType type, DynamicSkinTextures fallback) {
+    default ClientAsset.Texture getSkin(SkinType type, DynamicSkinTextures fallback) {
         return getSkin(type).orElseGet(() -> fallback.getSkin(type).orElse(null));
     }
 
@@ -36,17 +37,17 @@ public interface DynamicSkinTextures {
 
     boolean hasChanged();
 
-    static SkinTextures toSkinTextures(DynamicSkinTextures dynamic) {
-        return new SkinTextures(
+    static PlayerSkin toSkinTextures(DynamicSkinTextures dynamic) {
+        return new PlayerSkin(
             dynamic.getSkin(SkinType.SKIN).orElse(null),
             dynamic.getSkin(SkinType.CAPE).orElse(null),
             dynamic.getSkin(SkinType.ELYTRA).orElse(null),
-            VanillaModels.isSlim(dynamic.getModel().orElse(VanillaModels.DEFAULT)) ? PlayerSkinType.SLIM : PlayerSkinType.WIDE,
+            VanillaModels.isSlim(dynamic.getModel().orElse(VanillaModels.DEFAULT)) ? PlayerModelType.SLIM : PlayerModelType.WIDE,
             false
         );
     }
 
-    static DynamicSkinTextures of(Supplier<SkinTextures> supplier) {
+    static DynamicSkinTextures of(Supplier<PlayerSkin> supplier) {
         return new DynamicSkinTextures() {
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
@@ -54,7 +55,7 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public Optional<TextureAsset> getSkin(SkinType type) {
+            public Optional<ClientAsset.Texture> getSkin(SkinType type) {
                 return Optional.ofNullable(TEXTURE_LOOKUP.getOrDefault(type, NIL).apply(supplier.get()));
             }
 
@@ -82,7 +83,7 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public Optional<TextureAsset> getSkin(SkinType type) {
+            public Optional<ClientAsset.Texture> getSkin(SkinType type) {
                 return Optional.ofNullable(a.getSkin(type, b));
             }
 

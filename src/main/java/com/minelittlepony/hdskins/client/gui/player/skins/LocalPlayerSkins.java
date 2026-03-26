@@ -12,7 +12,7 @@ import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.Sk
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.profile.SkinType;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class LocalPlayerSkins extends PlayerSkins<LocalPlayerSkins.LocalTexture> {
 

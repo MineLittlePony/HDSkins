@@ -15,7 +15,7 @@ import com.google.common.cache.LoadingCache;
 import net.minecraft.util.Util;
 
 public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
-    private final Executor executor = Util.getIoWorkerExecutor();
+    private final Executor executor = Util.nonCriticalIoPool();
     private final Executor delayedExecutor = CompletableFuture.delayedExecutor(1, TimeUnit.MILLISECONDS, executor);
 
     private final AtomicReference<Function<K, CompletableFuture<V>>> activeBatch = new AtomicReference<>(null);

@@ -18,20 +18,19 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.AssetInfo.TextureAssetInfo;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
 public class SkinLoader {
     private final LoadingCache<GameProfile, CompletableFuture<ProvidedSkins>> cache = Memoize.createAsyncLoadingCache(15, profile -> {
         if (HDSkins.getInstance().getConfig().useBatchLoading.get()) {
-            return HDSkinsServer.getInstance().fillProfile(profile).thenComposeAsync(this::fetchTextures, MinecraftClient.getInstance());
+            return HDSkinsServer.getInstance().fillProfile(profile).thenComposeAsync(this::fetchTextures, Minecraft.getInstance());
         }
 
-        return CompletableFuture.supplyAsync(() -> HDSkinsServer.getInstance().getServers().fillProfile(profile), Util.getIoWorkerExecutor())
-                .thenComposeAsync(this::fetchTextures, MinecraftClient.getInstance());
+        return CompletableFuture.supplyAsync(() -> HDSkinsServer.getInstance().getServers().fillProfile(profile), Util.nonCriticalIoPool())
+                .thenComposeAsync(this::fetchTextures, Minecraft.getInstance());
     });
 
     private final FileStore fileStore = new FileStore();
@@ -46,7 +45,7 @@ public class SkinLoader {
             }
 
             @Override
-            public Optional<TextureAsset> getSkin(SkinType type) {
+            public Optional<ClientAsset.Texture> getSkin(SkinType type) {
                 return value.get().getSkin(type);
             }
 
@@ -68,12 +67,12 @@ public class SkinLoader {
     }
 
     private CompletableFuture<ProvidedSkins> fetchTextures(Map<SkinType, MinecraftProfileTexture> textures) {
-        Map<SkinType, CompletableFuture<TextureAsset>> tasks = textures.entrySet().stream().collect(Collectors.toMap(
+        Map<SkinType, CompletableFuture<ClientAsset.Texture>> tasks = textures.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,
-                entry -> fileStore.get(entry.getKey(), entry.getValue()).thenApply(id -> new TextureAssetInfo(id, id))
+                entry -> fileStore.get(entry.getKey(), entry.getValue()).thenApply(id -> new ClientAsset.ResourceTexture(id, id))
         ));
 
-        return CompletableFuture.allOf(tasks.values().stream().toArray(CompletableFuture[]::new)).thenApply(nothing -> {
+        return CompletableFuture.allOf(tasks.values().stream().toArray(CompletableFuture[]::new)).thenApply(_ -> {
             return new ProvidedSkins(
                     Optional.ofNullable(textures.get(SkinType.SKIN)).map(skin -> VanillaModels.of(skin.getMetadata("model"))),
                     tasks.keySet().stream().map(SkinType::getId).collect(Collectors.toSet()),
@@ -94,7 +93,7 @@ public class SkinLoader {
         SkinCacheClearCallback.EVENT.invoker().onSkinCacheCleared();
     }
 
-    public record ProvidedSkins (Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, TextureAsset> skins) implements DynamicSkinTextures {
+    public record ProvidedSkins (Optional<String> model, Set<Identifier> providedSkinTypes, Map<SkinType, ClientAsset.Texture> skins) implements DynamicSkinTextures {
         public static final ProvidedSkins EMPTY = new ProvidedSkins(Optional.empty(), Set.of(), Map.of());
 
         @Override
@@ -103,7 +102,7 @@ public class SkinLoader {
         }
 
         @Override
-        public Optional<TextureAsset> getSkin(SkinType type) {
+        public Optional<ClientAsset.Texture> getSkin(SkinType type) {
             return Optional.ofNullable(skins.get(type));
         }
 

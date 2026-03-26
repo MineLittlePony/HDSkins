@@ -22,23 +22,23 @@ import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.server.Gateway;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.RotatingCubeMapRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.Panorama;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 
 public class SettingsScreen extends GameGui {
 
     private final ScrollContainer content = new ScrollContainer();
 
-    private final RotatingCubeMapRenderer panorama;
+    private final Panorama panorama;
 
     private final HDConfig config = HDSkins.getInstance().getConfig();
 
-    public SettingsScreen(@Nullable Screen parent, RotatingCubeMapRenderer panorama) {
-        super(Text.translatable("options.title"), parent);
+    public SettingsScreen(@Nullable Screen parent, Panorama panorama) {
+        super(Component.translatable("options.title"), parent);
         this.panorama = panorama;
 
         content.margin.setVertical(30);
@@ -61,21 +61,21 @@ public class SettingsScreen extends GameGui {
 
         addButton(new Label(width / 2, 5).setCentered()).getStyle().setText(getTitle());
         addButton(new Button(width / 2 - 100, height - 25))
-            .onClick(sender -> finish())
+            .onClick(_ -> finish())
             .getStyle()
                 .setText("gui.done");
 
         content.addButton(new EnumSlider<>(LEFT, row += 20, config.pantsButtonVisibility))
             .onChange(config.pantsButtonVisibility)
-            .setTextFormat(slider -> Text.translatable("hdskins.settings.main_screen_button", slider.getValue().name()))
-            .getStyle().setText(Text.translatable("hdskins.settings.main_screen_button", config.pantsButtonVisibility.get().name()));
+            .setTextFormat(slider -> Component.translatable("hdskins.settings.main_screen_button", slider.getValue().name()))
+            .getStyle().setText(Component.translatable("hdskins.settings.main_screen_button", config.pantsButtonVisibility.get().name()));
 
         content.addButton(new Button(LEFT, row += 25, 200, 20))
-            .onClick(sender -> {
+            .onClick(_ -> {
                 try {
                     Path path = GamePaths.getAssetsDirectory().resolve("hd");
                     Files.createDirectories(path);
-                    Util.getOperatingSystem().open(path);
+                    Util.getPlatform().openPath(path);
                 } catch (IOException e) {
                     HDSkins.LOGGER.error("Could not create cache folder", e);
                 }
@@ -102,23 +102,23 @@ public class SettingsScreen extends GameGui {
         row += 10;
         int index = 1;
         for (Gateway gateway : HDSkinsServer.getInstance().getServers().getGateways()) {
-            content.addButton(new Label(LEFT, row += getFont().fontHeight))
+            content.addButton(new Label(LEFT, row += getFont().lineHeight))
                 .getStyle()
                 .setText("#" + (index++));
-            for (Text line : Tooltip.of(Text.literal(gateway.getServer().toString()), 300).getLines()) {
-                content.addButton(new Label(LEFT, row += getFont().fontHeight))
+            for (Component line : Tooltip.of(Component.literal(gateway.getServer().toString()), 300).getLines()) {
+                content.addButton(new Label(LEFT, row += getFont().lineHeight))
                     .getStyle()
                     .setText(line);
             }
-            Set<Map.Entry<Text, Text>> buttons = new HashSet<>();
+            Set<Map.Entry<Component, Component>> buttons = new HashSet<>();
 
             for (var metadata : gateway.getServer().getMetadata().entrySet()) {
 
                 if (metadata.getValue().getStyle().getClickEvent() != null) {
                     buttons.add(metadata);
                 } else {
-                    for (Text line : Tooltip.of(metadata.getKey().copy().formatted(Formatting.YELLOW).append(": ").append(metadata.getValue()), 300).getLines()) {
-                        content.addButton(new Label(LEFT + 7, row += getFont().fontHeight))
+                    for (Component line : Tooltip.of(metadata.getKey().copy().withStyle(ChatFormatting.YELLOW).append(": ").append(metadata.getValue()), 300).getLines()) {
+                        content.addButton(new Label(LEFT + 7, row += getFont().lineHeight))
                             .getStyle()
                             .setText(line);
                     }
@@ -128,9 +128,9 @@ public class SettingsScreen extends GameGui {
 
             int left = LEFT + 7;
             for (var metadata : buttons) {
-                int width = getFont().getWidth(metadata.getKey()) + 10;
+                int width = getFont().width(metadata.getKey()) + 10;
                 content.addButton(new Button(left, row, width, 20))
-                    .onClick(sender -> handleClickEvent(metadata.getValue().getStyle().getClickEvent(), client, this))
+                    .onClick(_ -> defaultHandleClickEvent(metadata.getValue().getStyle().getClickEvent(), minecraft, this))
                     .getStyle().setText(metadata.getKey());
                 left += width + 2;
             }
@@ -140,14 +140,14 @@ public class SettingsScreen extends GameGui {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float tickDelta) {
-        super.render(context, mouseX, mouseY, tickDelta);
-        content.render(context, mouseX, mouseY, tickDelta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float tickDelta) {
+        super.extractRenderState(context, mouseX, mouseY, tickDelta);
+        content.extractRenderState(context, mouseX, mouseY, tickDelta);
     }
 
     @Override
-    protected void renderPanoramaBackground(DrawContext context, float delta) {
-        panorama.render(context, this.width, this.height, true);
+    protected void extractPanorama(GuiGraphicsExtractor context, float delta) {
+        panorama.extractRenderState(context, width, height, panoramaShouldSpin());
     }
 
     @Override

@@ -8,21 +8,21 @@ import org.joml.Quaternionf;
 import com.minelittlepony.common.client.gui.ITextContext;
 import com.minelittlepony.common.client.gui.dimension.Bounds;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
+import com.mojang.blaze3d.platform.InputConstants;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 
-public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S extends PlayerEntityRenderState> implements Closeable, ITextContext {
+public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S extends AvatarRenderState> implements Closeable, ITextContext {
     public static final int HOR_MARGIN = 30;
     private static final int TOP = 50;
 
-    private final Text title;
+    private final Component title;
 
     private final PlayerBodyWidget<S> entity;
     private final T skins;
@@ -31,7 +31,7 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
 
     private final List<Element> elements = new ArrayList<>();
 
-    public Carousel(Text title, T skins, Function<PlayerSkins<?>, PlayerBodyWidget<S>> playerFactory) {
+    public Carousel(Component title, T skins, Function<PlayerSkins<?>, PlayerBodyWidget<S>> playerFactory) {
         this.title = title;
         this.skins = skins;
         this.entity = playerFactory.apply(skins);
@@ -50,9 +50,9 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
         return skins;
     }
 
-    public boolean mouseClicked(int width, int height, Click click) {
+    public boolean mouseClicked(int width, int height, MouseButtonEvent click) {
         if (bounds.contains(click.x(), click.y())) {
-            entity.swingArm(click.button() == InputUtil.GLFW_MOUSE_BUTTON_LEFT ? Hand.MAIN_HAND : Hand.OFF_HAND);
+            entity.swingArm(click.button() == InputConstants.MOUSE_BUTTON_LEFT ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND);
             return true;
         }
         return false;
@@ -62,12 +62,12 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
         elements.forEach(Element::tick);
     }
 
-    public void render(int mouseX, int mouseY, int rotationAngle, float partialTick, DrawContext context) {
+    public void extractRenderState(int mouseX, int mouseY, int rotationAngle, float partialTick, GuiGraphicsExtractor context) {
         context.enableScissor(bounds.left, bounds.top, bounds.right(), bounds.bottom());
         int horizon = bounds.bottom() - 50;
-        drawBackground(context, horizon);
+        extractBackground(context, horizon);
 
-        Quaternionf rotation = new Quaternionf().rotationX(MathHelper.PI).rotateY(rotationAngle / 20F);
+        Quaternionf rotation = new Quaternionf().rotationX(Mth.PI).rotateY(rotationAngle / 20F);
 
         elements.forEach(element -> {
             element.updateState(
@@ -77,17 +77,17 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
                     bounds.top + bounds.height / 2 - mouseY,
                     partialTick
             );
-            element.render(context, bounds, mouseX, mouseY, rotation);
+            element.extractRenderState(context, bounds, mouseX, mouseY, rotation);
         });
         context.disableScissor();
 
-        context.getMatrices().pushMatrix();
-        bounds.translate(context.getMatrices());
-        context.drawText(getFont(), title, 5, 5, Colors.WHITE, false);
-        context.getMatrices().popMatrix();
+        context.pose().pushMatrix();
+        bounds.translate(context.pose());
+        context.text(getFont(), title, 5, 5, CommonColors.WHITE, false);
+        context.pose().popMatrix();
     }
 
-    protected void drawBackground(DrawContext context, int horizon) {
+    protected void extractBackground(GuiGraphicsExtractor context, int horizon) {
         bounds.draw(context, 0xA0000000);
         context.fillGradient(bounds.left, horizon,  bounds.right(), bounds.bottom(), 0x05FFFFFF, 0x40FFFFFF);
     }
@@ -102,6 +102,6 @@ public class Carousel<T extends PlayerSkins<? extends PlayerSkins.PlayerSkin>, S
 
         void updateState(float xPosition, float yPosition, float mouseX, float mouseY, float tickDelta);
 
-        void render(DrawContext context, Bounds bounds, int mouseX, int mouseY, Quaternionf rotation);
+        void extractRenderState(GuiGraphicsExtractor context, Bounds bounds, int mouseX, int mouseY, Quaternionf rotation);
     }
 }

@@ -29,11 +29,11 @@ import com.minelittlepony.hdskins.client.profile.DynamicSkinTextures;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager.SkinData.Skin;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceReloader;
-import net.minecraft.util.AssetInfo.TextureAsset;
-import net.minecraft.util.AssetInfo.TextureAssetInfo;
-import net.minecraft.util.Identifier;
+
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.Resource;
 
 /**
  * A resource manager for players to specify their own skin overrides.
@@ -46,7 +46,7 @@ import net.minecraft.util.Identifier;
  * }
  *
  */
-public class SkinResourceManager implements ResourceReloader {
+public class SkinResourceManager implements PreparableReloadListener {
 
     public static final Identifier ID = HDSkins.id("skins");
 
@@ -56,7 +56,7 @@ public class SkinResourceManager implements ResourceReloader {
             .registerTypeHierarchyAdapter(SkinType.class, SkinType.adapter())
             .create();
 
-    private final TextureLoader loader = new TextureLoader("hd_skins", (image, exclusions) -> HDPlayerSkinTextureDownloader.remapTexture(image));
+    private final TextureLoader loader = new TextureLoader("hd_skins", (image, _) -> HDPlayerSkinTextureDownloader.remapTexture(image));
 
     private final Map<SkinType, SkinStore> store = new HashMap<>();
     private long lastLoadTime;
@@ -64,15 +64,15 @@ public class SkinResourceManager implements ResourceReloader {
     private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = Memoize.createAsyncLoadingCache(15, loader::loadAsync);
 
     @Override
-    public CompletableFuture<Void> reload(ResourceReloader.Store store, Executor prepareExecutor, ResourceReloader.Synchronizer sync, Executor applyExecutor) {
-        return sync.whenPrepared(null).thenRunAsync(() -> {
+    public CompletableFuture<Void> reload(SharedState store, Executor prepareExecutor, PreparationBarrier sync, Executor applyExecutor) {
+        return sync.wait(null).thenRunAsync(() -> {
             this.store.clear();
             loader.stop();
 
             textures.invalidateAll();
 
-            store.getResourceManager().getAllNamespaces().stream().map(domain -> Identifier.of(domain, "textures/skins/skins.json")).forEach(identifier -> {
-                store.getResourceManager().getAllResources(identifier).stream()
+            store.resourceManager().getNamespaces().stream().map(domain -> Identifier.fromNamespaceAndPath(domain, "textures/skins/skins.json")).forEach(identifier -> {
+                store.resourceManager().getResourceStack(identifier).stream()
                     .map(this::loadSkinData)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
@@ -88,10 +88,10 @@ public class SkinResourceManager implements ResourceReloader {
     }
 
     private Optional<SkinData> loadSkinData(Resource res) {
-        try (var reader = new InputStreamReader(res.getInputStream())) {
+        try (var reader = new InputStreamReader(res.open())) {
             return Optional.ofNullable(GSON.fromJson(reader, SkinData.class));
         } catch (JsonParseException e) {
-            LOGGER.warn("Invalid skins.json in " + res.getPackId(), e);
+            LOGGER.warn("Invalid skins.json in " + res.sourcePackId(), e);
         } catch (IOException ignored) {}
 
         return Optional.empty();
@@ -106,8 +106,8 @@ public class SkinResourceManager implements ResourceReloader {
             }
 
             @Override
-            public Optional<TextureAsset> getSkin(SkinType type) {
-                return getCustomPlayerTexture(profile, type).map(id -> new TextureAssetInfo(id, id));
+            public Optional<ClientAsset.Texture> getSkin(SkinType type) {
+                return getCustomPlayerTexture(profile, type).map(id -> new ClientAsset.ResourceTexture(id, id));
             }
 
             @Override
@@ -247,7 +247,7 @@ public class SkinResourceManager implements ResourceReloader {
                         return HDSkins.id(skin);
                     }
 
-                    return Identifier.of(skin);
+                    return Identifier.parse(skin);
                 }
 
                 return HDSkins.id(String.format("textures/skins/%s.png", skin));

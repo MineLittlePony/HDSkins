@@ -17,7 +17,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 class FileStore {
     private final Map<String, CompletableFuture<Identifier>> cache = new Object2ObjectOpenHashMap<>();

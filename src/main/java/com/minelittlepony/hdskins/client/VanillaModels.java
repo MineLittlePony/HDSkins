@@ -2,11 +2,11 @@ package com.minelittlepony.hdskins.client;
 
 import java.util.Locale;
 
-import net.minecraft.entity.player.PlayerSkinType;
+import net.minecraft.world.entity.player.PlayerModelType;
 
 public class VanillaModels {
-    public static final String SLIM = PlayerSkinType.SLIM.asString();
-    public static final String WIDE = PlayerSkinType.WIDE.asString();
+    public static final String SLIM = PlayerModelType.SLIM.getSerializedName();
+    public static final String WIDE = PlayerModelType.WIDE.getSerializedName();
     public static final String DEFAULT = "default";
 
     public static String of(String model) {

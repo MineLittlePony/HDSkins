@@ -19,11 +19,11 @@ import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.net.HttpException;
 import com.mojang.authlib.exceptions.*;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public class Gateway {
-    public static final Text ERR_SESSION = Text.translatable("hdskins.error.session");
-    public static final Text ERR_DNS = Text.translatable("hdskins.error.dns");
+    public static final Component ERR_SESSION = Component.translatable("hdskins.error.session");
+    public static final Component ERR_DNS = Component.translatable("hdskins.error.dns");
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -84,7 +84,7 @@ public class Gateway {
         return profiles.getUnchecked(session);
     }
 
-    public CompletableFuture<Void> uploadSkin(SkinUpload payload, Consumer<Text> errorCallback) {
+    public CompletableFuture<Void> uploadSkin(SkinUpload payload, Consumer<Component> errorCallback) {
         return CompletableFuture.runAsync(() -> {
             try {
                 setBusy(true);
@@ -98,7 +98,7 @@ public class Gateway {
         });
     }
 
-    public <K extends SkinServerProfile.Skin> CompletableFuture<Void> swapSkin(SkinServerProfile<K> profile, SkinType type, int index, Consumer<Text> errorCallback) {
+    public <K extends SkinServerProfile.Skin> CompletableFuture<Void> swapSkin(SkinServerProfile<K> profile, SkinType type, int index, Consumer<Component> errorCallback) {
         return CompletableFuture.runAsync(() -> {
             try {
                 setBusy(true);
@@ -112,7 +112,7 @@ public class Gateway {
         });
     }
 
-    public CompletableFuture<TexturePayload> fetchSkins(Session session, Consumer<Text> errorCallback) {
+    public CompletableFuture<TexturePayload> fetchSkins(Session session, Consumer<Component> errorCallback) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 setBusy(true);
@@ -126,7 +126,7 @@ public class Gateway {
         });
     }
 
-    public void handleException(Throwable throwable, Consumer<Text> errorCallback) {
+    public void handleException(Throwable throwable, Consumer<Component> errorCallback) {
         throwable = Throwables.getRootCause(throwable);
 
         setBusy(false);
@@ -136,10 +136,10 @@ public class Gateway {
 
             if (code >= 500) {
                 LOGGER.error(ex.getReasonPhrase(), ex);
-                errorCallback.accept(Text.literal("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
+                errorCallback.accept(Component.literal("A fatal server error has ocurred (check logs for details): \n" + ex.getReasonPhrase()));
             } else if (code >= 400 && code != 403 && code != 404) {
                 LOGGER.error(ex.getReasonPhrase(), ex);
-                errorCallback.accept(Text.literal(ex.getReasonPhrase()));
+                errorCallback.accept(Component.literal(ex.getReasonPhrase()));
             } else {
                 LOGGER.error(ex.getReasonPhrase(), ex);
             }
@@ -157,7 +157,7 @@ public class Gateway {
                 setThrottled(true);
             } else {
                 LOGGER.error("Unhandled exception", throwable);
-                errorCallback.accept(Text.literal(throwable.toString()));
+                errorCallback.accept(Component.literal(throwable.toString()));
             }
         }
     }

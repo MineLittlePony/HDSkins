@@ -22,10 +22,9 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
 import net.minecraft.util.Util;
 
 @ServerType("mojang")
@@ -202,12 +201,12 @@ public class YggdrasilSkinServer implements SkinServer {
     }
 
     @Override
-    public Map<Text, Text> getMetadata() {
+    public Map<Component, Component> getMetadata() {
         return Map.of(
-            Text.translatable("hdskins.label.website"), Text.literal(LOGIN_URI.toString()).formatted(Formatting.UNDERLINE).withColor(Colors.BLUE).styled(style -> {
-                return style.withClickEvent(new ClickEvent.OpenUrl(LOGIN_URI));
+            Component.translatable("hdskins.label.website"), Component.literal(LOGIN_URI.toString()).withStyle(style -> {
+                return style.withUnderlined(true).withColor(CommonColors.BLUE).withClickEvent(new ClickEvent.OpenUrl(LOGIN_URI));
             }),
-            Text.translatable("hdskins.label.author"), Text.literal("Mojang")
+            Component.translatable("hdskins.label.author"), Component.literal("Mojang")
         );
     }
 

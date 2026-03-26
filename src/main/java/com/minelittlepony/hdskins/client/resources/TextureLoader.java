@@ -12,34 +12,17 @@ import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
 
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
 
 public class TextureLoader {
-    private static final MinecraftClient CLIENT = MinecraftClient.getInstance();
-
-    /**
-     * Schedule texture loading on the main thread.
-     * @param textureLocation
-     * @param texture
-     */
-    @Deprecated
-    public static <T extends AbstractTexture> T loadTexture(final Identifier textureLocation, final T texture) {
-        CLIENT.execute(() -> {
-            RenderSystem.queueFencedTask(() -> {
-                CLIENT.getTextureManager().registerTexture(textureLocation, texture);
-            });
-        });
-        return texture;
-    }
+    private static final Minecraft CLIENT = Minecraft.getInstance();
 
     public static CompletableFuture<Identifier> uploadTexture(Identifier textureId, NativeImage image) {
         return CompletableFuture.supplyAsync(() -> {
-            CLIENT.getTextureManager().registerTexture(textureId, new NativeImageBackedTexture(textureId::toString, image));
+            CLIENT.getTextureManager().register(textureId, new DynamicTexture(textureId::toString, image));
             return textureId;
         }, CLIENT);
     }
@@ -72,7 +55,7 @@ public class TextureLoader {
             .thenApplyAsync(updated -> {
                 return updated.map(image -> {
                     Identifier convertedId = imageId.withPath(p -> "dynamic/" + id + "/" + p);
-                    CLIENT.getTextureManager().registerTexture(convertedId, new NativeImageBackedTexture(convertedId::toString, image));
+                    CLIENT.getTextureManager().register(convertedId, new DynamicTexture(convertedId::toString, image));
                     return convertedId;
                 }).orElse(imageId);
             }, CLIENT).exceptionally(t -> {
@@ -84,13 +67,13 @@ public class TextureLoader {
     @Nullable
     private CompletableFuture<Optional<NativeImage>> getImage(Identifier res) {
         return CompletableFuture.<CompletableFuture<Optional<NativeImage>>>supplyAsync(() -> {
-            if (CLIENT.getTextureManager().getTexture(res) instanceof NativeImageBackedTexture nat) {
-                return CompletableFuture.completedFuture(Optional.ofNullable(nat.getImage()));
+            if (CLIENT.getTextureManager().getTexture(res) instanceof DynamicTexture nat) {
+                return CompletableFuture.completedFuture(Optional.ofNullable(nat.getPixels()));
             }
 
             return CLIENT.getResourceManager().getResource(res).map(resource -> {
                 return CompletableFuture.<Optional<NativeImage>>supplyAsync(() -> {
-                    try (InputStream in = resource.getInputStream()) {
+                    try (InputStream in = resource.open()) {
                         return Optional.of(NativeImage.read(in));
                     } catch (IOException e) {
                         HDSkins.LOGGER.warn("Errored while reading image file ({}): {}.", res, e);
@@ -102,7 +85,7 @@ public class TextureLoader {
     }
 
     public interface Exclusion {
-        Exclusion NULL = (x, y) -> false;
+        Exclusion NULL = (_, _) -> false;
 
         boolean includes(int x, int y);
     }

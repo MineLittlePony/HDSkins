@@ -6,7 +6,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.TexturePayload;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 import java.io.*;
 import java.net.URL;
@@ -39,7 +39,7 @@ public class DynamicTextures {
         return getTextureMetadata(type).map(texture -> {
             Identifier id = HDSkins.id(String.format("dynamic/%s/%s", type.getId().getPath(), texture.getHash()));
             String uri = texture.getUrl();
-            return new Result(uri, HDPlayerSkinTextureDownloader.downloadAndRegisterTexture(id, createTempFile(texture.getHash()), uri, type).handle((u, throwable) -> {
+            return new Result(uri, HDPlayerSkinTextureDownloader.downloadAndRegisterTexture(id, createTempFile(texture.getHash()), uri, type).handle((u, _) -> {
                 if (u != null) {
                     loadCallback.onSkinAvailable(type, u, texture);
                 }
