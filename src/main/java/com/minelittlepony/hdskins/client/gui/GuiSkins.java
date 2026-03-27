@@ -8,6 +8,7 @@ import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.client.gui.element.Cycler;
 import com.minelittlepony.common.client.gui.element.Label;
 import com.minelittlepony.common.client.gui.element.Selector;
+import com.minelittlepony.common.client.gui.sprite.ISprite;
 import com.minelittlepony.common.client.gui.sprite.ItemStackSprite;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
@@ -26,10 +27,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.CubeMap;
-import net.minecraft.client.renderer.Panorama;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
-import net.minecraft.client.renderer.texture.CubeMapTexture;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -81,8 +79,6 @@ public class GuiSkins extends GameGui {
     }
 
     private final Identifier background = getBackground();
-    private final CubeMap cubemap = new CubeMap(background);
-    private final Panorama panorama = new Panorama();
 
     protected final DualCarouselWidget<?> previewer;
     protected final SkinUploader uploader;
@@ -120,8 +116,6 @@ public class GuiSkins extends GameGui {
                 typeSelector.setValue(previewer.getActiveSkinType());
             }
         });
-        // ensure faces are loaded
-        minecraft.getTextureManager().register(background, new CubeMapTexture(background));
     }
 
     protected DualCarouselWidget<?> createPreviewer() {
@@ -163,9 +157,10 @@ public class GuiSkins extends GameGui {
             }
 
             return new Style()
-                    .setIcon(Minecraft.getInstance().getResourceManager().getResource(type.icon()).isEmpty()
-                            ? new ItemStackSprite().setStack(type.iconStack().orElseThrow()) // TODO:
-                            : new TextureSprite().setTexture(type.icon()).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
+                    .setIcon(Minecraft.getInstance().getResourceManager().getResource(type.icon())
+                            .map(_ -> (ISprite)new TextureSprite().setTexture(type.icon()).setPosition(2, 2).setSize(16, 16).setTextureSize(16, 16))
+                            .or(() -> type.iconStack().map(icon -> new ItemStackSprite().setStack(icon)))
+                            .orElse(ISprite.EMPTY))
                     .setText(Component.translatable("hdskins.skin_type", Component.translatable(Util.makeDescriptionId("skin_type", type.getId()))))
                     .setTooltip(type.getId().toString(), 0, 10);
         })).setValue(previewer.getActiveSkinType())
@@ -263,7 +258,7 @@ public class GuiSkins extends GameGui {
             .getBounds();
 
         area = addButton(new Button(area.left - 19, area.top, 20, 20))
-            .onClick(_ -> minecraft.setScreen(new SettingsScreen(this, panorama)))
+            .onClick(_ -> minecraft.setScreen(new SettingsScreen(this, background)))
             .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip("options.title", 0, 10))
             .getBounds();
 
@@ -369,7 +364,8 @@ public class GuiSkins extends GameGui {
 
     @Override
     protected void extractPanorama(GuiGraphicsExtractor context, float tickDelta) {
-        panorama.extractRenderState(context, width, height, panoramaShouldSpin());
+        super.extractPanorama(context, tickDelta);
+        context.guiRenderState.panoramaRenderState.setData(RenderStateKeys.PANORAMA_TEXTURE_KEY, background);
     }
 
     @Override

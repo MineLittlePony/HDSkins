@@ -25,21 +25,21 @@ import com.minelittlepony.hdskins.server.Gateway;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.Panorama;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
 public class SettingsScreen extends GameGui {
 
     private final ScrollContainer content = new ScrollContainer();
 
-    private final Panorama panorama;
+    private final Identifier panoramaTexture;
 
     private final HDConfig config = HDSkins.getInstance().getConfig();
 
-    public SettingsScreen(@Nullable Screen parent, Panorama panorama) {
+    public SettingsScreen(@Nullable Screen parent, Identifier panoramaTexture) {
         super(Component.translatable("options.title"), parent);
-        this.panorama = panorama;
+        this.panoramaTexture = panoramaTexture;
 
         content.margin.setVertical(30);
         content.getContentPadding().setHorizontal(10);
@@ -147,7 +147,8 @@ public class SettingsScreen extends GameGui {
 
     @Override
     protected void extractPanorama(GuiGraphicsExtractor context, float delta) {
-        panorama.extractRenderState(context, width, height, panoramaShouldSpin());
+        super.extractPanorama(context, delta);
+        context.guiRenderState.panoramaRenderState.setData(RenderStateKeys.PANORAMA_TEXTURE_KEY, panoramaTexture);
     }
 
     @Override
