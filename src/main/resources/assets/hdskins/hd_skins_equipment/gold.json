@@ -1,5 +1,6 @@
 {
   "item": "minecraft:golden_helmet",
+  "asset_id": "minecraft:gold",
   "sound": "item.armor.equip_gold",
   "tooltip": "hdskins.equipment.gold",
   "equipment": {

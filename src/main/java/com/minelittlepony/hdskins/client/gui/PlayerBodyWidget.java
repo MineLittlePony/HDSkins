@@ -1,10 +1,13 @@
 package com.minelittlepony.hdskins.client.gui;
 
+import java.util.Optional;
+
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import com.minelittlepony.common.client.gui.dimension.Bounds;
+import com.minelittlepony.common.util.registry.ForwardingHolder;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.profile.SkinType;
 
@@ -12,6 +15,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -21,6 +26,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.WalkAnimationState;
 import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -70,16 +76,48 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
         playerState.attackArm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
     }
 
-    public void setHandStack(InteractionHand hand, ItemStackTemplate stack) {
+    public void setHandStack(InteractionHand hand, Optional<ItemStackTemplate> stack) {
         HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
         Minecraft.getInstance().getItemModelResolver().appendItemLayers(
                 arm == HumanoidArm.LEFT ? playerState.leftHandItemState : playerState.rightHandItemState,
-                stack.create(),
+                createStack(stack),
                 arm == HumanoidArm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
                 null,
                 null,
                 0
         );
+    }
+
+    public void setEquippedStack(EquipmentSlot slot, Optional<ItemStackTemplate> stack) {
+        switch (slot) {
+            case HEAD:
+                playerState.headEquipment = createStack(stack);
+                break;
+            case SADDLE:
+            case BODY:
+            case CHEST:
+                playerState.chestEquipment = createStack(stack);
+                break;
+            case FEET:
+                playerState.feetEquipment = createStack(stack);
+                break;
+            case LEGS:
+                playerState.legsEquipment = createStack(stack);
+                break;
+            case MAINHAND:
+                setHandStack(InteractionHand.MAIN_HAND, stack);
+                break;
+            case OFFHAND:
+                setHandStack(InteractionHand.OFF_HAND, stack);
+                break;
+        }
+    }
+
+    private ItemStack createStack(Optional<ItemStackTemplate> template) {
+        return template.map(t -> new ItemStack(ForwardingHolder.withComponents(t.typeHolder(), DataComponentMap.builder()
+                    .addAll(DataComponents.COMMON_ITEM_COMPONENTS)
+                    .set(DataComponents.ITEM_MODEL, t.item().unwrapKey().orElseThrow().identifier())
+                .build()), 1, t.components())).orElse(ItemStack.EMPTY);
     }
 
     @Override
@@ -89,7 +127,7 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
         playerState.skin = skins.getSkinTextureBundle();
 
         if ((type == SkinType.ELYTRA) != (playerState.headEquipment.getItem() == Items.ELYTRA)) {
-            playerState.headEquipment = (type == SkinType.ELYTRA ? Items.ELYTRA.getDefaultInstance() : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST).create());
+            setEquippedStack(EquipmentSlot.HEAD, (type == SkinType.ELYTRA ? Optional.of(new ItemStackTemplate(Items.ELYTRA)) : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
         }
 
         lastHandSwingProgress = playerState.ticksUsingItem;

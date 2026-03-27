@@ -1,5 +1,6 @@
 {
   "item": "minecraft:leather_helmet",
+  "asset_id": "minecraft:leather",
   "sound": "item.armor.equip_leather",
   "tooltip": "hdskins.equipment.leather",
   "equipment": {

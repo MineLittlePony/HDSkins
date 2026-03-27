@@ -1,0 +1,13 @@
+{
+  "item": "minecraft:copper_helmet",
+  "asset_id": "minecraft:copper",
+  "sound": "item.armor.equip_copper",
+  "tooltip": "hdskins.equipment.copper",
+  "equipment": {
+    "head": "minecraft:copper_helmet",
+    "chest": "minecraft:copper_chestplate",
+    "legs": "minecraft:copper_leggings",
+    "feet": "minecraft:copper_boots",
+    "mainhand": "minecraft:copper_sword"
+  }
+}

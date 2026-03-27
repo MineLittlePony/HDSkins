@@ -27,8 +27,6 @@ import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.properties.BedPart;
 
@@ -41,7 +39,6 @@ public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRend
     private static final BedRenderState BED_STATE = new BedRenderState() {{
         blockEntityType = BlockEntityType.BED;
         color = DyeColor.RED;
-        blockState = Blocks.RED_BED.defaultBlockState().setValue(BedBlock.PART, BedPart.FOOT).setValue(BedBlock.FACING, Direction.SOUTH);
         facing = Direction.WEST;
     }};
 

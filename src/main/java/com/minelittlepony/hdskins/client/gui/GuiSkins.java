@@ -35,7 +35,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
-
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

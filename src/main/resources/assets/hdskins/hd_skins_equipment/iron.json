@@ -1,5 +1,6 @@
 {
   "item": "minecraft:iron_helmet",
+  "asset_id": "minecraft:iron",
   "sound": "item.armor.equip_iron",
   "tooltip": "hdskins.equipment.iron",
   "equipment": {

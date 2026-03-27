@@ -1,5 +1,6 @@
 {
   "item": "minecraft:diamond_helmet",
+  "asset_id": "minecraft:diamond",
   "sound": "item.armor.equip_diamond",
   "tooltip": "hdskins.equipment.diamond",
   "equipment": {

@@ -1,5 +1,6 @@
 {
   "item": "minecraft:netherite_helmet",
+  "asset_id": "minecraft:netherite",
   "sound": "item.armor.equip_netherite",
   "tooltip": "hdskins.equipment.netherite",
   "equipment": {
