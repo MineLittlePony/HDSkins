@@ -47,7 +47,7 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-    implementation "com.ptsmods:devlogin:3.4.1"
+    //implementation "com.ptsmods:devlogin:3.5"
 
     api "net.fabricmc:fabric-loader:${project.loader_version}"
     api "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
