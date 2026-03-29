@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins.client.gui.player.skins;
 
+import com.google.common.base.MoreObjects;
 import com.minelittlepony.common.client.gui.sprite.ISprite;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
@@ -102,14 +103,23 @@ public abstract class PlayerSkins<T extends PlayerSkins.PlayerSkin> implements C
     public net.minecraft.world.entity.player.PlayerSkin getSkinTextureBundle() {
         ClientAsset.Texture skinId = get(SkinType.SKIN).getAsset();
         return net.minecraft.world.entity.player.PlayerSkin.insecure(
-                getPosture().getActiveSkinType() == SkinType.SKIN ? skinId : getGreyScaleSkin(skinId),
-                getPosture().getActiveSkinType() == SkinType.CAPE ? get(SkinType.CAPE).getAsset() : null,
-                getPosture().getActiveSkinType() == SkinType.ELYTRA ? get(SkinType.ELYTRA).getAsset() : null,
+                getGreyScaleSkinIfActive(SkinType.SKIN, skinId),
+                getGreyScaleSkinIfActive(SkinType.CAPE, get(SkinType.CAPE).getAsset()),
+                getPosture().getActiveSkinType() == SkinType.ELYTRA ? MoreObjects.firstNonNull(get(SkinType.CAPE).getAsset(), get(SkinType.ELYTRA).getAsset()) : null,
                 VanillaModels.isSlim(getSkinVariant()) ? PlayerModelType.SLIM : PlayerModelType.WIDE
         );
     }
 
-    private ClientAsset.Texture getGreyScaleSkin(ClientAsset.Texture asset) {
+    @Nullable
+    private ClientAsset.Texture getGreyScaleSkinIfActive(SkinType type, @Nullable ClientAsset.Texture asset) {
+        return getPosture().getActiveSkinType() == type ? asset : getGreyScaleSkin(asset);
+    }
+
+    @Nullable
+    private ClientAsset.Texture getGreyScaleSkin(@Nullable ClientAsset.Texture asset) {
+        if (asset == null) {
+            return null;
+        }
         Identifier newPath = NativeImageFilters.REDUCE_ALPHA.load(asset.texturePath(), asset.texturePath(), getPosture().getExclusion());
         if (newPath.equals(asset.texturePath())) {
             return asset;
