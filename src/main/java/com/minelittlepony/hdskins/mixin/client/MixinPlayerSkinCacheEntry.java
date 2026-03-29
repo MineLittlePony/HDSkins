@@ -3,9 +3,7 @@ package com.minelittlepony.hdskins.mixin.client;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,11 +23,6 @@ import net.minecraft.world.entity.player.PlayerSkin;
 
 @Mixin(PlayerSkinRenderCache.RenderInfo.class)
 abstract class MixinPlayerSkinCacheEntry implements ClientPlayerInfo {
-    @Shadow
-    private @Final GameProfile profile;
-    @Shadow
-    private @Final PlayerSkin textures;
-
     @Nullable
     private Supplier<PlayerSkins> dynamicSkins;
 
