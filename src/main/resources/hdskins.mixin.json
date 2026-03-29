@@ -6,7 +6,8 @@
   "mixins": [],
   "client": [
     "client.MixinPlayerSkinCacheEntry",
-    "client.MixinPlayerSkinProvider"
+    "client.MixinPlayerSkinProvider",
+    "client.MixinCapeLayer"
   ],
   "injectors": {
     "defaultRequire": 1
