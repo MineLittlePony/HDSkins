@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
@@ -91,14 +92,18 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
 
     public void setHandStack(InteractionHand hand, Optional<ItemStackTemplate> stack) {
         HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
-        Minecraft.getInstance().getItemModelResolver().appendItemLayers(
-                arm == HumanoidArm.LEFT ? playerState.leftHandItemState : playerState.rightHandItemState,
-                createStack(stack),
-                arm == HumanoidArm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
-                null,
-                null,
-                0
-        );
+        ItemStackRenderState state = arm == HumanoidArm.LEFT ? playerState.leftHandItemState : playerState.rightHandItemState;
+        state.clear();
+        if (!stack.isEmpty()) {
+            Minecraft.getInstance().getItemModelResolver().appendItemLayers(
+                    state,
+                    createStack(stack),
+                    arm == HumanoidArm.LEFT ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                    null,
+                    null,
+                    0
+            );
+        }
     }
 
     public void setEquippedStack(EquipmentSlot slot, Optional<ItemStackTemplate> stack) {

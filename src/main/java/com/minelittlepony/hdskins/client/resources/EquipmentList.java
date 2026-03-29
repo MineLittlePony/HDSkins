@@ -70,7 +70,7 @@ public class EquipmentList extends SimpleJsonResourceReloadListener<EquipmentLis
             Optional<SoundEvent> sound,
             String tooltip
         ) {
-        private static final EquipmentSet EMPTY = new EquipmentSet(Map.of(), EquipmentAssets.CHAINMAIL, Items.PLAYER_HEAD, null, "empty");
+        private static final EquipmentSet EMPTY = new EquipmentSet(Map.of(), EquipmentAssets.CHAINMAIL, Items.PLAYER_HEAD, Optional.empty(), "hdskins.equipment.empty");
         public static final Codec<EquipmentSet> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.unboundedMap(EquipmentSlot.CODEC, BuiltInRegistries.ITEM.byNameCodec()).fieldOf("equipment").forGetter(EquipmentSet::equipment),
                 ResourceKey.codec(EquipmentAssets.ROOT_ID).fieldOf("asset_id").forGetter(EquipmentSet::assetId),
@@ -81,7 +81,7 @@ public class EquipmentList extends SimpleJsonResourceReloadListener<EquipmentLis
 
         public void apply(PlayerBodyWidget<?> state) {
             EquipmentSlot.VALUES.forEach(slot -> {
-                if (slot.getType() == Type.HUMANOID_ARMOR) {
+                if (slot.getType() == Type.HUMANOID_ARMOR || slot.getType() == Type.HAND) {
                     state.setEquippedStack(slot, getStack(slot));
                 }
             });
