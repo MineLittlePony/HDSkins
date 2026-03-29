@@ -204,6 +204,7 @@ public abstract class DualCarouselWidget<S extends AvatarRenderState> implements
 
         if (playerHit && !listHit && click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             screen.setDragging(true);
+            screen.clearFocus();
         }
 
         return listHit || playerHit;
