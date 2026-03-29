@@ -20,7 +20,7 @@ public interface NativeImageFilters {
         float g = ARGB.green(color) / 255F;
         float b = ARGB.blue(color) / 255F;
         int brightness = (int)((0.2126F * r + 0.7152F * g + 0.0722F * b) * 255);
-        return ARGB.colorFromFloat(a, brightness, brightness, brightness);
+        return ARGB.color(a, brightness, brightness, brightness);
     });
     NativeImageFilters REDUCE_ALPHA = create("default_player_skin_half_alpha", color -> {
         return ARGB.color(Math.min(ARGB.alpha(color), 0x20), color);
