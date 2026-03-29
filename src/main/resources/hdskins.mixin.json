@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [],
   "client": [
+    "client.MixinGuiRenderer",
     "client.MixinPlayerSkinCacheEntry",
     "client.MixinPlayerSkinProvider",
     "client.MixinCapeLayer"
