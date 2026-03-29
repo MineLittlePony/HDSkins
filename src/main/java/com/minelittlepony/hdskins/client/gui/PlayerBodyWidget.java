@@ -205,19 +205,19 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
             offset.y += 0.7F;
             offset.x++;
         }
+
+        playerState.swimAmount = playerState.isVisuallySwimming ? 1 : 0;
+
         if (playerState.isVisuallySwimming) {
-            playerState.flyingYRot = 0.7F;
             if (velocity.x < 100) {
                 velocity.x += 100;
             }
 
             offset.y += 0.5F;
         } else if (playerState.isAutoSpinAttack) {
-            playerState.flyingYRot = 0;
             offset.y += 1;
             offset.z -= 0.5F;
         } else {
-            playerState.flyingYRot = 0;
             if (velocity.x >= 100) {
                 velocity.x -= 100;
             }
