@@ -16,9 +16,12 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -29,9 +32,19 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.phys.Vec3;
 
 public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.Element {
+    private static final Optional<ItemStackTemplate> ELYTRA = Optional.of(new ItemStackTemplate(Items.ELYTRA, DataComponentPatch.builder()
+            .set(DataComponents.GLIDER, Unit.INSTANCE)
+            .set(
+                DataComponents.EQUIPPABLE,
+                Equippable.builder(EquipmentSlot.CHEST).setEquipSound(SoundEvents.ARMOR_EQUIP_ELYTRA).setAsset(EquipmentAssets.ELYTRA).build()
+            )
+            .build()));
+
     protected final Vector3f position = new Vector3f();
 
     private final Vector3d offset = new Vector3d();
@@ -114,7 +127,7 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
     }
 
     private ItemStack createStack(Optional<ItemStackTemplate> template) {
-        return template.map(t -> new ItemStack(ForwardingHolder.withComponents(t.typeHolder(), DataComponentMap.builder()
+        return template.map(t -> t.typeHolder().areComponentsBound() ? t.create() : new ItemStack(ForwardingHolder.withComponents(t.typeHolder(), DataComponentMap.builder()
                     .addAll(DataComponents.COMMON_ITEM_COMPONENTS)
                     .set(DataComponents.ITEM_MODEL, t.item().unwrapKey().orElseThrow().identifier())
                 .build()), 1, t.components())).orElse(ItemStack.EMPTY);
@@ -126,8 +139,8 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
 
         playerState.skin = skins.getSkinTextureBundle();
 
-        if ((type == SkinType.ELYTRA) != (playerState.headEquipment.getItem() == Items.ELYTRA)) {
-            setEquippedStack(EquipmentSlot.HEAD, (type == SkinType.ELYTRA ? Optional.of(new ItemStackTemplate(Items.ELYTRA)) : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
+        if ((type == SkinType.ELYTRA) != (playerState.chestEquipment.getItem() == Items.ELYTRA)) {
+            setEquippedStack(EquipmentSlot.CHEST, (type == SkinType.ELYTRA ? ELYTRA : skins.getPosture().getEquipment().getStack(EquipmentSlot.CHEST)));
         }
 
         lastHandSwingProgress = playerState.ticksUsingItem;
