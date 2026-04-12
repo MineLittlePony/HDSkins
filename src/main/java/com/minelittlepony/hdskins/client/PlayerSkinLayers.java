@@ -24,8 +24,8 @@ public record PlayerSkinLayers (
         TIMESTAMP.set(System.currentTimeMillis());
     }
 
-    public boolean hasChanged() {
-        return vanilla.dynamic().hasChanged() || hd.dynamic().hasChanged() || combined.dynamic().hasChanged();
+    public boolean isNewer(long age) {
+        return vanilla.dynamic().isNewer(age) || hd.dynamic().isNewer(age) || combined.dynamic().isNewer(age);
     }
 
     public static PlayerSkinLayers of(GameProfile profile, Supplier<PlayerSkin> vanillaSkins) {
@@ -40,7 +40,7 @@ public record PlayerSkinLayers (
 
     public record Layer (DynamicSkinTextures dynamic, Memoize<PlayerSkin> resolved) {
         public Layer(DynamicSkinTextures dynamic) {
-            this(dynamic, Memoize.withExpiration(() -> DynamicSkinTextures.toSkinTextures(dynamic)));
+            this(dynamic, Memoize.withExpirationPredicate(() -> DynamicSkinTextures.toSkinTextures(dynamic), dynamic::isNewer));
         }
 
         public Set<Identifier> getProvidedSkinTypes() {
@@ -56,10 +56,7 @@ public record PlayerSkinLayers (
         }
 
         public PlayerSkin getSkinTextures() {
-            if (dynamic().hasChanged()) {
-                resolved.expireNow();
-            }
-            return resolved.get();
+            return resolved().get();
         }
     }
 }

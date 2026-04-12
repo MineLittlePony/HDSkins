@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
@@ -37,27 +36,34 @@ public class SkinLoader {
 
     public DynamicSkinTextures get(GameProfile profile) {
         return new DynamicSkinTextures() {
-            private final AtomicReference<ProvidedSkins> value = new AtomicReference<>(load(profile).getNow(ProvidedSkins.EMPTY));
+            private long cacheTime = System.currentTimeMillis();
+            private ProvidedSkins value = ProvidedSkins.EMPTY;
+
+            {
+                load(profile).thenAccept(result -> {
+                    value = result;
+                    cacheTime = System.currentTimeMillis();
+                });
+            }
 
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
-                return value.get().getProvidedSkinTypes();
+                return value.getProvidedSkinTypes();
             }
 
             @Override
             public Optional<ClientAsset.Texture> getSkin(SkinType type) {
-                return value.get().getSkin(type);
+                return value.getSkin(type);
             }
 
             @Override
             public Optional<String> getModel() {
-                return value.get().getModel();
+                return value.getModel();
             }
 
             @Override
-            public boolean hasChanged() {
-                final ProvidedSkins value = load(profile).getNow(ProvidedSkins.EMPTY);
-                return this.value.getAndSet(value) != value;
+            public boolean isNewer(long age) {
+                return cacheTime > age;
             }
         };
     }
@@ -112,7 +118,7 @@ public class SkinLoader {
         }
 
         @Override
-        public boolean hasChanged() {
+        public boolean isNewer(long age) {
             return false;
         }
     }

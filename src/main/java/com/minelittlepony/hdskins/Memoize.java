@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongPredicate;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
@@ -73,6 +74,28 @@ public interface Memoize<T> extends Supplier<T> {
             @Override
             public void expireNow() {
                 value = Suppliers.memoizeWithExpiration(supplier::get, 1, TimeUnit.SECONDS)::get;
+            }
+        };
+    }
+
+    static <T> Memoize<T> withExpirationPredicate(Supplier<T> supplier, LongPredicate expirationPredicate) {
+        return new Memoize<>() {
+            private long cacheTime = System.currentTimeMillis();
+            @Nullable
+            private final Memoize<T> basic = basic(supplier);
+            @Nullable
+            @Override
+            public T get() {
+                if (expirationPredicate.test(cacheTime)) {
+                    expireNow();
+                }
+                return basic.get();
+            }
+
+            @Override
+            public void expireNow() {
+                cacheTime = System.currentTimeMillis();
+                basic.expireNow();
             }
         };
     }

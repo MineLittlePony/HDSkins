@@ -20,6 +20,7 @@ public final class HDSkinCacheEntry implements ClientPlayerInfo {
     private final ClientPlayerInfo dynamicSkins;
     private final PlayerSkin.Patch patch;
 
+    private long cacheTime = System.currentTimeMillis();
     private PlayerSkin vanillaTextures;
     @Nullable
     private PlayerSkin cachedTextures;
@@ -45,8 +46,9 @@ public final class HDSkinCacheEntry implements ClientPlayerInfo {
         if (!this.vanillaTextures.equals(vanillaTextures)) {
             this.vanillaTextures = vanillaTextures;
         }
-        if (cachedTextures == null || getSkins().layers().hasChanged()) {
+        if (cachedTextures == null || getSkins().layers().isNewer(cacheTime)) {
             cachedTextures = getSkins().sorted().getSkinTextures();
+            cacheTime = System.currentTimeMillis();
             this.textures = cachedTextures.with(patch);
             renderType.expireNow();
             textureView.expireNow();

@@ -71,8 +71,8 @@ public class PrioritySorter {
             }
 
             @Override
-            public boolean hasChanged() {
-                return playerSkins.hasChanged();
+            public boolean isNewer(long age) {
+                return playerSkins.isNewer(age);
             }
         };
     }

@@ -99,7 +99,6 @@ public class SkinResourceManager implements PreparableReloadListener {
 
     public DynamicSkinTextures getSkinTextures(GameProfile profile) {
         return new DynamicSkinTextures() {
-            private long initTime = System.currentTimeMillis();
             @Override
             public Set<Identifier> getProvidedSkinTypes() {
                 return Set.of();
@@ -116,12 +115,8 @@ public class SkinResourceManager implements PreparableReloadListener {
             }
 
             @Override
-            public boolean hasChanged() {
-                if (initTime < lastLoadTime) {
-                    initTime = System.currentTimeMillis();
-                    return true;
-                }
-                return false;
+            public boolean isNewer(long age) {
+                return age < lastLoadTime;
             }
         };
     }

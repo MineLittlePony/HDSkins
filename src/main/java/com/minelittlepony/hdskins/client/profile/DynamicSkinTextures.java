@@ -35,7 +35,7 @@ public interface DynamicSkinTextures {
 
     Optional<String> getModel();
 
-    boolean hasChanged();
+    boolean isNewer(long age);
 
     static PlayerSkin toSkinTextures(DynamicSkinTextures dynamic) {
         return new PlayerSkin(
@@ -65,7 +65,7 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public boolean hasChanged() {
+            public boolean isNewer(long age) {
                 return false;
             }
         };
@@ -93,8 +93,8 @@ public interface DynamicSkinTextures {
             }
 
             @Override
-            public boolean hasChanged() {
-                return a.hasChanged() || b.hasChanged();
+            public boolean isNewer(long age) {
+                return a.isNewer(age) || b.isNewer(age);
             }
         };
     }
