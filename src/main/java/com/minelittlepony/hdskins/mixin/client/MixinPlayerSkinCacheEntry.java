@@ -1,8 +1,5 @@
 package com.minelittlepony.hdskins.mixin.client;
 
-import java.util.function.Supplier;
-
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,9 +20,6 @@ import net.minecraft.world.entity.player.PlayerSkin;
 
 @Mixin(PlayerSkinRenderCache.RenderInfo.class)
 abstract class MixinPlayerSkinCacheEntry implements ClientPlayerInfo {
-    @Nullable
-    private Supplier<PlayerSkins> dynamicSkins;
-
     @Unique
     private HDSkinCacheEntry hdSkinsCacheEntry;
 
