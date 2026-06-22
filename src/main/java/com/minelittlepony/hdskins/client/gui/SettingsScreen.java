@@ -70,6 +70,11 @@ public class SettingsScreen extends GameGui {
             .setTextFormat(slider -> Component.translatable("hdskins.settings.main_screen_button", slider.getValue().name()))
             .getStyle().setText(Component.translatable("hdskins.settings.main_screen_button", config.pantsButtonVisibility.get().name()));
 
+        content.addButton(new EnumSlider<>(LEFT, row += 25, config.pantsButtonLocation))
+            .onChange(config.pantsButtonLocation)
+            .setTextFormat(slider -> Component.translatable("hdskins.settings.main_screen_button_location", slider.getValue().name()))
+            .getStyle().setText(Component.translatable("hdskins.settings.main_screen_button_location", config.pantsButtonLocation.get().name()));
+
         content.addButton(new Button(LEFT, row += 25, 200, 20))
             .onClick(_ -> {
                 try {
@@ -89,8 +94,8 @@ public class SettingsScreen extends GameGui {
             .onChange(config.useNativeFileChooser)
             .getStyle().setText("hdskins.compatibility.native_file_picker");
         content.addButton(new Toggle(LEFT, row += 20, config.enableSandboxingCheck))
-        .onChange(config.enableSandboxingCheck)
-        .getStyle().setText("hdskins.compatibility.sandboxing");
+            .onChange(config.enableSandboxingCheck)
+            .getStyle().setText("hdskins.compatibility.sandboxing");
 
         content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings.category.experiments");
 

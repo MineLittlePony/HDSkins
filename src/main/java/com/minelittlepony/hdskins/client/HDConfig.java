@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import com.minelittlepony.common.client.gui.VisibilityMode;
 import com.minelittlepony.common.util.settings.*;
+import com.minelittlepony.hdskins.client.gui.ButtonLocation;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileSystemUtil;
 
 public class HDConfig extends Config {
@@ -17,6 +18,13 @@ public class HDConfig extends Config {
             .addComment("AUTO - only show when Mod Menu is not installed")
             .addComment("ON (default) - always show")
             .addComment("OFF - never show");
+    public final Setting<ButtonLocation> pantsButtonLocation = value("gui", "mainMenuButtonLocation", ButtonLocation.ICON)
+            .addComment("Where to put the hd skins uploader button on the main menu")
+            .addComment("ICON (default) - next to the accessibility button")
+            .addComment("TOP_LEFT")
+            .addComment("TOP_RIGHT")
+            .addComment("BOTTOM_LEFT")
+            .addComment("BOTTOM_RIGHT");
 
     public final Setting<Boolean> useBatchLoading = value("experiments", "useBatchLoading", false)
             .addComment("When enabled, player skins will be requested from the server in batches (experimental)");
