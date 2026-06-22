@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegis
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.resources.Identifier;
@@ -85,7 +86,7 @@ public final class HDSkins implements ClientModInitializer {
     }
 
     private void onScreenInit(Screen screen, ScreenInitCallback.ButtonList buttons) {
-        if (!(screen instanceof TitleScreen)) {
+        if (!(screen instanceof TitleScreen || screen instanceof PauseScreen)) {
             return;
         }
         VisibilityMode visibility = config.pantsButtonVisibility.get();
