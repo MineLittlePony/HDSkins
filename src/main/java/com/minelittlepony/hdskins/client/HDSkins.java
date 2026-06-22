@@ -20,7 +20,6 @@ import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.components.FriendsButton;
 import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -121,8 +120,7 @@ public final class HDSkins implements ClientModInitializer {
         return switch (location) {
             case ICON -> getEndOfListPlacement(screen)
                 .orElseGet(() -> getDefaultLocation(screen));
-            case REPLACE_FRIENDS -> getReplacing(screen, child -> child instanceof FriendsButton)
-                .or(() -> getEndOfListPlacement(screen))
+            case REPLACE_FRIENDS -> getEndOfListPlacement(screen)
                 .orElse(getDefaultLocation(screen));
             case REPLACE_LANGUAGE -> getReplacing(screen, child -> child instanceof SpriteIconButton && child.getMessage().equals(Component.translatable("options.language")))
                 .or(() -> getEndOfListPlacement(screen))
@@ -148,7 +146,7 @@ public final class HDSkins implements ClientModInitializer {
 
     private Optional<Vec3i> getEndOfListPlacement(Screen screen) {
         return screen.children().stream()
-                .filter(child -> child instanceof FriendsButton).map(FriendsButton.class::cast)
+                .filter(child -> child instanceof SpriteIconButton).map(SpriteIconButton.class::cast)
                 .findFirst()
                 .map(friendsButton -> {
             var friendButtons = screen.children().stream()
@@ -157,10 +155,6 @@ public final class HDSkins implements ClientModInitializer {
                             && sib.getHeight() == friendsButton.getHeight()
                             && sib.getY() == friendsButton.getY())
                     .map(AbstractButton.class::cast)
-                    .map(button -> {
-                        button.setX(button.getX() - 10);
-                        return button;
-                    })
                     .sorted(Comparator.comparing(AbstractButton::getX))
                     .toList();
 
