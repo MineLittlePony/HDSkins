@@ -72,6 +72,7 @@
   "hdskins.settings.category.compatibility": "Compatibility",
   "hdskins.settings.category.servers": "Skin Server List",
   "hdskins.settings.main_screen_button": "Main Screen Button: %s",
+  "hdskins.settings.main_screen_button_location": "Main Screen Button Location: %s",
   "hdskins.compatibility.native_file_picker": "Use Native File Picker",
   "hdskins.compatibility.sandboxing": "Sandboxing (LINUX :: Flatpak)",
   "hdskins.experiments.batches": "Fetch skins in batches",
