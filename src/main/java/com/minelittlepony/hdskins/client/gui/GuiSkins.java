@@ -258,7 +258,7 @@ public class GuiSkins extends GameGui {
             .getBounds();
 
         area = addButton(new Button(area.left - 19, area.top, 20, 20))
-            .onClick(_ -> minecraft.setScreen(new SettingsScreen(this, background)))
+            .onClick(_ -> minecraft.gui.setScreen(new SettingsScreen(this, background)))
             .styled(s -> s.setIcon(createIcon(80, 0)).setTooltip("options.title", 0, 10))
             .getBounds();
 

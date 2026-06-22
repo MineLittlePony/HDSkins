@@ -162,7 +162,7 @@ public class SkinChooser implements CarouselStatusLabel {
                     try (InputStream response = texture.texture().openStream()) {
                         Files.copy(response, file);
 
-                        Minecraft.getInstance().setScreen(new ConfirmationScreen(Minecraft.getInstance().screen, Component.translatable("hdskins.save.completed"), () -> {
+                        Minecraft.getInstance().gui.setScreen(new ConfirmationScreen(Minecraft.getInstance().gui.screen(), Component.translatable("hdskins.save.completed"), () -> {
                             Util.getPlatform().openPath(file);
                         }));
                     } catch (IOException e) {

@@ -24,7 +24,7 @@ import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
@@ -68,7 +68,7 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
     public PlayerBodyWidget(PlayerSkins<?> skins, S playerState) {
         this.skins = skins;
         this.playerState = playerState;
-        this.playerState.entityType = EntityType.PLAYER;
+        this.playerState.entityType = EntityTypes.PLAYER;
         this.playerState.mainArm = Minecraft.getInstance().options.mainHand().get();
 
         if (Minecraft.getInstance().player != null) {

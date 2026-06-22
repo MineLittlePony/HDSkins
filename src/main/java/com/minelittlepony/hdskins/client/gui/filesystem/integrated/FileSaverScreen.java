@@ -43,7 +43,7 @@ public class FileSaverScreen extends FileSelectorScreen {
                     currentDirectory = Paths.get(textInput.getValue());
 
                     if (Files.exists(currentDirectory)) {
-                        minecraft.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
+                        minecraft.gui.setScreen(new ConfirmationScreen(this, SAVE_OVERWRITE, () -> {
                             navigateTo(currentDirectory);
                         }));
                     } else {
@@ -92,7 +92,7 @@ public class FileSaverScreen extends FileSelectorScreen {
         Path name = fileLocation.getFileName();
 
         if (parent != null && name != null && !Files.isWritable(parent)) {
-            minecraft.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
+            minecraft.gui.setScreen(new ConfirmationScreen(this, SAVE_READONLY, () -> {
                 onDirectorySelected(GamePaths.getGameDirectory().resolve(name));
             }));
             return;

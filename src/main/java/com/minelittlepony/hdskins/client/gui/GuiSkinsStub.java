@@ -13,7 +13,7 @@ public class GuiSkinsStub extends Screen {
     private final Screen child;
 
     public GuiSkinsStub() {
-        this(Minecraft.getInstance().screen);
+        this(Minecraft.getInstance().gui.screen());
     }
 
     public GuiSkinsStub(Screen parent) {
@@ -28,7 +28,7 @@ public class GuiSkinsStub extends Screen {
 
     @Override
     public void tick() {
-        Minecraft.getInstance().setScreen(child);
+        Minecraft.getInstance().gui.setScreen(child);
     }
 
 }

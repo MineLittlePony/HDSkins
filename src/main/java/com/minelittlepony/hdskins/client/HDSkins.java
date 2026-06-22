@@ -78,7 +78,7 @@ public final class HDSkins implements ClientModInitializer {
     }
 
     private void onTick(Minecraft client) {
-        if (configDirty && client.screen instanceof SettingsScreen screen) {
+        if (configDirty && client.gui.screen() instanceof SettingsScreen screen) {
             screen.init(screen.width, screen.height);
         }
         configDirty = false;
@@ -93,7 +93,7 @@ public final class HDSkins implements ClientModInitializer {
             return;
         }
         Button button = buttons.addButton(new Button(screen.width - 50, screen.height - 50, 20, 20))
-            .onClick(_ -> Minecraft.getInstance().setScreen(GuiSkins.create(screen, HDSkinsServer.getInstance().getServers())));
+            .onClick(_ -> Minecraft.getInstance().gui.setScreen(GuiSkins.create(screen, HDSkinsServer.getInstance().getServers())));
         button.getStyle()
                 .setIcon(new ItemStackTemplate(Items.LEATHER_LEGGINGS), 0x3c5dcb)
                 .setTooltip("hdskins.manager", 0, 10);

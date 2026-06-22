@@ -13,37 +13,28 @@ import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegis
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
-import net.minecraft.client.renderer.SubmitNodeStorage;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.client.renderer.blockentity.state.BedRenderState;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.MovingBlockRenderState;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.BoatRenderState;
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BedPart;
 
 public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRenderer<PlayerPreviewSpecialGuiElementRenderer.Element> {
     public static final Logger LOGGER = LogManager.getLogger();
     private static final BoatRenderState BOAT_STATE = new BoatRenderState() {{
-        entityType = EntityType.OAK_BOAT;
+        entityType = EntityTypes.OAK_BOAT;
         lightCoords = LightCoordsUtil.FULL_BRIGHT;
-    }};
-    private static final BedRenderState BED_STATE = new BedRenderState() {{
-        blockEntityType = BlockEntityType.BED;
-        color = DyeColor.RED;
-        facing = Direction.WEST;
     }};
 
     public PlayerPreviewSpecialGuiElementRenderer(PictureInPictureRendererRegistry.Context context) {
-        super(context.bufferSource());
     }
 
     @Override
@@ -57,13 +48,10 @@ public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRend
     }
 
     @Override
-    protected void renderToTexture(Element state, PoseStack stack) {
-        Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ENTITY_IN_UI);
-        FeatureRenderDispatcher renderDispatcher = Minecraft.getInstance().gameRenderer.getFeatureRenderDispatcher();
+    protected void renderToTexture(Element state, PoseStack stack, SubmitNodeCollector queue) {
+        Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ENTITY_IN_UI);
         CameraRenderState camera = new CameraRenderState();
-        BlockEntityRenderDispatcher blocks = Minecraft.getInstance().getBlockEntityRenderDispatcher();
         EntityRenderDispatcher entities = Minecraft.getInstance().getEntityRenderDispatcher();
-        SubmitNodeStorage queue = renderDispatcher.getSubmitNodeStorage();
 
         Vector3f pos = state.translation();
 
@@ -77,21 +65,20 @@ public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRend
             if (state.state.hasPose(Pose.SLEEPING)) {
                 matrices.pushPose();
                 matrices.translate(0, -1.22, -0.5);
-                BED_STATE.part = BedPart.FOOT;
-                BED_STATE.lightCoords = LightCoordsUtil.FULL_BRIGHT;
-                BED_STATE.color = DyeColor.RED;
 
                 try {
-                    blocks.submit(BED_STATE, matrices, queue, camera);
+                    var blockState = new MovingBlockRenderState();
+                    blockState.blockState = Blocks.BED.red().defaultBlockState().setValue(BedBlock.PART, BedPart.FOOT);
+                    queue.submitMovingBlock(stack, blockState, 0);
                 } catch (Throwable t) {
                     handleError("bed 1", t);
                 }
 
-                BED_STATE.part = BedPart.HEAD;
                 matrices.translate(-1, 0, 0);
 
                 try {
-                    blocks.submit(BED_STATE, matrices, queue, camera);
+                    var blockState = new MovingBlockRenderState();
+                    blockState.blockState = Blocks.BED.red().defaultBlockState().setValue(BedBlock.PART, BedPart.HEAD);
                 } catch (Throwable t) {
                     handleError("bed 2", t);
                 }
@@ -117,8 +104,6 @@ public class PlayerPreviewSpecialGuiElementRenderer extends PictureInPictureRend
             }
 
             matrices.popPose();
-
-            renderDispatcher.renderAllFeatures();
         } catch (Throwable t) {
             handleError("root", t);
         }
