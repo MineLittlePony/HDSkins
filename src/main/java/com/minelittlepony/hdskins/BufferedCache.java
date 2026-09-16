@@ -11,19 +11,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import com.google.common.cache.LoadingCache;
-
 import net.minecraft.util.Util;
 
 public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
+    private static final long MAX_EXECUTOR_DELAY = 10_000 /*10s*/;
+    private static final long MIN_EXECUTOR_DELAY = 50 /*50ms*/;
+
     private final Executor executor = Util.nonCriticalIoPool();
-    private final Executor delayedExecutor = CompletableFuture.delayedExecutor(1, TimeUnit.MILLISECONDS, executor);
+    private Executor delayedExecutor;
 
     private final AtomicReference<Function<K, CompletableFuture<V>>> activeBatch = new AtomicReference<>(null);
 
     private final LoadingCache<K, CompletableFuture<V>> cache;
 
-    public BufferedCache(Function<Collection<K>, Map<K, V>> loadFunction) {
-        cache = Memoize.createAsyncLoadingCache(15, k -> {
+    public BufferedCache(long tickDelay, Function<Collection<K>, Map<K, V>> loadFunction) {
+        setLoadDelay(tickDelay);
+        cache = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, k -> {
             return this.activeBatch.updateAndGet(previous -> {
                 if (previous == null) {
                     Set<K> keys = new HashSet<>();
@@ -35,6 +38,10 @@ public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
                 return previous;
             }).apply(k);
         });
+    }
+
+    public void setLoadDelay(long ticks) {
+        delayedExecutor = CompletableFuture.delayedExecutor(Math.clamp(ticks * MIN_EXECUTOR_DELAY, MIN_EXECUTOR_DELAY, MAX_EXECUTOR_DELAY), TimeUnit.MILLISECONDS, executor);
     }
 
     public void invalidateAll() {

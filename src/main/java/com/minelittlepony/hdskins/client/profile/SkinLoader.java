@@ -23,8 +23,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
 public class SkinLoader {
-    private final LoadingCache<GameProfile, CompletableFuture<ProvidedSkins>> cache = Memoize.createAsyncLoadingCache(15, profile -> {
-        if (HDSkins.getInstance().getConfig().useBatchLoading.get()) {
+    private final LoadingCache<GameProfile, CompletableFuture<ProvidedSkins>> cache = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, profile -> {
+        if (HDSkins.getInstance().getConfig().skinBatching.get() > 0) {
             return HDSkinsServer.getInstance().fillProfile(profile).thenComposeAsync(this::fetchTextures, Minecraft.getInstance());
         }
 
