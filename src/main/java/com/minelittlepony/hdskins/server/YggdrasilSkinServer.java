@@ -19,8 +19,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.InsecurePublicKeyException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.yggdrasil.ProfileResult;
+import com.mojang.authlib.minecraft.SessionService;
+import com.mojang.authlib.services.ProfileResult;
 
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -80,7 +80,7 @@ public class YggdrasilSkinServer implements SkinServer {
 
     @Override
     public TexturePayload loadSkins(GameProfile profile) throws IOException, AuthenticationException {
-        MinecraftSessionService service = HDSkinsServer.getInstance().getSessionService();
+        SessionService service = HDSkinsServer.getInstance().getSessionService();
 
         @Nullable
         ProfileResult result = service.fetchProfile(profile.id(), requireSecure);

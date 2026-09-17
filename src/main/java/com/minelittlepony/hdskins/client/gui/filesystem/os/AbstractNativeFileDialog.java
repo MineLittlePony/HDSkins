@@ -8,14 +8,9 @@ import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 abstract class AbstractNativeFileDialog implements FileDialog {
-    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
-
     protected Path currentDirectory = HDSkins.getInstance().getConfig().lastChosenFile.get();
 
     @Nullable
@@ -46,19 +41,11 @@ abstract class AbstractNativeFileDialog implements FileDialog {
     }
 
     @Nullable
-    protected abstract String runFileDialog();
+    protected abstract CompletableFuture<@Nullable Path> runFileDialog();
 
     @Override
     public FileDialog launch() {
-        CompletableFuture.supplyAsync(() -> {
-            var file = runFileDialog();
-            if (file == null) {
-                return null;
-            }
-            return Paths.get(file);
-        }, EXECUTOR).thenAcceptAsync(result -> {
-            callback.onDialogClosed(result, true);
-        }, Minecraft.getInstance());
+        runFileDialog().thenAcceptAsync(result -> callback.onDialogClosed(result, true), Minecraft.getInstance());
         return this;
     }
 }

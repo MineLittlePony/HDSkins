@@ -21,13 +21,13 @@ import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.hdskins.server.Gateway;
+import com.mojang.blaze3d.Blaze3D;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
 
 public class SettingsScreen extends GameGui {
 
@@ -80,7 +80,7 @@ public class SettingsScreen extends GameGui {
                 try {
                     Path path = GamePaths.getAssetsDirectory().resolve("hd");
                     Files.createDirectories(path);
-                    Util.getPlatform().openPath(path);
+                    Blaze3D.openPath(path);
                 } catch (IOException e) {
                     HDSkins.LOGGER.error("Could not create cache folder", e);
                 }

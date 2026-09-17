@@ -9,7 +9,7 @@ import com.minelittlepony.hdskins.HDSkinsServer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.minecraft.SessionService;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.util.UUIDTypeAdapter;
@@ -35,7 +35,7 @@ public class ProfileUtils {
         return profile != null && profile.properties().containsKey(HD_TEXTURES_KEY);
     }
 
-    public static Stream<Map<SkinType, MinecraftProfileTexture>> readVanillaTexturesBlob(MinecraftSessionService service, GameProfile profile) {
+    public static Stream<Map<SkinType, MinecraftProfileTexture>> readVanillaTexturesBlob(SessionService service, GameProfile profile) {
         return Stream.of(unpackTextures(service.getTextures(profile))).filter(m -> !m.isEmpty());
     }
 

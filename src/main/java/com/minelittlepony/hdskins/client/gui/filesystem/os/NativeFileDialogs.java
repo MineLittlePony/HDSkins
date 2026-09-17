@@ -1,15 +1,12 @@
 package com.minelittlepony.hdskins.client.gui.filesystem.os;
 
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.PointerBuffer;
-import org.lwjgl.util.tinyfd.TinyFileDialogs;
-
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialog;
 import com.minelittlepony.hdskins.client.gui.filesystem.FileDialogs;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class NativeFileDialogs implements FileDialogs {
     @Override
@@ -17,12 +14,14 @@ public final class NativeFileDialogs implements FileDialogs {
         return new AbstractNativeFileDialog() {
             @Override
             @Nullable
-            protected String runFileDialog() {
-                return TinyFileDialogs.tinyfd_openFileDialog(
-                        sanitize(title),
-                        currentDirectory.toString(),
-                        getFilterBuffer(extensionFilter),
-                        sanitize(filterMessage), false);
+            protected CompletableFuture<@Nullable Path> runFileDialog() {
+                return Blaze3DDialog.openFile(currentDirectory,
+                        extensionFilter == null
+                            ? null
+                            : List.of(new Blaze3DDialog.DialogFileFilter(filterMessage, extensionFilter)),
+                            false
+                        )
+                        .thenApply(files -> files.isEmpty() ? null : files.getFirst());
             }
         };
     }
@@ -32,25 +31,15 @@ public final class NativeFileDialogs implements FileDialogs {
         return new AbstractNativeFileDialog() {
             @Override
             @Nullable
-            protected String runFileDialog() {
+            protected CompletableFuture<@Nullable Path> runFileDialog() {
                 currentDirectory = Files.isDirectory(currentDirectory) ? currentDirectory.resolve(filename) : currentDirectory.resolveSibling(filename);
-                return TinyFileDialogs.tinyfd_saveFileDialog(
-                        sanitize(title), currentDirectory.toString(),
-                        getFilterBuffer(extensionFilter),
-                        sanitize(filterMessage)
-                );
+                return Blaze3DDialog.saveFile(currentDirectory,
+                        extensionFilter == null
+                            ? null
+                            : List.of(new Blaze3DDialog.DialogFileFilter(filterMessage, extensionFilter))
+                        )
+                        .thenApply(files -> files.isEmpty() ? null : files.getFirst());
             }
         };
-    }
-
-    private static String sanitize(String input) {
-        return input.replaceAll("[\"\']", "").replaceAll("([|&\\[\\]$()`\\\\])", "\\\\$1");
-    }
-
-    private static PointerBuffer getFilterBuffer(@Nullable String filter) {
-        if (filter == null) {
-            return null;
-        }
-        return PointerBuffer.create(ByteBuffer.wrap(filter.getBytes(StandardCharsets.UTF_8)));
     }
 }

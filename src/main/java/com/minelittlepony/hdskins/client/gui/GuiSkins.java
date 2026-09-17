@@ -13,7 +13,6 @@ import com.minelittlepony.common.client.gui.sprite.ItemStackSprite;
 import com.minelittlepony.common.client.gui.sprite.TextureSprite;
 import com.minelittlepony.common.client.gui.style.Style;
 import com.minelittlepony.hdskins.client.HDSkins;
-import com.minelittlepony.hdskins.client.gui.filesystem.FileDrop;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins;
 import com.minelittlepony.hdskins.client.gui.player.skins.PlayerSkins.Posture.SkinVariant;
 import com.minelittlepony.hdskins.client.resources.EquipmentList.EquipmentSet;
@@ -36,6 +35,7 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
@@ -85,7 +85,6 @@ public class GuiSkins extends GameGui {
     protected final SkinChooser chooser;
 
     private final StatusBanner banner;
-    private final FileDrop dropper;
 
     private final SkinUpload.Session session = new SkinUpload.Session(
             Minecraft.getInstance().getGameProfile(),
@@ -105,7 +104,6 @@ public class GuiSkins extends GameGui {
         chooser = new SkinChooser(previewer);
         uploader = new SkinUploader(servers.getCycler(), previewer, session);
         banner = new StatusBanner(uploader);
-        dropper = FileDrop.newDropEvent(paths -> paths.stream().findFirst().ifPresent(chooser::selectFile));
 
         uploader.addSkinTypeChangedEventListener(_ -> {
             playSound(SoundEvents.BREWING_STAND_BREW);
@@ -116,6 +114,11 @@ public class GuiSkins extends GameGui {
                 typeSelector.setValue(previewer.getActiveSkinType());
             }
         });
+    }
+
+    @Override
+    public void onFilesDrop(List<Path> files) {
+        files.stream().findFirst().ifPresent(chooser::selectFile);
     }
 
     protected DualCarouselWidget<?> createPreviewer() {
@@ -300,11 +303,6 @@ public class GuiSkins extends GameGui {
     }
 
     @Override
-    public void removed() {
-        dropper.cancel();
-    }
-
-    @Override
     public void onClose() {
         super.onClose();
         try {
@@ -317,7 +315,6 @@ public class GuiSkins extends GameGui {
 
     @Override
     public void added() {
-        dropper.subscribe();
         uploader.scheduleReload();
     }
 

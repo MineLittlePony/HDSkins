@@ -11,7 +11,7 @@ import com.minelittlepony.hdskins.client.PlayerSkins;
 import com.minelittlepony.hdskins.client.ducks.ClientPlayerInfo;
 import com.minelittlepony.hdskins.client.profile.HDSkinCacheEntry;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 
 import net.minecraft.client.gui.font.GlyphRenderTypes;
 import net.minecraft.client.renderer.PlayerSkinRenderCache;

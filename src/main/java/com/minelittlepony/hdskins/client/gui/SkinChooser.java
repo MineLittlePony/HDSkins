@@ -7,12 +7,11 @@ import com.minelittlepony.hdskins.client.gui.filesystem.WatchedFile;
 import com.minelittlepony.hdskins.client.gui.player.skins.ServerPlayerSkins.RemoteTexture;
 import com.minelittlepony.hdskins.client.resources.HDPlayerSkinTextureDownloader;
 import com.minelittlepony.hdskins.profile.SkinType;
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.NativeImage;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -136,7 +135,7 @@ public class SkinChooser implements CarouselStatusLabel {
     public void openBrowsePNG(String title) {
         pickingInProgress = true;
         getFileDialogs().open(title)
-                .filter(".png", "PNG Files (*.png)")
+                .filter("png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             pickingInProgress = false;
 
@@ -148,7 +147,7 @@ public class SkinChooser implements CarouselStatusLabel {
 
     public void openSavePNG(SkinUploader uploader, String title, String filename) {
         getFileDialogs().save(title, filename)
-                .filter(".png", "PNG Files (*.png)")
+                .filter("png", "PNG Files (*.png)")
                 .andThen((file, success) -> {
             pickingInProgress = false;
 
@@ -163,7 +162,7 @@ public class SkinChooser implements CarouselStatusLabel {
                         Files.copy(response, file);
 
                         Minecraft.getInstance().gui.setScreen(new ConfirmationScreen(Minecraft.getInstance().gui.screen(), Component.translatable("hdskins.save.completed"), () -> {
-                            Util.getPlatform().openPath(file);
+                            Blaze3D.openPath(file);
                         }));
                     } catch (IOException e) {
                         LogManager.getLogger().error("Failed to save remote skin.", e);

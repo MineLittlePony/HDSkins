@@ -87,7 +87,6 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
     public void swingArm(InteractionHand hand) {
         playerState.isUsingItem = true;
         playerState.useItemHand = hand;
-        playerState.attackArm = hand == InteractionHand.MAIN_HAND ? playerState.mainArm : playerState.mainArm.getOpposite();
     }
 
     public void setHandStack(InteractionHand hand, Optional<ItemStackTemplate> stack) {

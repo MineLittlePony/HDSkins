@@ -13,7 +13,7 @@ import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServerList;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.minecraft.SessionService;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
@@ -41,7 +41,7 @@ public class HDSkinsServer implements ModInitializer {
         return Identifier.fromNamespaceAndPath(DEFAULT_NAMESPACE, name);
     }
 
-    private Supplier<MinecraftSessionService> sessionServiceSupplier = () -> null;
+    private Supplier<SessionService> sessionServiceSupplier = () -> null;
 
     private final SkinServerList servers = new SkinServerList();
 
@@ -66,11 +66,11 @@ public class HDSkinsServer implements ModInitializer {
         return profileLoader.apply(profile);
     }
 
-    public void setSessionService(Supplier<MinecraftSessionService> serviceSupplier) {
+    public void setSessionService(Supplier<SessionService> serviceSupplier) {
         sessionServiceSupplier = serviceSupplier;
     }
 
-    public MinecraftSessionService getSessionService() {
+    public SessionService getSessionService() {
         return Objects.requireNonNull(sessionServiceSupplier.get(), "getSessionService called too early");
     }
 
