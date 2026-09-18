@@ -27,12 +27,14 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity.SwingState;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.WalkAnimationState;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.phys.Vec3;
@@ -52,6 +54,8 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
     private final Vector3f velocity = new Vector3f();
     private final WalkAnimationState limbAnimator = new WalkAnimationState();
     private final ElytraState elytraState = new ElytraState();
+
+    private final SwingState swingState = new SwingState();
 
     public boolean sprinting;
     public boolean jumping;
@@ -87,6 +91,8 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
     public void swingArm(InteractionHand hand) {
         playerState.isUsingItem = true;
         playerState.useItemHand = hand;
+        playerState.currentSwing = null;
+        swingState.startIfAble(hand, SwingAnimation.DEFAULT, SwingAnimation.DEFAULT.duration());
     }
 
     public void setHandStack(InteractionHand hand, Optional<ItemStackTemplate> stack) {
@@ -225,6 +231,8 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
         playerState.ageInTicks += 0.5F;
         playerState.passengerOffset = new Vec3(offset.x, offset.y, offset.z);
         playerState.lightCoords = LightCoordsUtil.pack(0, Math.min((int)playerState.ageInTicks, 15));
+
+        swingState.tick();
     }
 
     @Override
@@ -245,6 +253,8 @@ public class PlayerBodyWidget<S extends AvatarRenderState> implements Carousel.E
             playerState.walkAnimationPos = 0;
             playerState.walkAnimationSpeed = 0;
         }
+        playerState.currentSwing = swingState.currentSwing;
+        playerState.swingAnimation = swingState.getAnimation(tickDelta);
     }
 
     @Override

@@ -25,6 +25,10 @@ base {
     archivesName = project.name
 }
 
+loom {
+    accessWidenerPath = file('src/main/resources/hdskins.aw')
+}
+
 reckon {
     scopeFromProp()
     stageFromProp('beta', 'rc', 'final')
