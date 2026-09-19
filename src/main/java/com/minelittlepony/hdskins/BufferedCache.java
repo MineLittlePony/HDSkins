@@ -24,7 +24,7 @@ public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
     private final LoadingCache<K, CompletableFuture<V>> cache;
 
     public BufferedCache(Function<Collection<K>, Map<K, V>> loadFunction) {
-        cache = Memoize.createAsyncLoadingCache(15, k -> {
+        cache = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, k -> {
             return this.activeBatch.updateAndGet(previous -> {
                 if (previous == null) {
                     Set<K> keys = new HashSet<>();

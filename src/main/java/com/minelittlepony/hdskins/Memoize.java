@@ -1,5 +1,6 @@
 package com.minelittlepony.hdskins;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,6 +13,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 public interface Memoize<T> extends Supplier<T> {
+    Duration DEFAULT_DURATION = Duration.ofSeconds(15);
 
     default void expireNow() {}
 
@@ -54,9 +56,9 @@ public interface Memoize<T> extends Supplier<T> {
         };
     }
 
-    static <K, V> LoadingCache<K, CompletableFuture<V>> createAsyncLoadingCache(long retentionPeriod, Function<K, CompletableFuture<V>> loadFunction) {
+    static <K, V> LoadingCache<K, CompletableFuture<V>> createAsyncLoadingCache(Duration duration, Function<K, CompletableFuture<V>> loadFunction) {
         return CacheBuilder.newBuilder()
-            .expireAfterAccess(retentionPeriod, TimeUnit.SECONDS)
+            .expireAfterAccess(duration)
             .<K, CompletableFuture<V>>removalListener(entry -> entry.getValue().cancel(false))
             .build(CacheLoader.<K, CompletableFuture<V>>from(loadFunction));
     }

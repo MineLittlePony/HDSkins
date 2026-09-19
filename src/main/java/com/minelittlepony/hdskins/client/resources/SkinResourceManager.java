@@ -61,7 +61,7 @@ public class SkinResourceManager implements IdentifiableResourceReloadListener {
     private final Map<SkinType, SkinStore> store = new HashMap<>();
     private long lastLoadTime;
 
-    private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = Memoize.createAsyncLoadingCache(15, loader::loadAsync);
+    private final LoadingCache<Identifier, CompletableFuture<Identifier>> textures = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, loader::loadAsync);
 
     @Override
     public CompletableFuture<Void> reload(Synchronizer sync, ResourceManager sender,
