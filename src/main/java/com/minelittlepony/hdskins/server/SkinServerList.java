@@ -8,6 +8,7 @@ import com.minelittlepony.hdskins.profile.ProfileUtils;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.util.ResourceUtil;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -85,7 +86,7 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
         for (Gateway gateway : skinServers) {
             try {
                 if (!gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
-                    gateway.getServer().loadSkins(profileList).forEach(textures -> {
+                    loadSkins(gateway, profileList).forEach(textures -> {
                         GameProfile profile = profileLookup.get(textures.profileId());
                         if (profile == null) {
                             LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway.toString(), textures.profileId());
@@ -103,13 +104,21 @@ public class SkinServerList implements SynchronousResourceReloader, Identifiable
                         break;
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | AuthenticationException e) {
                 LOGGER.trace(e);
             }
         }
 
         return result.entrySet().stream().collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Map.copyOf(e.getValue().textures())));
 
+    }
+
+    private List<TexturePayload> loadSkins(Gateway gateway, List<GameProfile> profiles) throws IOException, AuthenticationException {
+        return switch (profiles.size()) {
+            case 0 -> List.of();
+            case 1 -> List.of(gateway.getServer().loadSkins(profiles.get(0)));
+            default -> gateway.getServer().loadSkins(profiles);
+        };
     }
 
     public Map<SkinType, MinecraftProfileTexture> fillProfile(GameProfile profile) {

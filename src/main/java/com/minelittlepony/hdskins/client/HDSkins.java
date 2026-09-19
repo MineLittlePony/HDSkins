@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.client;
 import com.minelittlepony.common.client.gui.VisibilityMode;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
-import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.gui.SettingsScreen;
@@ -40,7 +39,7 @@ public final class HDSkins implements ClientModInitializer {
         return HDSkinsServer.id(name);
     }
 
-    private final HDConfig config = new HDConfig(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+    private final HDConfig config = HDConfig.getInstance();
     private final EquipmentList equipmentList = new EquipmentList();
     private final SkinResourceManager resources = new SkinResourceManager();
     private final SkinLoader repository = new SkinLoader();
@@ -59,7 +58,6 @@ public final class HDSkins implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        config.load();
         HDSkinsServer.getInstance().setSessionService(MinecraftClient.getInstance()::getSessionService);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(HDSkinsServer.getInstance().getServers());
@@ -73,8 +71,11 @@ public final class HDSkins implements ClientModInitializer {
     }
 
     private void onTick(MinecraftClient client) {
-        if (configDirty && client.currentScreen instanceof SettingsScreen screen) {
-            screen.init(client, screen.width, screen.height);
+        if (configDirty) {
+            if (client.currentScreen instanceof SettingsScreen screen) {
+                screen.init(client, screen.width, screen.height);
+            }
+            HDSkinsServer.getInstance().setBatchingDelay(config.skinBatching.get());
         }
         configDirty = false;
     }
