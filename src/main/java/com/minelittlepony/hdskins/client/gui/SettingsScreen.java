@@ -92,12 +92,6 @@ public class SettingsScreen extends GameGui {
         .onChange(config.enableSandboxingCheck)
         .getStyle().setText("hdskins.compatibility.sandboxing");
 
-        content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings.category.experiments");
-
-        content.addButton(new Toggle(LEFT, row += 20, config.useBatchLoading))
-            .onChange(config.useBatchLoading)
-            .getStyle().setText("hdskins.experiments.batches");
-
         content.addButton(new Label(width / 2, row += 20).setCentered()).getStyle().setText("hdskins.settings.category.servers");
         row += 10;
         int index = 1;

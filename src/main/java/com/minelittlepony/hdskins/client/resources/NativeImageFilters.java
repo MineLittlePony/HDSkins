@@ -42,7 +42,7 @@ public interface NativeImageFilters {
 
             return copy;
         });
-        final LoadingCache<Pair<Identifier, TextureLoader.Exclusion>, CompletableFuture<Identifier>> cache = Memoize.createAsyncLoadingCache(15, pair -> loader.loadAsync(pair.left(), pair.right()));
+        final LoadingCache<Pair<Identifier, TextureLoader.Exclusion>, CompletableFuture<Identifier>> cache = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, pair -> loader.loadAsync(pair.left(), pair.right()));
 
         return (id, fallback, exclusion) -> {
             try {
