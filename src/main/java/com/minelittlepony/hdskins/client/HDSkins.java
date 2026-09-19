@@ -3,7 +3,6 @@ package com.minelittlepony.hdskins.client;
 import com.minelittlepony.common.client.gui.VisibilityMode;
 import com.minelittlepony.common.client.gui.element.Button;
 import com.minelittlepony.common.event.ScreenInitCallback;
-import com.minelittlepony.common.util.GamePaths;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.client.gui.GuiSkins;
 import com.minelittlepony.hdskins.client.gui.PlayerPreviewSpecialGuiElementRenderer;
@@ -51,7 +50,7 @@ public final class HDSkins implements ClientModInitializer {
         return HDSkinsServer.id(name);
     }
 
-    private final HDConfig config = new HDConfig(GamePaths.getConfigDirectory().resolve("hdskins.json"));
+    private final HDConfig config = HDConfig.getInstance();
     private final EquipmentList equipmentList = new EquipmentList();
     private final SkinResourceManager resources = new SkinResourceManager();
     private final SkinLoader repository = new SkinLoader();
@@ -70,8 +69,6 @@ public final class HDSkins implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        config.load();
-
         PictureInPictureRendererRegistry.register(PlayerPreviewSpecialGuiElementRenderer::new);
 
         HDSkinsServer.getInstance().setSessionService(() -> Minecraft.getInstance().services().sessionService());
@@ -87,8 +84,11 @@ public final class HDSkins implements ClientModInitializer {
     }
 
     private void onTick(Minecraft client) {
-        if (configDirty && client.screen instanceof SettingsScreen screen) {
-            screen.init(screen.width, screen.height);
+        if (configDirty) {
+            if (client.screen instanceof SettingsScreen screen) {
+                screen.init(screen.width, screen.height);
+            }
+            HDSkinsServer.getInstance().setBatchingDelay(config.skinBatching.get());
         }
         configDirty = false;
     }
