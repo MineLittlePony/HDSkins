@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.minelittlepony.hdskins.client.HDConfig;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinServerList;
 import com.mojang.authlib.GameProfile;
@@ -44,7 +45,10 @@ public class HDSkinsServer implements ModInitializer {
 
     private final SkinServerList servers = new SkinServerList();
 
-    private final BufferedCache<GameProfile, Map<SkinType, MinecraftProfileTexture>> profileLoader = new BufferedCache<>(servers::fillProfiles);
+    private final BufferedCache<GameProfile, Map<SkinType, MinecraftProfileTexture>> profileLoader = new BufferedCache<>(
+            HDConfig.getInstance().skinBatching.get(),
+            servers::fillProfiles
+    );
 
     public HDSkinsServer() {
         instance = this;
@@ -52,6 +56,10 @@ public class HDSkinsServer implements ModInitializer {
 
     public SkinServerList getServers() {
         return servers;
+    }
+
+    public void setBatchingDelay(long ticks) {
+        profileLoader.setLoadDelay(ticks);
     }
 
     public CompletableFuture<Map<SkinType, MinecraftProfileTexture>> fillProfile(GameProfile profile) {
@@ -72,6 +80,9 @@ public class HDSkinsServer implements ModInitializer {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             ServerLifecycleEvents.SERVER_STARTING.register(server -> {
                 setSessionService(server::getSessionService);
+            });
+            HDConfig.getInstance().onChangedExternally(c -> {
+                setBatchingDelay(HDConfig.getInstance().skinBatching.get());
             });
         }
     }

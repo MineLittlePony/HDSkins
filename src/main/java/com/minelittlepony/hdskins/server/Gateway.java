@@ -37,7 +37,7 @@ public class Gateway {
 
     public Gateway(SkinServer server) {
         this.server = server;
-        profiles = Memoize.createAsyncLoadingCache(15, session -> {
+        profiles = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, session -> {
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return server.loadProfile(session);
