@@ -15,8 +15,11 @@
   "license": "MIT",
   "icon": "hdskins_logo.png",
   "accessWidener": "hdskins.aw",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.minelittlepony.hdskins.HDSkinsServer"
+    ],
     "client": [
       "com.minelittlepony.hdskins.client.HDSkins"
     ],

@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
-import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
-import com.minelittlepony.hdskins.client.HDSkins;
 import com.minelittlepony.common.util.registry.Registries;
+import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
+import com.minelittlepony.hdskins.HDSkinsServer;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
 import net.minecraft.core.Registry;
@@ -19,8 +19,8 @@ import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 
 public class SkinType implements Comparable<SkinType> {
-    public static final SkinType UNKNOWN = new SkinType(HDSkins.id("unknown"), Optional.empty(), false);
-    public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(HDSkins.id("skin_type"), SkinType::getId, UNKNOWN);
+    public static final SkinType UNKNOWN = new SkinType(HDSkinsServer.id("unknown"), Optional.empty(), false);
+    public static final Registry<SkinType> REGISTRY = Registries.createDefaulted(HDSkinsServer.id("skin_type"), SkinType::getId, UNKNOWN);
 
     private static final TypeAdapter<SkinType> ADAPTER = RegistryTypeAdapter.of(REGISTRY, (ls, registry) -> {
         return registry.stream().filter(type -> type.getParameterizedName().equalsIgnoreCase(ls)).findFirst().orElseGet(() -> createUnsupported(ls));
