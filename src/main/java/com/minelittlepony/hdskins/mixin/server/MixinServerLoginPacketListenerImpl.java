@@ -14,7 +14,7 @@ public class MixinServerLoginPacketListenerImpl {
         target = "Lnet/minecraft/server/network/ServerLoginPacketListenerImpl;startClientVerification(Lcom/mojang/authlib/GameProfile;)V",
         ordinal = 0
     ))
-    private GameProfile hdskins$authenticationThreadRun(GameProfile singleplayerProfile) {
+    private GameProfile hdskins$authenticationHello(GameProfile singleplayerProfile) {
         return HDSkinsServer.getInstance().getServers().fillProfileServerSide(singleplayerProfile);
     }
 }
