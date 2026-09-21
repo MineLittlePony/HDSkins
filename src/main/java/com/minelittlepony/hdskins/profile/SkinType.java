@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gson.TypeAdapter;
-import com.minelittlepony.common.util.registry.Registries;
 import com.minelittlepony.common.util.registry.RegistryTypeAdapter;
+import com.minelittlepony.common.util.registry.Registries;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 
