@@ -94,6 +94,7 @@ public class HDSkinsServer implements ModInitializer {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             ServerLifecycleEvents.SERVER_STARTING.register(server -> {
                 setSessionService(() -> server.services().sessionService());
+                PlatformVersionUtil.setClientBrand(server::getServerModName);
             });
             HDConfig.getInstance().onChangedExternally(_ -> {
                 setBatchingDelay(HDConfig.getInstance().skinBatching.get());

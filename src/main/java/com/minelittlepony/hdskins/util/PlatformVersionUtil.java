@@ -16,8 +16,6 @@ import com.minelittlepony.hdskins.HDSkinsServer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
-import net.minecraft.client.ClientBrandRetriever;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 
 public final class PlatformVersionUtil {
@@ -38,10 +36,9 @@ public final class PlatformVersionUtil {
     private static final Supplier<String> USER_AGENT = Suppliers.memoize(() -> {
         String osName = Util.getPlatform().telemetryName();
         String osVersion = System.getProperty("os.version");
-        @Nullable String launcherBrand = Minecraft.getLauncherBrand();
-        String clientBrand = ClientBrandRetriever.getClientModName();
+        @Nullable String launcherBrand = System.getProperty("minecraft.launcher.brand");
+        @Nullable String clientBrand = PlatformVersionUtil.clientBrand.get();
         String loaderVersion = getLoaderVersion();
-
         return String.format("%s/%s (%s %s; Java %s) Minecraft/%s (%s)",
                 HDSkinsServer.DEFAULT_NAMESPACE, HDSkinsServer.getInstance().getVersion(),
                 osName, osVersion, getJavaVersion(),
@@ -49,6 +46,12 @@ public final class PlatformVersionUtil {
                 combineParts(launcherBrand, combineParts(clientBrand, loaderVersion))
         );
     });
+
+    private static Supplier<@Nullable String> clientBrand = () -> null;
+
+    public static void setClientBrand(Supplier<String> supplier) {
+        clientBrand = supplier;
+    }
 
     public static boolean isDev() {
         return "true".equals(System.getProperty("fabric.development"));
