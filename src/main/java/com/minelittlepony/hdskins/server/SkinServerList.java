@@ -18,6 +18,7 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -90,7 +91,6 @@ public class SkinServerList implements ResourceManagerReloadListener {
                                     _ -> new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>()))
                                     .appendTextures(textures.textures())) {
                                 profileList.remove(profile);
-                                writeEmbeddedTextures(profile, result.get(profile).textures());
                             }
                         }
                     });
@@ -158,6 +158,7 @@ public class SkinServerList implements ResourceManagerReloadListener {
                 .filter(this::isUrlPermitted);
     }
 
+    @Contract(pure=true)
     public GameProfile writeEmbeddedTextures(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textures) {
         return ProfileUtils.writeCustomBlob(profile, ProfileUtils.HD_TEXTURES_KEY, new ProfileUtils.TextureData(timestamp, textures));
     }
