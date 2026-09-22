@@ -13,8 +13,6 @@ import org.spongepowered.include.com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.io.CharStreams;
 import com.minelittlepony.hdskins.HDSkinsServer;
-import com.minelittlepony.hdskins.client.HDSkins;
-
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
@@ -22,9 +20,9 @@ import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 
-public interface PlatformVersionUtil {
-    Supplier<Version> MINECRAFT_VERSION = Suppliers.memoize(() -> FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().getMetadata().getVersion());
-    Supplier<String> LOADER_VERSION = Suppliers.memoize(() -> {
+public final class PlatformVersionUtil {
+    private static final Supplier<Version> MINECRAFT_VERSION = Suppliers.memoize(() -> FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().getMetadata().getVersion());
+    private static final Supplier<String> LOADER_VERSION = Suppliers.memoize(() -> {
         var loader = FabricLoader.getInstance().getModContainer("fabricloader");
         var connector = FabricLoader.getInstance().getModContainer("connector");
         var fabricapi = FabricLoader.getInstance().getModContainer("fabric-api");
@@ -34,15 +32,29 @@ public interface PlatformVersionUtil {
             return c.getMetadata().getId() + " " + c.getMetadata().getVersion();
         }).collect(Collectors.joining("; "));
     });
-    Supplier<Version> JAVA_VERSION = Suppliers.memoize(() -> {
+    private static final Supplier<Version> JAVA_VERSION = Suppliers.memoize(() -> {
         return FabricLoader.getInstance().getModContainer("java").orElseThrow().getMetadata().getVersion();
     });
+    private static final Supplier<String> USER_AGENT = Suppliers.memoize(() -> {
+        String osName = Util.getPlatform().telemetryName();
+        String osVersion = System.getProperty("os.version");
+        @Nullable String launcherBrand = Minecraft.getLauncherBrand();
+        String clientBrand = ClientBrandRetriever.getClientModName();
+        String loaderVersion = getLoaderVersion();
 
-    static boolean isDev() {
+        return String.format("%s/%s (%s %s; Java %s) Minecraft/%s (%s)",
+                HDSkinsServer.DEFAULT_NAMESPACE, HDSkinsServer.getInstance().getVersion(),
+                osName, osVersion, getJavaVersion(),
+                getMinecraftVersion(),
+                combineParts(launcherBrand, combineParts(clientBrand, loaderVersion))
+        );
+    });
+
+    public static boolean isDev() {
         return "true".equals(System.getProperty("fabric.development"));
     }
 
-    static Version getGitVersion() {
+    public static Version getGitVersion() {
         try (var reader = new InputStreamReader(new ProcessBuilder().command("git", "describe", "--tags").start().getInputStream())) {
             return Version.parse(CharStreams.toString(reader).trim() + "-DEV");
         } catch (IOException | VersionParsingException e) {
@@ -55,39 +67,23 @@ public interface PlatformVersionUtil {
         }
     }
 
-    static Version getMinecraftVersion() {
+    public static Version getMinecraftVersion() {
         return MINECRAFT_VERSION.get();
     }
 
-    static String getLoaderVersion() {
+    public static String getLoaderVersion() {
         return LOADER_VERSION.get();
     }
 
-    static Version getJavaVersion() {
+    public static Version getJavaVersion() {
         return JAVA_VERSION.get();
     }
 
-    static String getUserAgent() {
-        String osName = Util.getPlatform().telemetryName();
-        String osVersion = System.getProperty("os.version");
-        @Nullable String launcherBrand = Minecraft.getLauncherBrand();
-        String clientBrand = ClientBrandRetriever.getClientModName();
-        String loaderVersion = getLoaderVersion();
-
-        var properties = System.getProperties();
-        for (var i : properties.entrySet()) {
-            HDSkins.LOGGER.info(i.getKey() + "=" + i.getValue());
-        }
-
-        return String.format("%s/%s (%s %s; Java %s) Minecraft/%s (%s)",
-                HDSkinsServer.DEFAULT_NAMESPACE, HDSkinsServer.getInstance().getVersion(),
-                osName, osVersion, getJavaVersion(),
-                getMinecraftVersion(),
-                combineParts(launcherBrand, combineParts(clientBrand, loaderVersion))
-        );
+    public static String getUserAgent() {
+        return USER_AGENT.get();
     }
 
-    static String combineParts(String a, String b) {
+    private static String combineParts(String a, String b) {
         return Strings.isNullOrEmpty(a) ? b : Strings.isNullOrEmpty(b) ? a : a + "; " + b;
     }
 }
