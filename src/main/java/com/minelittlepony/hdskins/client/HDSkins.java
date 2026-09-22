@@ -11,7 +11,6 @@ import com.minelittlepony.hdskins.client.profile.SkinLoader;
 import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
-
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
