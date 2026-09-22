@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import com.google.common.hash.Hashing;
-
 import net.minecraft.client.Minecraft;
 
 public interface URIUtil {
