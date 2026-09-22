@@ -84,7 +84,7 @@ public class SkinServerList implements ResourceManagerReloadListener {
                     loadSkins(gateway, profileList).forEach(textures -> {
                         GameProfile profile = profileLookup.get(textures.profileId());
                         if (profile == null) {
-                            LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway.toString(), textures.profileId());
+                            warnServerReturnedBadProfile(gateway, textures);
                         } else {
                             if (result.computeIfAbsent(profile,
                                     _ -> new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>()))
@@ -106,6 +106,37 @@ public class SkinServerList implements ResourceManagerReloadListener {
 
         return result.entrySet().stream().collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Map.copyOf(e.getValue().textures())));
 
+    }
+
+    /**
+     * Fills a profile and returns a new instance for use on the server.
+     */
+    public GameProfile fillProfileServerSide(GameProfile profile) {
+        var requestedSkinTypes = SkinType.REGISTRY.stream().filter(SkinType::isKnown).collect(Collectors.toUnmodifiableSet());
+        var data = new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>());
+
+        for (Gateway gateway : skinServers) {
+            if (gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
+                continue;
+            }
+            try {
+                var textures = gateway.getServer().loadSkins(profile);
+                if (!textures.profileId().equals(profile.id())) {
+                    warnServerReturnedBadProfile(gateway, textures);
+                    continue;
+                }
+                if (data.appendTextures(textures.textures())) {
+                    break;
+                }
+            } catch (IOException | AuthenticationException e) {
+                LOGGER.trace(e);
+            }
+        }
+        return writeEmbeddedTextures(profile, data.textures());
+    }
+
+    private static void warnServerReturnedBadProfile(Gateway gateway, TexturePayload payload) {
+        LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway, payload.profileId());
     }
 
     private List<TexturePayload> loadSkins(Gateway gateway, List<GameProfile> profiles) throws IOException, AuthenticationException {
