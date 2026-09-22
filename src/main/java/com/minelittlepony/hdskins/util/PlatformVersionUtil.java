@@ -2,6 +2,7 @@ package com.minelittlepony.hdskins.util;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -39,10 +40,11 @@ public final class PlatformVersionUtil {
         @Nullable String launcherBrand = System.getProperty("minecraft.launcher.brand");
         @Nullable String clientBrand = PlatformVersionUtil.clientBrand.get();
         String loaderVersion = getLoaderVersion();
-        return String.format("%s/%s (%s %s; Java %s) Minecraft/%s (%s)",
+        return String.format("%s/%s (%s %s; Java %s) Minecraft/%s (%s; %s)",
                 HDSkinsServer.DEFAULT_NAMESPACE, HDSkinsServer.getInstance().getVersion(),
                 osName, osVersion, getJavaVersion(),
                 getMinecraftVersion(),
+                FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ROOT),
                 combineParts(launcherBrand, combineParts(clientBrand, loaderVersion))
         );
     });
