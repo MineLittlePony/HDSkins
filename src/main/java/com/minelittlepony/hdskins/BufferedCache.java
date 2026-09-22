@@ -1,9 +1,8 @@
 package com.minelittlepony.hdskins;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -11,7 +10,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.cache.LoadingCache;
+
 import net.minecraft.util.Util;
 
 public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
@@ -21,23 +23,16 @@ public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
     private final Executor executor = Util.getIoWorkerExecutor();
     private Executor delayedExecutor;
 
-    private final AtomicReference<Function<K, CompletableFuture<V>>> activeBatch = new AtomicReference<>(null);
+    private final AtomicReference<@Nullable Batch<K, V>> activeBatch = new AtomicReference<>(null);
 
     private final LoadingCache<K, CompletableFuture<V>> cache;
 
     public BufferedCache(long tickDelay, Function<Collection<K>, Map<K, V>> loadFunction) {
         setLoadDelay(tickDelay);
         cache = Memoize.createAsyncLoadingCache(Memoize.DEFAULT_DURATION, k -> {
-            return this.activeBatch.updateAndGet(previous -> {
-                if (previous == null) {
-                    Set<K> keys = new HashSet<>();
-                    return new Batch<K, V>(CompletableFuture.supplyAsync(() -> {
-                        this.activeBatch.set(null);
-                        return loadFunction.apply(keys);
-                    }, delayedExecutor), keys);
-                }
-                return previous;
-            }).apply(k);
+            return activeBatch.updateAndGet(previous -> {
+                return previous == null || previous.hasBeenStarted() ? new Batch<K, V>(loadFunction, delayedExecutor) : previous;
+            }).addAndGetFuture(k);
         });
     }
 
@@ -54,13 +49,47 @@ public class BufferedCache<K, V> implements Function<K, CompletableFuture<V>> {
         return cache.getUnchecked(k);
     }
 
-    record Batch<K, V>(CompletableFuture<Map<K, V>> future, Set<K> collection) implements Function<K, CompletableFuture<V>> {
-        @Override
-        public CompletableFuture<V> apply(K k) {
-            collection.add(k);
-            return future().thenApply(results -> {
-               return results.get(k);
+    private record Batch<K, V>(
+            CompletableFuture<CompletableFuture<Map<K, V>>> future,
+            Function<Collection<K>, Map<K, V>> loadFunction,
+            Map<K, CompletableFuture<V>> values,
+            Executor executor
+    ) {
+        public Batch(Function<Collection<K>, Map<K, V>> loadFunction, Executor executor) {
+            this(new CompletableFuture<>(), loadFunction, new HashMap<>(), executor);
+        }
+
+        private Map<K, V> prepare() {
+            synchronized (values()) {
+                return loadFunction.apply(values().keySet());
+            }
+        }
+
+        private Map<K, V> apply(Map<K, V> data) {
+            data.forEach((key, value) -> {
+                synchronized (values()) {
+                    var f = values().get(key);
+                    if (f != null && !f.isCancelled()) {
+                        f.complete(value);
+                    }
+                }
             });
+            return data;
+        }
+
+        public boolean hasBeenStarted() {
+            return future().isDone();
+        }
+
+        public CompletableFuture<V> addAndGetFuture(K k) {
+            synchronized (values()) {
+                if (values.isEmpty()) {
+                    CompletableFuture.runAsync(() -> {
+                        future().complete(CompletableFuture.supplyAsync(this::prepare, Util.getIoWorkerExecutor()).thenApply(this::apply));
+                    }, executor);
+                }
+                return values().computeIfAbsent(k, kk -> new CompletableFuture<V>());
+            }
         }
     }
 }
