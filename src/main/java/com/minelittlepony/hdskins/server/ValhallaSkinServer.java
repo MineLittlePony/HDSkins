@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
@@ -97,6 +98,7 @@ public class ValhallaSkinServer implements SkinServer {
         var path = buildBackendUserUri(profile.getId());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(path)
                     .GET()
+                    .timeout(Duration.ofSeconds(5))
                     .build())
                 .requireOk()
                 .json(TexturePayload.class, "Invalid texture payload");
@@ -107,6 +109,7 @@ public class ValhallaSkinServer implements SkinServer {
         var data = new BulkTextures(profiles.stream().map(GameProfile::getId).toList());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("bulk_textures"))
                         .POST(FileTypes.json(data))
+                        .timeout(Duration.ofSeconds(10))
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                         .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                         .build())
