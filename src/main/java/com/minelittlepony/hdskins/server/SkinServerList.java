@@ -115,6 +115,7 @@ public class SkinServerList implements ResourceManagerReloadListener {
         var requestedSkinTypes = SkinType.REGISTRY.stream().filter(SkinType::isKnown).collect(Collectors.toUnmodifiableSet());
         var data = new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>());
 
+        boolean failed = false;
         for (Gateway gateway : skinServers) {
             if (gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
                 continue;
@@ -130,7 +131,11 @@ public class SkinServerList implements ResourceManagerReloadListener {
                 }
             } catch (IOException | AuthenticationException e) {
                 LOGGER.trace(e);
+                failed = true;
             }
+        }
+        if (failed && data.textures().isEmpty()) {
+            return profile;
         }
         return writeEmbeddedTextures(profile, data.textures());
     }
