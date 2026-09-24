@@ -10,11 +10,13 @@ import com.minelittlepony.hdskins.client.profile.SkinLoader;
 import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
+import com.minelittlepony.hdskins.util.PlatformVersionUtil;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -59,6 +61,7 @@ public final class HDSkins implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         HDSkinsServer.getInstance().setSessionService(MinecraftClient.getInstance()::getSessionService);
+        PlatformVersionUtil.setClientBrand(ClientBrandRetriever::getClientModName);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(resources);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(HDSkinsServer.getInstance().getServers());
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(equipmentList);
