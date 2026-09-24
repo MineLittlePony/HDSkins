@@ -59,7 +59,6 @@ public interface Memoize<T> extends Supplier<T> {
     static <K, V> LoadingCache<K, CompletableFuture<V>> createAsyncLoadingCache(Duration duration, Function<K, CompletableFuture<V>> loadFunction) {
         return CacheBuilder.newBuilder()
             .expireAfterAccess(duration)
-            .<K, CompletableFuture<V>>removalListener(entry -> entry.getValue().cancel(false))
-            .build(CacheLoader.<K, CompletableFuture<V>>from(loadFunction));
+            .build(CacheLoader.from(loadFunction));
     }
 }
