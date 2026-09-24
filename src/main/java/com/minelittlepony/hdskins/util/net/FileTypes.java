@@ -23,6 +23,7 @@ public interface FileTypes {
     String HEADER_ACCEPT = "Accept";
     String HEADER_CONTENT_TYPE = "Content-Type";
     String HEADER_AUTHORIZATION = "Authorization";
+    String HEADER_USER_AGENT = "User-Agent";
 
     String APPLICATION_JSON = "application/json";
     String APPLICATION_OCTET_STREAM = "application/octet-stream";

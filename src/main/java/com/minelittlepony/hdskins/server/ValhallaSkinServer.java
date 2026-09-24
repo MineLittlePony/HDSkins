@@ -6,6 +6,7 @@ import com.minelittlepony.hdskins.client.VanillaModels;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.minelittlepony.hdskins.server.SkinUpload.Session;
 import com.minelittlepony.hdskins.util.IndentedToStringStyle;
+import com.minelittlepony.hdskins.util.PlatformVersionUtil;
 import com.minelittlepony.hdskins.util.net.*;
 import com.minelittlepony.hdskins.util.net.URIUtil.NameValuePair;
 import com.mojang.authlib.GameProfile;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
@@ -93,6 +95,7 @@ public class ValhallaSkinServer implements SkinServer {
         var path = buildBackendUserUri(profile.id());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(path)
                     .GET()
+                    .timeout(Duration.ofSeconds(5))
                     .build())
                 .requireOk()
                 .json(TexturePayload.class, "Invalid texture payload");
@@ -103,7 +106,9 @@ public class ValhallaSkinServer implements SkinServer {
         var data = new BulkTextures(profiles.stream().map(GameProfile::id).toList());
         return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("bulk_textures"))
                         .POST(FileTypes.json(data))
+                        .timeout(Duration.ofSeconds(10))
                         .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
+                        .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                         .build())
                 .requireOk()
                 .json(BulkTexturesResponse.class, "Invalid texture payload")
@@ -117,6 +122,7 @@ public class ValhallaSkinServer implements SkinServer {
                 MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures"))
                         .GET()
                         .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                        .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                         .build())
                     .requireOk()
                     .json(TexturePayload.Textures.class, "Invalid texture payload")
@@ -132,6 +138,7 @@ public class ValhallaSkinServer implements SkinServer {
                     MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendUri("textures", param("type", upload.type().getParameterizedName())))
                             .DELETE()
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                             .build())
                     .requireOk();
             case SkinUpload.FileUpload fileUpload ->
@@ -142,6 +149,7 @@ public class ValhallaSkinServer implements SkinServer {
                             .build(HttpRequest.newBuilder(buildBackendUri("textures"))::PUT)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                             .build())
                     .requireOk();
             case SkinUpload.UriUpload uriUpload ->
@@ -154,6 +162,7 @@ public class ValhallaSkinServer implements SkinServer {
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
+                            .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                             .build())
                     .requireOk();
         });
@@ -193,8 +202,8 @@ public class ValhallaSkinServer implements SkinServer {
     public Optional<SkinServerProfile<?>> loadProfile(Session session) throws IOException, AuthenticationException {
         return MoreHttpResponses.execute(HttpRequest.newBuilder(buildBackendHistoryUri(session.profile().id()))
                 .GET()
+                .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                 .build()).accept(r -> r.json(Textures.class, "Server sent invalid profile response")).map(p -> {
-                    // TODO: (@Killjoy) Remove duplicates and sort by upload time
             Function<SkinType, List<Texture>> textures = Util.memoize(type -> {
                 Set<String> visited = new HashSet<>();
                 return p.textures().getOrDefault(type, List.of())
@@ -212,7 +221,6 @@ public class ValhallaSkinServer implements SkinServer {
 
                 @Override
                 public void setActive(SkinType type, Texture texture) throws IOException, AuthenticationException {
-                    // TODO: (@Killjoy) Swap active skins rather than upload a copy
                     uploadSkin(new SkinUpload.UriUpload(session, type, URI.create(texture.getUri()), texture.metadata));
                 }
             };
@@ -250,7 +258,8 @@ public class ValhallaSkinServer implements SkinServer {
         return MoreHttpResponses.execute(FileTypes.multiPart()
                     .field("name", name)
                 .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft"))::POST)
-                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                    .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent()))
                 .requireOk()
                 .json(AuthHandshake.class, "Invalid handshake response");
     }
@@ -260,7 +269,8 @@ public class ValhallaSkinServer implements SkinServer {
                     .field("name", name)
                     .field("verifyToken", verifyToken)
                 .build(HttpRequest.newBuilder(buildBackendUri("auth/minecraft/callback"))::POST)
-                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON))
+                    .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
+                    .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent()))
                 .requireOk()
                 .json(AuthResponse.class, "Invalid auth response");
     }
@@ -291,7 +301,6 @@ public class ValhallaSkinServer implements SkinServer {
     private record BulkTextures(List<UUID> uuids) {}
     private record BulkTexturesResponse(List<TexturePayload> users) {}
 
-    // TODO: (@Killjoy) Response does not match the documentation
     private record Textures (String profileId, String profilename, Map<SkinType, List<Texture>> textures) {}
     private record Texture (long startTime, String endTime, Map<String, String> metadata, String url) implements SkinServerProfile.Skin {
         @Override
