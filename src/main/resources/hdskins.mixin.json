@@ -3,7 +3,10 @@
   "minVersion": "0.7",
   "package": "com.minelittlepony.hdskins.mixin",
   "compatibilityLevel": "JAVA_16",
-  "mixins": [],
+  "mixins": [
+    "server.MixinServerLoginPacketListenerImpl",
+    "server.MixinServerLoginPacketListenerImpl$1"
+  ],
   "client": [
     "client.MixinGuiRenderer",
     "client.MixinPlayerSkinCacheEntry",

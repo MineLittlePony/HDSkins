@@ -18,6 +18,7 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -84,13 +85,12 @@ public class SkinServerList implements ResourceManagerReloadListener {
                     loadSkins(gateway, profileList).forEach(textures -> {
                         GameProfile profile = profileLookup.get(textures.profileId());
                         if (profile == null) {
-                            LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway.toString(), textures.profileId());
+                            warnServerReturnedBadProfile(gateway, textures);
                         } else {
                             if (result.computeIfAbsent(profile,
                                     _ -> new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>()))
                                     .appendTextures(textures.textures())) {
                                 profileList.remove(profile);
-                                writeEmbeddedTextures(profile, result.get(profile).textures());
                             }
                         }
                     });
@@ -106,6 +106,42 @@ public class SkinServerList implements ResourceManagerReloadListener {
 
         return result.entrySet().stream().collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Map.copyOf(e.getValue().textures())));
 
+    }
+
+    /**
+     * Fills a profile and returns a new instance for use on the server.
+     */
+    public GameProfile fillProfileServerSide(GameProfile profile) {
+        var requestedSkinTypes = SkinType.REGISTRY.stream().filter(SkinType::isKnown).collect(Collectors.toUnmodifiableSet());
+        var data = new PartialTextures(new HashSet<>(requestedSkinTypes), new HashMap<>());
+
+        boolean failed = false;
+        for (Gateway gateway : skinServers) {
+            if (gateway.getServer().getFeatures().contains(Feature.SYNTHETIC)) {
+                continue;
+            }
+            try {
+                var textures = gateway.getServer().loadSkins(profile);
+                if (!textures.profileId().equals(profile.id())) {
+                    warnServerReturnedBadProfile(gateway, textures);
+                    continue;
+                }
+                if (data.appendTextures(textures.textures())) {
+                    break;
+                }
+            } catch (IOException | AuthenticationException e) {
+                LOGGER.trace(e);
+                failed = true;
+            }
+        }
+        if (failed && data.textures().isEmpty()) {
+            return profile;
+        }
+        return writeEmbeddedTextures(profile, data.textures());
+    }
+
+    private static void warnServerReturnedBadProfile(Gateway gateway, TexturePayload payload) {
+        LOGGER.warn("Server {} sent textures for unrequested profile {}. Ignoring.", gateway, payload.profileId());
     }
 
     private List<TexturePayload> loadSkins(Gateway gateway, List<GameProfile> profiles) throws IOException, AuthenticationException {
@@ -127,6 +163,7 @@ public class SkinServerList implements ResourceManagerReloadListener {
                 .filter(this::isUrlPermitted);
     }
 
+    @Contract(pure=true)
     public GameProfile writeEmbeddedTextures(GameProfile profile, Map<SkinType, MinecraftProfileTexture> textures) {
         return ProfileUtils.writeCustomBlob(profile, ProfileUtils.HD_TEXTURES_KEY, new ProfileUtils.TextureData(timestamp, textures));
     }

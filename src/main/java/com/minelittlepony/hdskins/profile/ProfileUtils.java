@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.Contract;
+
 public class ProfileUtils {
     public static final String TEXTURES_KEY = "textures";
     public static final String HD_TEXTURES_KEY = "hd_textures";
@@ -65,6 +67,7 @@ public class ProfileUtils {
         }).filter(Objects::nonNull);
     }
 
+    @Contract(pure=true)
     public static <T> GameProfile writeCustomBlob(GameProfile profile, String key, T data) {
         HashMultimap<String, Property> properties = HashMultimap.create(profile.properties());
         String json = GSON.toJson(data);

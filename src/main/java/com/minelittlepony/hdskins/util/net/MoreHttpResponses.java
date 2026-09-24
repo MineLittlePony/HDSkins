@@ -1,6 +1,7 @@
 package com.minelittlepony.hdskins.util.net;
 
 import com.google.common.io.CharStreams;
+import com.minelittlepony.hdskins.HDSkinsServer;
 import com.minelittlepony.hdskins.profile.SkinType;
 import com.mojang.util.UUIDTypeAdapter;
 import com.google.gson.Gson;
@@ -37,6 +38,7 @@ public interface MoreHttpResponses {
     }
 
     static MoreHttpResponses execute(HttpRequest request) throws IOException {
+        HDSkinsServer.LOGGER.debug("Executing web request to {}", request::uri);
         try {
             HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());
             return () -> response;
