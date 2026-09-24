@@ -11,12 +11,14 @@ import com.minelittlepony.hdskins.client.profile.SkinLoader;
 import com.minelittlepony.hdskins.client.resources.EquipmentList;
 import com.minelittlepony.hdskins.client.resources.SkinResourceManager;
 import com.minelittlepony.hdskins.server.SkinServerList;
+import com.minelittlepony.hdskins.util.PlatformVersionUtil;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -63,6 +65,7 @@ public final class HDSkins implements ClientModInitializer {
         SpecialGuiElementRegistry.register(PlayerPreviewSpecialGuiElementRenderer::new);
 
         HDSkinsServer.getInstance().setSessionService(() -> MinecraftClient.getInstance().getApiServices().sessionService());
+        PlatformVersionUtil.setClientBrand(ClientBrandRetriever::getClientModName);
         ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(SkinResourceManager.ID, resources);
         ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(SkinServerList.SKIN_SERVERS, HDSkinsServer.getInstance().getServers());
         ResourceLoader.get(ResourceType.CLIENT_RESOURCES).registerReloader(EquipmentList.EQUIPMENT, equipmentList);
