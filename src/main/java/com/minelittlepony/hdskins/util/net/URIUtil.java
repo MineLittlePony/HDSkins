@@ -35,10 +35,6 @@ public interface URIUtil {
         }
     }
 
-    static String getChecksum(URI uri) throws IOException {
-        return Hashing.farmHashFingerprint64().hashBytes(getBytes(uri)).toString();
-    }
-
     static byte[] getBytes(URI uri) throws IOException {
         if ("file".equalsIgnoreCase(uri.getScheme())) {
             return Files.readAllBytes(Path.of(uri));
