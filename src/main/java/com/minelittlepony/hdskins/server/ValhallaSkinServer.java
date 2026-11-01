@@ -15,14 +15,12 @@ import com.mojang.authlib.exceptions.AuthenticationException;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
-import net.minecraft.util.Util;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Function;
 
 @ServerType("valhalla")
 public class ValhallaSkinServer implements SkinServer {
@@ -144,7 +142,7 @@ public class ValhallaSkinServer implements SkinServer {
                     MoreHttpResponses.execute(FileTypes.multiPart()
                             .field("type", fileUpload.type().getParameterizedName())
                             .field("file", fileUpload.file())
-                            .field("meta", new Gson().toJson(addChecksum(fileUpload.metadata(), fileUpload.file().toUri())))
+                            .field("meta", new Gson().toJson(fileUpload.metadata()))
                             .build(HttpRequest.newBuilder(buildBackendUri("textures"))::PUT)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_AUTHORIZATION, accessToken)
@@ -156,7 +154,7 @@ public class ValhallaSkinServer implements SkinServer {
                             .POST(FileTypes.json(Map.of(
                                 "type", uriUpload.type().getParameterizedName(),
                                 "file", uriUpload.uri().toString(),
-                                "meta", addChecksum(uriUpload.metadata(), uriUpload.uri())
+                                "meta", uriUpload.metadata()
                             )))
                             .header(FileTypes.HEADER_CONTENT_TYPE, FileTypes.APPLICATION_JSON)
                             .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
@@ -165,15 +163,6 @@ public class ValhallaSkinServer implements SkinServer {
                             .build())
                     .requireOk();
         });
-    }
-
-    private Map<String, String> addChecksum(Map<String, String> metadata, URI uri) throws IOException {
-        if (metadata.containsKey("checksum")) {
-            return metadata;
-        }
-        metadata = new HashMap<>(metadata);
-        metadata.put("checksum", URIUtil.getChecksum(uri));
-        return Map.copyOf(metadata);
     }
 
     @Override
@@ -203,19 +192,10 @@ public class ValhallaSkinServer implements SkinServer {
                 .GET()
                 .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
                 .build()).accept(r -> r.json(Textures.class, "Server sent invalid profile response")).map(p -> {
-            Function<SkinType, List<Texture>> textures = Util.memoize(type -> {
-                Set<String> visited = new HashSet<>();
-                return p.textures().getOrDefault(type, List.of())
-                        .stream()
-                        .filter(texture -> texture.metadata().containsKey("checksum"))
-                        .sorted(Comparator.comparing(t -> -t.startTime))
-                        .filter(texture -> visited.add(texture.metadata().get("checksum") + texture.getModel()))
-                        .toList();
-            });
             return new SkinServerProfile<Texture>() {
                 @Override
                 public List<Texture> getSkins(SkinType type) {
-                    return textures.apply(type);
+                    return p.textures().getOrDefault(type, List.of());
                 }
 
                 @Override
