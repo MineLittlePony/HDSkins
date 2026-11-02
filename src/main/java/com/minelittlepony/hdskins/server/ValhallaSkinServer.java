@@ -94,8 +94,7 @@ public class ValhallaSkinServer implements SkinServer {
     private static HttpRequest.Builder newHttpBuilder(URI uri, @Nullable String accessToken) {
         var builder = HttpRequest.newBuilder(uri)
                 .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
-                .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent())
-                ;
+                .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent());
         if (accessToken != null) {
             builder.header(FileTypes.HEADER_AUTHORIZATION, accessToken);
         }
