@@ -41,6 +41,9 @@
   "suggests": {
     "modmenu": "*"
   },
+  "conflicts": {
+    "essential": "*"
+  },
   "custom": {
     "modmenu": {
       "links": {
