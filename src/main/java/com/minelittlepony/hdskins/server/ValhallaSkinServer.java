@@ -19,6 +19,7 @@ import net.minecraft.util.Util;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.*;
@@ -93,6 +94,7 @@ public class ValhallaSkinServer implements SkinServer {
 
     private static HttpRequest.Builder newHttpBuilder(URI uri, @Nullable String accessToken) {
         var builder = HttpRequest.newBuilder(uri)
+                .version("http".equals(uri.getScheme()) ? HttpClient.Version.HTTP_1_1 : HttpClient.Version.HTTP_2)
                 .header(FileTypes.HEADER_ACCEPT, FileTypes.APPLICATION_JSON)
                 .header(FileTypes.HEADER_USER_AGENT, PlatformVersionUtil.getUserAgent());
         if (accessToken != null) {
