@@ -4,8 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 
-import org.spongepowered.include.com.google.common.base.Strings;
-
+import com.google.common.base.Strings;
 import com.minelittlepony.hdskins.HDSkinsServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.Util.OS;

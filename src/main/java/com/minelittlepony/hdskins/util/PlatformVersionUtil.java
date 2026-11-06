@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.include.com.google.common.base.Strings;
-
+import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.io.CharStreams;
 import com.minelittlepony.hdskins.HDSkinsServer;
